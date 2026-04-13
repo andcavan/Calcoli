@@ -1,0 +1,1041 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Calcolo Viti di Potenza / Madreviti</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@300;400;500&family=Barlow+Condensed:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<style>
+:root{
+  --bg:#0e0f11;--bg1:#141519;--bg2:#1c1d23;--bg3:#23252d;
+  --border:rgba(255,255,255,.07);--border2:rgba(255,255,255,.13);
+  --text:#e8e9ec;--muted:#7a7d8a;--dim:#4a4d5a;
+  --acc:#4fc3f7;--acc2:#0288d1;
+  --up:#66bb6a;--dn:#ef5350;--amber:#ffa726;--violet:#b39ddb;
+  --mono:'DM Mono',monospace;--cond:'Barlow Condensed',sans-serif;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{background:var(--bg);color:var(--text);font-family:var(--mono);font-size:13px}
+body{min-height:100vh}
+.header{border-bottom:1px solid var(--border);padding:11px 20px;display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.header h1{font-family:var(--cond);font-size:20px;font-weight:700;letter-spacing:.04em;text-transform:uppercase}
+.sub{font-size:10px;color:var(--muted);letter-spacing:.1em;text-transform:uppercase;flex:1}
+.dot{width:7px;height:7px;border-radius:50%;background:var(--acc);display:inline-block;margin-right:6px;animation:pulse 2s ease-in-out infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
+.norm-badge{font-size:9px;color:var(--acc);background:rgba(79,195,247,.1);border:1px solid rgba(79,195,247,.25);border-radius:4px;padding:3px 8px;letter-spacing:.08em;font-family:var(--cond);font-weight:600}
+.layout{display:flex;flex-direction:column;min-height:calc(100vh - 51px)}
+.panels-top{display:grid;grid-template-columns:minmax(0,1.2fr) minmax(0,1fr) minmax(0,1fr) minmax(0,1fr) minmax(0,1fr);gap:8px;padding:10px 13px;border-bottom:1px solid var(--border);align-items:start}
+.panel{background:var(--bg2);border:1px solid var(--border2);border-radius:8px;padding:10px 11px}
+.stitle{font-family:var(--cond);font-size:10px;font-weight:600;letter-spacing:.17em;color:var(--muted);text-transform:uppercase;margin-bottom:8px;display:flex;align-items:center;gap:6px}
+.stitle::after{content:'';flex:1;height:1px;background:var(--border)}
+.field{margin-bottom:8px}.field:last-child{margin-bottom:0}
+.fhdr{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:4px}
+.flabel{color:var(--muted);font-size:11px;letter-spacing:.03em}
+.fval{color:var(--acc);font-size:12px;font-weight:500;min-width:80px;text-align:right;font-family:var(--mono)}
+.field.output .flabel{color:var(--amber)}
+.field.output .fval{color:var(--amber)}
+.srow{display:flex;align-items:center;gap:4px}
+.arr{flex-shrink:0;width:25px;height:25px;display:flex;align-items:center;justify-content:center;background:var(--bg2);border:1px solid var(--border2);border-radius:5px;cursor:pointer;color:var(--muted);font-size:10px;transition:all .12s;user-select:none}
+.arr:hover{border-color:var(--acc);color:var(--acc);background:rgba(79,195,247,.08)}
+.arr:active{transform:scale(.88)}
+.numinput{flex:1;height:25px;background:var(--bg3);border:1px solid var(--border2);border-radius:5px;color:var(--acc);font-family:var(--mono);font-size:12px;font-weight:500;text-align:center;outline:none;padding:0 4px;min-width:0;transition:border-color .12s}
+.numinput:focus{border-color:var(--acc);background:var(--bg2)}
+.numinput:hover{border-color:rgba(79,195,247,.4)}
+.numinput::-webkit-outer-spin-button,.numinput::-webkit-inner-spin-button{-webkit-appearance:none;margin:0}
+.numinput[type=number]{-moz-appearance:textfield}
+.numinput:disabled{opacity:.4;cursor:not-allowed}
+.sel{width:100%;height:25px;background:var(--bg3);border:1px solid var(--border2);border-radius:5px;color:var(--acc);font-family:var(--mono);font-size:11px;outline:none;padding:0 6px;cursor:pointer;transition:border-color .12s;-webkit-appearance:none;appearance:none}
+.sel:focus{border-color:var(--acc);background:var(--bg2)}
+.sel-wrap{position:relative}
+.sel-wrap::after{content:'▾';position:absolute;right:7px;top:50%;transform:translateY(-50%);color:var(--muted);pointer-events:none;font-size:10px}
+/* radio buttons */
+.radio-row{display:flex;gap:4px;margin-bottom:6px}
+.rdbtn{flex:1;height:25px;display:flex;align-items:center;justify-content:center;gap:4px;background:var(--bg3);border:1px solid var(--border2);border-radius:5px;cursor:pointer;font-size:10px;font-family:var(--cond);font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--dim);transition:all .15s;user-select:none}
+.rdbtn:has(input:checked){border-color:var(--acc);background:rgba(79,195,247,.1);color:var(--acc)}
+.rdbtn.dir-raise:has(input:checked){border-color:var(--up);background:rgba(102,187,106,.1);color:var(--up)}
+.rdbtn.dir-lower:has(input:checked){border-color:var(--amber);background:rgba(255,167,38,.1);color:var(--amber)}
+.rdbtn input{display:none}
+/* checkbox */
+.cb-row{display:flex;align-items:center;gap:6px;margin-bottom:6px;cursor:pointer;font-size:10px;color:var(--muted)}
+.cb-row input[type=checkbox]{accent-color:var(--acc);width:12px;height:12px;cursor:pointer}
+/* self-locking chips */
+.sl-grid{display:grid;grid-template-columns:1fr 1fr;gap:4px;margin-bottom:8px}
+.sl-chip{border:1px solid var(--border2);border-radius:5px;padding:7px 4px;cursor:default;text-align:center;background:transparent;color:var(--dim);transition:all .2s}
+.sl-chip.on.sl-yes{border-color:var(--up);background:rgba(102,187,106,.12);color:var(--up)}
+.sl-chip.on.sl-no{border-color:var(--dn);background:rgba(239,83,80,.12);color:var(--dn)}
+.sl-chip .fc-ico{font-size:15px;display:block;margin-bottom:2px}
+.sl-chip .fc-lbl{font-size:8px;font-family:var(--cond);font-weight:600;letter-spacing:.06em;text-transform:uppercase}
+/* verify chips */
+.sf-chip{border:1px solid var(--border2);border-radius:4px;padding:2px 6px;font-size:9px;font-family:var(--cond);font-weight:600;text-transform:uppercase;color:var(--dim);transition:all .2s;display:inline-block;margin-left:4px}
+.sf-chip.ok{border-color:var(--up);color:var(--up);background:rgba(102,187,106,.1)}
+.sf-chip.warn{border-color:var(--amber);color:var(--amber);background:rgba(255,167,38,.1)}
+.sf-chip.fail{border-color:var(--dn);color:var(--dn);background:rgba(239,83,80,.1)}
+/* TOOLTIP */
+[data-tip]{position:relative;cursor:default}
+@keyframes tipIn{from{opacity:0}to{opacity:1}}
+[data-tip]:hover::after{content:attr(data-tip);position:absolute;bottom:calc(100% + 7px);left:0;background:#1e2130;border:1px solid rgba(79,195,247,.25);color:#c8cad4;font-size:10px;padding:7px 11px;border-radius:6px;white-space:pre-wrap;max-width:290px;min-width:180px;z-index:999;line-height:1.6;pointer-events:none;font-family:var(--mono);text-align:left;box-shadow:0 4px 20px rgba(0,0,0,.5);animation:tipIn .12s ease .6s both}
+[data-tip]:hover::before{content:'';position:absolute;bottom:calc(100% + 1px);left:20px;border:5px solid transparent;border-top-color:#1e2130;z-index:1000;pointer-events:none;animation:tipIn .12s ease .6s both}
+[data-tip].tr:hover::after{left:auto;right:0}
+/* RESULT STRIP */
+.result-strip{background:rgba(79,195,247,.04);border:1px solid rgba(79,195,247,.18);border-radius:8px;padding:10px 14px;margin:0 13px}
+.rs-title{font-family:var(--cond);font-size:10px;font-weight:700;letter-spacing:.14em;color:var(--acc);text-transform:uppercase;margin-bottom:8px;display:flex;align-items:center;gap:8px}
+.rs-title::after{content:'';flex:1;height:1px;background:rgba(79,195,247,.15)}
+.rs-grid{display:flex;flex-wrap:wrap;gap:6px}
+.rsc{background:rgba(79,195,247,.07);border:1px solid rgba(79,195,247,.16);border-radius:6px;padding:7px 12px;flex:1;min-width:110px}
+.rsc.warn{background:rgba(255,167,38,.07);border-color:rgba(255,167,38,.25)}
+.rsc.warn .rsc-v{color:var(--amber)}
+.rsc.danger{background:rgba(239,83,80,.07);border-color:rgba(239,83,80,.25)}
+.rsc.danger .rsc-v{color:var(--dn)}
+.rsc.ok{background:rgba(102,187,106,.07);border-color:rgba(102,187,106,.25)}
+.rsc.ok .rsc-v{color:var(--up)}
+.rsc-l{font-size:9px;color:var(--acc2);text-transform:uppercase;letter-spacing:.1em;margin-bottom:2px;font-family:var(--cond)}
+.rsc-v{font-size:17px;font-weight:500;color:var(--acc)}
+.rsc-u{font-size:10px;color:rgba(79,195,247,.55);margin-left:3px}
+/* VERIFY STRIP */
+.vfy-strip{background:rgba(102,187,106,.03);border:1px solid rgba(102,187,106,.18);border-radius:8px;padding:10px 14px;margin:6px 13px 0}
+.vfy-strip.fail{background:rgba(239,83,80,.04);border-color:rgba(239,83,80,.25)}
+.vfy-strip.warn{background:rgba(255,167,38,.04);border-color:rgba(255,167,38,.25)}
+.vt{font-family:var(--cond);font-size:10px;font-weight:700;letter-spacing:.14em;color:var(--up);text-transform:uppercase;margin-bottom:8px;display:flex;align-items:center;gap:8px}
+.vfy-strip.fail .vt{color:var(--dn)}
+.vfy-strip.warn .vt{color:var(--amber)}
+.vt::after{content:'';flex:1;height:1px;background:rgba(102,187,106,.15)}
+.vfy-strip.fail .vt::after{background:rgba(239,83,80,.15)}
+.vfy-strip.warn .vt::after{background:rgba(255,167,38,.15)}
+.vg{display:flex;flex-wrap:wrap;gap:6px}
+.vc{background:rgba(102,187,106,.06);border:1px solid rgba(102,187,106,.16);border-radius:6px;padding:7px 12px;flex:1;min-width:120px}
+.vc.warn{background:rgba(255,167,38,.06);border-color:rgba(255,167,38,.2)}
+.vc.fail{background:rgba(239,83,80,.06);border-color:rgba(239,83,80,.2)}
+.vc-l{font-size:9px;color:var(--up);text-transform:uppercase;letter-spacing:.1em;margin-bottom:2px;font-family:var(--cond)}
+.vc.warn .vc-l{color:var(--amber)}
+.vc.fail .vc-l{color:var(--dn)}
+.vc-v{font-size:15px;font-weight:500;color:var(--up)}
+.vc.warn .vc-v{color:var(--amber)}
+.vc.fail .vc-v{color:var(--dn)}
+.warnbox{background:rgba(239,83,80,.08);border:1px solid rgba(239,83,80,.25);border-radius:6px;padding:7px 11px;font-size:11px;color:#ef9a9a;display:none;margin:6px 13px 0;line-height:1.6}
+.warnbox.show{display:block}
+.main{padding:10px 13px;display:flex;flex-direction:column;gap:9px}
+.charts-row{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.chart-wrap{background:var(--bg2);border:1px solid var(--border2);border-radius:8px;padding:10px;height:230px;position:relative}
+.chart-title{font-family:var(--cond);font-size:9px;font-weight:600;letter-spacing:.15em;color:var(--muted);text-transform:uppercase;margin-bottom:6px}
+.chart-wrap canvas{width:100%!important;height:calc(100% - 22px)!important}
+.dtg-wrap{background:var(--bg2);border:1px solid var(--border2);border-radius:8px;padding:10px 12px}
+.dtg{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
+.dgtitle{font-family:var(--cond);font-size:9px;font-weight:600;letter-spacing:.15em;color:var(--muted);text-transform:uppercase;margin-bottom:6px;padding-bottom:4px;border-bottom:1px solid var(--border)}
+.dr{display:flex;justify-content:space-between;padding:2.5px 0;border-bottom:1px solid var(--border)}
+.dk{color:var(--muted);font-size:10px}
+.dv{color:var(--text);font-size:11px;font-weight:500}
+.section-div{padding:5px 13px;font-family:var(--cond);font-size:9px;font-weight:700;letter-spacing:.2em;color:var(--dim);text-transform:uppercase;display:flex;align-items:center;gap:8px}
+.section-div::after{content:'';flex:1;height:1px;background:var(--border)}
+.hidden{display:none!important}
+.sep{border-top:1px solid var(--border);margin:6px 0}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <span class="dot"></span>
+  <h1>Viti di Potenza — Vite / Madrevite</h1>
+  <span class="sub">Coppia · Forza · Rendimento · Verifica</span>
+  <span class="norm-badge">ISO 724 · ISO 2904 · DIN 103</span>
+</div>
+
+<div class="layout">
+<div class="panels-top">
+
+<!-- P1: FILETTATURA -->
+<div class="panel">
+  <div class="stitle">⟿ Filettatura</div>
+
+  <div class="field" data-tip="Tipo di filettatura:&#10;M normale — metrica grossa ISO 724 (uso generale).&#10;M fine — metrica passo fine (vibrazioni, regolazioni).&#10;TR — trapezoidale ISO 2904 / DIN 103 (viti di moto, angolo fianco 30°).&#10;Manuale — inserimento libero di tutti i parametri.">
+    <div class="fhdr"><span class="flabel">Tipo filettatura</span></div>
+    <div class="sel-wrap">
+      <select class="sel" id="sel-type" onchange="onTypeChange()">
+        <option value="m_coarse">M normale (ISO)</option>
+        <option value="m_fine">M fine (ISO)</option>
+        <option value="tr">TR trapezoidale</option>
+        <option value="manual">Manuale</option>
+      </select>
+    </div>
+  </div>
+
+  <div id="grp-size" class="field" data-tip="Dimensione nominale filettatura dalla serie standard.">
+    <div class="fhdr"><span class="flabel">Dimensione</span></div>
+    <div class="sel-wrap">
+      <select class="sel" id="sel-size" onchange="recalc()"></select>
+    </div>
+  </div>
+
+  <!-- Campi manuali -->
+  <div id="grp-manual" class="hidden">
+    <div class="field" data-tip="Diametro nominale esterno della vite (mm).">
+      <div class="fhdr"><span class="flabel">Diam. nominale d</span></div>
+      <div class="srow">
+        <button class="arr" onclick="step('in-d-man',-1)">−</button>
+        <input class="numinput" type="number" id="in-d-man" value="20" min="1" max="500" step="1" oninput="recalc()">
+        <button class="arr" onclick="step('in-d-man',1)">+</button>
+        <span style="font-size:10px;color:var(--muted);white-space:nowrap">mm</span>
+      </div>
+    </div>
+    <div class="field" data-tip="Passo della filettatura (mm).&#10;Per filettatura a più principi: passo = avanzamento per giro / numero principi.">
+      <div class="fhdr"><span class="flabel">Passo p</span></div>
+      <div class="srow">
+        <input class="numinput" type="number" id="in-p-man" value="4" min="0.1" max="50" step="0.25" oninput="recalc()">
+        <span style="font-size:10px;color:var(--muted);white-space:nowrap">mm</span>
+      </div>
+    </div>
+    <div class="field" data-tip="Diametro di fianco (medio) d₂ (mm).&#10;Per M: d₂ = d − 0.6495·p&#10;Per TR: d₂ = d − p/2">
+      <div class="fhdr"><span class="flabel">Diam. fianco d₂</span></div>
+      <div class="srow">
+        <input class="numinput" type="number" id="in-d2-man" value="18" min="0.5" max="499" step="0.001" oninput="recalc()">
+        <span style="font-size:10px;color:var(--muted);white-space:nowrap">mm</span>
+      </div>
+    </div>
+    <div class="field" data-tip="Diametro interno (nucleo) della vite d₁ (mm).&#10;Sezione resistente alla trazione e alla torsione.">
+      <div class="fhdr"><span class="flabel">Diam. nucleo d₁</span></div>
+      <div class="srow">
+        <input class="numinput" type="number" id="in-d1-man" value="16" min="0.5" max="498" step="0.001" oninput="recalc()">
+        <span style="font-size:10px;color:var(--muted);white-space:nowrap">mm</span>
+      </div>
+    </div>
+    <div class="field" data-tip="Semiangolo del fianco α/2 (°).&#10;Filettatura M: 30° (angolo pieno 60°).&#10;Filettatura TR: 15° (angolo pieno 30°).&#10;Filettatura quadra: 0°.">
+      <div class="fhdr"><span class="flabel">Semiang. fianco α/2</span></div>
+      <div class="srow">
+        <input class="numinput" type="number" id="in-alpha-man" value="30" min="0" max="45" step="1" oninput="recalc()">
+        <span style="font-size:10px;color:var(--muted);white-space:nowrap">°</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="field" data-tip="Numero di principi (filettatura a più entrate).&#10;Lead = n_principi × passo.&#10;Più principi → maggiore avanzamento per giro, rendimento più alto, meno autobloccante.">
+    <div class="fhdr"><span class="flabel">N. principi</span></div>
+    <div class="sel-wrap">
+      <select class="sel" id="sel-starts" onchange="recalc()">
+        <option value="1">1 — singolo</option>
+        <option value="2">2 — doppio</option>
+        <option value="3">3 — triplo</option>
+        <option value="4">4 — quadruplo</option>
+      </select>
+    </div>
+  </div>
+
+  <div class="sep"></div>
+  <div class="field output" data-tip="Diametro di fianco (medio) calcolato (mm).&#10;Su questa quota si calcolano la coppia e l'angolo d'elica.">
+    <div class="fhdr"><span class="flabel">d₂ fianco</span><span class="fval" id="lbl-d2">—</span></div>
+  </div>
+  <div class="field output" data-tip="Diametro nucleo vite (mm). Sezione critica per trazione e torsione.">
+    <div class="fhdr"><span class="flabel">d₁ nucleo</span><span class="fval" id="lbl-d1">—</span></div>
+  </div>
+  <div class="field output" data-tip="Avanzamento per giro completo (mm/giro).&#10;Lead = n_principi × passo.">
+    <div class="fhdr"><span class="flabel">Lead (avanz./giro)</span><span class="fval" id="lbl-lead">—</span></div>
+  </div>
+  <div class="field output" data-tip="Angolo d'elica φ sulla superficie del fianco d₂.&#10;φ = arctan(Lead / π·d₂).&#10;Angolo piccolo → coppia alta, rendimento basso, spesso autobloccante.">
+    <div class="fhdr"><span class="flabel">Angolo d'elica φ</span><span class="fval" id="lbl-phi">—</span></div>
+  </div>
+</div>
+
+<!-- P2: CARICO E MOTO -->
+<div class="panel">
+  <div class="stitle">⊕ Carico e Moto</div>
+
+  <div class="field" data-tip="Seleziona il dato di ingresso noto.&#10;Forza assiale: si conosce il carico Fa da spostare.&#10;Coppia: si conosce la coppia disponibile all'albero vite.&#10;Potenza+velocità: si conosce la potenza motore e la velocità di rotazione.">
+    <div class="fhdr"><span class="flabel">Dato noto</span></div>
+    <div class="radio-row">
+      <label class="rdbtn"><input type="radio" name="mode" value="force" checked onchange="onModeChange()"><span>Forza</span></label>
+      <label class="rdbtn"><input type="radio" name="mode" value="torque" onchange="onModeChange()"><span>Coppia</span></label>
+      <label class="rdbtn"><input type="radio" name="mode" value="power" onchange="onModeChange()"><span>Potenza</span></label>
+    </div>
+  </div>
+
+  <div class="field" data-tip="Direzione del moto principale da analizzare.&#10;Sollevamento / avanzamento: la forza assiale si oppone al moto (carico da vincere).&#10;Abbassamento / ritorno: la forza assiale favorisce il moto (carico che spinge).">
+    <div class="fhdr"><span class="flabel">Direzione</span></div>
+    <div class="radio-row">
+      <label class="rdbtn dir-raise"><input type="radio" name="dir" value="raise" checked onchange="recalc()"><span>↑ Sollevamento</span></label>
+      <label class="rdbtn dir-lower"><input type="radio" name="dir" value="lower" onchange="recalc()"><span>↓ Abbassamento</span></label>
+    </div>
+  </div>
+
+  <div id="grp-Fa" class="field" data-tip="Forza assiale applicata alla vite (N).&#10;Sollevamento: peso del carico, forza di serraggio, pressione di stampaggio, ecc.&#10;Positiva nel verso dell'asse della vite.">
+    <div class="fhdr"><span class="flabel">Forza assiale Fₐ</span></div>
+    <div class="srow">
+      <button class="arr" onclick="step('in-Fa',-100)">−</button>
+      <input class="numinput" type="number" id="in-Fa" value="5000" min="1" max="10000000" step="100" oninput="recalc()">
+      <button class="arr" onclick="step('in-Fa',100)">+</button>
+      <span style="font-size:10px;color:var(--muted);white-space:nowrap">N</span>
+    </div>
+  </div>
+
+  <div id="grp-M" class="field hidden" data-tip="Coppia applicata all'albero vite (N·m).&#10;Coppia motore disponibile al netto degli attriti di trasmissione.">
+    <div class="fhdr"><span class="flabel">Coppia M</span></div>
+    <div class="srow">
+      <button class="arr" onclick="step('in-M',-1)">−</button>
+      <input class="numinput" type="number" id="in-M" value="50" min="0.001" max="100000" step="1" oninput="recalc()">
+      <button class="arr" onclick="step('in-M',1)">+</button>
+      <span style="font-size:10px;color:var(--muted);white-space:nowrap">N·m</span>
+    </div>
+  </div>
+
+  <div id="grp-P" class="field hidden" data-tip="Potenza meccanica disponibile all'albero vite (W).&#10;P = M · ω = M · 2π·n/60.">
+    <div class="fhdr"><span class="flabel">Potenza P</span></div>
+    <div class="srow">
+      <button class="arr" onclick="step('in-P',-50)">−</button>
+      <input class="numinput" type="number" id="in-P" value="500" min="1" max="10000000" step="50" oninput="recalc()">
+      <button class="arr" onclick="step('in-P',50)">+</button>
+      <span style="font-size:10px;color:var(--muted);white-space:nowrap">W</span>
+    </div>
+  </div>
+
+  <div class="field" data-tip="Velocità di rotazione della vite (giri/min).&#10;Necessaria per il calcolo di potenza e velocità di traslazione.&#10;Lasciare 0 per non calcolare la potenza.">
+    <div class="fhdr"><span class="flabel" id="lbl-n-label">Velocità n</span></div>
+    <div class="srow">
+      <button class="arr" onclick="step('in-n',-10)">−</button>
+      <input class="numinput" type="number" id="in-n" value="60" min="0" max="50000" step="10" oninput="recalc()">
+      <button class="arr" onclick="step('in-n',10)">+</button>
+      <span style="font-size:10px;color:var(--muted);white-space:nowrap">rpm</span>
+    </div>
+  </div>
+
+  <div class="sep"></div>
+  <!-- Attrito alla spalla (opzionale) -->
+  <label class="cb-row" data-tip="Attivare per includere la coppia di attrito alla spalla (testa vite o madrevite contro la superficie di appoggio).&#10;Significativo in applicazioni di serraggio o quando non è presente un cuscinetto assiale.">
+    <input type="checkbox" id="cb-collar" onchange="onCollarChange()"> Attrito spalla/testa
+  </label>
+  <div id="grp-collar" class="hidden">
+    <div class="field" data-tip="Coefficiente d'attrito alla spalla μ_c.&#10;Tipicamente = μ filetto o leggermente superiore.">
+      <div class="fhdr"><span class="flabel">μ spalla</span></div>
+      <div class="srow">
+        <input class="numinput" type="number" id="in-mu-c" value="0.12" min="0.01" max="0.5" step="0.01" oninput="recalc()">
+      </div>
+    </div>
+    <div class="field" data-tip="Diametro medio della superficie di contatto della spalla (mm).&#10;Per superfici annulari: d_c = (D_est + D_int) / 2.">
+      <div class="fhdr"><span class="flabel">d_spalla</span></div>
+      <div class="srow">
+        <input class="numinput" type="number" id="in-dc" value="30" min="1" max="1000" step="1" oninput="recalc()">
+        <span style="font-size:10px;color:var(--muted);white-space:nowrap">mm</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="sep"></div>
+  <div class="field output" data-tip="Velocità di traslazione lineare del dado/madrevite (mm/s).">
+    <div class="fhdr"><span class="flabel">Velocità traslaz.</span><span class="fval" id="lbl-v">—</span></div>
+  </div>
+</div>
+
+<!-- P3: MATERIALI -->
+<div class="panel">
+  <div class="stitle">⬡ Materiali</div>
+
+  <div class="field" data-tip="Materiale della vite. Determina i limiti di resistenza a trazione e torsione.&#10;C45: acciaio da costruzione, uso generale.&#10;C45 bon.: bonificato, prestazioni migliori.&#10;42CrMo4: acciaio legato bonificato, alta resistenza.&#10;Inox A2-70: acciaio inossidabile.&#10;C10: acciaio dolce, usi non strutturali.">
+    <div class="fhdr"><span class="flabel">Materiale vite</span></div>
+    <div class="sel-wrap">
+      <select class="sel" id="sel-screw-mat" onchange="recalc()">
+        <option value="c45">Acciaio C45</option>
+        <option value="c45_b">Acciaio C45 bonif.</option>
+        <option value="cr_mo" selected>42CrMo4 bonif.</option>
+        <option value="inox">Inox A2-70</option>
+        <option value="c10">Acciaio C10</option>
+      </select>
+    </div>
+  </div>
+
+  <div class="field" data-tip="Materiale della madrevite. Deve avere buona resistenza all'usura e compatibilità tribologica con l'acciaio.&#10;Bronzo: ottima compatibilità con l'acciaio, basso μ, lunghe viti di moto.&#10;Bronzo Al: maggiore carico specifico.&#10;Ghisa: economica, buona per basse velocità.&#10;Acciaio: possibile incollaggio se non lubrificato.&#10;Plastica/PTFE: basso attrito, bassi carichi.">
+    <div class="fhdr"><span class="flabel">Materiale madrevite</span></div>
+    <div class="sel-wrap">
+      <select class="sel" id="sel-nut-mat" onchange="onNutMatChange()">
+        <option value="bronze" selected>Bronzo CuSn</option>
+        <option value="bronze_al">Bronzo alluminio</option>
+        <option value="castiron">Ghisa</option>
+        <option value="steel">Acciaio</option>
+        <option value="brass">Ottone</option>
+        <option value="pom">POM (Delrin / Acetalica)</option>
+        <option value="plastic">Plastica / PTFE</option>
+      </select>
+    </div>
+  </div>
+
+  <div class="field" data-tip="Condizione di lubrificazione all'interfaccia vite-madrevite.&#10;Lubrificato: grasso o olio nell'ingaggio (consigliato per viti di moto).&#10;Secco: senza lubrificante (raro nella pratica, μ più elevato).">
+    <div class="fhdr"><span class="flabel">Lubrificazione</span></div>
+    <div class="radio-row">
+      <label class="rdbtn"><input type="radio" name="lub" value="lub" checked onchange="onNutMatChange()"><span>Lubrificato</span></label>
+      <label class="rdbtn"><input type="radio" name="lub" value="dry" onchange="onNutMatChange()"><span>Secco</span></label>
+    </div>
+  </div>
+
+  <div class="field" data-tip="Coefficiente d'attrito μ all'interfaccia filetto vite-madrevite.&#10;Calcolato automaticamente dalla combinazione materiali/lubrificazione.&#10;Attivare override per inserirlo manualmente.">
+    <div class="fhdr"><span class="flabel">Coeff. attrito μ</span></div>
+    <div class="srow">
+      <input class="numinput" type="number" id="in-mu" value="0.08" min="0.01" max="0.5" step="0.01" oninput="recalc()" disabled>
+      <label class="cb-row" style="margin:0;white-space:nowrap"><input type="checkbox" id="cb-mu-ovr" onchange="onMuOverride()"> ovr</label>
+    </div>
+  </div>
+
+  <div class="sep"></div>
+  <div class="field output" data-tip="Coefficiente d'attrito apparente μ' = μ / cos(α/2).&#10;Per filettature V (metrica): μ' > μ perché la reazione normale è inclinata rispetto all'asse.&#10;Per filettatura quadra (α=0): μ' = μ.">
+    <div class="fhdr"><span class="flabel">μ' apparente</span><span class="fval" id="lbl-mu-prime">—</span></div>
+  </div>
+  <div class="field output" data-tip="Angolo d'attrito ridotto ρ' = arctan(μ').&#10;Confronto con angolo d'elica φ determina l'autobloccaggio:&#10;ρ' > φ → autobloccante (η abbassamento = 0).&#10;ρ' < φ → non autobloccante (la vite arretra da sola).">
+    <div class="fhdr"><span class="flabel">Angolo attrito ρ'</span><span class="fval" id="lbl-rho">—</span></div>
+  </div>
+  <div class="sep"></div>
+  <div class="field" data-tip="Limite di snervamento del materiale vite (MPa).">
+    <div class="fhdr"><span class="flabel">σ_y vite</span><span class="fval" id="lbl-sigma-y-s" style="color:var(--violet)">—</span></div>
+  </div>
+  <div class="field" data-tip="Pressione specifica ammissibile sul fianco del filetto della madrevite (MPa).&#10;Limite statico per il cedimento plastico del materiale più tenero.">
+    <div class="fhdr"><span class="flabel">σ_p,adm madrev.</span><span class="fval" id="lbl-sp-adm" style="color:var(--violet)">—</span></div>
+  </div>
+</div>
+
+<!-- P4: VERIFICA -->
+<div class="panel">
+  <div class="stitle">✓ Verifica</div>
+
+  <div class="field" data-tip="Lunghezza di impegno del filetto (mm).&#10;Per madreviti: altezza del dado/boccola.&#10;Regola pratica: l_e ≥ 1.5·d per acciaio-acciaio; l_e ≥ 2÷3·d per bronzo/ghisa.&#10;Inserire 0 per saltare la verifica.">
+    <div class="fhdr"><span class="flabel">Lungh. impegno l_e</span></div>
+    <div class="srow">
+      <button class="arr" onclick="step('in-le',-5)">−</button>
+      <input class="numinput" type="number" id="in-le" value="40" min="0" max="5000" step="5" oninput="recalc()">
+      <button class="arr" onclick="step('in-le',5)">+</button>
+      <span style="font-size:10px;color:var(--muted);white-space:nowrap">mm</span>
+    </div>
+  </div>
+
+  <div class="field" data-tip="Coefficiente di sicurezza applicato ai limiti di resistenza.&#10;SF = 2: carichi statici noti, calcolo accurato.&#10;SF = 3: carichi variabili o incerti.&#10;SF = 4÷5: carichi dinamici, applicazioni critiche.">
+    <div class="fhdr"><span class="flabel">Coeff. sicurezza SF</span></div>
+    <div class="srow">
+      <button class="arr" onclick="step('in-sf',-0.5)">−</button>
+      <input class="numinput" type="number" id="in-sf" value="2" min="1" max="10" step="0.5" oninput="recalc()">
+      <button class="arr" onclick="step('in-sf',0.5)">+</button>
+    </div>
+  </div>
+
+  <div class="sep"></div>
+  <div class="field output" data-tip="Tensione equivalente di Von Mises nel nucleo della vite (MPa).&#10;σ_eq = √(σ_a² + 3·τ_t²)&#10;σ_a = Fₐ / (π/4·d₁²) — tensione assiale&#10;τ_t = M / (π/16·d₁³) — tensione torsionale">
+    <div class="fhdr"><span class="flabel">σ_eq nucleo vite</span><span class="fval" id="lbl-sigma-eq">—</span></div>
+  </div>
+  <div class="field output" data-tip="Pressione specifica sul fianco del filetto della madrevite (MPa).&#10;σ_p = Fₐ·p / (π·d₂·l_e·h_eng)&#10;h_eng: altezza di contatto (0.54·p per M, 0.5·p per TR).&#10;Confrontare con σ_p,adm del materiale madrevite.">
+    <div class="fhdr"><span class="flabel">σ_p fianco madrev.</span><span class="fval" id="lbl-sigma-p">—</span></div>
+  </div>
+  <div class="field output" data-tip="Tensione tangenziale di taglio alla radice del filetto della vite (MPa).&#10;τ = Fₐ·p / (π·d₁·l_e·b_s)&#10;b_s: larghezza radice (0.75·p per M, 0.65·p per TR).">
+    <div class="fhdr"><span class="flabel">τ taglio filetto vite</span><span class="fval" id="lbl-tau-thread">—</span></div>
+  </div>
+
+  <div class="sep"></div>
+  <div class="field" data-tip="Fattore di sicurezza effettivo sul nucleo della vite.&#10;SF_vite = σ_y / σ_eq.">
+    <div class="fhdr"><span class="flabel">SF nucleo vite</span><span class="fval" id="lbl-sf-screw">—</span></div>
+  </div>
+  <div class="field" data-tip="Fattore di sicurezza sulla pressione di fianco madrevite.&#10;SF_p = σ_p,adm / σ_p.">
+    <div class="fhdr"><span class="flabel">SF fianco madrev.</span><span class="fval" id="lbl-sf-bearing">—</span></div>
+  </div>
+  <div class="field" data-tip="Fattore di sicurezza a taglio sul filetto vite.&#10;SF_τ = (σ_y/√3) / τ.">
+    <div class="fhdr"><span class="flabel">SF taglio filetto</span><span class="fval" id="lbl-sf-shear">—</span></div>
+  </div>
+</div>
+
+<!-- P5: RISULTATI -->
+<div class="panel">
+  <div class="stitle">◈ Risultati</div>
+
+  <!-- Self-locking chips -->
+  <div class="sl-grid">
+    <div class="sl-chip sl-yes" id="chip-sl-yes">
+      <span class="fc-ico">🔒</span><span class="fc-lbl">Autobloccante</span>
+    </div>
+    <div class="sl-chip sl-no" id="chip-sl-no">
+      <span class="fc-ico">🔓</span><span class="fc-lbl">Non autoblocc.</span>
+    </div>
+  </div>
+
+  <div class="field output" data-tip="Rendimento al sollevamento.&#10;η_s = tan(φ) / tan(φ + ρ').&#10;Con attrito spalla: η_tot = Fₐ·v / (M_tot·ω).">
+    <div class="fhdr"><span class="flabel">η sollevamento</span><span class="fval" id="lbl-eta-s">—</span></div>
+  </div>
+  <div class="field output" data-tip="Rendimento all'abbassamento.&#10;η_a = tan(φ − ρ') / tan(φ) se φ > ρ'.&#10;= 0 se autobloccante (φ ≤ ρ').">
+    <div class="fhdr"><span class="flabel">η abbassamento</span><span class="fval" id="lbl-eta-a">—</span></div>
+  </div>
+
+  <div class="sep"></div>
+  <div class="field output" data-tip="Forza assiale risultante (N).&#10;Calcolata dalla coppia o potenza nota.">
+    <div class="fhdr"><span class="flabel">Forza assiale Fₐ</span><span class="fval" id="lbl-Fa-out">—</span></div>
+  </div>
+  <div class="field output" data-tip="Coppia al filetto per il moto attivo (N·m).&#10;Sollevamento: M_s = Fₐ·(d₂/2)·tan(φ+ρ').&#10;Abbassamento: M_a = Fₐ·(d₂/2)·|tan(ρ'−φ)|.">
+    <div class="fhdr"><span class="flabel">Coppia filetto M</span><span class="fval" id="lbl-M-out">—</span></div>
+  </div>
+  <div class="field output" data-tip="Coppia alla spalla/testa vite (N·m).&#10;M_c = μ_c · Fₐ · d_c/2.&#10;Visibile solo se 'attrito spalla' attivo.">
+    <div class="fhdr"><span class="flabel" id="lbl-Mc-lbl">Coppia spalla M_c</span><span class="fval" id="lbl-Mc">—</span></div>
+  </div>
+  <div class="field output" data-tip="Coppia totale all'albero vite = M_filetto + M_spalla (N·m).">
+    <div class="fhdr"><span class="flabel">Coppia totale M_tot</span><span class="fval" id="lbl-M-tot">—</span></div>
+  </div>
+  <div class="field output" data-tip="Potenza meccanica richiesta / disponibile (W).&#10;P = M_tot · 2π·n/60.">
+    <div class="fhdr"><span class="flabel">Potenza P</span><span class="fval" id="lbl-P-out">—</span></div>
+  </div>
+</div>
+
+</div><!-- /panels-top -->
+
+<!-- RESULT STRIP -->
+<div class="result-strip" id="result-strip" style="margin-top:8px">
+  <div class="rs-title">◈ Riepilogo</div>
+  <div class="rs-grid" id="rs-grid"></div>
+</div>
+
+<!-- VERIFY STRIP -->
+<div class="vfy-strip" id="vfy-strip" style="display:none">
+  <div class="vt" id="vfy-title">✓ Verifica strutturale</div>
+  <div class="vg" id="vfy-grid"></div>
+</div>
+
+<!-- WARNING -->
+<div class="warnbox" id="warnbox"></div>
+
+<div class="section-div" style="margin-top:6px">Grafici · Analisi visiva</div>
+
+<div class="main">
+  <div class="charts-row">
+    <div class="chart-wrap">
+      <div class="chart-title">Coppia (N·m) vs Forza assiale (N)</div>
+      <canvas id="ch-mf"></canvas>
+    </div>
+    <div class="chart-wrap">
+      <div class="chart-title">Rendimento η (%) vs Coeff. attrito μ</div>
+      <canvas id="ch-eta"></canvas>
+    </div>
+  </div>
+  <div class="dtg-wrap">
+    <div class="dtg" id="dtg"></div>
+  </div>
+</div>
+</div><!-- /layout -->
+
+<script>
+// ═══════════════════════════════════
+//  DATI FILETTATURE
+// ═══════════════════════════════════
+const M_COARSE=[
+  {d:3,  p:0.5,   d2:2.675,  d1:2.459, label:'M3'},
+  {d:4,  p:0.7,   d2:3.545,  d1:3.242, label:'M4'},
+  {d:5,  p:0.8,   d2:4.480,  d1:4.134, label:'M5'},
+  {d:6,  p:1.0,   d2:5.350,  d1:4.917, label:'M6'},
+  {d:8,  p:1.25,  d2:7.188,  d1:6.647, label:'M8'},
+  {d:10, p:1.5,   d2:9.026,  d1:8.376, label:'M10'},
+  {d:12, p:1.75,  d2:10.863, d1:10.106,label:'M12'},
+  {d:16, p:2.0,   d2:14.701, d1:13.835,label:'M16'},
+  {d:20, p:2.5,   d2:18.376, d1:17.294,label:'M20'},
+  {d:24, p:3.0,   d2:22.051, d1:20.752,label:'M24'},
+  {d:30, p:3.5,   d2:27.727, d1:26.211,label:'M30'},
+  {d:36, p:4.0,   d2:33.402, d1:31.670,label:'M36'},
+  {d:42, p:4.5,   d2:39.077, d1:37.129,label:'M42'},
+  {d:48, p:5.0,   d2:44.752, d1:42.587,label:'M48'},
+  {d:56, p:5.5,   d2:52.428, d1:50.046,label:'M56'},
+  {d:64, p:6.0,   d2:60.103, d1:57.505,label:'M64'},
+];
+const M_FINE=[
+  {d:8,  p:1.0,   d2:7.350,  d1:6.917, label:'M8×1'},
+  {d:10, p:1.0,   d2:9.350,  d1:8.917, label:'M10×1'},
+  {d:10, p:1.25,  d2:9.188,  d1:8.647, label:'M10×1.25'},
+  {d:12, p:1.25,  d2:11.188, d1:10.647,label:'M12×1.25'},
+  {d:12, p:1.5,   d2:11.026, d1:10.376,label:'M12×1.5'},
+  {d:16, p:1.5,   d2:15.026, d1:14.376,label:'M16×1.5'},
+  {d:20, p:1.5,   d2:19.026, d1:18.376,label:'M20×1.5'},
+  {d:20, p:2.0,   d2:18.701, d1:17.835,label:'M20×2'},
+  {d:24, p:1.5,   d2:23.026, d1:22.376,label:'M24×1.5'},
+  {d:24, p:2.0,   d2:22.701, d1:21.835,label:'M24×2'},
+  {d:30, p:2.0,   d2:28.701, d1:27.835,label:'M30×2'},
+  {d:36, p:3.0,   d2:34.051, d1:32.752,label:'M36×3'},
+];
+// TR: d2=d-p/2, d1=d-p (ISO 2904)
+const TR=[
+  {d:8,  p:1.5, label:'TR 8×1.5'},
+  {d:10, p:2,   label:'TR 10×2'},
+  {d:12, p:3,   label:'TR 12×3'},
+  {d:14, p:3,   label:'TR 14×3'},
+  {d:16, p:4,   label:'TR 16×4'},
+  {d:18, p:4,   label:'TR 18×4'},
+  {d:20, p:4,   label:'TR 20×4'},
+  {d:22, p:5,   label:'TR 22×5'},
+  {d:24, p:5,   label:'TR 24×5'},
+  {d:26, p:5,   label:'TR 26×5'},
+  {d:28, p:5,   label:'TR 28×5'},
+  {d:30, p:6,   label:'TR 30×6'},
+  {d:32, p:6,   label:'TR 32×6'},
+  {d:36, p:6,   label:'TR 36×6'},
+  {d:40, p:7,   label:'TR 40×7'},
+  {d:44, p:7,   label:'TR 44×7'},
+  {d:48, p:8,   label:'TR 48×8'},
+  {d:52, p:8,   label:'TR 52×8'},
+  {d:55, p:9,   label:'TR 55×9'},
+  {d:60, p:9,   label:'TR 60×9'},
+  {d:65, p:10,  label:'TR 65×10'},
+  {d:70, p:10,  label:'TR 70×10'},
+  {d:75, p:10,  label:'TR 75×10'},
+  {d:80, p:10,  label:'TR 80×10'},
+  {d:90, p:12,  label:'TR 90×12'},
+  {d:100,p:12,  label:'TR 100×12'},
+].map(t=>({...t, d2:t.d-t.p/2, d1:t.d-t.p}));
+
+// ═══════════════════════════════════
+//  MATERIALI
+// ═══════════════════════════════════
+const SCREW_MAT={
+  c45:   {n:'Acciaio C45',       sigma_y:360, tau_y:208},
+  c45_b: {n:'Acciaio C45 bonif.',sigma_y:490, tau_y:283},
+  cr_mo: {n:'42CrMo4 bonif.',    sigma_y:900, tau_y:520},
+  inox:  {n:'Inox A2-70',        sigma_y:450, tau_y:260},
+  c10:   {n:'Acciaio C10',       sigma_y:200, tau_y:115},
+};
+const NUT_MAT={
+  bronze:   {n:'Bronzo CuSn',       sigma_p_adm:50,  tau_adm:35},
+  bronze_al:{n:'Bronzo alluminio',  sigma_p_adm:80,  tau_adm:55},
+  castiron: {n:'Ghisa',             sigma_p_adm:40,  tau_adm:28},
+  steel:    {n:'Acciaio',           sigma_p_adm:80,  tau_adm:60},
+  brass:    {n:'Ottone',            sigma_p_adm:45,  tau_adm:30},
+  pom:      {n:'POM (Delrin)',       sigma_p_adm:25,  tau_adm:18},
+  plastic:  {n:'Plastica/PTFE',     sigma_p_adm:12,  tau_adm:8},
+};
+const MU_TABLE={
+  bronze:   {lub:0.08, dry:0.12},
+  bronze_al:{lub:0.08, dry:0.12},
+  castiron: {lub:0.10, dry:0.15},
+  steel:    {lub:0.12, dry:0.18},
+  brass:    {lub:0.09, dry:0.13},
+  pom:      {lub:0.10, dry:0.15},
+  plastic:  {lub:0.03, dry:0.05},
+};
+
+// ═══════════════════════════════════
+//  HELPERS
+// ═══════════════════════════════════
+const fp=(v,n=2)=>isFinite(v)?v.toFixed(n):'—';
+const fpm=(v,n=2)=>isFinite(v)?(v>=0?'+':'')+v.toFixed(n):'—';
+const deg=(r)=>r*180/Math.PI;
+const rad=(d)=>d*Math.PI/180;
+function sfClass(sf){
+  if(!isFinite(sf)||sf===0)return'';
+  if(sf>=2)return'ok';
+  if(sf>=1.2)return'warn';
+  return'fail';
+}
+
+function step(id,delta){
+  const el=document.getElementById(id);
+  let v=parseFloat(el.value)||0;
+  v=Math.max(parseFloat(el.min)||0,Math.min(parseFloat(el.max)||1e9,v+delta));
+  el.value=parseFloat(v.toPrecision(6));
+  recalc();
+}
+
+// ═══════════════════════════════════
+//  UI CALLBACKS
+// ═══════════════════════════════════
+function onTypeChange(){
+  const t=document.getElementById('sel-type').value;
+  const manual=t==='manual';
+  document.getElementById('grp-size').classList.toggle('hidden',manual);
+  document.getElementById('grp-manual').classList.toggle('hidden',!manual);
+  if(!manual) populateSizeSelect(t);
+  recalc();
+}
+
+function populateSizeSelect(type){
+  const db=type==='m_coarse'?M_COARSE:type==='m_fine'?M_FINE:TR;
+  const sel=document.getElementById('sel-size');
+  const prev=sel.value;
+  sel.innerHTML=db.map((t,i)=>`<option value="${i}">${t.label}</option>`).join('');
+  // Try restore previous or default to middle
+  const mi=Math.floor(db.length/2);
+  sel.value=prev<db.length?prev:mi;
+  if(!sel.value)sel.selectedIndex=mi;
+}
+
+function onModeChange(){
+  const m=document.querySelector('input[name="mode"]:checked').value;
+  document.getElementById('grp-Fa').classList.toggle('hidden',m!=='force');
+  document.getElementById('grp-M').classList.toggle('hidden',m!=='torque');
+  document.getElementById('grp-P').classList.toggle('hidden',m!=='power');
+  document.getElementById('lbl-n-label').textContent=m==='power'?'Velocità n (req.)':'Velocità n (opz.)';
+  recalc();
+}
+
+function onNutMatChange(){
+  const nm=document.getElementById('sel-nut-mat').value;
+  const lub=document.querySelector('input[name="lub"]:checked').value;
+  const ovr=document.getElementById('cb-mu-ovr').checked;
+  if(!ovr){
+    const mu=MU_TABLE[nm][lub];
+    document.getElementById('in-mu').value=mu;
+  }
+  recalc();
+}
+
+function onMuOverride(){
+  const ovr=document.getElementById('cb-mu-ovr').checked;
+  document.getElementById('in-mu').disabled=!ovr;
+  if(!ovr) onNutMatChange(); else recalc();
+}
+
+function onCollarChange(){
+  const on=document.getElementById('cb-collar').checked;
+  document.getElementById('grp-collar').classList.toggle('hidden',!on);
+  recalc();
+}
+
+// ═══════════════════════════════════
+//  CALCOLO
+// ═══════════════════════════════════
+function getThread(){
+  const type=document.getElementById('sel-type').value;
+  if(type==='manual'){
+    const d =parseFloat(document.getElementById('in-d-man').value)||20;
+    const p =parseFloat(document.getElementById('in-p-man').value)||4;
+    const d2=parseFloat(document.getElementById('in-d2-man').value)||18;
+    const d1=parseFloat(document.getElementById('in-d1-man').value)||16;
+    const alpha_half=parseFloat(document.getElementById('in-alpha-man').value)||30;
+    return{d,p,d2,d1,alpha_half,label:'Manuale',type};
+  }
+  const db=type==='m_coarse'?M_COARSE:type==='m_fine'?M_FINE:TR;
+  const idx=parseInt(document.getElementById('sel-size').value)||0;
+  const t=db[Math.min(idx,db.length-1)];
+  return{...t,alpha_half:type==='tr'?15:30,type};
+}
+
+function compute(){
+  const th=getThread();
+  const {d,p,d2,d1,alpha_half}=th;
+  const ns=parseInt(document.getElementById('sel-starts').value)||1;
+  const lead=ns*p;
+
+  // Attrito
+  const nm=document.getElementById('sel-nut-mat').value;
+  const mu=parseFloat(document.getElementById('in-mu').value)||0.08;
+  const alpha_r=rad(alpha_half);
+  const mu_p=mu/Math.cos(alpha_r);
+  const rho_p=Math.atan(mu_p);
+  const phi=Math.atan(lead/(Math.PI*d2));
+  const self_locking=phi<=rho_p;
+
+  // Rendimento
+  const eta_s=Math.tan(phi)/Math.tan(phi+rho_p);
+  const eta_a=self_locking?0:Math.tan(phi-rho_p)/Math.tan(phi);
+
+  // Coppia filetto per unità di forza [N·mm/N]
+  const Mf_raise_pN=d2/2*Math.tan(phi+rho_p);
+  const Mf_lower_pN=d2/2*Math.abs(Math.tan(rho_p-phi));
+
+  // Spalla
+  const use_collar=document.getElementById('cb-collar').checked;
+  const mu_c=parseFloat(document.getElementById('in-mu-c').value)||0.12;
+  const dc=parseFloat(document.getElementById('in-dc').value)||d*1.5;
+  const Mc_pN=use_collar?(mu_c*dc/2):0;  // N·mm/N
+
+  const Mt_raise_pN=Mf_raise_pN+Mc_pN;
+  const Mt_lower_pN=Mf_lower_pN+Mc_pN;
+
+  // Modo e direzione
+  const mode=document.querySelector('input[name="mode"]:checked').value;
+  const dir=document.querySelector('input[name="dir"]:checked').value;
+  const pN=dir==='raise'?Mt_raise_pN:Mt_lower_pN;  // coppia per unità forza
+
+  let Fa=NaN, M_thread=NaN, M_collar_val=NaN, M_tot=NaN, P_mech=NaN;
+  const n_rpm=parseFloat(document.getElementById('in-n').value)||0;
+  const v_mm_s=n_rpm>0?n_rpm*lead/60:NaN;
+  const omega=n_rpm>0?2*Math.PI*n_rpm/60:NaN;
+
+  if(mode==='force'){
+    Fa=parseFloat(document.getElementById('in-Fa').value)||1000;
+    M_thread=Fa*(dir==='raise'?Mf_raise_pN:Mf_lower_pN)/1e3;  // N·m
+    M_collar_val=use_collar?Fa*Mc_pN/1e3:0;
+    M_tot=M_thread+M_collar_val;
+    if(omega>0) P_mech=M_tot*omega;
+  }else if(mode==='torque'){
+    const Mi=parseFloat(document.getElementById('in-M').value)||50;
+    M_tot=Mi;
+    // distribute: M_thread = M_tot * Mf/Mt
+    const ratio=pN>0?Mf_raise_pN*((dir==='raise'?1:Mf_lower_pN/Mf_raise_pN))/pN:1;
+    M_thread=M_tot*(dir==='raise'?Mf_raise_pN:Mf_lower_pN)/pN;
+    M_collar_val=use_collar?M_tot*Mc_pN/pN:0;
+    Fa=Mi*1e3/pN;
+    if(omega>0) P_mech=M_tot*omega;
+  }else{
+    const Pi=parseFloat(document.getElementById('in-P').value)||500;
+    if(omega>0){
+      M_tot=Pi/omega;
+      Fa=M_tot*1e3/pN;
+      M_thread=Fa*(dir==='raise'?Mf_raise_pN:Mf_lower_pN)/1e3;
+      M_collar_val=use_collar?Fa*Mc_pN/1e3:0;
+      P_mech=Pi;
+    }
+  }
+
+  // Verifica
+  const le=parseFloat(document.getElementById('in-le').value)||0;
+  const sf_in=parseFloat(document.getElementById('in-sf').value)||2;
+  const smk=document.getElementById('sel-screw-mat').value;
+  const sm=SCREW_MAT[smk];
+  const nutn=NUT_MAT[nm];
+
+  let sigma_eq=NaN,sigma_p=NaN,tau_th=NaN,sf_screw=NaN,sf_bearing=NaN,sf_shear=NaN;
+  if(le>0&&isFinite(Fa)&&Fa>0){
+    const h_eng=th.type==='tr'?0.5*p:0.5413*p;
+    const b_shear=th.type==='tr'?0.65*p:0.75*p;
+    sigma_p=Fa*p/(Math.PI*d2*le*h_eng);
+    const A1=Math.PI/4*d1*d1;
+    const Wp=Math.PI/16*d1*d1*d1;
+    const sigma_a=Fa/A1;
+    const tau_t=isFinite(M_thread)?(M_thread*1e3)/Wp:0;
+    sigma_eq=Math.sqrt(sigma_a*sigma_a+3*tau_t*tau_t);
+    tau_th=Fa*p/(Math.PI*d1*le*b_shear);
+    sf_screw=sm.sigma_y/sigma_eq;
+    sf_bearing=nutn.sigma_p_adm/sigma_p;
+    sf_shear=(sm.sigma_y/Math.sqrt(3))/tau_th;
+  }
+
+  return{
+    th,d,p,d2,d1,lead,ns,alpha_half,
+    mu,mu_p,rho_p,phi,self_locking,eta_s,eta_a,
+    Mf_raise_pN,Mf_lower_pN,Mc_pN,Mt_raise_pN,Mt_lower_pN,
+    Fa,M_thread,M_collar_val,M_tot,P_mech,
+    v_mm_s,n_rpm,
+    le,sigma_eq,sigma_p,tau_th,sf_screw,sf_bearing,sf_shear,
+    sm,nutn,sf_in,
+    mode,dir,use_collar,nm
+  };
+}
+
+// ═══════════════════════════════════
+//  RENDER
+// ═══════════════════════════════════
+function render(r){
+  // Geometria filetto
+  document.getElementById('lbl-d2').textContent=fp(r.d2,3)+' mm';
+  document.getElementById('lbl-d1').textContent=fp(r.d1,3)+' mm';
+  document.getElementById('lbl-lead').textContent=fp(r.lead,3)+' mm/giro';
+  document.getElementById('lbl-phi').textContent=fp(deg(r.phi),3)+'°';
+
+  // Attrito
+  document.getElementById('lbl-mu-prime').textContent=fp(r.mu_p,4);
+  document.getElementById('lbl-rho').textContent=fp(deg(r.rho_p),3)+'°';
+  document.getElementById('lbl-sigma-y-s').textContent=fp(r.sm.sigma_y)+' MPa';
+  document.getElementById('lbl-sp-adm').textContent=fp(r.nutn.sigma_p_adm)+' MPa';
+
+  // Self-locking chips
+  document.getElementById('chip-sl-yes').classList.toggle('on',r.self_locking);
+  document.getElementById('chip-sl-no').classList.toggle('on',!r.self_locking);
+
+  // Rendimento
+  document.getElementById('lbl-eta-s').textContent=fp(r.eta_s*100,1)+' %';
+  document.getElementById('lbl-eta-a').textContent=r.self_locking?'—  (autoblocc.)':fp(r.eta_a*100,1)+' %';
+
+  // Risultati principali
+  document.getElementById('lbl-Fa-out').textContent=isFinite(r.Fa)?fp(r.Fa,0)+' N':'—';
+  document.getElementById('lbl-M-out').textContent=isFinite(r.M_thread)?fp(r.M_thread,2)+' N·m':'—';
+  document.getElementById('lbl-Mc').textContent=isFinite(r.M_collar_val)&&r.use_collar?fp(r.M_collar_val,2)+' N·m':'—';
+  document.getElementById('lbl-M-tot').textContent=isFinite(r.M_tot)?fp(r.M_tot,2)+' N·m':'—';
+  document.getElementById('lbl-P-out').textContent=isFinite(r.P_mech)?fp(r.P_mech,1)+' W':'—';
+  document.getElementById('lbl-v').textContent=isFinite(r.v_mm_s)?fp(r.v_mm_s,2)+' mm/s':'—';
+
+  // Verifica stress
+  if(r.le>0&&isFinite(r.sigma_eq)){
+    document.getElementById('lbl-sigma-eq').textContent=fp(r.sigma_eq,1)+' MPa';
+    document.getElementById('lbl-sigma-p').textContent=fp(r.sigma_p,1)+' MPa';
+    document.getElementById('lbl-tau-thread').textContent=fp(r.tau_th,1)+' MPa';
+    const sfFmt=sf=>isFinite(sf)?fp(sf,2):'∞';
+    document.getElementById('lbl-sf-screw').innerHTML=sfFmt(r.sf_screw)+` <span class="sf-chip ${sfClass(r.sf_screw)}">${sfClass(r.sf_screw)||'—'}</span>`;
+    document.getElementById('lbl-sf-bearing').innerHTML=sfFmt(r.sf_bearing)+` <span class="sf-chip ${sfClass(r.sf_bearing)}">${sfClass(r.sf_bearing)||'—'}</span>`;
+    document.getElementById('lbl-sf-shear').innerHTML=sfFmt(r.sf_shear)+` <span class="sf-chip ${sfClass(r.sf_shear)}">${sfClass(r.sf_shear)||'—'}</span>`;
+  }else{
+    ['lbl-sigma-eq','lbl-sigma-p','lbl-tau-thread'].forEach(id=>document.getElementById(id).textContent='—');
+    ['lbl-sf-screw','lbl-sf-bearing','lbl-sf-shear'].forEach(id=>document.getElementById(id).textContent='l_e = 0');
+  }
+
+  // Result strip
+  document.getElementById('rs-grid').innerHTML=[
+    {l:'Filettatura',v:r.th.label+(r.ns>1?' (×'+r.ns+')':''),u:'',cls:''},
+    {l:'Angolo elica φ',v:fp(deg(r.phi),2),u:'°',cls:''},
+    {l:'Auto-bloccante',v:r.self_locking?'Sì':'No',u:'',cls:r.self_locking?'ok':'warn'},
+    {l:'η sollevamento',v:fp(r.eta_s*100,1),u:'%',cls:r.eta_s>0.4?'ok':r.eta_s>0.25?'warn':'danger'},
+    {l:r.dir==='raise'?'Coppia sollevamento':'Coppia abbassamento',v:isFinite(r.M_tot)?fp(r.M_tot,2):'—',u:'N·m',cls:''},
+    {l:'Forza assiale',v:isFinite(r.Fa)?fp(r.Fa,0):'—',u:'N',cls:''},
+  ].map(({l,v,u,cls})=>`<div class="rsc ${cls}"><div class="rsc-l">${l}</div><div class="rsc-v">${v}<span class="rsc-u">${u}</span></div></div>`).join('');
+
+  // Verify strip
+  const vs=document.getElementById('vfy-strip');
+  if(r.le>0&&isFinite(r.sigma_eq)){
+    vs.style.display='';
+    const worst=Math.min(r.sf_screw,r.sf_bearing,r.sf_shear);
+    const cls=sfClass(worst);
+    vs.className='vfy-strip '+(cls==='ok'?'':''+cls);
+    document.getElementById('vfy-title').textContent=cls==='ok'?'✓ Verifica OK':cls==='warn'?'⚠ Verifica — attenzione':'✗ Verifica FALLITA';
+    document.getElementById('vfy-grid').innerHTML=[
+      {l:'SF nucleo vite',v:fp(r.sf_screw,2),u:'(adm: σ_y/SF='+fp(r.sm.sigma_y/r.sf_in,0)+' MPa)',cls:sfClass(r.sf_screw)},
+      {l:'SF fianco mad.',v:fp(r.sf_bearing,2),u:'(σ_p='+fp(r.sigma_p,1)+' / adm='+fp(r.nutn.sigma_p_adm,0)+' MPa)',cls:sfClass(r.sf_bearing)},
+      {l:'SF taglio fil.',v:fp(r.sf_shear,2),u:'(τ='+fp(r.tau_th,1)+' MPa)',cls:sfClass(r.sf_shear)},
+    ].map(({l,v,u,cls})=>`<div class="vc ${cls}"><div class="vc-l">${l}</div><div class="vc-v">${v} <span style="font-size:9px;opacity:.6">${u}</span></div></div>`).join('');
+  }else{vs.style.display='none';}
+
+  // Warnings
+  const wb=document.getElementById('warnbox');
+  const w=[];
+  if(!r.self_locking) w.push('⚠  Non autobloccante: la vite arretra sotto carico assiale. Necessario un freno o una ralla di arresto.');
+  if(r.eta_s<0.25) w.push('ℹ  Rendimento di sollevamento basso ('+fp(r.eta_s*100,1)+'%): considerare filettatura a più principi o lubrificazione migliore.');
+  if(r.le>0&&isFinite(r.sf_screw)&&r.sf_screw<r.sf_in) w.push('✗  Nucleo vite non verificato: SF='+fp(r.sf_screw,2)+' < SF_richiesto='+fp(r.sf_in,1));
+  if(r.le>0&&isFinite(r.sf_bearing)&&r.sf_bearing<r.sf_in) w.push('✗  Pressione di fianco madrevite non verificata: SF='+fp(r.sf_bearing,2)+' < SF_richiesto='+fp(r.sf_in,1));
+  if(r.le>0&&isFinite(r.sf_shear)&&r.sf_shear<r.sf_in) w.push('✗  Taglio filetto vite non verificato: SF='+fp(r.sf_shear,2)+' < SF_richiesto='+fp(r.sf_in,1));
+  if(r.nm==='steel'&&r.mu<0.1) w.push('⚠  Accoppiamento acciaio-acciaio con μ basso: rischio di incollaggio (stick-slip). Verificare lubrificazione.');
+  wb.className='warnbox'+(w.length?' show':'');
+  wb.innerHTML=w.join('<br>');
+
+  // Detail table
+  const dt=document.getElementById('dtg');
+  const row=(k,v)=>`<div class="dr"><span class="dk">${k}</span><span class="dv">${v}</span></div>`;
+  dt.innerHTML=`
+    <div>
+      <div class="dgtitle">Geometria filetto</div>
+      ${row('Tipo',r.th.label)}
+      ${row('Diam. nom. d',fp(r.d,3)+' mm')}
+      ${row('Passo p',fp(r.p,3)+' mm')}
+      ${row('N. principi',r.ns)}
+      ${row('Lead',fp(r.lead,3)+' mm/giro')}
+      ${row('d₂ fianco',fp(r.d2,3)+' mm')}
+      ${row('d₁ nucleo',fp(r.d1,3)+' mm')}
+      ${row('Semiang. α/2',fp(r.alpha_half)+'°')}
+      ${row('A nucleo',fp(Math.PI/4*r.d1*r.d1,2)+' mm²')}
+    </div>
+    <div>
+      <div class="dgtitle">Attrito e Angoli</div>
+      ${row('μ attrito',fp(r.mu,4))}
+      ${row('μ\' apparente',fp(r.mu_p,4))}
+      ${row('ρ\' angolo attrito',fp(deg(r.rho_p),3)+'°')}
+      ${row('φ angolo elica',fp(deg(r.phi),3)+'°')}
+      ${row('ρ\'−φ',fp(deg(r.rho_p-r.phi),3)+'°')}
+      ${row('Auto-bloccante',r.self_locking?'Sì (ρ\'≥φ)':'No (ρ\'<φ)')}
+      ${row('η sollevamento',fp(r.eta_s*100,2)+'%')}
+      ${row('η abbassamento',r.self_locking?'0 (autoblocc.)':fp(r.eta_a*100,2)+'%')}
+      ${row('Materiale vite',r.sm.n)}
+      ${row('Materiale mad.',r.nutn.n)}
+    </div>
+    <div>
+      <div class="dgtitle">Coppia e Forza</div>
+      ${row('Forza assiale Fₐ',isFinite(r.Fa)?fp(r.Fa,1)+' N':'—')}
+      ${row('Coppia filetto',isFinite(r.M_thread)?fp(r.M_thread,3)+' N·m':'—')}
+      ${row('Coppia spalla',isFinite(r.M_collar_val)&&r.use_collar?fp(r.M_collar_val,3)+' N·m':'—')}
+      ${row('Coppia totale',isFinite(r.M_tot)?fp(r.M_tot,3)+' N·m':'—')}
+      ${row('Coppia M/Fₐ',isFinite(r.Fa)&&r.Fa>0?fp(r.M_tot/r.Fa*1000,3)+' N·mm/N':'—')}
+      ${row('Potenza P',isFinite(r.P_mech)?fp(r.P_mech,1)+' W':'—')}
+      ${row('Vel. traslaz.',isFinite(r.v_mm_s)?fp(r.v_mm_s,3)+' mm/s':'—')}
+      ${row('Velocità',r.n_rpm>0?fp(r.n_rpm,0)+' rpm':'—')}
+    </div>
+    <div>
+      <div class="dgtitle">Verifica (l_e=${fp(r.le,0)} mm)</div>
+      ${r.le>0&&isFinite(r.sigma_eq)?`
+      ${row('l_e / p',fp(r.le/r.p,1)+' filetti')}
+      ${row('σ_axiale nucleo',fp(isFinite(r.Fa)?r.Fa/(Math.PI/4*r.d1*r.d1):NaN,1)+' MPa')}
+      ${row('τ_tors. nucleo',fp(isFinite(r.M_thread)?r.M_thread*1e3/(Math.PI/16*Math.pow(r.d1,3)):NaN,1)+' MPa')}
+      ${row('σ_eq (VM) nucleo',fp(r.sigma_eq,1)+' MPa')}
+      ${row('σ_y vite',fp(r.sm.sigma_y)+' MPa')}
+      ${row('SF nucleo vite',fp(r.sf_screw,2))}
+      ${row('σ_p fianco mad.',fp(r.sigma_p,1)+' MPa')}
+      ${row('σ_p,adm mad.',fp(r.nutn.sigma_p_adm)+' MPa')}
+      ${row('SF fianco mad.',fp(r.sf_bearing,2))}
+      ${row('τ taglio fil.',fp(r.tau_th,1)+' MPa')}
+      ${row('SF taglio fil.',fp(r.sf_shear,2))}
+      `:`<div class="dr"><span class="dk" style="color:var(--dim);font-style:italic">Inserire l_e per la verifica</span></div>`}
+    </div>`;
+
+  updateCharts(r);
+}
+
+// ═══════════════════════════════════
+//  GRAFICI
+// ═══════════════════════════════════
+let chMF, chEta;
+
+function initCharts(){
+  const base={
+    responsive:true,maintainAspectRatio:false,animation:{duration:60},
+    plugins:{legend:{display:true,labels:{color:'#7a7d8a',font:{family:"'DM Mono'",size:10},boxWidth:10}},
+      tooltip:{backgroundColor:'#1c1d23',titleColor:'#7a7d8a',bodyColor:'#e8e9ec',
+        borderColor:'rgba(255,255,255,.1)',borderWidth:1,
+        titleFont:{family:"'DM Mono'",size:10},bodyFont:{family:"'DM Mono'",size:11}}},
+    scales:{
+      x:{ticks:{font:{family:"'DM Mono'",size:9},color:'#4a4d5a'},grid:{color:'rgba(255,255,255,.04)'},border:{display:false}},
+      y:{ticks:{font:{family:"'DM Mono'",size:9},color:'#4a4d5a'},grid:{color:'rgba(255,255,255,.04)'},border:{display:false}}
+    }
+  };
+
+  chMF=new Chart(document.getElementById('ch-mf'),{type:'line',
+    data:{labels:[],datasets:[
+      {label:'M sollevamento (N·m)',data:[],borderColor:'#4fc3f7',borderWidth:1.5,pointRadius:0,tension:.3,fill:false},
+      {label:'M abbassamento (N·m)',data:[],borderColor:'#ffa726',borderWidth:1.5,pointRadius:0,tension:.3,fill:false},
+    ]},
+    options:{...base}
+  });
+
+  chEta=new Chart(document.getElementById('ch-eta'),{type:'line',
+    data:{labels:[],datasets:[
+      {label:'η sollevamento (%)',data:[],borderColor:'#66bb6a',borderWidth:1.5,pointRadius:0,tension:.3,fill:false},
+      {label:'η abbassamento (%)',data:[],borderColor:'#ef5350',borderWidth:1.5,pointRadius:0,tension:.3,fill:false},
+      {label:'μ corrente',data:[],borderColor:'rgba(79,195,247,.5)',borderWidth:1,pointRadius:0,borderDash:[4,3],fill:false},
+    ]},
+    options:{...base,
+      scales:{...base.scales,
+        y:{...base.scales.y,min:0,max:100,ticks:{...base.scales.y.ticks,
+          callback:v=>v+'%'}}
+      }
+    }
+  });
+}
+
+function updateCharts(r){
+  if(!chMF||!chEta)return;
+  // Chart 1: Coppia vs Forza (da 0 a 3×Fa)
+  const Fa_max=isFinite(r.Fa)&&r.Fa>0?r.Fa*3:15000;
+  const steps=40;
+  const Fa_arr=[],Ms_arr=[],Ma_arr=[];
+  for(let i=0;i<=steps;i++){
+    const f=Fa_max*i/steps;
+    Fa_arr.push(Math.round(f));
+    Ms_arr.push(parseFloat((f*r.Mt_raise_pN/1e3).toFixed(3)));
+    Ma_arr.push(parseFloat((f*r.Mt_lower_pN/1e3).toFixed(3)));
+  }
+  chMF.data.labels=Fa_arr.map(f=>f>999?Math.round(f/100)/10+'k':f);
+  chMF.data.datasets[0].data=Ms_arr;
+  chMF.data.datasets[1].data=Ma_arr;
+  chMF.update('none');
+
+  // Chart 2: η vs μ (da 0 a 0.4)
+  const mu_arr=[],etas_arr=[],etaa_arr=[],cur_arr=[];
+  const phi=r.phi, alpha_r=rad(r.alpha_half);
+  for(let i=0;i<=40;i++){
+    const mi=i*0.01;
+    mu_arr.push(mi.toFixed(2));
+    const mp=mi/Math.cos(alpha_r);
+    const rp=Math.atan(mp);
+    const es=Math.tan(phi)/Math.tan(phi+rp)*100;
+    const ea=phi>rp?Math.tan(phi-rp)/Math.tan(phi)*100:0;
+    etas_arr.push(parseFloat(es.toFixed(2)));
+    etaa_arr.push(parseFloat(ea.toFixed(2)));
+    cur_arr.push(Math.abs(mi-r.mu)<0.006?50:null);
+  }
+  chEta.data.labels=mu_arr;
+  chEta.data.datasets[0].data=etas_arr;
+  chEta.data.datasets[1].data=etaa_arr;
+  chEta.data.datasets[2].data=cur_arr;
+  chEta.update('none');
+}
+
+// ═══════════════════════════════════
+//  MAIN
+// ═══════════════════════════════════
+function recalc(){
+  const r=compute();
+  render(r);
+}
+
+// Init
+populateSizeSelect('m_coarse');
+initCharts();
+onNutMatChange();  // chiama recalc() internamente
+</script>
+</body>
+</html>

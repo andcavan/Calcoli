@@ -1,0 +1,897 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Accoppiamenti ISO Albero / Foro</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@300;400;500&family=Barlow+Condensed:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<style>
+:root{
+  --bg:#0e0f11;--bg1:#141519;--bg2:#1c1d23;--bg3:#23252d;
+  --border:rgba(255,255,255,.07);--border2:rgba(255,255,255,.13);
+  --text:#e8e9ec;--muted:#7a7d8a;--dim:#4a4d5a;
+  --acc:#4fc3f7;--acc2:#0288d1;
+  --up:#66bb6a;--dn:#ef5350;--amber:#ffa726;--violet:#b39ddb;
+  --mono:'DM Mono',monospace;--cond:'Barlow Condensed',sans-serif;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{background:var(--bg);color:var(--text);font-family:var(--mono);font-size:13px}
+body{min-height:100vh}
+.header{border-bottom:1px solid var(--border);padding:11px 20px;display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.header h1{font-family:var(--cond);font-size:20px;font-weight:700;letter-spacing:.04em;text-transform:uppercase}
+.sub{font-size:10px;color:var(--muted);letter-spacing:.1em;text-transform:uppercase;flex:1}
+.dot{width:7px;height:7px;border-radius:50%;background:var(--acc);display:inline-block;margin-right:6px;animation:pulse 2s ease-in-out infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
+.norm-badge{font-size:9px;color:var(--acc);background:rgba(79,195,247,.1);border:1px solid rgba(79,195,247,.25);border-radius:4px;padding:3px 8px;letter-spacing:.08em;font-family:var(--cond);font-weight:600}
+.layout{display:flex;flex-direction:column;min-height:calc(100vh - 51px)}
+.panels-top{display:grid;grid-template-columns:minmax(0,1.2fr) minmax(0,1.1fr) minmax(0,1.1fr) minmax(0,1fr) minmax(0,.9fr);gap:8px;padding:10px 13px;border-bottom:1px solid var(--border);align-items:start}
+.panel{background:var(--bg2);border:1px solid var(--border2);border-radius:8px;padding:10px 11px}
+.stitle{font-family:var(--cond);font-size:10px;font-weight:600;letter-spacing:.17em;color:var(--muted);text-transform:uppercase;margin-bottom:8px;display:flex;align-items:center;gap:6px}
+.stitle::after{content:'';flex:1;height:1px;background:var(--border)}
+.field{margin-bottom:8px}.field:last-child{margin-bottom:0}
+.fhdr{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:4px}
+.flabel{color:var(--muted);font-size:11px;letter-spacing:.03em}
+.fval{color:var(--acc);font-size:12px;font-weight:500;min-width:80px;text-align:right;font-family:var(--mono)}
+.field.output .flabel{color:var(--amber)}
+.field.output .fval{color:var(--amber)}
+.srow{display:flex;align-items:center;gap:4px}
+.arr{flex-shrink:0;width:25px;height:25px;display:flex;align-items:center;justify-content:center;background:var(--bg2);border:1px solid var(--border2);border-radius:5px;cursor:pointer;color:var(--muted);font-size:10px;transition:all .12s;user-select:none}
+.arr:hover{border-color:var(--acc);color:var(--acc);background:rgba(79,195,247,.08)}
+.arr:active{transform:scale(.88)}
+.numinput{flex:1;height:25px;background:var(--bg3);border:1px solid var(--border2);border-radius:5px;color:var(--acc);font-family:var(--mono);font-size:12px;font-weight:500;text-align:center;outline:none;padding:0 4px;min-width:0;transition:border-color .12s}
+.numinput:focus{border-color:var(--acc);background:var(--bg2)}
+.numinput:hover{border-color:rgba(79,195,247,.4)}
+.numinput::-webkit-outer-spin-button,.numinput::-webkit-inner-spin-button{-webkit-appearance:none;margin:0}
+.numinput[type=number]{-moz-appearance:textfield}
+.sel{width:100%;height:25px;background:var(--bg3);border:1px solid var(--border2);border-radius:5px;color:var(--acc);font-family:var(--mono);font-size:11px;outline:none;padding:0 6px;cursor:pointer;transition:border-color .12s;-webkit-appearance:none;appearance:none}
+.sel:focus{border-color:var(--acc);background:var(--bg2)}
+.sel-wrap{position:relative}
+.sel-wrap::after{content:'▾';position:absolute;right:7px;top:50%;transform:translateY(-50%);color:var(--muted);pointer-events:none;font-size:10px}
+
+/* TOOLTIP */
+[data-tip]{position:relative;cursor:default}
+@keyframes tipIn{from{opacity:0}to{opacity:1}}
+[data-tip]:hover::after{content:attr(data-tip);position:absolute;bottom:calc(100% + 7px);left:0;background:#1e2130;border:1px solid rgba(79,195,247,.25);color:#c8cad4;font-size:10px;padding:7px 11px;border-radius:6px;white-space:pre-wrap;max-width:280px;min-width:180px;z-index:999;line-height:1.6;pointer-events:none;font-family:var(--mono);text-align:left;box-shadow:0 4px 20px rgba(0,0,0,.5);animation:tipIn .12s ease .6s both}
+[data-tip]:hover::before{content:'';position:absolute;bottom:calc(100% + 1px);left:20px;border:5px solid transparent;border-top-color:#1e2130;z-index:1000;pointer-events:none;animation:tipIn .12s ease .6s both}
+[data-tip].tr:hover::after{left:auto;right:0}
+
+/* FIT TYPE CHIPS */
+.fit-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:4px;margin-bottom:8px}
+.fit-section-label{font-size:9px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);border-top:1px solid rgba(255,255,255,.06);margin:6px 0 5px;padding-top:6px}
+.fit-chip{border:1px solid var(--border2);border-radius:5px;padding:6px 2px;cursor:default;text-align:center;background:transparent;color:var(--dim);transition:all .2s}
+.fit-chip.on.lasco{border-color:var(--up);background:rgba(102,187,106,.12);color:var(--up)}
+.fit-chip.on.incerto{border-color:var(--amber);background:rgba(255,167,38,.12);color:var(--amber)}
+.fit-chip.on.forzato{border-color:var(--dn);background:rgba(239,83,80,.12);color:var(--dn)}
+.fit-chip .fc-ico{font-size:15px;display:block;margin-bottom:2px}
+.fit-chip .fc-lbl{font-size:8px;font-family:var(--cond);font-weight:600;letter-spacing:.06em;text-transform:uppercase}
+
+/* RESULT STRIP */
+.result-strip{background:rgba(79,195,247,.04);border:1px solid rgba(79,195,247,.18);border-radius:8px;padding:10px 14px;margin:0 13px}
+.rs-title{font-family:var(--cond);font-size:10px;font-weight:700;letter-spacing:.14em;color:var(--acc);text-transform:uppercase;margin-bottom:8px;display:flex;align-items:center;gap:8px}
+.rs-title::after{content:'';flex:1;height:1px;background:rgba(79,195,247,.15)}
+.rs-grid{display:flex;flex-wrap:wrap;gap:6px}
+.rsc{background:rgba(79,195,247,.07);border:1px solid rgba(79,195,247,.16);border-radius:6px;padding:7px 12px;flex:1;min-width:110px}
+.rsc.warn{background:rgba(255,167,38,.07);border-color:rgba(255,167,38,.25)}
+.rsc.warn .rsc-v{color:var(--amber)}
+.rsc.danger{background:rgba(239,83,80,.07);border-color:rgba(239,83,80,.25)}
+.rsc.danger .rsc-v{color:var(--dn)}
+.rsc.ok{background:rgba(102,187,106,.07);border-color:rgba(102,187,106,.25)}
+.rsc.ok .rsc-v{color:var(--up)}
+.rsc-l{font-size:9px;color:var(--acc2);text-transform:uppercase;letter-spacing:.1em;margin-bottom:2px;font-family:var(--cond)}
+.rsc-v{font-size:17px;font-weight:500;color:var(--acc)}
+.rsc-u{font-size:10px;color:rgba(79,195,247,.55);margin-left:3px}
+
+/* TEMP STRIP */
+.temp-strip{background:rgba(255,167,38,.04);border:1px solid rgba(255,167,38,.18);border-radius:8px;padding:10px 14px;margin:6px 13px 0}
+.ts-title{font-family:var(--cond);font-size:10px;font-weight:700;letter-spacing:.14em;color:var(--amber);text-transform:uppercase;margin-bottom:8px;display:flex;align-items:center;gap:8px}
+.ts-title::after{content:'';flex:1;height:1px;background:rgba(255,167,38,.15)}
+.ts-grid{display:flex;flex-wrap:wrap;gap:6px}
+.tsc{background:rgba(255,167,38,.06);border:1px solid rgba(255,167,38,.16);border-radius:6px;padding:7px 12px;flex:1;min-width:130px}
+.tsc-l{font-size:9px;color:#ffa726;text-transform:uppercase;letter-spacing:.1em;margin-bottom:2px;font-family:var(--cond)}
+.tsc-v{font-size:15px;font-weight:500;color:var(--amber)}
+.tsc.ok .tsc-v{color:var(--up)}
+.tsc.chg .tsc-v{color:var(--dn)}
+
+.warnbox{background:rgba(239,83,80,.08);border:1px solid rgba(239,83,80,.25);border-radius:6px;padding:7px 11px;font-size:11px;color:#ef9a9a;display:none;margin:6px 13px 0;line-height:1.6}
+.warnbox.show{display:block}
+
+.main{padding:10px 13px;display:flex;flex-direction:column;gap:9px}
+.charts-row{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.chart-wrap{background:var(--bg2);border:1px solid var(--border2);border-radius:8px;padding:10px;height:230px;position:relative}
+.chart-title{font-family:var(--cond);font-size:9px;font-weight:600;letter-spacing:.15em;color:var(--muted);text-transform:uppercase;margin-bottom:6px}
+.chart-wrap canvas{width:100%!important;height:calc(100% - 22px)!important}
+
+.dtg-wrap{background:var(--bg2);border:1px solid var(--border2);border-radius:8px;padding:10px 12px}
+.dtg{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
+.dgtitle{font-family:var(--cond);font-size:9px;font-weight:600;letter-spacing:.15em;color:var(--muted);text-transform:uppercase;margin-bottom:6px;padding-bottom:4px;border-bottom:1px solid var(--border)}
+.dr{display:flex;justify-content:space-between;padding:2.5px 0;border-bottom:1px solid var(--border)}
+.dk{color:var(--muted);font-size:10px}
+.dv{color:var(--text);font-size:11px;font-weight:500}
+
+/* Barra visiva tolleranza */
+.tol-vis{margin-top:8px;padding:7px 8px;background:var(--bg3);border-radius:6px;border:1px solid var(--border)}
+.tol-bar-head{font-size:9px;color:var(--dim);font-family:var(--cond);display:flex;justify-content:space-between;margin-bottom:4px}
+.tol-bar-wrap{position:relative;height:44px;margin:2px 0 3px}
+.tol-zero{position:absolute;top:0;bottom:0;width:1px;background:var(--dim);left:50%;opacity:.5}
+.tol-shaft-bar{position:absolute;height:18px;top:1px;border-radius:2px;transition:all .3s;background:rgba(79,195,247,.3);border:1px solid var(--acc)}
+.tol-hole-bar{position:absolute;height:18px;bottom:1px;border-radius:2px;transition:all .3s;background:rgba(255,167,38,.25);border:1px solid var(--amber)}
+.tol-bar-foot{font-size:9px;color:var(--dim);font-family:var(--cond);display:flex;justify-content:space-between}
+
+.section-div{padding:5px 13px;font-family:var(--cond);font-size:9px;font-weight:700;letter-spacing:.2em;color:var(--dim);text-transform:uppercase;display:flex;align-items:center;gap:8px}
+.section-div::after{content:'';flex:1;height:1px;background:var(--border)}
+
+/* Schema SVG accoppiamento */
+.schema-wrap{background:var(--bg2);border:1px solid var(--border2);border-radius:8px;padding:10px;display:flex;flex-direction:column;align-items:center}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <span class="dot"></span>
+  <h1>Accoppiamenti ISO — Albero / Foro</h1>
+  <span class="sub">Tolleranze · Materiali · Analisi Termica</span>
+  <span class="norm-badge">ISO 286-1 · ISO 286-2</span>
+</div>
+
+<div class="layout">
+<div class="panels-top">
+
+  <!-- P1: DIAMETRO + VISIVO -->
+  <div class="panel">
+    <div class="stitle">⌀ Diametro Nominale</div>
+
+    <div class="field" data-tip="Diametro nominale dell'accoppiamento (mm).&#10;Intervalli ISO: 1÷3, 3÷6, 6÷10, 10÷18, 18÷30,&#10;30÷50, 50÷80, 80÷120, 120÷180, 180÷250,&#10;250÷315, 315÷400, 400÷500 mm.&#10;Campo: 1 ÷ 500 mm.">
+      <div class="fhdr"><span class="flabel">Diametro D</span><span class="fval" id="lbl-D">50 mm</span></div>
+      <div class="srow">
+        <div class="arr" onclick="step('D',-1)">◀</div>
+        <input type="number" class="numinput" id="in-D" value="50" min="1" max="500" step="1" oninput="recalc()">
+        <div class="arr" onclick="step('D',1)">▶</div>
+      </div>
+    </div>
+
+    <div class="field" data-tip="Intervallo di diametri ISO 286-1 in cui ricade il diametro nominale.&#10;Ogni intervallo ha specifici moltiplicatori per calcolare gli scostamenti fondamentali.&#10;Calcolato automaticamente.">
+      <div class="fhdr"><span class="flabel">Intervallo ISO</span><span class="fval" style="color:var(--violet)" id="lbl-interval">30÷50</span></div>
+    </div>
+
+    <div class="field" data-tip="Unità di tolleranza ISO (μm).&#10;Formula: i = 0.45·∛Dm + 0.001·Dm&#10;dove Dm = √(D1·D2) = media geometrica dell'intervallo.&#10;Base per il calcolo dei gradi IT: IT5=7i, IT6=10i, IT7=16i, IT8=25i, ecc.">
+      <div class="fhdr"><span class="flabel">Unità tol. i</span><span class="fval" style="color:var(--violet)" id="lbl-i">—</span></div>
+    </div>
+
+    <!-- Barra visiva zone tolleranza -->
+    <div class="tol-vis">
+      <div class="tol-bar-head"><span style="color:var(--acc)">▬ Albero</span><span style="color:var(--amber)">▬ Foro</span></div>
+      <div class="tol-bar-wrap">
+        <div class="tol-zero"></div>
+        <div class="tol-shaft-bar" id="tvs" style="left:40%;width:15%"></div>
+        <div class="tol-hole-bar" id="tvh" style="left:46%;width:10%"></div>
+      </div>
+      <div class="tol-bar-foot"><span>← gioco</span><span>nominale</span><span>interferenza →</span></div>
+    </div>
+
+    <div class="field" style="margin-top:8px" data-tip="Designazione completa secondo ISO 286-1.&#10;Formato: Ø D  ForoGrado / AlberoGrado&#10;Esempio: Ø50 H8/f7&#10;Sistema foro-base (H...): il foro è il riferimento fisso.&#10;Sistema albero-base (...h): l'albero è il riferimento fisso.">
+      <div style="background:var(--bg3);border:1px solid rgba(79,195,247,.3);border-radius:5px;padding:6px 8px;text-align:center;font-family:var(--mono);font-size:15px;font-weight:500;color:var(--acc);letter-spacing:.05em" id="lbl-designation">Ø50 H8/f7</div>
+    </div>
+  </div>
+
+  <!-- P2: ALBERO -->
+  <div class="panel">
+    <div class="stitle">⟳ Albero</div>
+
+    <div class="field" data-tip="Posizione della zona di tolleranza dell'albero (lettera minuscola).&#10;a÷h → scostamenti negativi: albero sempre più piccolo del nominale (gioco garantito).&#10;  a,b,c: grandi giochi (es. cuscinetti radiali pesanti, pulegge)&#10;  d,e,f: giochi medi (es. alberi in bronzine, ventilatori)&#10;  g: piccolo gioco (es. steli valvole, chiavette scorrevoli)&#10;  h: scostamento superiore = 0 (albero-base)&#10;js,j,k,m,n → transizione: gioco o interferenza secondo la coppia.&#10;p÷z → interferenza: albero più grande del foro (accoppiamenti forzati).">
+      <div class="fhdr"><span class="flabel">Posizione (lettera)</span></div>
+      <div class="sel-wrap">
+        <select class="sel" id="sel-sp" onchange="recalc()">
+          <option value="a">a — grande gioco</option>
+          <option value="b">b — grande gioco</option>
+          <option value="c">c — grande gioco</option>
+          <option value="d">d — gioco</option>
+          <option value="e">e — gioco</option>
+          <option value="f" selected>f — gioco normale</option>
+          <option value="g">g — piccolo gioco</option>
+          <option value="h">h — zero superiore</option>
+          <option value="js">js — simmetrico</option>
+          <option value="k">k — transizione</option>
+          <option value="m">m — transizione</option>
+          <option value="n">n — transizione</option>
+          <option value="p">p — interferenza lieve</option>
+          <option value="r">r — interferenza</option>
+          <option value="s">s — interferenza media</option>
+          <option value="t">t — interferenza forte</option>
+          <option value="u">u — grande interferenza</option>
+          <option value="x">x — grandissima interf.</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="field" data-tip="Grado di qualità IT dell'albero (International Tolerance Grade).&#10;IT1÷IT4: calibri, strumenti di misura di alta precisione.&#10;IT5÷IT6: lavorazioni di alta precisione (rettifica, lapidatura).&#10;IT7: lavorazioni fini (tornitura fine, fresatura fine) — uso comune.&#10;IT8÷IT9: lavorazioni normali (tornio, fresatrice).&#10;IT10÷IT11: lavorazioni meno precise.&#10;IT12: stampaggio, trafilatura.">
+      <div class="fhdr"><span class="flabel">Qualità IT</span></div>
+      <div class="sel-wrap">
+        <select class="sel" id="sel-si" onchange="recalc()">
+          <option value="4">IT4</option><option value="5">IT5</option><option value="6">IT6</option>
+          <option value="7" selected>IT7</option><option value="8">IT8</option><option value="9">IT9</option>
+          <option value="10">IT10</option><option value="11">IT11</option><option value="12">IT12</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="field output" data-tip="Scostamento inferiore albero ei (μm).&#10;Differenza algebrica: diametro minimo albero − diametro nominale.&#10;Lettere a÷h: ei negativo (albero più piccolo del nominale).&#10;Lettere p÷z: ei positivo (albero più grande: interferenza).&#10;Diametro minimo albero = D + ei/1000 mm.">
+      <div class="fhdr"><span class="flabel">ei — scost. inferiore</span><span class="fval" id="lbl-ei">— μm</span></div>
+    </div>
+
+    <div class="field output" data-tip="Scostamento superiore albero es (μm).&#10;es = ei + IT_albero.&#10;Diametro massimo albero = D + es/1000 mm.&#10;Per albero 'h': es = 0 (il massimo dell'albero coincide con il nominale).&#10;Il campo di lavoro dell'albero è: [D+ei/1000, D+es/1000] mm.">
+      <div class="fhdr"><span class="flabel">es — scost. superiore</span><span class="fval" id="lbl-es">— μm</span></div>
+    </div>
+
+    <div class="field output" data-tip="Tolleranza dell'albero IT_albero (μm).&#10;IT = es − ei = ampiezza della zona di tolleranza.&#10;Corrisponde alla massima variazione ammessa del diametro albero.&#10;Minore è IT, maggiore è la precisione richiesta (e il costo di lavorazione).">
+      <div class="fhdr"><span class="flabel">T albero (IT)</span><span class="fval" id="lbl-Ts">— μm</span></div>
+    </div>
+
+    <div class="field output tr" data-tip="Diametri limite dell'albero (mm).&#10;D_min = D + ei/1000&#10;D_max = D + es/1000&#10;L'albero è accettabile se il suo diametro rientra in questo intervallo.">
+      <div class="fhdr"><span class="flabel">D_min ÷ D_max</span><span class="fval" id="lbl-Dlim-s" style="font-size:10px">—</span></div>
+    </div>
+  </div>
+
+  <!-- P3: FORO -->
+  <div class="panel">
+    <div class="stitle">○ Foro</div>
+
+    <div class="field" data-tip="Posizione della zona di tolleranza del foro (lettera MAIUSCOLA).&#10;A÷H → scostamenti positivi: foro sempre più grande del nominale (gioco).&#10;  A,B,C: grandi giochi&#10;  D,E,F: giochi medi&#10;  G: piccolo gioco&#10;  H: scostamento inferiore EI = 0 (foro-base, uso preferenziale)&#10;JS,J,K,M,N → transizione.&#10;P÷Z → interferenza: foro più piccolo dell'albero.&#10;Il sistema foro-base (H) è il più usato nella pratica industriale.">
+      <div class="fhdr"><span class="flabel">Posizione (lettera)</span></div>
+      <div class="sel-wrap">
+        <select class="sel" id="sel-hp" onchange="recalc()">
+          <option value="A">A — grande gioco</option>
+          <option value="B">B — grande gioco</option>
+          <option value="C">C — grande gioco</option>
+          <option value="D">D — gioco</option>
+          <option value="E">E — gioco</option>
+          <option value="F">F — gioco normale</option>
+          <option value="G">G — piccolo gioco</option>
+          <option value="H" selected>H — zero inferiore (foro-base)</option>
+          <option value="JS">JS — simmetrico</option>
+          <option value="K">K — transizione</option>
+          <option value="M">M — transizione</option>
+          <option value="N">N — transizione</option>
+          <option value="P">P — interferenza lieve</option>
+          <option value="R">R — interferenza</option>
+          <option value="S">S — interferenza media</option>
+          <option value="T">T — interferenza forte</option>
+          <option value="U">U — grande interferenza</option>
+          <option value="X">X — grandissima interf.</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="field" data-tip="Grado di qualità IT del foro.&#10;La lavorazione del foro è più difficile di quella dell'albero.&#10;In genere si usa un grado in più rispetto all'albero per ottenere la stessa qualità di accoppiamento.&#10;Esempio tipico: albero IT7 + foro IT8 (accoppiamento H8/f7).&#10;Metodi comuni: alesatura (IT7-IT8), brocciatura (IT7-IT9), barenatura fine (IT6-IT7).">
+      <div class="fhdr"><span class="flabel">Qualità IT</span></div>
+      <div class="sel-wrap">
+        <select class="sel" id="sel-hi" onchange="recalc()">
+          <option value="4">IT4</option><option value="5">IT5</option><option value="6">IT6</option>
+          <option value="7">IT7</option><option value="8" selected>IT8</option><option value="9">IT9</option>
+          <option value="10">IT10</option><option value="11">IT11</option><option value="12">IT12</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="field output" data-tip="Scostamento inferiore foro EI (μm).&#10;Differenza algebrica: diametro minimo foro − diametro nominale.&#10;Per foro H: EI = 0 (il foro non scende mai sotto il nominale).&#10;Per fori A÷G: EI positivo (foro sempre più grande).&#10;Per fori P÷Z: EI negativo (interferenza).&#10;Diametro minimo foro = D + EI/1000 mm.">
+      <div class="fhdr"><span class="flabel">EI — scost. inferiore</span><span class="fval" id="lbl-EI">— μm</span></div>
+    </div>
+
+    <div class="field output" data-tip="Scostamento superiore foro ES (μm).&#10;ES = EI + IT_foro.&#10;Diametro massimo foro = D + ES/1000 mm.&#10;Il campo di lavoro del foro è: [D+EI/1000, D+ES/1000] mm.">
+      <div class="fhdr"><span class="flabel">ES — scost. superiore</span><span class="fval" id="lbl-ES">— μm</span></div>
+    </div>
+
+    <div class="field output" data-tip="Tolleranza del foro IT_foro (μm).&#10;IT = ES − EI = ampiezza della zona di tolleranza del foro.&#10;La tolleranza totale dell'accoppiamento = IT_albero + IT_foro.">
+      <div class="fhdr"><span class="flabel">T foro (IT)</span><span class="fval" id="lbl-Th">— μm</span></div>
+    </div>
+
+    <div class="field output tr" data-tip="Diametri limite del foro (mm).&#10;D_min = D + EI/1000&#10;D_max = D + ES/1000&#10;Il foro è accettabile se il suo diametro rientra in questo intervallo.">
+      <div class="fhdr"><span class="flabel">D_min ÷ D_max</span><span class="fval" id="lbl-Dlim-h" style="font-size:10px">—</span></div>
+    </div>
+  </div>
+
+  <!-- P4: MATERIALI + TEMP -->
+  <div class="panel">
+    <div class="stitle">⬡ Materiali</div>
+
+    <div class="field" data-tip="Materiale dell'albero con coefficiente di dilatazione termica lineare α (μm/m·°C).&#10;La dilatazione termica modifica le dimensioni: ΔL = L·α·ΔT.&#10;Se α_albero > α_foro, con T crescente l'interferenza aumenta.&#10;Se α_albero < α_foro, con T crescente il gioco aumenta.">
+      <div class="fhdr"><span class="flabel">Materiale Albero</span></div>
+      <div class="sel-wrap">
+        <select class="sel" id="sel-ms" onchange="recalc()">
+          <option value="steel">Acciaio C (α=11.7 μm/m·°C)</option>
+          <option value="steel_ss">Acc. Inox (α=17.2)</option>
+          <option value="cast_iron">Ghisa (α=10.8)</option>
+          <option value="aluminum">Alluminio (α=23.1)</option>
+          <option value="copper">Rame (α=17.0)</option>
+          <option value="brass">Ottone (α=19.0)</option>
+          <option value="bronze">Bronzo (α=18.0)</option>
+          <option value="titanium">Titanio (α=8.6)</option>
+          <option value="nylon">Nylon/PA (α=80.0)</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="field" data-tip="Materiale del foro (componente esterno/mozzo) con coefficiente α.&#10;Nei mozzi in alluminio con albero in acciaio: con T crescente il foro si dilata più dell'albero → gioco aumenta.&#10;Nei mozzi in ghisa con albero in acciaio inox: l'inox si dilata più della ghisa → interferenza aumenta.&#10;Questa analisi è fondamentale negli accoppiamenti forzati ad alta temperatura.">
+      <div class="fhdr"><span class="flabel">Materiale Foro</span></div>
+      <div class="sel-wrap">
+        <select class="sel" id="sel-mh" onchange="recalc()">
+          <option value="steel" selected>Acciaio C (α=11.7 μm/m·°C)</option>
+          <option value="steel_ss">Acc. Inox (α=17.2)</option>
+          <option value="cast_iron">Ghisa (α=10.8)</option>
+          <option value="aluminum">Alluminio (α=23.1)</option>
+          <option value="copper">Rame (α=17.0)</option>
+          <option value="brass">Ottone (α=19.0)</option>
+          <option value="bronze">Bronzo (α=18.0)</option>
+          <option value="titanium">Titanio (α=8.6)</option>
+          <option value="nylon">Nylon/PA (α=80.0)</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="field" data-tip="Temperatura di riferimento ISO 1 per le misure: 20°C (293.15 K).&#10;Tutte le tolleranze ISO 286 sono definite a questa temperatura.&#10;Le misure dimensionali di precisione devono essere effettuate a 20°C o corrette per la temperatura.">
+      <div class="fhdr"><span class="flabel">T° rif. ISO</span><span class="fval" style="color:var(--dim)">20 °C</span></div>
+    </div>
+
+    <div class="field" data-tip="Temperatura di esercizio dell'accoppiamento (°C).&#10;ΔT = T_esercizio − 20°C.&#10;Causa dilatazione differenziale: ΔD = D[mm] · (α_foro − α_albero)[μm/m·°C] · ΔT / 1000&#10;Valore positivo di ΔD → il gioco aumenta (favorevole per lasco, critico per forzato).&#10;Valore negativo → il gioco diminuisce / interferenza aumenta (critico per lasco).">
+      <div class="fhdr"><span class="flabel">T° esercizio</span><span class="fval" id="lbl-Tw">80 °C</span></div>
+      <div class="srow">
+        <div class="arr" onclick="step('Tw',-10)">◀</div>
+        <input type="number" class="numinput" id="in-Tw" value="80" min="-100" max="600" step="5" oninput="recalc()">
+        <div class="arr" onclick="step('Tw',10)">▶</div>
+      </div>
+    </div>
+
+    <div class="field output" data-tip="Variazione del gioco/interferenza per dilatazione termica differenziale (μm).&#10;Formula: ΔD = D · (α_foro − α_albero) · ΔT / 1000&#10;Positivo: foro si dilata più dell'albero → gioco aumenta.&#10;Negativo: albero si dilata più del foro → interferenza aumenta.&#10;Questo valore si aggiunge al gioco/interferenza nominale a 20°C.">
+      <div class="fhdr"><span class="flabel">ΔD termico</span><span class="fval" id="lbl-dDT">— μm</span></div>
+    </div>
+  </div>
+
+  <!-- P5: TIPO + RISULTATI RAPIDI -->
+  <div class="panel">
+    <div class="stitle">⚙ Tipo Accoppiamento</div>
+
+    <!-- A 20°C -->
+    <div class="fit-section-label">A 20°C (rif. ISO)</div>
+    <div class="fit-grid">
+      <div class="fit-chip lasco" id="chip-lasco" data-tip="Accoppiamento LASCO:&#10;Gioco garantito in tutte le condizioni.&#10;EI > es → Jmin > 0.&#10;Usi: alberi rotanti, slitte, guide.&#10;Esempi: H7/f6, H8/e7, H11/c11.">
+        <span class="fc-ico">↔</span><span class="fc-lbl">Lasco</span>
+      </div>
+      <div class="fit-chip incerto" id="chip-incerto" data-tip="Accoppiamento INCERTO (transizione):&#10;Può risultare con gioco o interferenza.&#10;Jmin ≤ 0 ≤ Jmax.&#10;Usi: centratura senza trasmissione di coppia, spine.&#10;Esempi: H7/k6, H7/m6, H7/n6.">
+        <span class="fc-ico">⇔</span><span class="fc-lbl">Incerto</span>
+      </div>
+      <div class="fit-chip forzato" id="chip-forzato" data-tip="Accoppiamento FORZATO (interferenza):&#10;Interferenza garantita in tutte le condizioni.&#10;es < EI → Jmax < 0.&#10;Usi: trasmissione di coppia senza organi aggiuntivi.&#10;Esempi: H7/p6, H7/s6, H7/u6.&#10;Montaggio: pressatura, riscaldamento foro, raffreddamento albero.">
+        <span class="fc-ico">⇋</span><span class="fc-lbl">Forzato</span>
+      </div>
+    </div>
+
+    <div class="field output" data-tip="Gioco massimo dell'accoppiamento a 20°C (μm).&#10;Jmax = ES − ei (foro massimo − albero minimo).">
+      <div class="fhdr"><span class="flabel">Gioco max</span><span class="fval" id="lbl-Jmax">— μm</span></div>
+    </div>
+    <div class="field output" data-tip="Gioco minimo dell'accoppiamento a 20°C (μm).&#10;Jmin = EI − es (foro minimo − albero massimo).">
+      <div class="fhdr"><span class="flabel">Gioco min</span><span class="fval" id="lbl-Jmin">— μm</span></div>
+    </div>
+    <div class="field output" data-tip="Tolleranza totale dell'accoppiamento (μm).&#10;T_tot = IT_albero + IT_foro = Jmax − Jmin.">
+      <div class="fhdr"><span class="flabel">Tolleranza totale</span><span class="fval" id="lbl-Ttot">— μm</span></div>
+    </div>
+
+    <!-- A T° esercizio -->
+    <div class="fit-section-label" id="lbl-sect-T">A T° esercizio</div>
+    <div class="fit-grid">
+      <div class="fit-chip lasco" id="chip-T-lasco" data-tip="A T° esercizio: accoppiamento LASCO.">
+        <span class="fc-ico">↔</span><span class="fc-lbl">Lasco</span>
+      </div>
+      <div class="fit-chip incerto" id="chip-T-incerto" data-tip="A T° esercizio: accoppiamento INCERTO.">
+        <span class="fc-ico">⇔</span><span class="fc-lbl">Incerto</span>
+      </div>
+      <div class="fit-chip forzato" id="chip-T-forzato" data-tip="A T° esercizio: accoppiamento FORZATO.">
+        <span class="fc-ico">⇋</span><span class="fc-lbl">Forzato</span>
+      </div>
+    </div>
+
+    <div class="field output" data-tip="Gioco massimo a temperatura di esercizio (μm).&#10;Jmax_T = Jmax + ΔD_termico.">
+      <div class="fhdr"><span class="flabel">Gioco max a T°</span><span class="fval" id="lbl-JmaxT">— μm</span></div>
+    </div>
+    <div class="field output" data-tip="Gioco minimo a temperatura di esercizio (μm).&#10;Jmin_T = Jmin + ΔD_termico.">
+      <div class="fhdr"><span class="flabel">Gioco min a T°</span><span class="fval" id="lbl-JminT">— μm</span></div>
+    </div>
+    <div class="field output tr" data-tip="Tipo di accoppiamento a temperatura di esercizio.&#10;Se diverso dal tipo a 20°C → ATTENZIONE: la dilatazione termica modifica il comportamento.">
+      <div class="fhdr"><span class="flabel">Tipo a T° esercizio</span><span class="fval" id="lbl-fitT" style="font-size:10px">—</span></div>
+    </div>
+  </div>
+
+</div><!-- /panels-top -->
+
+<!-- RESULT STRIP -->
+<div class="result-strip" id="result-strip">
+  <div class="rs-title">◈ Riepilogo Accoppiamento</div>
+  <div class="rs-grid" id="rs-grid"></div>
+</div>
+
+<!-- TEMP STRIP -->
+<div class="temp-strip" id="temp-strip">
+  <div class="ts-title">◈ Analisi Termica Differenziale</div>
+  <div class="ts-grid" id="ts-grid"></div>
+</div>
+
+<!-- WARNING -->
+<div class="warnbox" id="warnbox"></div>
+
+<div class="section-div">Grafici · Analisi visiva</div>
+
+<div class="main">
+  <div class="charts-row">
+    <div class="chart-wrap">
+      <div class="chart-title">Zone di tolleranza rispetto al diametro nominale (μm)</div>
+      <canvas id="ch-tol"></canvas>
+    </div>
+    <div class="chart-wrap">
+      <div class="chart-title">Gioco / Interferenza al variare della temperatura (°C)</div>
+      <canvas id="ch-temp"></canvas>
+    </div>
+  </div>
+
+  <div class="dtg-wrap">
+    <div class="dtg" id="dtg"></div>
+  </div>
+</div>
+
+</div><!-- /layout -->
+
+<script>
+// ═══════════════════════════════════════
+//  ISO 286-1 — DATI INTERVALLI
+// ═══════════════════════════════════════
+const RANGES      = [3,6,10,18,30,50,80,120,180,250,315,400,500];
+const RANGE_NAMES = ['1÷3','3÷6','6÷10','10÷18','18÷30','30÷50','50÷80','80÷120','120÷180','180÷250','250÷315','315÷400','400÷500'];
+const DMEAN       = RANGES.map((r,i)=>i===0?Math.sqrt(1*r):Math.sqrt(RANGES[i-1]*r));
+
+// Tabella IT in μm — ISO 286-1:2010 Tabella 1
+const IT_TAB={
+  4: [3,4,4,5,6,7,8,10,12,14,16,18,20],
+  5: [4,5,6,8,9,11,13,15,18,20,23,25,27],
+  6: [6,8,9,11,13,16,19,22,25,29,32,36,40],
+  7: [10,12,15,18,21,25,30,35,40,46,52,57,63],
+  8: [14,18,22,27,33,39,46,54,63,72,81,89,97],
+  9: [25,30,36,43,52,62,74,87,100,115,130,140,155],
+  10:[40,48,58,70,84,100,120,140,160,185,210,230,250],
+  11:[60,75,90,110,130,160,190,220,250,290,320,360,400],
+  12:[100,120,150,180,210,250,300,350,400,460,520,570,630]
+};
+
+function getIT(ri,g){return IT_TAB[Math.max(4,Math.min(12,parseInt(g)))][ri];}
+function getRangeIdx(D){for(let i=0;i<RANGES.length;i++)if(D<=RANGES[i])return i;return RANGES.length-1;}
+
+// ═══════════════════════════════════════
+//  SCOSTAMENTI FONDAMENTALI ALBERO (es in μm per lettere a÷h; ei per p÷z)
+// ═══════════════════════════════════════
+function shaftFund(letter, ri, D) {
+  const l = letter.toLowerCase();
+  switch(l) {
+    case 'a':
+      if(D<=120) return -(265+1.3*D);
+      return -(3.5*D);
+    case 'b':
+      if(D<=160) return -(140+0.85*D);
+      return -(1.8*D);
+    case 'c': {
+      const tab=[60,70,80,95,110,120,130,140,150,170,180,190,200];
+      return -tab[ri];
+    }
+    case 'd': return -Math.round(16*Math.pow(D,0.44));
+    case 'e': return -Math.round(11*Math.pow(D,0.41));
+    case 'f': return -Math.round(5.5*Math.pow(D,0.41));
+    case 'g': return -Math.round(2.5*Math.pow(D,0.34));
+    case 'h': return 0;
+    case 'js': return 0;
+    case 'k': return 0;
+    case 'm': {
+      const tab=[2,4,6,7,8,9,11,13,15,17,20,21,23];
+      return tab[ri];
+    }
+    case 'n': {
+      const tab=[4,8,10,12,15,17,20,23,27,31,34,37,40];
+      return tab[ri];
+    }
+    case 'p': {
+      const tab=[6,12,15,18,22,26,32,37,43,50,56,62,68];
+      return tab[ri];
+    }
+    case 'r': {
+      const tab=[10,15,19,23,28,34,41,51,63,77,98,114,132];
+      return tab[ri];
+    }
+    case 's': {
+      const tab=[14,19,23,28,35,43,59,79,100,122,158,190,226];
+      return tab[ri];
+    }
+    case 't': {
+      const tab=[18,23,28,33,41,48,66,91,114,144,186,226,272];
+      return tab[ri];
+    }
+    case 'u': {
+      const tab=[18,23,28,33,41,60,87,124,170,225,300,360,445];
+      return tab[ri];
+    }
+    case 'x': {
+      const tab=[20,28,34,40,64,90,130,188,280,380,500,600,740];
+      return tab[ri];
+    }
+    default: return 0;
+  }
+}
+
+// ═══════════════════════════════════════
+//  MATERIALI
+// ═══════════════════════════════════════
+const MAT={
+  steel:{n:'Acciaio C',a:11.7},
+  steel_ss:{n:'Acc. Inox',a:17.2},
+  cast_iron:{n:'Ghisa',a:10.8},
+  aluminum:{n:'Alluminio',a:23.1},
+  copper:{n:'Rame',a:17.0},
+  brass:{n:'Ottone',a:19.0},
+  bronze:{n:'Bronzo',a:18.0},
+  titanium:{n:'Titanio',a:8.6},
+  nylon:{n:'Nylon/PA',a:80.0}
+};
+
+const fp=(v,d=1)=>typeof v==='number'&&isFinite(v)?v.toFixed(d):'—';
+const fpm=(v,d=1)=>typeof v==='number'&&isFinite(v)?(v>=0?'+':'')+v.toFixed(d):'—';
+
+function step(id,delta){
+  if(id==='D'){const e=document.getElementById('in-D');e.value=Math.max(1,Math.min(500,(parseFloat(e.value)||50)+delta));}
+  if(id==='Tw'){const e=document.getElementById('in-Tw');e.value=Math.max(-100,Math.min(600,(parseFloat(e.value)||80)+delta));}
+  recalc();
+}
+
+// ═══════════════════════════════════════
+//  CALCOLO
+// ═══════════════════════════════════════
+function compute(){
+  const D   = parseFloat(document.getElementById('in-D').value)||50;
+  const Tw  = parseFloat(document.getElementById('in-Tw').value)||80;
+  const sp  = document.getElementById('sel-sp').value;   // shaft pos
+  const si  = parseInt(document.getElementById('sel-si').value)||7;  // shaft IT grade
+  const hp  = document.getElementById('sel-hp').value;   // hole pos
+  const hi  = parseInt(document.getElementById('sel-hi').value)||8;  // hole IT grade
+  const ms  = document.getElementById('sel-ms').value;
+  const mh  = document.getElementById('sel-mh').value;
+
+  const ri  = getRangeIdx(D);
+  const Dm  = DMEAN[ri];
+  const i_val = 0.45*Math.pow(Dm,1/3)+0.001*Dm;
+
+  const IT_s = getIT(ri,si);
+  const IT_h = getIT(ri,hi);
+
+  // ALBERO: scostamenti es,ei
+  let es,ei;
+  const sl=sp.toLowerCase();
+  if(sl==='h'){es=0;ei=-IT_s;}
+  else if(sl==='js'){es=Math.round(IT_s/2);ei=-Math.round(IT_s/2);}
+  else if(sl==='k'||sl==='m'||sl==='n'||sl==='p'||sl==='r'||sl==='s'||sl==='t'||sl==='u'||sl==='x'){
+    // lettere p÷z: lo scostamento fondamentale è ei (inferiore positivo)
+    ei=shaftFund(sl,ri,D); es=ei+IT_s;
+  } else {
+    // lettere a÷g: scostamento fondamentale è es (superiore negativo)
+    es=shaftFund(sl,ri,D); ei=es-IT_s;
+  }
+
+  // FORO: scostamenti EI,ES
+  let EI,ES;
+  const hl=hp.toUpperCase();
+  if(hl==='H'){EI=0;ES=IT_h;}
+  else if(hl==='JS'){ES=Math.round(IT_h/2);EI=-Math.round(IT_h/2);}
+  else if(['K','M','N','P','R','S','T','U','X'].includes(hl)){
+    // Fori K÷X: EI = -ei_albero_corrispondente (speculare)
+    // Approssimazione: EI_foro = -es_albero + IT_foro ??? 
+    // Standard: per fori P÷Z: ES = -ei_albero; EI = ES - IT_foro
+    const ei_a=shaftFund(hl.toLowerCase(),ri,D);
+    ES=-ei_a; EI=ES-IT_h;
+  } else {
+    // Fori A÷G: EI = |es_albero| (positivo); ES = EI + IT
+    EI=Math.abs(shaftFund(hl.toLowerCase(),ri,D));
+    ES=EI+IT_h;
+  }
+
+  // Gioco/interferenza
+  const Jmax=ES-ei;   // foro max - albero min
+  const Jmin=EI-es;   // foro min - albero max
+  const Ttot=IT_s+IT_h;
+
+  let fitClass;
+  if(Jmin>0)fitClass='lasco';
+  else if(Jmax<0)fitClass='forzato';
+  else fitClass='incerto';
+
+  // Termica
+  const as=MAT[ms].a, ah=MAT[mh].a;
+  const dT=Tw-20;
+  const dDT=D*(ah-as)*dT/1000;
+  const JmaxT=Jmax+dDT, JminT=Jmin+dDT;
+  let fitClassT;
+  if(JminT>0)fitClassT='lasco';
+  else if(JmaxT<0)fitClassT='forzato';
+  else fitClassT='incerto';
+
+  const fitNames={lasco:'Lasco',incerto:'Incerto',forzato:'Forzato'};
+
+  // Espansioni termiche assolute (μm) e scostamenti a T°
+  const dDs=D*as*dT/1000, dDh=D*ah*dT/1000;
+  const ei_T=ei+dDs, es_T=es+dDs, EI_T=EI+dDh, ES_T=ES+dDh;
+
+  return{D,Tw,ri,Dm,i_val,IT_s,IT_h,es,ei,EI,ES,Jmax,Jmin,Ttot,fitClass,
+    fitName:fitNames[fitClass],
+    as,ah,dT,dDT,dDs,dDh,ei_T,es_T,EI_T,ES_T,JmaxT,JminT,fitClassT,
+    fitNameT:fitNames[fitClassT],
+    sp,si,hp,hi,ms,mh};
+}
+
+// ═══════════════════════════════════════
+//  RENDER
+// ═══════════════════════════════════════
+function render(r){
+  // Header values
+  document.getElementById('lbl-D').textContent=r.D+' mm';
+  document.getElementById('lbl-Tw').textContent=r.Tw+' °C';
+  document.getElementById('lbl-interval').textContent=RANGE_NAMES[r.ri];
+  document.getElementById('lbl-i').textContent=fp(r.i_val,2)+' μm';
+
+  // Albero
+  document.getElementById('lbl-ei').textContent=fpm(r.ei)+' μm';
+  document.getElementById('lbl-es').textContent=fpm(r.es)+' μm';
+  document.getElementById('lbl-Ts').textContent=fp(r.IT_s)+' μm';
+  document.getElementById('lbl-Dlim-s').textContent=fp(r.D+r.ei/1000,4)+'÷'+fp(r.D+r.es/1000,4)+' mm';
+
+  // Foro
+  document.getElementById('lbl-EI').textContent=fpm(r.EI)+' μm';
+  document.getElementById('lbl-ES').textContent=fpm(r.ES)+' μm';
+  document.getElementById('lbl-Th').textContent=fp(r.IT_h)+' μm';
+  document.getElementById('lbl-Dlim-h').textContent=fp(r.D+r.EI/1000,4)+'÷'+fp(r.D+r.ES/1000,4)+' mm';
+
+  // Risultati
+  document.getElementById('lbl-Jmax').textContent=fpm(r.Jmax)+' μm';
+  document.getElementById('lbl-Jmin').textContent=fpm(r.Jmin)+' μm';
+  document.getElementById('lbl-Ttot').textContent=fp(r.Ttot)+' μm';
+  document.getElementById('lbl-dDT').textContent=fpm(r.dDT,2)+' μm';
+  document.getElementById('lbl-JmaxT').textContent=fpm(r.JmaxT)+' μm';
+  const ftEl=document.getElementById('lbl-fitT');
+  ftEl.textContent=r.fitNameT;
+  ftEl.style.color=r.fitClassT==='lasco'?'var(--up)':r.fitClassT==='forzato'?'var(--dn)':'var(--amber)';
+
+  // Designazione
+  const des=`Ø${r.D}  ${r.hp}${r.hi} / ${r.sp}${r.si}`;
+  document.getElementById('lbl-designation').textContent=des;
+
+  // Fit chips 20°C
+  ['lasco','incerto','forzato'].forEach(t=>{
+    document.getElementById('chip-'+t).classList.toggle('on',t===r.fitClass);
+  });
+  // Fit chips T° esercizio
+  ['lasco','incerto','forzato'].forEach(t=>{
+    document.getElementById('chip-T-'+t).classList.toggle('on',t===r.fitClassT);
+  });
+  // JminT
+  document.getElementById('lbl-JminT').textContent=fpm(r.JminT)+' μm';
+  // Label sezione T°
+  document.getElementById('lbl-sect-T').textContent='A T° esercizio ('+r.Tw+'°C)';
+
+  // Result strip
+  const fc=r.fitClass==='lasco'?'ok':r.fitClass==='forzato'?'danger':'warn';
+  document.getElementById('rs-grid').innerHTML=[
+    {l:'Designazione ISO',v:des,u:'',cls:''},
+    {l:'Tipo accoppiamento',v:r.fitName,u:'',cls:fc},
+    {l:'Gioco massimo',v:fpm(r.Jmax),u:'μm',cls:r.Jmax>=0?'ok':'danger'},
+    {l:'Gioco minimo',v:fpm(r.Jmin),u:'μm',cls:r.Jmin>=0?'ok':r.fitClass==='forzato'?'danger':'warn'},
+    {l:'Tolleranza totale',v:fp(r.Ttot),u:'μm',cls:''},
+    {l:'IT albero / IT foro',v:'IT'+r.si+' / IT'+r.hi,u:'',cls:''},
+  ].map(({l,v,u,cls})=>`<div class="rsc ${cls}"><div class="rsc-l">${l}</div><div class="rsc-v">${v}<span class="rsc-u">${u}</span></div></div>`).join('');
+
+  // Temp strip
+  const typeChanged=r.fitClass!==r.fitClassT;
+  const bigDelta=Math.abs(r.dDT)>r.Ttot*0.4;
+  document.getElementById('ts-grid').innerHTML=[
+    {l:'α albero ('+MAT[r.ms].n+')',v:r.as.toFixed(1),u:'μm/m·°C'},
+    {l:'α foro ('+MAT[r.mh].n+')',v:r.ah.toFixed(1),u:'μm/m·°C'},
+    {l:'ΔT esercizio',v:(r.dT>=0?'+':'')+r.dT.toFixed(0),u:'°C'},
+    {l:'ΔD termico differenziale',v:fpm(r.dDT,2),u:'μm',cls:bigDelta?'chg':''},
+    {l:'Gioco max a '+r.Tw+'°C',v:fpm(r.JmaxT),u:'μm',cls:r.JmaxT>=0?'ok':'chg'},
+    {l:'Gioco min a '+r.Tw+'°C',v:fpm(r.JminT),u:'μm',cls:r.JminT>=0?'ok':r.fitClassT==='forzato'?'chg':''},
+    {l:'Tipo accopp. a '+r.Tw+'°C',v:r.fitNameT,u:'',cls:typeChanged?'chg':'ok'},
+  ].map(({l,v,u,cls=''})=>`<div class="tsc ${cls}"><div class="tsc-l">${l}</div><div class="tsc-v">${v} <span style="font-size:10px;opacity:.6">${u}</span></div></div>`).join('');
+
+  // Warnings
+  const wb=document.getElementById('warnbox');
+  const warns=[];
+  if(typeChanged) warns.push(`⚠  A ${r.Tw}°C il tipo di accoppiamento cambia: ${r.fitName} → ${r.fitNameT}  (ΔD termico = ${fpm(r.dDT,2)} μm)`);
+  if(bigDelta) warns.push(`⚠  La dilatazione termica differenziale (${fpm(r.dDT,2)} μm) supera il 40% della tolleranza totale (${fp(r.Ttot)} μm). Verificare la compatibilità dei materiali.`);
+  if(r.as>50||r.ah>50) warns.push(`ℹ  Uno o entrambi i materiali hanno coefficiente α molto elevato (polimeri). Verificare la stabilità dimensionale e l'effetto dell'umidità.`);
+  wb.innerHTML=warns.join('<br>');
+  wb.classList.toggle('show',warns.length>0);
+
+  // Barra visiva
+  updateTolBar(r);
+
+  // Dettaglio tabella
+  document.getElementById('dtg').innerHTML=[
+    ['Albero',[
+      ['Posizione',r.sp],
+      ['Qualità','IT'+r.si],
+      ['IT albero',fp(r.IT_s)+' μm'],
+      ['ei (inf.)',fpm(r.ei)+' μm'],
+      ['es (sup.)',fpm(r.es)+' μm'],
+      ['D min',fp(r.D+r.ei/1000,4)+' mm'],
+      ['D max',fp(r.D+r.es/1000,4)+' mm'],
+    ]],
+    ['Foro',[
+      ['Posizione',r.hp],
+      ['Qualità','IT'+r.hi],
+      ['IT foro',fp(r.IT_h)+' μm'],
+      ['EI (inf.)',fpm(r.EI)+' μm'],
+      ['ES (sup.)',fpm(r.ES)+' μm'],
+      ['D min',fp(r.D+r.EI/1000,4)+' mm'],
+      ['D max',fp(r.D+r.ES/1000,4)+' mm'],
+    ]],
+    ['Accoppiamento',[
+      ['Designazione',`${r.hp}${r.hi}/${r.sp}${r.si}`],
+      ['Tipo',r.fitName],
+      ['Gioco max',fpm(r.Jmax)+' μm'],
+      ['Gioco min',fpm(r.Jmin)+' μm'],
+      ['Media gioco',fpm((r.Jmax+r.Jmin)/2)+' μm'],
+      ['Tolleranza tot.',fp(r.Ttot)+' μm'],
+      ['Tolleranza %','IT_s/IT_h: '+r.IT_s+'/'+r.IT_h],
+    ]],
+    ['Termico',[
+      ['α albero',r.as.toFixed(1)+' μm/m·°C'],
+      ['α foro',r.ah.toFixed(1)+' μm/m·°C'],
+      ['Δα',fpm(r.ah-r.as,1)+' μm/m·°C'],
+      ['T° esercizio',r.Tw+' °C'],
+      ['ΔT',fpm(r.dT,0)+' °C'],
+      ['ΔD termico',fpm(r.dDT,2)+' μm'],
+      ['Tipo a T°',r.fitNameT],
+    ]],
+  ].map(([title,rows])=>`<div><div class="dgtitle">${title}</div>${rows.map(([k,v])=>`<div class="dr"><span class="dk">${k}</span><span class="dv">${v}</span></div>`).join('')}</div>`).join('');
+
+  updateCharts(r);
+}
+
+function updateTolBar(r){
+  const vals=[Math.abs(r.ES),Math.abs(r.ei),Math.abs(r.EI),Math.abs(r.es)];
+  const maxVal=Math.max(...vals,30);
+  const scale=38/maxVal; // 38% per parte
+  const cx=50;
+  const sl=cx+(r.ei*scale);
+  const sw=Math.max(2,(r.es-r.ei)*scale);
+  const hl=cx+(r.EI*scale);
+  const hw=Math.max(2,(r.ES-r.EI)*scale);
+  document.getElementById('tvs').style.cssText=`left:${Math.max(2,sl).toFixed(1)}%;width:${sw.toFixed(1)}%`;
+  document.getElementById('tvh').style.cssText=`left:${Math.max(2,hl).toFixed(1)}%;width:${hw.toFixed(1)}%`;
+}
+
+// ═══════════════════════════════════════
+//  GRAFICI
+// ═══════════════════════════════════════
+let chTol, chTemp;
+
+function initCharts(){
+  const base={
+    responsive:true,maintainAspectRatio:false,animation:{duration:60},
+    plugins:{legend:{display:true,labels:{color:'#7a7d8a',font:{family:"'DM Mono'",size:10},boxWidth:10}},
+      tooltip:{backgroundColor:'#1c1d23',titleColor:'#7a7d8a',bodyColor:'#e8e9ec',
+        borderColor:'rgba(255,255,255,.1)',borderWidth:1,
+        titleFont:{family:"'DM Mono'",size:10},bodyFont:{family:"'DM Mono'",size:11}}},
+    scales:{
+      x:{ticks:{font:{family:"'DM Mono'",size:9},color:'#4a4d5a'},grid:{color:'rgba(255,255,255,.04)'},border:{display:false}},
+      y:{ticks:{font:{family:"'DM Mono'",size:9},color:'#4a4d5a'},grid:{color:'rgba(255,255,255,.04)'},border:{display:false}}
+    }
+  };
+
+  const tolBase={
+    ...base,
+    plugins:{
+      ...base.plugins,
+      tooltip:{
+        ...base.plugins.tooltip,
+        callbacks:{
+          label:ctx=>{
+            const v=ctx.raw;
+            return Array.isArray(v)
+              ? `${ctx.dataset.label}: ei/EI = ${v[0]>0?'+':''}${v[0]} μm   es/ES = ${v[1]>0?'+':''}${v[1]} μm`
+              : `${ctx.dataset.label}: ${v} μm`;
+          }
+        }
+      }
+    },
+    scales:{
+      ...base.scales,
+      y:{
+        ...base.scales.y,
+        title:{display:true,text:'Scostamento dal Ø nominale (μm)',color:'#4a4d5a',font:{family:"'DM Mono'",size:9}},
+        grid:{color:'rgba(255,255,255,.04)'},
+        border:{display:false},
+        ticks:{font:{family:"'DM Mono'",size:9},color:'#4a4d5a'}
+      }
+    }
+  };
+
+  chTol=new Chart(document.getElementById('ch-tol'),{type:'bar',
+    data:{
+      labels:['Albero 20°C','Foro 20°C','Albero T°','Foro T°'],
+      datasets:[{
+        label:'Zona tolleranza',
+        data:[[0,0],[0,0],[0,0],[0,0]],
+        backgroundColor:[
+          'rgba(79,195,247,.45)',
+          'rgba(255,167,38,.45)',
+          'rgba(79,195,247,.2)',
+          'rgba(255,167,38,.2)',
+        ],
+        borderColor:['#4fc3f7','#ffa726','rgba(79,195,247,.7)','rgba(255,167,38,.7)'],
+        borderWidth:[2,2,1,1],
+        borderRadius:3,
+        borderSkipped:false
+      }]
+    },
+    options:{...tolBase,plugins:{...tolBase.plugins,legend:{display:false}}}
+  });
+
+  chTemp=new Chart(document.getElementById('ch-temp'),{type:'line',
+    data:{labels:[],datasets:[
+      {label:'Gioco max (μm)',data:[],borderColor:'#66bb6a',borderWidth:1.5,pointRadius:0,tension:.3,fill:false},
+      {label:'Gioco min (μm)',data:[],borderColor:'#ef5350',borderWidth:1.5,pointRadius:0,tension:.3,fill:false},
+      {label:'Media gioco (μm)',data:[],borderColor:'#4fc3f7',borderWidth:1,pointRadius:0,tension:.3,borderDash:[4,3],fill:false},
+    ]},
+    options:{...base}
+  });
+}
+
+function updateCharts(r){
+  // Floating bars: [min_dev, max_dev] per ogni zona
+  chTol.data.labels[2]='Albero '+r.Tw+'°C';
+  chTol.data.labels[3]='Foro '+r.Tw+'°C';
+  chTol.data.datasets[0].data=[
+    [r.ei, r.es],   // albero 20°C
+    [r.EI, r.ES],   // foro 20°C
+    [r.ei_T, r.es_T], // albero T°
+    [r.EI_T, r.ES_T], // foro T°
+  ];
+  // Colori: rosso se la zona è interamente negativa (interferenza), altrimenti blu/arancio
+  const aCol20 = r.es<0 ? 'rgba(239,83,80,.5)'  : r.ei<0 ? 'rgba(168,198,245,.45)' : 'rgba(79,195,247,.5)';
+  const hCol20 = r.ES<0 ? 'rgba(239,83,80,.5)'  : r.EI<0 ? 'rgba(255,210,140,.45)' : 'rgba(255,167,38,.5)';
+  const aColT  = r.es_T<0? 'rgba(239,83,80,.28)': r.ei_T<0? 'rgba(168,198,245,.22)': 'rgba(79,195,247,.22)';
+  const hColT  = r.ES_T<0? 'rgba(239,83,80,.28)': r.EI_T<0? 'rgba(255,210,140,.22)': 'rgba(255,167,38,.22)';
+  chTol.data.datasets[0].backgroundColor=[aCol20, hCol20, aColT, hColT];
+  chTol.data.datasets[0].borderColor=[
+    r.es<0?'rgba(239,83,80,.8)':'#4fc3f7',
+    r.ES<0?'rgba(239,83,80,.8)':'#ffa726',
+    r.es_T<0?'rgba(239,83,80,.5)':'rgba(79,195,247,.6)',
+    r.ES_T<0?'rgba(239,83,80,.5)':'rgba(255,167,38,.6)',
+  ];
+  chTol.update('none');
+
+  const temps=[],jMax=[],jMin=[],jMed=[];
+  for(let T=-60;T<=350;T+=10){
+    temps.push(T+'°');
+    const dD=r.D*(r.ah-r.as)*(T-20)/1000;
+    jMax.push(parseFloat((r.Jmax+dD).toFixed(2)));
+    jMin.push(parseFloat((r.Jmin+dD).toFixed(2)));
+    jMed.push(parseFloat(((r.Jmax+r.Jmin)/2+dD).toFixed(2)));
+  }
+  chTemp.data.labels=temps;
+  chTemp.data.datasets[0].data=jMax;
+  chTemp.data.datasets[1].data=jMin;
+  chTemp.data.datasets[2].data=jMed;
+  chTemp.update('none');
+}
+
+function recalc(){
+  const r=compute();
+  render(r);
+}
+
+initCharts();
+recalc();
+</script>
+</body>
+</html>
