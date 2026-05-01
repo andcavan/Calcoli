@@ -1,0 +1,992 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Calcolatore Molle | UNI EN 13906</title>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;700&family=Syne:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#0d0f14;--bg2:#13161e;--bg3:#1a1e28;
+  --surface:#1e2330;--surface2:#252c3d;
+  --border:#2e3550;--border2:#3d4663;
+  --accent:#4f9eff;--accent2:#7bb8ff;
+  --gold:#f0b429;--gold2:#ffd166;
+  --green:#3ecf8e;--red:#f66d6d;--orange:#ff8c42;--violet:#b39ddb;
+  --text:#e2e8f4;--text2:#8a94aa;--text3:#5a6278;
+  --mono:'JetBrains Mono',monospace;--head:'Syne',sans-serif;
+  --r:8px;--r2:14px;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--bg);color:var(--text);font-family:var(--mono);font-size:13px;min-height:100vh}
+
+header{background:var(--bg2);border-bottom:1px solid var(--border);padding:0 28px;display:flex;align-items:center;gap:18px;height:68px;position:sticky;top:0;z-index:200}
+.logo{width:42px;height:42px;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:26px}
+header h1{font-family:var(--head);font-size:19px;font-weight:800;letter-spacing:-.5px}
+header h1 span{color:var(--accent)}
+.header-sub{font-size:10px;color:var(--text3);letter-spacing:.5px;text-transform:uppercase;margin-top:2px}
+.back-link{margin-left:auto;color:var(--text3);font-size:11px;text-decoration:none;border:1px solid var(--border);border-radius:var(--r);padding:5px 12px;transition:all .15s}
+.back-link:hover{color:var(--accent);border-color:var(--accent)}
+
+.layout{display:grid;grid-template-columns:400px 1fr;min-height:calc(100vh - 68px)}
+.sidebar{background:var(--bg2);border-right:1px solid var(--border);overflow-y:auto;max-height:calc(100vh - 68px);position:sticky;top:68px}
+.main-content{padding:22px 26px;overflow-y:auto;background:var(--bg)}
+
+/* SPRING TYPE TABS */
+.spring-tabs{display:flex;border-bottom:1px solid var(--border);background:var(--bg)}
+.st-btn{flex:1;padding:11px 6px;background:none;border:none;border-bottom:2px solid transparent;color:var(--text3);font-family:var(--mono);font-size:10px;font-weight:500;letter-spacing:.3px;cursor:pointer;transition:all .2s;text-transform:uppercase}
+.st-btn.active{color:var(--accent);border-bottom-color:var(--accent);background:var(--bg2)}
+.st-btn:hover:not(.active){color:var(--text2);background:var(--bg3)}
+.spring-panel{display:none;padding:16px}
+.spring-panel.active{display:block}
+
+/* FORM SECTIONS */
+.section{margin-bottom:18px}
+.section-title{font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.5px;margin-bottom:10px;padding-bottom:5px;border-bottom:1px solid var(--border)}
+.field{margin-bottom:10px}
+.field label{display:block;font-size:10px;color:var(--text2);margin-bottom:4px;letter-spacing:.3px;text-transform:uppercase}
+.field input,.field select{width:100%;background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:7px 10px;font-family:var(--mono);font-size:12px;color:var(--text);outline:none;transition:border-color .15s}
+.field input:focus,.field select:focus{border-color:var(--accent)}
+.field select option{background:var(--bg2)}
+.field-row{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.field-row3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px}
+.unit{font-size:10px;color:var(--text3);margin-left:4px}
+
+.calc-btn{width:100%;padding:11px;background:var(--accent);color:#fff;border:none;border-radius:var(--r);font-family:var(--mono);font-size:12px;font-weight:700;letter-spacing:.5px;cursor:pointer;transition:all .2s;text-transform:uppercase;margin-top:6px}
+.calc-btn:hover{background:var(--accent2);color:#0d0f14}
+.clear-btn{width:100%;padding:7px;background:none;color:var(--text3);border:1px solid var(--border);border-radius:var(--r);font-family:var(--mono);font-size:11px;cursor:pointer;transition:all .15s;margin-top:6px}
+.clear-btn:hover{color:var(--text);border-color:var(--border2)}
+
+/* RESULTS PANEL */
+.results-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:18px}
+.results-header h2{font-family:var(--head);font-size:16px;font-weight:700}
+.norm-badge{font-size:10px;color:var(--gold);background:rgba(240,180,41,.1);border:1px solid rgba(240,180,41,.3);border-radius:4px;padding:3px 9px;letter-spacing:.3px}
+
+.empty-state{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:300px;color:var(--text3);text-align:center;gap:12px}
+.empty-icon{font-size:48px;opacity:.3}
+.empty-text{font-size:12px;line-height:1.6}
+
+.result-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:12px;margin-bottom:20px}
+.result-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r2);padding:14px}
+.result-card.accent{border-color:rgba(79,158,255,.35);background:rgba(79,158,255,.06)}
+.result-card.green{border-color:rgba(62,207,142,.35);background:rgba(62,207,142,.06)}
+.result-card.red{border-color:rgba(246,109,109,.35);background:rgba(246,109,109,.06)}
+.result-card.gold{border-color:rgba(240,180,41,.35);background:rgba(240,180,41,.06)}
+.result-card.orange{border-color:rgba(255,140,66,.35);background:rgba(255,140,66,.06)}
+.rc-label{font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.4px;margin-bottom:6px}
+.rc-value{font-size:18px;font-weight:700;color:var(--text)}
+.rc-value.accent{color:var(--accent2)}
+.rc-value.green{color:var(--green)}
+.rc-value.red{color:var(--red)}
+.rc-value.gold{color:var(--gold2)}
+.rc-value.orange{color:var(--orange)}
+.rc-unit{font-size:11px;color:var(--text3);margin-left:4px;font-weight:400}
+.rc-note{font-size:10px;color:var(--text3);margin-top:4px}
+
+.result-section{margin-bottom:22px}
+.result-section-title{font-size:11px;color:var(--text2);text-transform:uppercase;letter-spacing:.5px;margin-bottom:12px;padding-bottom:6px;border-bottom:1px solid var(--border)}
+
+.status-bar{display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap}
+.status-chip{display:flex;align-items:center;gap:5px;padding:5px 10px;border-radius:20px;font-size:10px;letter-spacing:.3px;text-transform:uppercase;font-weight:600}
+.status-chip.ok{background:rgba(62,207,142,.12);border:1px solid rgba(62,207,142,.3);color:var(--green)}
+.status-chip.warn{background:rgba(255,140,66,.12);border:1px solid rgba(255,140,66,.3);color:var(--orange)}
+.status-chip.fail{background:rgba(246,109,109,.12);border:1px solid rgba(246,109,109,.35);color:var(--red)}
+
+.diagram{background:var(--bg2);border:1px solid var(--border);border-radius:var(--r2);padding:16px;margin-bottom:20px}
+.diagram-title{font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.4px;margin-bottom:12px}
+canvas{display:block;max-width:100%}
+
+.info-box{background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);padding:12px 14px;margin-bottom:14px;font-size:11px;color:var(--text3);line-height:1.7}
+.info-box strong{color:var(--text2)}
+.norm-ref{background:var(--bg3);border-left:3px solid var(--gold);border-radius:0 var(--r) var(--r) 0;padding:10px 14px;margin-bottom:14px;font-size:10px;color:var(--text3);line-height:1.8}
+.norm-ref strong{color:var(--gold2);display:block;margin-bottom:4px;letter-spacing:.3px;text-transform:uppercase}
+
+.formula-row{display:flex;align-items:baseline;gap:6px;padding:6px 0;border-bottom:1px solid var(--border);font-size:11px}
+.formula-row:last-child{border-bottom:none}
+.formula-name{color:var(--text2);min-width:200px}
+.formula-expr{color:var(--accent2);font-size:12px;font-weight:500}
+
+/* Stress bar */
+.stress-bar-wrap{margin-top:8px}
+.stress-bar-label{display:flex;justify-content:space-between;font-size:10px;color:var(--text3);margin-bottom:4px}
+.stress-bar-bg{background:var(--surface2);border-radius:4px;height:8px;overflow:hidden}
+.stress-bar-fill{height:100%;border-radius:4px;transition:width .4s}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">🌀</div>
+  <div>
+    <h1>Calcolo <span>Molle</span></h1>
+    <div class="header-sub">UNI EN 13906 · Compressione · Trazione · Torsione</div>
+  </div>
+  <a class="back-link" href="index.html">← Indice</a>
+</header>
+
+<div class="layout">
+
+<!-- ═══════════════════ SIDEBAR ═══════════════════ -->
+<aside class="sidebar">
+  <div class="spring-tabs">
+    <button class="st-btn active" onclick="switchType('comp')">Compressione</button>
+    <button class="st-btn" onclick="switchType('traz')">Trazione</button>
+    <button class="st-btn" onclick="switchType('tors')">Torsione</button>
+  </div>
+
+  <!-- ─── COMPRESSIONE ─── -->
+  <div class="spring-panel active" id="panel-comp">
+    <div class="section">
+      <div class="section-title">Geometria filo e avvolgimento</div>
+      <div class="field-row">
+        <div class="field">
+          <label>Diametro filo d <span class="unit">mm</span></label>
+          <input type="number" id="c-d" placeholder="es. 3.0" step="0.1" min="0">
+        </div>
+        <div class="field">
+          <label>Diametro medio D <span class="unit">mm</span></label>
+          <input type="number" id="c-D" placeholder="es. 30" step="0.5" min="0">
+        </div>
+      </div>
+      <div class="field-row">
+        <div class="field">
+          <label>Lunghezza libera L₀ <span class="unit">mm</span></label>
+          <input type="number" id="c-L0" placeholder="es. 100" step="0.5" min="0">
+        </div>
+        <div class="field">
+          <label>Spire attive n</label>
+          <input type="number" id="c-n" placeholder="es. 8" step="0.5" min="0">
+        </div>
+      </div>
+      <div class="field">
+        <label>Tipo terminali</label>
+        <select id="c-ends">
+          <option value="cg">Chiuse e rettificate (closed &amp; ground)</option>
+          <option value="cn">Chiuse non rettificate</option>
+          <option value="og">Aperte e rettificate</option>
+          <option value="on">Aperte non rettificate</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="section-title">Materiale</div>
+      <div class="field">
+        <label>Materiale</label>
+        <select id="c-mat" onchange="updateMat('c')">
+          <option value="sh">Acciaio SH/DH – EN 10270-1 (G=81500 MPa)</option>
+          <option value="vd">Cr-V acciaio VD/VDSiCr – EN 10270-2 (G=81500 MPa)</option>
+          <option value="inox">Acciaio inox 1.4310 – EN 10270-3 (G=73000 MPa)</option>
+          <option value="crsi">Cr-Si acciaio (G=80000 MPa)</option>
+          <option value="cuzn">Ottone CuZn – EN 12166 (G=37000 MPa)</option>
+          <option value="cuzn2">Fosforo-bronzo CuSn – EN 12166 (G=40000 MPa)</option>
+          <option value="custom">Personalizzato</option>
+        </select>
+      </div>
+      <div class="field-row">
+        <div class="field">
+          <label>G <span class="unit">MPa</span></label>
+          <input type="number" id="c-G" value="81500" step="100">
+        </div>
+        <div class="field">
+          <label>Rm (stima) <span class="unit">MPa</span></label>
+          <input type="number" id="c-Rm" placeholder="es. 1700" step="10">
+        </div>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="section-title">Condizioni di lavoro</div>
+      <div class="field">
+        <label>Freccia/forza nota tramite</label>
+        <select id="c-input-mode" onchange="toggleInputMode('c')">
+          <option value="f">Frecce di lavoro f₁, f₂ (mm)</option>
+          <option value="F">Forze di lavoro F₁, F₂ (N)</option>
+        </select>
+      </div>
+      <div id="c-f-inputs">
+        <div class="field-row">
+          <div class="field">
+            <label>Freccia f₁ <span class="unit">mm</span></label>
+            <input type="number" id="c-f1" placeholder="es. 20" step="0.5" min="0">
+          </div>
+          <div class="field">
+            <label>Freccia f₂ <span class="unit">mm</span></label>
+            <input type="number" id="c-f2" placeholder="es. 40" step="0.5" min="0">
+          </div>
+        </div>
+      </div>
+      <div id="c-F-inputs" style="display:none">
+        <div class="field-row">
+          <div class="field">
+            <label>Forza F₁ <span class="unit">N</span></label>
+            <input type="number" id="c-F1" placeholder="es. 100" step="1" min="0">
+          </div>
+          <div class="field">
+            <label>Forza F₂ <span class="unit">N</span></label>
+            <input type="number" id="c-F2" placeholder="es. 200" step="1" min="0">
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <button class="calc-btn" onclick="calcComp()">Calcola</button>
+    <button class="clear-btn" onclick="clearComp()">Azzera</button>
+  </div>
+
+  <!-- ─── TRAZIONE ─── -->
+  <div class="spring-panel" id="panel-traz">
+    <div class="section">
+      <div class="section-title">Geometria filo e avvolgimento</div>
+      <div class="field-row">
+        <div class="field">
+          <label>Diametro filo d <span class="unit">mm</span></label>
+          <input type="number" id="t-d" placeholder="es. 2.0" step="0.1" min="0">
+        </div>
+        <div class="field">
+          <label>Diametro medio D <span class="unit">mm</span></label>
+          <input type="number" id="t-D" placeholder="es. 20" step="0.5" min="0">
+        </div>
+      </div>
+      <div class="field-row">
+        <div class="field">
+          <label>Lunghezza libera L₀ <span class="unit">mm</span></label>
+          <input type="number" id="t-L0" placeholder="es. 80" step="0.5" min="0">
+        </div>
+        <div class="field">
+          <label>Spire attive n</label>
+          <input type="number" id="t-n" placeholder="es. 10" step="0.5" min="0">
+        </div>
+      </div>
+      <div class="field">
+        <label>Tipo gancio</label>
+        <select id="t-hook">
+          <option value="half">Occhiello semicircolare (half loop)</option>
+          <option value="full">Occhiello completo (full loop)</option>
+          <option value="ext">Gambe estese (extended hooks)</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="section-title">Materiale</div>
+      <div class="field">
+        <label>Materiale</label>
+        <select id="t-mat" onchange="updateMat('t')">
+          <option value="sh">Acciaio SH/DH – EN 10270-1 (G=81500 MPa)</option>
+          <option value="vd">Cr-V acciaio VD/VDSiCr – EN 10270-2 (G=81500 MPa)</option>
+          <option value="inox">Acciaio inox 1.4310 – EN 10270-3 (G=73000 MPa)</option>
+          <option value="crsi">Cr-Si acciaio (G=80000 MPa)</option>
+          <option value="cuzn">Ottone CuZn – EN 12166 (G=37000 MPa)</option>
+          <option value="cuzn2">Fosforo-bronzo CuSn – EN 12166 (G=40000 MPa)</option>
+          <option value="custom">Personalizzato</option>
+        </select>
+      </div>
+      <div class="field-row">
+        <div class="field">
+          <label>G <span class="unit">MPa</span></label>
+          <input type="number" id="t-G" value="81500" step="100">
+        </div>
+        <div class="field">
+          <label>Rm (stima) <span class="unit">MPa</span></label>
+          <input type="number" id="t-Rm" placeholder="es. 1700" step="10">
+        </div>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="section-title">Condizioni di lavoro</div>
+      <div class="field">
+        <label>Tensione iniziale τ₀ <span class="unit">MPa</span></label>
+        <input type="number" id="t-tau0" placeholder="es. 20 (0 = no pretensione)" step="1" min="0" value="0">
+      </div>
+      <div class="field">
+        <label>Freccia/forza nota tramite</label>
+        <select id="t-input-mode" onchange="toggleInputMode('t')">
+          <option value="f">Frecce di lavoro f₁, f₂ (mm)</option>
+          <option value="F">Forze di lavoro F₁, F₂ (N)</option>
+        </select>
+      </div>
+      <div id="t-f-inputs">
+        <div class="field-row">
+          <div class="field">
+            <label>Freccia f₁ <span class="unit">mm</span></label>
+            <input type="number" id="t-f1" placeholder="es. 10" step="0.5" min="0">
+          </div>
+          <div class="field">
+            <label>Freccia f₂ <span class="unit">mm</span></label>
+            <input type="number" id="t-f2" placeholder="es. 25" step="0.5" min="0">
+          </div>
+        </div>
+      </div>
+      <div id="t-F-inputs" style="display:none">
+        <div class="field-row">
+          <div class="field">
+            <label>Forza F₁ <span class="unit">N</span></label>
+            <input type="number" id="t-F1" placeholder="es. 50" step="1" min="0">
+          </div>
+          <div class="field">
+            <label>Forza F₂ <span class="unit">N</span></label>
+            <input type="number" id="t-F2" placeholder="es. 120" step="1" min="0">
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <button class="calc-btn" onclick="calcTraz()">Calcola</button>
+    <button class="clear-btn" onclick="clearTraz()">Azzera</button>
+  </div>
+
+  <!-- ─── TORSIONE ─── -->
+  <div class="spring-panel" id="panel-tors">
+    <div class="section">
+      <div class="section-title">Geometria filo e avvolgimento</div>
+      <div class="field-row">
+        <div class="field">
+          <label>Diametro filo d <span class="unit">mm</span></label>
+          <input type="number" id="to-d" placeholder="es. 2.0" step="0.1" min="0">
+        </div>
+        <div class="field">
+          <label>Diametro medio D <span class="unit">mm</span></label>
+          <input type="number" id="to-D" placeholder="es. 20" step="0.5" min="0">
+        </div>
+      </div>
+      <div class="field-row">
+        <div class="field">
+          <label>Spire attive n</label>
+          <input type="number" id="to-n" placeholder="es. 8" step="0.5" min="0">
+        </div>
+        <div class="field">
+          <label>Lungh. braccio L <span class="unit">mm</span></label>
+          <input type="number" id="to-L" placeholder="es. 50" step="1" min="0">
+        </div>
+      </div>
+      <div class="field">
+        <label>Tipo avvolgimento</label>
+        <select id="to-wind">
+          <option value="right">Destrorso (right-hand)</option>
+          <option value="left">Sinistrorso (left-hand)</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="section-title">Materiale</div>
+      <div class="field">
+        <label>Materiale</label>
+        <select id="to-mat" onchange="updateMat('to')">
+          <option value="sh">Acciaio SH/DH – EN 10270-1 (E=206000 MPa)</option>
+          <option value="vd">Cr-V acciaio VD – EN 10270-2 (E=206000 MPa)</option>
+          <option value="inox">Acciaio inox 1.4310 – EN 10270-3 (E=193000 MPa)</option>
+          <option value="crsi">Cr-Si acciaio (E=206000 MPa)</option>
+          <option value="custom">Personalizzato</option>
+        </select>
+      </div>
+      <div class="field-row">
+        <div class="field">
+          <label>E <span class="unit">MPa</span></label>
+          <input type="number" id="to-E" value="206000" step="100">
+        </div>
+        <div class="field">
+          <label>Rm (stima) <span class="unit">MPa</span></label>
+          <input type="number" id="to-Rm" placeholder="es. 1700" step="10">
+        </div>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="section-title">Condizioni di lavoro</div>
+      <div class="field">
+        <label>Forza applicata F <span class="unit">N</span></label>
+        <input type="number" id="to-F" placeholder="es. 10" step="0.5" min="0">
+      </div>
+    </div>
+
+    <button class="calc-btn" onclick="calcTors()">Calcola</button>
+    <button class="clear-btn" onclick="clearTors()">Azzera</button>
+  </div>
+</aside>
+
+<!-- ═══════════════════ MAIN ═══════════════════ -->
+<main class="main-content" id="main-results">
+  <div class="empty-state" id="empty-state">
+    <div class="empty-icon">🌀</div>
+    <div class="empty-text">
+      Inserire i dati nella barra laterale<br>e premere <strong>Calcola</strong> per ottenere i risultati.
+    </div>
+    <div class="norm-ref" style="max-width:400px;text-align:left">
+      <strong>Normative di riferimento</strong>
+      UNI EN 13906-1: Molle a compressione<br>
+      UNI EN 13906-2: Molle a trazione<br>
+      UNI EN 13906-3: Molle a torsione<br>
+      UNI EN 15800/15801/15802: Tolleranze e qualità<br>
+      UNI EN 10270: Fili d'acciaio per molle
+    </div>
+  </div>
+  <div id="results-area" style="display:none"></div>
+</main>
+
+</div>
+
+<script>
+/* ─── MATERIAL DATA ─── */
+const MAT_G = {sh:81500,vd:81500,inox:73000,crsi:80000,cuzn:37000,cuzn2:40000};
+const MAT_E = {sh:206000,vd:206000,inox:193000,crsi:206000};
+const MAT_NAME = {
+  sh:'Acciaio SH/DH (EN 10270-1)',
+  vd:'Cr-V VD/VDSiCr (EN 10270-2)',
+  inox:'Inox 1.4310 (EN 10270-3)',
+  crsi:'Cr-Si acciaio',
+  cuzn:'Ottone CuZn',
+  cuzn2:'Fosforo-bronzo CuSn',
+  custom:'Personalizzato'
+};
+
+function updateMat(prefix){
+  const mat = document.getElementById(prefix+'-mat').value;
+  if(prefix==='to'){
+    const el = document.getElementById('to-E');
+    if(mat!=='custom' && MAT_E[mat]) el.value = MAT_E[mat];
+  } else {
+    const el = document.getElementById(prefix+'-G');
+    if(mat!=='custom' && MAT_G[mat]) el.value = MAT_G[mat];
+  }
+}
+
+/* ─── SPRING TYPE SWITCH ─── */
+function switchType(type){
+  document.querySelectorAll('.st-btn').forEach((b,i)=>{
+    const types=['comp','traz','tors'];
+    b.classList.toggle('active', types[i]===type);
+  });
+  document.querySelectorAll('.spring-panel').forEach(p=>p.classList.remove('active'));
+  document.getElementById('panel-'+type).classList.add('active');
+}
+
+function toggleInputMode(prefix){
+  const mode = document.getElementById(prefix+'-input-mode').value;
+  document.getElementById(prefix+'-f-inputs').style.display = mode==='f'?'':'none';
+  document.getElementById(prefix+'-F-inputs').style.display = mode==='F'?'':'none';
+}
+
+/* ─── WAHL FACTOR ─── */
+function wahl(c){
+  return (4*c-1)/(4*c-4) + 0.615/c;
+}
+/* ─── WAHL FACTOR INNER FIBER (torsione) ─── */
+function wahlInner(c){
+  return (4*c*c - c - 1)/(4*c*(c-1));
+}
+
+function fmt(v,dec=2){return isNaN(v)||!isFinite(v)?'—':v.toFixed(dec);}
+function fmtN(v){return fmt(v,1);}
+
+/* ─── END TYPE DATA ─── */
+function endData(type, n, d){
+  // returns {ntot, Lc, endName}
+  switch(type){
+    case 'cg': return {ntot:n+2, Lc:d*(n+2),        endName:'Chiuse e rettificate'};
+    case 'cn': return {ntot:n+2, Lc:d*(n+3),        endName:'Chiuse non rettificate'};
+    case 'og': return {ntot:n,   Lc:d*n,             endName:'Aperte e rettificate'};
+    case 'on': return {ntot:n,   Lc:d*(n+1),         endName:'Aperte non rettificate'};
+    default:   return {ntot:n+2, Lc:d*(n+2),         endName:'Chiuse e rettificate'};
+  }
+}
+
+/* ─── STRESS BAR HTML ─── */
+function stressBarHtml(ratio, tau, tauMax){
+  const pct = Math.min(ratio*100,100);
+  const color = ratio<0.65?'var(--green)':ratio<0.8?'var(--orange)':'var(--red)';
+  return `
+  <div class="stress-bar-wrap">
+    <div class="stress-bar-label"><span>τ = ${fmt(tau)} MPa</span><span>${fmt(ratio*100,1)}% di τ<sub>lim</sub>${tauMax?' ('+fmt(tauMax)+' MPa)':''}</span></div>
+    <div class="stress-bar-bg"><div class="stress-bar-fill" style="width:${pct}%;background:${color}"></div></div>
+  </div>`;
+}
+
+/* ═══════════════════════════════════
+   COMPRESSIONE
+═══════════════════════════════════ */
+function calcComp(){
+  const d   = +document.getElementById('c-d').value;
+  const D   = +document.getElementById('c-D').value;
+  const L0  = +document.getElementById('c-L0').value;
+  const n   = +document.getElementById('c-n').value;
+  const G   = +document.getElementById('c-G').value;
+  const Rm  = +document.getElementById('c-Rm').value || null;
+  const ends= document.getElementById('c-ends').value;
+  const mode= document.getElementById('c-input-mode').value;
+
+  if(!d||!D||!L0||!n||!G){alert('Compilare tutti i campi geometria e materiale.');return;}
+  if(d>=D){alert('Il diametro filo d deve essere minore del diametro medio D.');return;}
+
+  // Geometry
+  const c  = D/d;
+  const Kw = wahl(c);
+  const ed = endData(ends, n, d);
+  const Lc = ed.Lc;
+  const ntot = ed.ntot;
+
+  // Spring rate [N/mm]
+  const k = G * Math.pow(d,4) / (8 * Math.pow(D,3) * n);
+
+  // Deflections / Forces — calcola sempre entrambi
+  let f1,f2,F1,F2;
+  if(mode==='f'){
+    f1 = +document.getElementById('c-f1').value || 0;
+    f2 = +document.getElementById('c-f2').value || 0;
+    F1 = k*f1; F2 = k*f2;
+  } else {
+    F1 = +document.getElementById('c-F1').value || 0;
+    F2 = +document.getElementById('c-F2').value || 0;
+    f1 = F1/k; f2 = F2/k;
+  }
+
+  const L1 = L0 - f1;
+  const L2 = L0 - f2;
+  const fC = L0 - Lc;   // deflection to solid
+  const FC = k * fC;    // solid force
+
+  // Stresses [MPa]
+  const tau1 = Kw * 8*F1*D / (Math.PI * Math.pow(d,3));
+  const tau2 = Kw * 8*F2*D / (Math.PI * Math.pow(d,3));
+  const tauC = Kw * 8*FC*D / (Math.PI * Math.pow(d,3));
+
+  // Allowable (EN 13906-1: τkh ≤ 0.45·Rm, τkB ≤ 0.65·Rm)
+  const tauLimWork = Rm ? 0.45*Rm : null;
+  const tauLimSolid= Rm ? 0.65*Rm : null;
+
+  // Status checks
+  const checks = [];
+  if(L0<=Lc) checks.push({label:'L₀ > Lc (lunghezza libera > blocco)',ok:false});
+  else checks.push({label:`L₀ (${fmt(L0)}) > Lc (${fmt(Lc)}) ✓`,ok:true});
+
+  const fMin = Math.max(f1,f2);
+  if(fMin>0 && L0-fMin <= Lc) checks.push({label:'Lunghezza lavoro > lunghezza a blocco',ok:false});
+  else if(fMin>0) checks.push({label:`L_lav min (${fmt(Math.min(L1,L2))}) > Lc (${fmt(Lc)}) ✓`,ok:true});
+
+  if(tauLimWork && tau2>0){
+    const ok = tau2 <= tauLimWork;
+    checks.push({label:`τ₂ (${fmt(tau2)} MPa) ${ok?'≤':'>'} 0.45·Rm (${fmt(tauLimWork)} MPa)`,ok});
+  }
+  if(tauLimSolid){
+    const ok = tauC <= tauLimSolid;
+    checks.push({label:`τ blocco (${fmt(tauC)} MPa) ${ok?'≤':'>'} 0.65·Rm (${fmt(tauLimSolid)} MPa)`,ok});
+  }
+  if(c<4) checks.push({label:`Indice di molla c=${fmt(c,1)} < 4 (avvolgimento difficile)`,ok:false});
+  else if(c>16) checks.push({label:`Indice c=${fmt(c,1)} > 16 (instabilità possibile)`,ok:false});
+  else checks.push({label:`Indice c = ${fmt(c,1)} (4÷16 ✓)`,ok:true});
+
+  // Pitch
+  const p = (L0 - d*(ntot-n)) / n;
+
+  const html = `
+  <div class="results-header">
+    <h2>Risultati — Molla a Compressione</h2>
+    <span class="norm-badge">UNI EN 13906-1</span>
+  </div>
+
+  <div class="status-bar">
+    ${checks.map(ch=>`<span class="status-chip ${ch.ok?'ok':'fail'}">${ch.ok?'✓':'✗'} ${ch.label}</span>`).join('')}
+  </div>
+
+  <div class="result-section">
+    <div class="result-section-title">Parametri di avvolgimento</div>
+    <div class="result-grid">
+      <div class="result-card accent">
+        <div class="rc-label">Rigidità k</div>
+        <div class="rc-value accent">${fmt(k,3)}<span class="rc-unit">N/mm</span></div>
+      </div>
+      <div class="result-card">
+        <div class="rc-label">Indice molla c = D/d</div>
+        <div class="rc-value">${fmt(c,2)}</div>
+      </div>
+      <div class="result-card">
+        <div class="rc-label">Fattore Wahl K<sub>w</sub></div>
+        <div class="rc-value">${fmt(Kw,3)}</div>
+      </div>
+      <div class="result-card">
+        <div class="rc-label">Passo attivo p</div>
+        <div class="rc-value">${fmt(p,2)}<span class="rc-unit">mm</span></div>
+      </div>
+      <div class="result-card">
+        <div class="rc-label">Spire totali n<sub>tot</sub></div>
+        <div class="rc-value">${fmt(ntot,1)}</div>
+        <div class="rc-note">${ed.endName}</div>
+      </div>
+      <div class="result-card gold">
+        <div class="rc-label">Lunghezza a blocco L<sub>c</sub></div>
+        <div class="rc-value gold">${fmt(Lc,2)}<span class="rc-unit">mm</span></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="result-section">
+    <div class="result-section-title">Condizioni di lavoro</div>
+    <div class="result-grid">
+      <div class="result-card accent">
+        <div class="rc-label">Posizione 1 — ${mode==='f'?'forza calcolata':'freccia calcolata'}</div>
+        ${mode==='f'
+          ? `<div class="rc-value accent">${fmtN(F1)}<span class="rc-unit">N</span></div><div class="rc-note">f₁ = ${fmt(f1,2)} mm &nbsp;·&nbsp; L₁ = ${fmt(L1,2)} mm</div>`
+          : `<div class="rc-value accent">${fmt(f1,2)}<span class="rc-unit">mm</span></div><div class="rc-note">F₁ = ${fmtN(F1)} N &nbsp;·&nbsp; L₁ = ${fmt(L1,2)} mm</div>`
+        }
+      </div>
+      <div class="result-card accent">
+        <div class="rc-label">Posizione 2 — ${mode==='f'?'forza calcolata':'freccia calcolata'}</div>
+        ${mode==='f'
+          ? `<div class="rc-value accent">${fmtN(F2)}<span class="rc-unit">N</span></div><div class="rc-note">f₂ = ${fmt(f2,2)} mm &nbsp;·&nbsp; L₂ = ${fmt(L2,2)} mm</div>`
+          : `<div class="rc-value accent">${fmt(f2,2)}<span class="rc-unit">mm</span></div><div class="rc-note">F₂ = ${fmtN(F2)} N &nbsp;·&nbsp; L₂ = ${fmt(L2,2)} mm</div>`
+        }
+      </div>
+      <div class="result-card orange">
+        <div class="rc-label">A blocco</div>
+        <div class="rc-value orange">${fmtN(FC)}<span class="rc-unit">N</span></div>
+        <div class="rc-note">f<sub>c</sub> = ${fmt(fC,2)} mm &nbsp;·&nbsp; L<sub>c</sub> = ${fmt(Lc,2)} mm</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="result-section">
+    <div class="result-section-title">Tensioni tangenziali (Wahl)</div>
+    <div class="result-grid">
+      <div class="result-card ${tau1>0&&tauLimWork&&tau1>tauLimWork?'red':tau1>0?'green':''}">
+        <div class="rc-label">τ₁ (@ F₁)</div>
+        <div class="rc-value ${tau1>0&&tauLimWork&&tau1>tauLimWork?'red':tau1>0?'green':''}">${fmt(tau1)}<span class="rc-unit">MPa</span></div>
+        ${tauLimWork?stressBarHtml(tau1/tauLimWork,tau1,tauLimWork):''}
+      </div>
+      <div class="result-card ${tau2>0&&tauLimWork&&tau2>tauLimWork?'red':tau2>0?'green':''}">
+        <div class="rc-label">τ₂ (@ F₂) — tensione lavoro massima</div>
+        <div class="rc-value ${tau2>0&&tauLimWork&&tau2>tauLimWork?'red':tau2>0?'green':''}">${fmt(tau2)}<span class="rc-unit">MPa</span></div>
+        ${tauLimWork?stressBarHtml(tau2/tauLimWork,tau2,tauLimWork):''}
+      </div>
+      <div class="result-card ${tauLimSolid&&tauC>tauLimSolid?'red':'orange'}">
+        <div class="rc-label">τ<sub>c</sub> (a blocco)</div>
+        <div class="rc-value ${tauLimSolid&&tauC>tauLimSolid?'red':'orange'}">${fmt(tauC)}<span class="rc-unit">MPa</span></div>
+        ${tauLimSolid?stressBarHtml(tauC/tauLimSolid,tauC,tauLimSolid):''}
+      </div>
+    </div>
+    ${!Rm?'<div class="info-box"><strong>Nota:</strong> Inserire Rm per visualizzare i limiti ammissibili (0.45·Rm per lavoro, 0.65·Rm a blocco secondo UNI EN 13906-1).</div>':''}
+  </div>
+
+  <div class="result-section">
+    <div class="result-section-title">Formule utilizzate (UNI EN 13906-1)</div>
+    <div class="result-card" style="padding:16px">
+      <div class="formula-row"><span class="formula-name">Rigidità</span><span class="formula-expr">k = G·d⁴ / (8·D³·n)</span></div>
+      <div class="formula-row"><span class="formula-name">Indice molla</span><span class="formula-expr">c = D/d</span></div>
+      <div class="formula-row"><span class="formula-name">Fattore Wahl</span><span class="formula-expr">K<sub>w</sub> = (4c−1)/(4c−4) + 0.615/c</span></div>
+      <div class="formula-row"><span class="formula-name">Tensione tangenziale</span><span class="formula-expr">τ = K<sub>w</sub>·8·F·D / (π·d³)</span></div>
+      <div class="formula-row"><span class="formula-name">Lunghezza a blocco (chiuse/rett.)</span><span class="formula-expr">L<sub>c</sub> = d·n<sub>tot</sub></span></div>
+    </div>
+  </div>
+
+  <div class="norm-ref">
+    <strong>Normative di riferimento</strong>
+    UNI EN 13906-1: Calcolo molle a compressione · UNI EN 15800: Tolleranze molle a compressione · UNI EN 10270-1/2/3: Fili acciaio per molle
+  </div>`;
+
+  showResults(html);
+}
+
+function clearComp(){
+  ['c-d','c-D','c-L0','c-n','c-f1','c-f2','c-F1','c-F2','c-Rm'].forEach(id=>{
+    const el=document.getElementById(id); if(el) el.value='';
+  });
+  document.getElementById('c-G').value=81500;
+  hideResults();
+}
+
+/* ═══════════════════════════════════
+   TRAZIONE
+═══════════════════════════════════ */
+function calcTraz(){
+  const d    = +document.getElementById('t-d').value;
+  const D    = +document.getElementById('t-D').value;
+  const L0   = +document.getElementById('t-L0').value;
+  const n    = +document.getElementById('t-n').value;
+  const G    = +document.getElementById('t-G').value;
+  const Rm   = +document.getElementById('t-Rm').value || null;
+  const tau0 = +document.getElementById('t-tau0').value || 0;
+  const hook = document.getElementById('t-hook').value;
+  const mode = document.getElementById('t-input-mode').value;
+
+  if(!d||!D||!L0||!n||!G){alert('Compilare tutti i campi geometria e materiale.');return;}
+  if(d>=D){alert('Il diametro filo d deve essere minore del diametro medio D.');return;}
+
+  const c  = D/d;
+  const Kw = wahl(c);
+
+  // Spring rate
+  const k = G * Math.pow(d,4) / (8 * Math.pow(D,3) * n);
+
+  // Initial tension force from tau0
+  const Fi = tau0 * Math.PI * Math.pow(d,3) / (Kw * 8 * D);
+
+  // Hook length
+  const hookLengths = {half: D/2, full: D, ext: 0};
+  const Lhook = hookLengths[hook] || D/2;
+  const Lbody = d * n;
+
+  // Deflections / Forces — calcola sempre entrambi
+  let f1,f2,F1,F2;
+  if(mode==='f'){
+    f1 = +document.getElementById('t-f1').value || 0;
+    f2 = +document.getElementById('t-f2').value || 0;
+    F1 = Fi + k*f1; F2 = Fi + k*f2;
+  } else {
+    F1 = +document.getElementById('t-F1').value || 0;
+    F2 = +document.getElementById('t-F2').value || 0;
+    f1 = F1>Fi ? (F1-Fi)/k : 0;
+    f2 = F2>Fi ? (F2-Fi)/k : 0;
+  }
+
+  const L1 = L0 + f1;
+  const L2 = L0 + f2;
+
+  const tau1 = Kw * 8*F1*D / (Math.PI * Math.pow(d,3));
+  const tau2 = Kw * 8*F2*D / (Math.PI * Math.pow(d,3));
+
+  const tauLimWork = Rm ? 0.45*Rm : null;
+
+  const checks = [];
+  if(tauLimWork && tau2>0){
+    const ok = tau2 <= tauLimWork;
+    checks.push({label:`τ₂ (${fmt(tau2)} MPa) ${ok?'≤':'>'} 0.45·Rm (${fmt(tauLimWork)} MPa)`,ok});
+  }
+  if(c<4) checks.push({label:`c=${fmt(c,1)} < 4`,ok:false});
+  else if(c>16) checks.push({label:`c=${fmt(c,1)} > 16`,ok:false});
+  else checks.push({label:`Indice c = ${fmt(c,1)} ✓`,ok:true});
+
+  const html = `
+  <div class="results-header">
+    <h2>Risultati — Molla a Trazione</h2>
+    <span class="norm-badge">UNI EN 13906-2</span>
+  </div>
+
+  <div class="status-bar">
+    ${checks.map(ch=>`<span class="status-chip ${ch.ok?'ok':'fail'}">${ch.ok?'✓':'✗'} ${ch.label}</span>`).join('')}
+  </div>
+
+  <div class="result-section">
+    <div class="result-section-title">Parametri di avvolgimento</div>
+    <div class="result-grid">
+      <div class="result-card accent">
+        <div class="rc-label">Rigidità k</div>
+        <div class="rc-value accent">${fmt(k,3)}<span class="rc-unit">N/mm</span></div>
+      </div>
+      <div class="result-card">
+        <div class="rc-label">Indice molla c = D/d</div>
+        <div class="rc-value">${fmt(c,2)}</div>
+      </div>
+      <div class="result-card">
+        <div class="rc-label">Fattore Wahl K<sub>w</sub></div>
+        <div class="rc-value">${fmt(Kw,3)}</div>
+      </div>
+      <div class="result-card">
+        <div class="rc-label">Forza iniziale F<sub>i</sub> (tensione iniziale)</div>
+        <div class="rc-value">${fmtN(Fi)}<span class="rc-unit">N</span></div>
+        <div class="rc-note">τ₀ = ${fmt(tau0)} MPa</div>
+      </div>
+      <div class="result-card">
+        <div class="rc-label">Lunghezza corpo</div>
+        <div class="rc-value">${fmt(Lbody,2)}<span class="rc-unit">mm</span></div>
+        <div class="rc-note">d × n = ${fmt(d)}×${fmt(n,1)}</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="result-section">
+    <div class="result-section-title">Condizioni di lavoro</div>
+    <div class="result-grid">
+      <div class="result-card accent">
+        <div class="rc-label">Posizione 1 — ${mode==='f'?'forza calcolata':'freccia calcolata'}</div>
+        ${mode==='f'
+          ? `<div class="rc-value accent">${fmtN(F1)}<span class="rc-unit">N</span></div><div class="rc-note">f₁ = ${fmt(f1,2)} mm &nbsp;·&nbsp; L₁ = ${fmt(L1,2)} mm</div>`
+          : `<div class="rc-value accent">${fmt(f1,2)}<span class="rc-unit">mm</span></div><div class="rc-note">F₁ = ${fmtN(F1)} N &nbsp;·&nbsp; L₁ = ${fmt(L1,2)} mm</div>`
+        }
+      </div>
+      <div class="result-card accent">
+        <div class="rc-label">Posizione 2 — ${mode==='f'?'forza calcolata':'freccia calcolata'}</div>
+        ${mode==='f'
+          ? `<div class="rc-value accent">${fmtN(F2)}<span class="rc-unit">N</span></div><div class="rc-note">f₂ = ${fmt(f2,2)} mm &nbsp;·&nbsp; L₂ = ${fmt(L2,2)} mm</div>`
+          : `<div class="rc-value accent">${fmt(f2,2)}<span class="rc-unit">mm</span></div><div class="rc-note">F₂ = ${fmtN(F2)} N &nbsp;·&nbsp; L₂ = ${fmt(L2,2)} mm</div>`
+        }
+      </div>
+    </div>
+  </div>
+
+  <div class="result-section">
+    <div class="result-section-title">Tensioni tangenziali (Wahl)</div>
+    <div class="result-grid">
+      <div class="result-card ${tau1>0&&tauLimWork&&tau1>tauLimWork?'red':tau1>0?'green':''}">
+        <div class="rc-label">τ₁ (@ F₁)</div>
+        <div class="rc-value ${tau1>0&&tauLimWork&&tau1>tauLimWork?'red':tau1>0?'green':''}">${fmt(tau1)}<span class="rc-unit">MPa</span></div>
+        ${tauLimWork?stressBarHtml(tau1/tauLimWork,tau1,tauLimWork):''}
+      </div>
+      <div class="result-card ${tau2>0&&tauLimWork&&tau2>tauLimWork?'red':tau2>0?'green':''}">
+        <div class="rc-label">τ₂ (@ F₂)</div>
+        <div class="rc-value ${tau2>0&&tauLimWork&&tau2>tauLimWork?'red':tau2>0?'green':''}">${fmt(tau2)}<span class="rc-unit">MPa</span></div>
+        ${tauLimWork?stressBarHtml(tau2/tauLimWork,tau2,tauLimWork):''}
+      </div>
+    </div>
+    ${!Rm?'<div class="info-box"><strong>Nota:</strong> Inserire Rm per visualizzare i limiti ammissibili (0.45·Rm secondo UNI EN 13906-2).</div>':''}
+  </div>
+
+  <div class="result-section">
+    <div class="result-section-title">Formule utilizzate (UNI EN 13906-2)</div>
+    <div class="result-card" style="padding:16px">
+      <div class="formula-row"><span class="formula-name">Rigidità</span><span class="formula-expr">k = G·d⁴ / (8·D³·n)</span></div>
+      <div class="formula-row"><span class="formula-name">Forza iniziale</span><span class="formula-expr">F<sub>i</sub> = τ₀·π·d³ / (K<sub>w</sub>·8·D)</span></div>
+      <div class="formula-row"><span class="formula-name">Forza di lavoro</span><span class="formula-expr">F = F<sub>i</sub> + k·f</span></div>
+      <div class="formula-row"><span class="formula-name">Tensione tangenziale</span><span class="formula-expr">τ = K<sub>w</sub>·8·F·D / (π·d³)</span></div>
+    </div>
+  </div>
+
+  <div class="norm-ref">
+    <strong>Normative di riferimento</strong>
+    UNI EN 13906-2: Calcolo molle a trazione · UNI EN 15801: Tolleranze molle a trazione · UNI EN 10270-1/2/3: Fili acciaio per molle
+  </div>`;
+
+  showResults(html);
+}
+
+function clearTraz(){
+  ['t-d','t-D','t-L0','t-n','t-f1','t-f2','t-F1','t-F2','t-Rm','t-tau0'].forEach(id=>{
+    const el=document.getElementById(id); if(el) el.value='';
+  });
+  document.getElementById('t-tau0').value=0;
+  document.getElementById('t-G').value=81500;
+  hideResults();
+}
+
+/* ═══════════════════════════════════
+   TORSIONE
+═══════════════════════════════════ */
+function calcTors(){
+  const d  = +document.getElementById('to-d').value;
+  const D  = +document.getElementById('to-D').value;
+  const n  = +document.getElementById('to-n').value;
+  const L  = +document.getElementById('to-L').value;
+  const E  = +document.getElementById('to-E').value;
+  const Rm = +document.getElementById('to-Rm').value || null;
+  const F  = +document.getElementById('to-F').value;
+
+  if(!d||!D||!n||!E){alert('Compilare tutti i campi geometria e materiale.');return;}
+  if(d>=D){alert('Il diametro filo d deve essere minore del diametro medio D.');return;}
+
+  const c   = D/d;
+  const Ki  = wahlInner(c);  // fattore fibra interna
+  const R   = D/2;
+
+  // Spring rate [N·mm/°] — EN 13906-3
+  // k_phi = E·d⁴ / (64·D·n)  [N·mm/rad]
+  const kRad = E * Math.pow(d,4) / (64 * D * n);
+  const kDeg = kRad * Math.PI / 180; // [N·mm/°]
+
+  // Moment from force on arm
+  const M = F * L;  // [N·mm]
+  const phi_deg = M / kDeg; // angular deflection [°]
+
+  // Bending stress (inner fiber) [MPa]
+  const sigma = Ki * 32 * M / (Math.PI * Math.pow(d,3));
+
+  // Allowable: σ_lim ≈ 0.70·Rm (torsione, fibra interna)
+  const sigmaLim = Rm ? 0.70*Rm : null;
+
+  const checks = [];
+  if(sigmaLim){
+    const ok = sigma <= sigmaLim;
+    checks.push({label:`σ (${fmt(sigma)} MPa) ${ok?'≤':'>'} 0.70·Rm (${fmt(sigmaLim)} MPa)`,ok});
+  }
+  if(c<3) checks.push({label:`c=${fmt(c,1)} < 3`,ok:false});
+  else if(c>12) checks.push({label:`c=${fmt(c,1)} > 12`,ok:false});
+  else checks.push({label:`Indice c = ${fmt(c,1)} ✓`,ok:true});
+
+  const html = `
+  <div class="results-header">
+    <h2>Risultati — Molla a Torsione</h2>
+    <span class="norm-badge">UNI EN 13906-3</span>
+  </div>
+
+  <div class="status-bar">
+    ${checks.map(ch=>`<span class="status-chip ${ch.ok?'ok':'fail'}">${ch.ok?'✓':'✗'} ${ch.label}</span>`).join('')}
+  </div>
+
+  <div class="result-section">
+    <div class="result-section-title">Parametri di avvolgimento</div>
+    <div class="result-grid">
+      <div class="result-card accent">
+        <div class="rc-label">Rigidità k<sub>φ</sub></div>
+        <div class="rc-value accent">${fmt(kDeg,3)}<span class="rc-unit">N·mm/°</span></div>
+        <div class="rc-note">${fmt(kRad,3)} N·mm/rad</div>
+      </div>
+      <div class="result-card">
+        <div class="rc-label">Indice molla c = D/d</div>
+        <div class="rc-value">${fmt(c,2)}</div>
+      </div>
+      <div class="result-card">
+        <div class="rc-label">Fattore fibra int. K<sub>i</sub></div>
+        <div class="rc-value">${fmt(Ki,3)}</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="result-section">
+    <div class="result-section-title">Condizioni di lavoro</div>
+    <div class="result-grid">
+      <div class="result-card">
+        <div class="rc-label">Momento M = F·L</div>
+        <div class="rc-value">${fmt(M,1)}<span class="rc-unit">N·mm</span></div>
+        <div class="rc-note">F=${fmtN(F)} N · L=${fmt(L)} mm</div>
+      </div>
+      <div class="result-card gold">
+        <div class="rc-label">Rotazione φ</div>
+        <div class="rc-value gold">${fmt(phi_deg,2)}<span class="rc-unit">°</span></div>
+      </div>
+      <div class="result-card ${sigmaLim&&sigma>sigmaLim?'red':'green'}">
+        <div class="rc-label">Tensione flessionale σ (fibra int.)</div>
+        <div class="rc-value ${sigmaLim&&sigma>sigmaLim?'red':'green'}">${fmt(sigma)}<span class="rc-unit">MPa</span></div>
+        ${sigmaLim?stressBarHtml(sigma/sigmaLim,sigma,sigmaLim):''}
+      </div>
+    </div>
+    ${!Rm?'<div class="info-box"><strong>Nota:</strong> Inserire Rm per visualizzare il limite ammissibile (0.70·Rm secondo UNI EN 13906-3).</div>':''}
+  </div>
+
+  <div class="result-section">
+    <div class="result-section-title">Formule utilizzate (UNI EN 13906-3)</div>
+    <div class="result-card" style="padding:16px">
+      <div class="formula-row"><span class="formula-name">Rigidità angolare</span><span class="formula-expr">k<sub>φ</sub> = E·d⁴ / (64·D·n) [N·mm/rad]</span></div>
+      <div class="formula-row"><span class="formula-name">Fattore fibra interna</span><span class="formula-expr">K<sub>i</sub> = (4c²−c−1) / (4c(c−1))</span></div>
+      <div class="formula-row"><span class="formula-name">Tensione flessionale</span><span class="formula-expr">σ = K<sub>i</sub>·32·M / (π·d³)</span></div>
+    </div>
+  </div>
+
+  <div class="norm-ref">
+    <strong>Normative di riferimento</strong>
+    UNI EN 13906-3: Calcolo molle a torsione · UNI EN 15802: Tolleranze molle a torsione · UNI EN 10270-1/2/3: Fili acciaio per molle
+  </div>`;
+
+  showResults(html);
+}
+
+function clearTors(){
+  ['to-d','to-D','to-n','to-L','to-F','to-Rm'].forEach(id=>{
+    const el=document.getElementById(id); if(el) el.value='';
+  });
+  document.getElementById('to-E').value=206000;
+  hideResults();
+}
+
+/* ─── SHOW/HIDE RESULTS ─── */
+function showResults(html){
+  document.getElementById('empty-state').style.display='none';
+  const area = document.getElementById('results-area');
+  area.style.display='block';
+  area.innerHTML = html;
+}
+function hideResults(){
+  document.getElementById('empty-state').style.display='flex';
+  document.getElementById('results-area').style.display='none';
+}
+</script>
+</body>
+</html>
