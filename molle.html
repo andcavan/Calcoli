@@ -4,17 +4,17 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Calcolatore Molle | UNI EN 13906</title>
-<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;700&family=Syne:wght@400;600;700;800&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@300;400;500&family=Barlow+Condensed:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <style>
 :root{
-  --bg:#0d0f14;--bg2:#13161e;--bg3:#1a1e28;
+  --bg:#0e0f11;--bg2:#1c1d23;--bg3:#1a1e28;
   --surface:#1e2330;--surface2:#252c3d;
   --border:#2e3550;--border2:#3d4663;
-  --accent:#4f9eff;--accent2:#7bb8ff;
+  --accent:#4fc3f7;--accent2:#7bb8ff;
   --gold:#f0b429;--gold2:#ffd166;
   --green:#3ecf8e;--red:#f66d6d;--orange:#ff8c42;--violet:#b39ddb;
   --text:#e2e8f4;--text2:#8a94aa;--text3:#5a6278;
-  --mono:'JetBrains Mono',monospace;--head:'Syne',sans-serif;
+  --mono:'DM Mono',monospace;--head:'Barlow Condensed',sans-serif;
   --r:8px;--r2:14px;
 }
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
@@ -25,8 +25,8 @@ header{background:var(--bg2);border-bottom:1px solid var(--border);padding:0 28p
 header h1{font-family:var(--head);font-size:19px;font-weight:800;letter-spacing:-.5px}
 header h1 span{color:var(--accent)}
 .header-sub{font-size:10px;color:var(--text3);letter-spacing:.5px;text-transform:uppercase;margin-top:2px}
-.back-link{margin-left:auto;color:var(--text3);font-size:11px;text-decoration:none;border:1px solid var(--border);border-radius:var(--r);padding:5px 12px;transition:all .15s}
-.back-link:hover{color:var(--accent);border-color:var(--accent)}
+.back-btn{font-family:'Barlow Condensed',sans-serif;font-size:10px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--text2,#8a94aa);text-decoration:none;border:1px solid var(--border2,#3d4663);border-radius:4px;padding:4px 10px;transition:all .15s;white-space:nowrap;flex-shrink:0}
+.back-btn:hover{color:var(--accent,#4fc3f7);border-color:var(--accent,#4fc3f7)}
 
 .layout{display:grid;grid-template-columns:400px 1fr;min-height:calc(100vh - 68px)}
 .sidebar{background:var(--bg2);border-right:1px solid var(--border);overflow-y:auto;max-height:calc(100vh - 68px);position:sticky;top:68px}
@@ -52,8 +52,6 @@ header h1 span{color:var(--accent)}
 .field-row3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px}
 .unit{font-size:10px;color:var(--text3);margin-left:4px}
 
-.calc-btn{width:100%;padding:11px;background:var(--accent);color:#fff;border:none;border-radius:var(--r);font-family:var(--mono);font-size:12px;font-weight:700;letter-spacing:.5px;cursor:pointer;transition:all .2s;text-transform:uppercase;margin-top:6px}
-.calc-btn:hover{background:var(--accent2);color:#0d0f14}
 .clear-btn{width:100%;padding:7px;background:none;color:var(--text3);border:1px solid var(--border);border-radius:var(--r);font-family:var(--mono);font-size:11px;cursor:pointer;transition:all .15s;margin-top:6px}
 .clear-btn:hover{color:var(--text);border-color:var(--border2)}
 
@@ -111,6 +109,13 @@ canvas{display:block;max-width:100%}
 .stress-bar-label{display:flex;justify-content:space-between;font-size:10px;color:var(--text3);margin-bottom:4px}
 .stress-bar-bg{background:var(--surface2);border-radius:4px;height:8px;overflow:hidden}
 .stress-bar-fill{height:100%;border-radius:4px;transition:width .4s}
+
+/* TOOLTIP */
+[data-tip]{position:relative;cursor:default}
+@keyframes tipIn{from{opacity:0}to{opacity:1}}
+[data-tip]:hover::after{content:attr(data-tip);position:absolute;bottom:calc(100% + 7px);left:0;background:#1a1e28;border:1px solid rgba(79,195,247,.25);color:#e2e8f4;font-size:10px;padding:7px 11px;border-radius:6px;white-space:pre-wrap;max-width:280px;min-width:180px;z-index:999;line-height:1.6;pointer-events:none;font-family:var(--mono);text-align:left;box-shadow:0 4px 20px rgba(0,0,0,.5);animation:tipIn .12s ease .6s both}
+[data-tip]:hover::before{content:'';position:absolute;bottom:calc(100% + 1px);left:20px;border:5px solid transparent;border-top-color:#1a1e28;z-index:1000;pointer-events:none;animation:tipIn .12s ease .6s both}
+[data-tip].tr:hover::after{left:auto;right:0}
 </style>
 </head>
 <body>
@@ -121,7 +126,7 @@ canvas{display:block;max-width:100%}
     <h1>Calcolo <span>Molle</span></h1>
     <div class="header-sub">UNI EN 13906 · Compressione · Trazione · Torsione</div>
   </div>
-  <a class="back-link" href="index.html">← Indice</a>
+  <a class="back-btn" href="index.html">← Ritorna</a>
 </header>
 
 <div class="layout">
@@ -140,21 +145,21 @@ canvas{display:block;max-width:100%}
       <div class="section-title">Geometria filo e avvolgimento</div>
       <div class="field-row">
         <div class="field">
-          <label>Diametro filo d <span class="unit">mm</span></label>
+          <label data-tip="Diametro del filo (sezione circolare)\nUnità: mm\nRange tipico: 0.5 ÷ 20 mm\nRapporto d'indice C = D/d (tipico 4÷12)">Diametro filo d <span class="unit">mm</span></label>
           <input type="number" id="c-d" placeholder="es. 3.0" step="0.1" min="0">
         </div>
         <div class="field">
-          <label>Diametro medio D <span class="unit">mm</span></label>
+          <label data-tip="Diametro medio della molla (linea di centro del filo)\nUnità: mm\nD_medio = D_esterno - d = D_interno + d\nRange tipico: 10 ÷ 200 mm">Diametro medio D <span class="unit">mm</span></label>
           <input type="number" id="c-D" placeholder="es. 30" step="0.5" min="0">
         </div>
       </div>
       <div class="field-row">
         <div class="field">
-          <label>Lunghezza libera L₀ <span class="unit">mm</span></label>
+          <label data-tip="Lunghezza a riposo della molla (senza carichi)\nUnità: mm\nL₀ > lunghezza in blocco Lb = n × d\nRange tipico: 20 ÷ 500 mm">Lunghezza libera L₀ <span class="unit">mm</span></label>
           <input type="number" id="c-L0" placeholder="es. 100" step="0.5" min="0">
         </div>
         <div class="field">
-          <label>Spire attive n</label>
+          <label data-tip="Numero di spire attive (elasticamente deformate)\nAdimensionale\nSpire totali = spire attive + spire terminali (1÷2 per terminali chiusi)\nRange tipico: 3 ÷ 30 spire">Spire attive n</label>
           <input type="number" id="c-n" placeholder="es. 8" step="0.5" min="0">
         </div>
       </div>
@@ -185,11 +190,11 @@ canvas{display:block;max-width:100%}
       </div>
       <div class="field-row">
         <div class="field">
-          <label>G <span class="unit">MPa</span></label>
+          <label data-tip="Modulo di rigidità a taglio (modulo di scorrimento)\nUnità: MPa\nAcciaio SH/VD: 81500 MPa, Inox: 73000 MPa\nBronzo fosforoso: 40000 MPa, Ottone: 37000 MPa">G <span class="unit">MPa</span></label>
           <input type="number" id="c-G" value="81500" step="100">
         </div>
         <div class="field">
-          <label>Rm (stima) <span class="unit">MPa</span></label>
+          <label data-tip="Resistenza a trazione nominale del filo — usata per calcolare la tensione ammissibile\nUnità: MPa\nVaria con diametro e materiale (UNI EN 13906)\nAcciaio SH ø3mm: ~1700 MPa, ø10mm: ~1300 MPa">Rm (stima) <span class="unit">MPa</span></label>
           <input type="number" id="c-Rm" placeholder="es. 1700" step="10">
         </div>
       </div>
@@ -207,11 +212,11 @@ canvas{display:block;max-width:100%}
       <div id="c-f-inputs">
         <div class="field-row">
           <div class="field">
-            <label>Freccia f₁ <span class="unit">mm</span></label>
+            <label data-tip="Freccia minima di lavoro (precarico)\nUnità: mm\nf₁ corrisponde a F₁ = k × f₁\nDeve essere ≥ 0 e < freccia massima f₂">Freccia f₁ <span class="unit">mm</span></label>
             <input type="number" id="c-f1" placeholder="es. 20" step="0.5" min="0">
           </div>
           <div class="field">
-            <label>Freccia f₂ <span class="unit">mm</span></label>
+            <label data-tip="Freccia massima di lavoro (carico massimo)\nUnità: mm\nf₂ < freccia in blocco = L₀ - Lb\nEscursione utile: Δf = f₂ - f₁">Freccia f₂ <span class="unit">mm</span></label>
             <input type="number" id="c-f2" placeholder="es. 40" step="0.5" min="0">
           </div>
         </div>
@@ -219,18 +224,17 @@ canvas{display:block;max-width:100%}
       <div id="c-F-inputs" style="display:none">
         <div class="field-row">
           <div class="field">
-            <label>Forza F₁ <span class="unit">N</span></label>
+            <label data-tip="Forza di precarico (condizione minima di lavoro)\nUnità: N\nF₁ = k × f₁, determina la tensione minima τ₁\nF₁ ≥ 0 per molle di compressione">Forza F₁ <span class="unit">N</span></label>
             <input type="number" id="c-F1" placeholder="es. 100" step="1" min="0">
           </div>
           <div class="field">
-            <label>Forza F₂ <span class="unit">N</span></label>
+            <label data-tip="Forza massima di lavoro (condizione massima di lavoro)\nUnità: N\nF₂ = k × f₂, determina la tensione massima τ₂\nVerifica: τ₂ ≤ τ_ammissibile">Forza F₂ <span class="unit">N</span></label>
             <input type="number" id="c-F2" placeholder="es. 200" step="1" min="0">
           </div>
         </div>
       </div>
     </div>
 
-    <button class="calc-btn" onclick="calcComp()">Calcola</button>
     <button class="clear-btn" onclick="clearComp()">Azzera</button>
   </div>
 
@@ -333,7 +337,6 @@ canvas{display:block;max-width:100%}
       </div>
     </div>
 
-    <button class="calc-btn" onclick="calcTraz()">Calcola</button>
     <button class="clear-btn" onclick="clearTraz()">Azzera</button>
   </div>
 
@@ -402,7 +405,6 @@ canvas{display:block;max-width:100%}
       </div>
     </div>
 
-    <button class="calc-btn" onclick="calcTors()">Calcola</button>
     <button class="clear-btn" onclick="clearTors()">Azzera</button>
   </div>
 </aside>
@@ -412,7 +414,7 @@ canvas{display:block;max-width:100%}
   <div class="empty-state" id="empty-state">
     <div class="empty-icon">🌀</div>
     <div class="empty-text">
-      Inserire i dati nella barra laterale<br>e premere <strong>Calcola</strong> per ottenere i risultati.
+      Inserire i dati nella barra laterale<br>per ottenere i risultati in tempo reale.
     </div>
     <div class="norm-ref" style="max-width:400px;text-align:left">
       <strong>Normative di riferimento</strong>
@@ -517,8 +519,8 @@ function calcComp(){
   const ends= document.getElementById('c-ends').value;
   const mode= document.getElementById('c-input-mode').value;
 
-  if(!d||!D||!L0||!n||!G){alert('Compilare tutti i campi geometria e materiale.');return;}
-  if(d>=D){alert('Il diametro filo d deve essere minore del diametro medio D.');return;}
+  if(!d||!D||!L0||!n||!G){hideResults();return;}
+  if(d>=D){hideResults();return;}
 
   // Geometry
   const c  = D/d;
@@ -709,8 +711,8 @@ function calcTraz(){
   const hook = document.getElementById('t-hook').value;
   const mode = document.getElementById('t-input-mode').value;
 
-  if(!d||!D||!L0||!n||!G){alert('Compilare tutti i campi geometria e materiale.');return;}
-  if(d>=D){alert('Il diametro filo d deve essere minore del diametro medio D.');return;}
+  if(!d||!D||!L0||!n||!G){hideResults();return;}
+  if(d>=D){hideResults();return;}
 
   const c  = D/d;
   const Kw = wahl(c);
@@ -870,8 +872,8 @@ function calcTors(){
   const Rm = +document.getElementById('to-Rm').value || null;
   const F  = +document.getElementById('to-F').value;
 
-  if(!d||!D||!n||!E){alert('Compilare tutti i campi geometria e materiale.');return;}
-  if(d>=D){alert('Il diametro filo d deve essere minore del diametro medio D.');return;}
+  if(!d||!D||!n||!E){hideResults();return;}
+  if(d>=D){hideResults();return;}
 
   const c   = D/d;
   const Ki  = wahlInner(c);  // fattore fibra interna
@@ -987,6 +989,31 @@ function hideResults(){
   document.getElementById('empty-state').style.display='flex';
   document.getElementById('results-area').style.display='none';
 }
+
+/* ─── REAL-TIME ─── */
+let _activeType = 'comp';
+function autoCalc(){
+  if(_activeType==='comp') calcComp();
+  else if(_activeType==='traz') calcTraz();
+  else calcTors();
+}
+
+const _origSwitchType = switchType;
+function switchType(type){
+  _activeType = type;
+  document.querySelectorAll('.st-btn').forEach((b,i)=>{
+    const types=['comp','traz','tors'];
+    b.classList.toggle('active', types[i]===type);
+  });
+  document.querySelectorAll('.spring-panel').forEach(p=>p.classList.remove('active'));
+  document.getElementById('panel-'+type).classList.add('active');
+  autoCalc();
+}
+
+document.addEventListener('DOMContentLoaded', function(){
+  document.querySelectorAll('.sidebar input').forEach(el => el.addEventListener('input', autoCalc));
+  document.querySelectorAll('.sidebar select').forEach(el => el.addEventListener('change', autoCalc));
+});
 </script>
 </body>
 </html>

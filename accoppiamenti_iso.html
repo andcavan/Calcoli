@@ -57,6 +57,10 @@ body{min-height:100vh}
 [data-tip]:hover::before{content:'';position:absolute;bottom:calc(100% + 1px);left:20px;border:5px solid transparent;border-top-color:#1e2130;z-index:1000;pointer-events:none;animation:tipIn .12s ease .6s both}
 [data-tip].tr:hover::after{left:auto;right:0}
 
+/* BACK BUTTON */
+.back-btn{font-family:var(--cond,'Barlow Condensed',sans-serif);font-size:10px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--muted,#7a7d8a);text-decoration:none;border:1px solid var(--border2,rgba(255,255,255,.13));border-radius:4px;padding:4px 10px;transition:all .15s;white-space:nowrap;flex-shrink:0}
+.back-btn:hover{color:var(--acc,#4fc3f7);border-color:var(--acc,#4fc3f7)}
+
 /* FIT TYPE CHIPS */
 .fit-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:4px;margin-bottom:8px}
 .fit-section-label{font-size:9px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);border-top:1px solid rgba(255,255,255,.06);margin:6px 0 5px;padding-top:6px}
@@ -129,6 +133,7 @@ body{min-height:100vh}
 <body>
 
 <div class="header">
+  <a href="index.html" class="back-btn">← Ritorna</a>
   <span class="dot"></span>
   <h1>Accoppiamenti ISO — Albero / Foro</h1>
   <span class="sub">Tolleranze · Materiali · Analisi Termica</span>

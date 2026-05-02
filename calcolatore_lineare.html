@@ -144,6 +144,18 @@ body{min-height:100vh}
 .dv .u{font-size:10px;color:var(--dim);font-weight:400;margin-left:2px}
 
 ::-webkit-scrollbar{width:5px}::-webkit-scrollbar-track{background:var(--bg)}::-webkit-scrollbar-thumb{background:var(--bg3);border-radius:3px}
+
+/* BACK BUTTON */
+.back-btn{font-family:var(--cond,'Barlow Condensed',sans-serif);font-size:10px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--muted,#7a7d8a);text-decoration:none;border:1px solid var(--border2,rgba(255,255,255,.13));border-radius:4px;padding:4px 10px;transition:all .15s;white-space:nowrap;flex-shrink:0}
+.back-btn:hover{color:var(--acc,#4fc3f7);border-color:var(--acc,#4fc3f7)}
+
+/* TOOLTIP */
+[data-tip]{position:relative;cursor:default}
+@keyframes tipIn{from{opacity:0}to{opacity:1}}
+[data-tip]:hover::after{content:attr(data-tip);position:absolute;bottom:calc(100% + 7px);left:0;background:#1e2130;border:1px solid rgba(79,195,247,.25);color:#c8cad4;font-size:10px;padding:7px 11px;border-radius:6px;white-space:pre-wrap;max-width:280px;min-width:180px;z-index:999;line-height:1.6;pointer-events:none;font-family:var(--mono);text-align:left;box-shadow:0 4px 20px rgba(0,0,0,.5);animation:tipIn .12s ease .6s both}
+[data-tip]:hover::before{content:'';position:absolute;bottom:calc(100% + 1px);left:20px;border:5px solid transparent;border-top-color:#1e2130;z-index:1000;pointer-events:none;animation:tipIn .12s ease .6s both}
+[data-tip].tr:hover::after{left:auto;right:0}
+
 /* distance display field */
 .dfield{margin-top:6px;padding-top:6px;border-top:1px solid var(--border)}
 .dval{font-size:15px;font-weight:500;color:var(--amber);font-family:var(--mono);padding:2px 0}
@@ -153,6 +165,7 @@ body{min-height:100vh}
 
 <!-- HEADER -->
 <div class="header">
+  <a href="index.html" class="back-btn">← Ritorna</a>
   <h1><span class="dot"></span>Cinematica</h1>
   <div class="sub">profili di moto · inclinazione · modalità calcolo</div>
   <div class="inc-strip">
@@ -219,7 +232,7 @@ body{min-height:100vh}
     </div>
     <div class="diag-wrap"><svg id="diag" width="100%" height="90" viewBox="0 0 212 100" preserveAspectRatio="xMidYMid meet"></svg></div>
     <div class="field">
-      <div class="fhdr"><span class="flabel">Angolo</span><span style="font-size:10px;color:var(--dim)">°</span></div>
+      <div class="fhdr"><span class="flabel" data-tip="Angolo di inclinazione del piano rispetto all'orizzontale\nUnità: ° (gradi)\nRange: 0° (piano) ÷ 90° (verticale)\nInfluisce su forze gravitazionali e dinamica">Angolo</span><span style="font-size:10px;color:var(--dim)">°</span></div>
       
       <div class="srow">
         <button class="arr" data-key="angolo" data-dir="-1">&#9660;</button>
@@ -234,7 +247,7 @@ body{min-height:100vh}
   <div class="panel">
     <div class="stitle">Oggetto</div>
     <div class="field" id="fld-massa">
-      <div class="fhdr"><span class="flabel">Massa</span><span style="font-size:10px;color:var(--dim)">kg</span></div>
+      <div class="fhdr"><span class="flabel" data-tip="Massa del corpo in movimento\nUnità: kg\nRange tipico: 0.01 ÷ 5000 kg\nInfluisce su forza motrice, inerzia ed energia cinetica">Massa</span><span style="font-size:10px;color:var(--dim)">kg</span></div>
       
       <div class="srow">
         <button class="arr" data-key="massa" data-dir="-1">&#9660;</button>
@@ -250,7 +263,7 @@ body{min-height:100vh}
     <div class="pgrid" id="chips-acc"></div>
     <div class="pdesc" id="desc-acc"></div>
     <div class="field" id="fld-tacc">
-      <div class="fhdr"><span class="flabel">Durata</span><span style="font-size:10px;color:var(--dim)">s</span></div>
+      <div class="fhdr"><span class="flabel" data-tip="Durata della fase di accelerazione\nUnità: s (secondi)\nRange tipico: 0.1 ÷ 120 s\nTempi brevi → accelerazione elevata → forze maggiori">Durata</span><span style="font-size:10px;color:var(--dim)">s</span></div>
       <div class="srow">
         <button class="arr" data-key="tacc" data-dir="-1">&#9660;</button>
         <input type="number" id="ra" class="numinput" value="3" min="0.01" onchange="setVal('tacc',+this.value)" oninput="slid('tacc',+this.value)">
@@ -258,7 +271,7 @@ body{min-height:100vh}
       </div>
     </div>
     <div class="field dfield">
-      <div class="fhdr"><span class="flabel">Distanza</span><span style="font-size:10px;color:var(--dim)">m</span></div>
+      <div class="fhdr"><span class="flabel" data-tip="Distanza percorsa durante l'accelerazione\nUnità: m\nCalcolata automaticamente dal profilo e dalla durata\nModificabile: aggiusta la durata di conseguenza">Distanza</span><span style="font-size:10px;color:var(--dim)">m</span></div>
       <div class="srow">
         <button class="arr" data-key="sacc" data-dir="-1">&#9660;</button>
         <input type="number" id="r-sacc" class="numinput" value="" min="0" step="0.001"
@@ -272,7 +285,7 @@ body{min-height:100vh}
   <div class="panel">
     <div class="stitle">Vel. Costante</div>
     <div class="field" id="fld-tcv">
-      <div class="fhdr"><span class="flabel">Durata</span><span style="font-size:10px;color:var(--dim)">s</span></div>
+      <div class="fhdr"><span class="flabel" data-tip="Durata della fase a velocità costante (cruise)\nUnità: s (secondi)\nRange tipico: 0 ÷ 300 s\nImpostare a 0 per profili puramente acc/dec">Durata</span><span style="font-size:10px;color:var(--dim)">s</span></div>
       <div class="srow">
         <button class="arr" data-key="tcv" data-dir="-1">&#9660;</button>
         <input type="number" id="rc" class="numinput" value="8" min="0" onchange="setVal('tcv',+this.value)" oninput="slid('tcv',+this.value)">
@@ -280,7 +293,7 @@ body{min-height:100vh}
       </div>
     </div>
     <div class="field dfield">
-      <div class="fhdr"><span class="flabel">Distanza</span><span style="font-size:10px;color:var(--dim)">m</span></div>
+      <div class="fhdr"><span class="flabel" data-tip="Distanza percorsa a velocità costante\nUnità: m\nFormula: s = v_max × t_cv\nModificabile: aggiusta la durata di conseguenza">Distanza</span><span style="font-size:10px;color:var(--dim)">m</span></div>
       <div class="srow">
         <button class="arr" data-key="scv" data-dir="-1">&#9660;</button>
         <input type="number" id="r-scv" class="numinput" value="" min="0" step="0.001"
@@ -296,7 +309,7 @@ body{min-height:100vh}
     <div class="pgrid" id="chips-dec"></div>
     <div class="pdesc" id="desc-dec"></div>
     <div class="field" id="fld-tdec">
-      <div class="fhdr"><span class="flabel">Durata</span><span style="font-size:10px;color:var(--dim)">s</span></div>
+      <div class="fhdr"><span class="flabel" data-tip="Durata della fase di decelerazione (frenata)\nUnità: s (secondi)\nRange tipico: 0.1 ÷ 120 s\nTempi brevi → decelerazione intensa → forze frenanti elevate">Durata</span><span style="font-size:10px;color:var(--dim)">s</span></div>
       <div class="srow">
         <button class="arr" data-key="tdec" data-dir="-1">&#9660;</button>
         <input type="number" id="rd" class="numinput" value="2" min="0.01" onchange="setVal('tdec',+this.value)" oninput="slid('tdec',+this.value)">
@@ -304,7 +317,7 @@ body{min-height:100vh}
       </div>
     </div>
     <div class="field dfield">
-      <div class="fhdr"><span class="flabel">Distanza</span><span style="font-size:10px;color:var(--dim)">m</span></div>
+      <div class="fhdr"><span class="flabel" data-tip="Distanza percorsa durante la decelerazione\nUnità: m\nCalcolata dal profilo selezionato e dalla durata\nModificabile: aggiusta la durata di conseguenza">Distanza</span><span style="font-size:10px;color:var(--dim)">m</span></div>
       <div class="srow">
         <button class="arr" data-key="sdec" data-dir="-1">&#9660;</button>
         <input type="number" id="r-sdec" class="numinput" value="" min="0" step="0.001"

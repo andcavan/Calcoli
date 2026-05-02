@@ -4,14 +4,14 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Calcolo Forza di Presa — Pinze Industriali</title>
-<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@300;400;500&family=Instrument+Serif:ital@0;1&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@300;400;500&family=Barlow+Condensed:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <style>
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
   body {
     font-family: 'DM Mono', monospace;
-    background: #1a1a18;
-    color: #e8e4dd;
+    background: #0e0f11;
+    color: #e8e9ec;
     min-height: 100vh;
     padding: 24px 20px;
   }
@@ -42,12 +42,12 @@
   }
 
   h1 {
-    font-family: 'Instrument Serif', serif;
-    font-size: 26px; font-weight: 400;
-    color: #e8e4dd; letter-spacing: -0.5px;
+    font-family: 'Barlow Condensed', sans-serif;
+    font-size: 22px; font-weight: 700;
+    color: #e8e9ec; letter-spacing: .04em; text-transform: uppercase;
   }
   .subtitle {
-    font-size: 12px; color: #6a6560;
+    font-size: 12px; color: #7a7d8a;
     margin-top: 2px; letter-spacing: 0.5px;
   }
 
@@ -56,7 +56,7 @@
     border: 1px solid rgba(232,228,221,0.15);
     background: transparent; color: #8a8580;
     font-size: 14px; cursor: pointer;
-    font-family: 'Instrument Serif', serif;
+    font-family: 'Barlow Condensed', sans-serif;
     flex-shrink: 0; display: flex; align-items: center; justify-content: center;
     transition: all 0.2s;
   }
@@ -75,7 +75,7 @@
     margin-bottom: 8px; text-transform: uppercase; letter-spacing: 1px;
   }
   .formula {
-    font-family: 'Instrument Serif', serif;
+    font-family: 'Barlow Condensed', sans-serif;
     font-size: 20px; color: #e8e4dd; margin-bottom: 6px;
   }
   .info-grid {
@@ -87,6 +87,16 @@
     font-size: 11px; color: #6a6560;
     font-style: italic; margin-top: 10px;
   }
+
+  /* ── Back Button ── */
+  .back-btn{font-family:'Barlow Condensed',sans-serif;font-size:10px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:#7a7d8a;text-decoration:none;border:1px solid rgba(232,228,221,0.15);border-radius:4px;padding:4px 10px;transition:all .15s;white-space:nowrap;flex-shrink:0;display:inline-block;margin-bottom:12px}
+  .back-btn:hover{color:#C45B28;border-color:#C45B28}
+
+  /* ── Tooltip ── */
+  [data-tip]{position:relative;cursor:default}
+  @keyframes tipIn{from{opacity:0}to{opacity:1}}
+  [data-tip]:hover::after{content:attr(data-tip);position:absolute;bottom:calc(100% + 7px);left:0;background:#222220;border:1px solid rgba(196,91,40,.3);color:#e8e9ec;font-size:11px;padding:8px 12px;border-radius:8px;white-space:pre-wrap;max-width:280px;min-width:180px;z-index:999;line-height:1.7;pointer-events:none;font-family:'DM Mono',monospace;text-align:left;box-shadow:0 4px 20px rgba(0,0,0,.5);animation:tipIn .12s ease .6s both}
+  [data-tip]:hover::before{content:'';position:absolute;bottom:calc(100% + 1px);left:20px;border:5px solid transparent;border-top-color:#222220;z-index:1000;pointer-events:none;animation:tipIn .12s ease .6s both}
 
   /* ── Form ── */
   .form-section { display: flex; flex-direction: column; gap: 20px; }
@@ -229,7 +239,7 @@
     display: block;
   }
   .result-card .rc-value {
-    font-family: 'Instrument Serif', serif;
+    font-family: 'Barlow Condensed', sans-serif;
     font-size: 28px; color: #e8e4dd; line-height: 1.1;
   }
   .result-card.accent .rc-value { color: #C45B28; }
@@ -261,6 +271,7 @@
 
   <!-- Header -->
   <header>
+    <a href="index.html" class="back-btn">← Ritorna</a>
     <div class="header-top">
       <div class="header-left">
         <div class="logo-icon">
@@ -300,11 +311,11 @@
     <!-- Row 1: Weight + Orientation -->
     <div class="grid-2">
       <div class="field">
-        <label for="weight">Peso oggetto (kg)</label>
+        <label for="weight" data-tip="Massa dell'oggetto da afferrare\nUnità: kg\nRange tipico: 0.1 ÷ 500 kg\nDetermina la forza peso F = m × g da vincere con l'attrito">Peso oggetto (kg)</label>
         <input type="number" id="weight" min="0" step="0.01" placeholder="es. 5.0">
       </div>
       <div class="field">
-        <label>Orientamento presa</label>
+        <label data-tip="Orientamento geometrico della presa rispetto alla gravità\nVerticale: ganasce sopra/sotto — attrito deve vincere solo inerzia\nOrizzontale: ganasce ai lati — attrito deve vincere tutto il peso\nInfluisce sul fattore geometrico nella formula">Orientamento presa</label>
         <div class="toggle-row">
           <button class="toggle-btn active" id="btn-vertical" onclick="setOrientation('vertical')">
             <span class="icon">↕</span> Verticale (no gravità)
@@ -318,7 +329,7 @@
 
     <!-- Row 2: Material -->
     <div class="field">
-      <label for="material">
+      <label for="material" data-tip="Coppia di materiali ganascia/oggetto — determina il coefficiente di attrito μs statico\nValori tipici: gomma/acciaio ~0.8, acciaio/acciaio ~0.15÷0.3\nμs più alto → forza di presa minore necessaria\nUsa 'Personalizzato' per inserire un valore specifico">
         Materiali a contatto
         <span class="mu-badge" id="mu-badge">μ<sub>s</sub> = 0.80</span>
       </label>
@@ -331,7 +342,7 @@
     <!-- Row 3: Area + Jaws -->
     <div class="grid-2">
       <div class="field">
-        <label for="area">Area di contatto (per ganascia)</label>
+        <label for="area" data-tip="Area di contatto di ciascuna singola ganascia sull'oggetto\nUnità: mm², cm² o m² (selezionare con il menu)\nArea maggiore → pressione di contatto ridotta\nVerifica: pressione = F_ganascia / A ≤ pressione ammissibile superficie">Area di contatto (per ganascia)</label>
         <div class="input-row">
           <input type="number" id="area" min="0" step="0.1" placeholder="es. 200">
           <select id="area-unit">
@@ -342,7 +353,7 @@
         </div>
       </div>
       <div class="field">
-        <label>Numero ganasce</label>
+        <label data-tip="Numero di ganasce che afferrano l'oggetto\n2 ganasce: presa contrapposta (pinze lineari)\n3 ganasce: mandrino a 120° (pezzi cilindrici)\n4 ganasce: mandrino a 90° (pezzi prismatici)\nPiù ganasce → forza per ganascia minore">Numero ganasce</label>
         <div class="toggle-row">
           <button class="toggle-btn jaw-btn active" id="jaw-2" onclick="setJaws(2)">
             <span class="jaw-n">2</span>
@@ -362,7 +373,7 @@
 
     <!-- Row 4: Safety Factor -->
     <div class="field">
-      <label for="safety">Fattore di sicurezza</label>
+      <label for="safety" data-tip="Fattore di sicurezza ks applicato alla forza di presa calcolata\n1.5 — carichi statici, condizioni controllate\n2.0 — uso generale (raccomandato)\n2.5 ÷ 3.0 — carichi dinamici, vibrazioni\n4.0 — applicazioni critiche o di sollevamento">Fattore di sicurezza</label>
       <select id="safety">
         <option value="1.5">1.5 — Statico / leggero</option>
         <option value="2.0" selected>2.0 — Uso generale</option>
@@ -374,7 +385,6 @@
 
     <!-- Buttons -->
     <div class="btn-row">
-      <button class="btn-calc" onclick="calculate()">Calcola</button>
       <button class="btn-reset" onclick="resetForm()">Reset</button>
     </div>
   </div>
@@ -489,12 +499,14 @@ function onMaterialChange() {
     row.classList.remove("visible");
     badge.innerHTML = `μ<sub>s</sub> = ${FRICTION[mat].s}`;
   }
+  calculate();
 }
 
 function setOrientation(val) {
   orientation = val;
   document.getElementById("btn-vertical").classList.toggle("active", val === "vertical");
   document.getElementById("btn-horizontal").classList.toggle("active", val === "horizontal");
+  calculate();
 }
 
 function setJaws(n) {
@@ -502,6 +514,7 @@ function setJaws(n) {
   [2, 3, 4].forEach(j => {
     document.getElementById(`jaw-${j}`).classList.toggle("active", j === n);
   });
+  calculate();
 }
 
 // ── Calculate ──
@@ -513,7 +526,7 @@ function calculate() {
   const mat = document.getElementById("material").value;
 
   if (isNaN(m) || m <= 0 || isNaN(A_raw) || A_raw <= 0) {
-    alert("Inserire peso e area validi.");
+    document.getElementById("results").classList.remove("visible");
     return;
   }
 
@@ -521,7 +534,7 @@ function calculate() {
   if (mat === "Personalizzato") {
     mu = parseFloat(document.getElementById("custom-mu").value);
     if (isNaN(mu) || mu <= 0) {
-      alert("Inserire un coefficiente μs valido.");
+      document.getElementById("results").classList.remove("visible");
       return;
     }
   } else {
@@ -568,13 +581,17 @@ function calculate() {
     `Servono <b>${fmt(F_jaw)} N</b> per ganascia, ` +
     `con una pressione di <b>${fmt(P_MPa, 3)} MPa</b> (${fmt(P_bar, 3)} bar).`;
 
-  const sec = document.getElementById("results");
-  sec.classList.remove("visible");
-  void sec.offsetWidth; // force reflow for animation
-  sec.classList.add("visible");
-
-  setTimeout(() => sec.scrollIntoView({ behavior: "smooth", block: "start" }), 100);
+  document.getElementById("results").classList.add("visible");
 }
+
+// ── Real-time listeners ──
+document.addEventListener('DOMContentLoaded', function() {
+  document.getElementById('weight').addEventListener('input', calculate);
+  document.getElementById('area').addEventListener('input', calculate);
+  document.getElementById('area-unit').addEventListener('change', calculate);
+  document.getElementById('safety').addEventListener('change', calculate);
+  document.getElementById('custom-mu').addEventListener('input', calculate);
+});
 
 // ── Reset ──
 function resetForm() {
