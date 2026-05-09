@@ -1,0 +1,1553 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ruote Dentate</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@300;400;500&family=Barlow+Condensed:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<style>
+:root{
+  --bg:#0e0f11;--bg1:#141519;--bg2:#1c1d23;--bg3:#23252d;
+  --border:rgba(255,255,255,.07);--border2:rgba(255,255,255,.13);
+  --text:#e8e9ec;--muted:#7a7d8a;--dim:#4a4d5a;
+  --acc:#4fc3f7;--acc2:#0288d1;
+  --green:#66bb6a;--amber:#ffa726;--red:#ef5350;--violet:#b39ddb;
+  --mono:'DM Mono',monospace;--cond:'Barlow Condensed',sans-serif;
+  --r:6px;--r2:10px;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{background:var(--bg);color:var(--text);font-family:var(--mono);font-size:12px;height:100%}
+body{display:flex;flex-direction:column;height:100%;min-height:100vh}
+
+/* HEADER */
+.hdr{
+  display:flex;align-items:center;gap:16px;
+  padding:10px 20px;
+  background:var(--bg1);border-bottom:1px solid var(--border);
+  flex-shrink:0;
+}
+.hdr-title{font-family:var(--cond);font-size:1.4rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase}
+.hdr-sub{font-size:10px;color:var(--muted);letter-spacing:.04em}
+.hdr-badges{display:flex;gap:6px;margin-left:auto;align-items:center}
+.badge{font-size:9px;font-family:var(--cond);font-weight:600;letter-spacing:.06em;text-transform:uppercase;padding:3px 8px;border-radius:3px;border:1px solid}
+.badge.blue{color:var(--acc);border-color:rgba(79,195,247,.3);background:rgba(79,195,247,.06)}
+.badge.green{color:var(--green);border-color:rgba(102,187,106,.3);background:rgba(102,187,106,.06)}
+.live-dot{width:7px;height:7px;border-radius:50%;background:var(--green);animation:pulse 2s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+
+/* MAIN LAYOUT */
+.layout{display:flex;flex:1;overflow:hidden}
+
+/* SIDEBAR */
+.sidebar{
+  width:30%;min-width:340px;
+  background:var(--bg1);
+  border-right:1px solid var(--border);
+  overflow-y:auto;
+  flex-shrink:0;
+  padding:14px;
+  display:flex;flex-direction:column;gap:10px;
+}
+
+/* TAB SELECTOR */
+.tabs{
+  display:grid;grid-template-columns:1fr 1fr;gap:4px;
+  background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);padding:4px;
+}
+.tab-btn{
+  font-family:var(--cond);font-size:11px;font-weight:600;letter-spacing:.04em;text-transform:uppercase;
+  padding:7px 4px;border:none;cursor:pointer;border-radius:4px;
+  background:transparent;color:var(--muted);transition:all .15s;
+}
+.tab-btn.active{background:var(--bg3);color:var(--acc);border:1px solid rgba(79,195,247,.2)}
+
+/* PANELS */
+.panel{background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);padding:12px}
+.stitle{
+  font-family:var(--cond);font-size:10px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;
+  color:var(--muted);margin-bottom:10px;padding-bottom:6px;
+  border-bottom:1px solid var(--border);
+}
+
+/* FIELD ROWS */
+.frow{display:flex;align-items:center;gap:8px;padding:3px 0}
+.frow + .frow{border-top:1px solid var(--border)}
+.flabel{flex:1;font-size:11px;color:var(--muted)}
+.fsym{width:28px;font-size:11px;color:var(--dim);text-align:center;font-style:italic}
+.funit{width:32px;font-size:10px;color:var(--dim);text-align:right}
+.fval{
+  width:80px;
+  background:var(--bg3);border:1px solid var(--border2);border-radius:4px;
+  color:var(--text);font-family:var(--mono);font-size:12px;
+  padding:4px 7px;text-align:right;outline:none;
+  transition:border-color .1s;
+}
+.fval:focus{border-color:var(--acc)}
+.fval[readonly]{color:var(--muted);background:var(--bg1);cursor:default}
+select.fval{text-align:left;cursor:pointer;padding:4px 4px}
+
+/* SPIN BUTTONS */
+.spin-wrap{display:flex;align-items:center;gap:2px}
+.arr{
+  width:18px;height:22px;background:var(--bg3);border:1px solid var(--border2);
+  border-radius:3px;cursor:pointer;display:flex;align-items:center;justify-content:center;
+  color:var(--muted);font-size:9px;transition:all .1s;user-select:none;
+}
+.arr:hover{background:var(--bg2);color:var(--text)}
+
+/* TOGGLE CHIPS */
+.chip-row{display:flex;gap:4px;flex-wrap:wrap}
+.chip{
+  font-family:var(--cond);font-size:10px;font-weight:600;letter-spacing:.04em;text-transform:uppercase;
+  padding:4px 10px;border:1px solid var(--border2);border-radius:3px;
+  cursor:pointer;background:transparent;color:var(--muted);transition:all .1s;
+}
+.chip.active{background:rgba(79,195,247,.1);border-color:rgba(79,195,247,.4);color:var(--acc)}
+.chip.active-green{background:rgba(102,187,106,.1);border-color:rgba(102,187,106,.4);color:var(--green)}
+
+/* MATERIAL AUTO BADGE */
+.auto-badge{
+  font-size:9px;font-family:var(--cond);letter-spacing:.04em;text-transform:uppercase;
+  padding:1px 5px;border-radius:2px;
+  background:rgba(79,195,247,.08);border:1px solid rgba(79,195,247,.2);color:var(--acc);
+}
+
+/* MAIN CONTENT */
+.main{flex:1;overflow-y:auto;padding:16px;display:flex;flex-direction:column;gap:14px}
+
+/* KPI CARDS */
+.kpi-row{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
+.kpi{
+  background:var(--bg2);border:1px solid var(--border);border-radius:var(--r2);
+  padding:14px 12px;position:relative;overflow:hidden;
+}
+.kpi::before{content:'';position:absolute;top:0;left:0;right:0;height:2px}
+.kpi.c1::before{background:var(--acc)}
+.kpi.c2::before{background:var(--amber)}
+.kpi.c3::before{background:var(--green)}
+.kpi.c4::before{background:var(--violet)}
+.kpi-lbl{font-size:9px;color:var(--muted);letter-spacing:.06em;text-transform:uppercase;margin-bottom:4px}
+.kpi-val{font-size:1.5rem;font-family:var(--cond);font-weight:700;color:var(--text);line-height:1}
+.kpi-unit{font-size:10px;color:var(--muted);margin-top:2px}
+
+/* RESULT SECTIONS */
+.rsec{background:var(--bg2);border:1px solid var(--border);border-radius:var(--r2);padding:14px}
+.rsec-title{
+  font-family:var(--cond);font-size:11px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;
+  color:var(--muted);margin-bottom:12px;
+}
+
+/* GEO TABLE */
+.gtable{width:100%;border-collapse:collapse;font-size:11px}
+.gtable th{
+  font-family:var(--cond);font-size:9px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;
+  color:var(--dim);padding:4px 8px;border-bottom:1px solid var(--border);text-align:right;
+}
+.gtable th:first-child{text-align:left}
+.gtable td{
+  padding:5px 8px;border-bottom:1px solid rgba(255,255,255,.03);
+  color:var(--text);text-align:right;
+}
+.gtable td:first-child{color:var(--muted);text-align:left}
+.gtable td.sym{color:var(--dim);font-style:italic;text-align:center}
+.gtable td.unit{color:var(--dim);font-size:10px}
+.gtable tr:hover td{background:rgba(255,255,255,.02)}
+
+/* TOLERANCE TABLE */
+.toltable{width:100%;border-collapse:collapse;font-size:11px}
+.toltable th{
+  font-family:var(--cond);font-size:9px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;
+  color:var(--dim);padding:4px 8px;border-bottom:1px solid var(--border);text-align:right;
+}
+.toltable th:first-child{text-align:left}
+.toltable td{padding:5px 8px;border-bottom:1px solid rgba(255,255,255,.03);text-align:right}
+.toltable td:first-child{color:var(--muted);text-align:left}
+.toltable tr:hover td{background:rgba(255,255,255,.02)}
+
+/* VERIFICATION STRIPS */
+.vstrip{
+  border:1px solid var(--border);border-left:3px solid var(--border);
+  border-radius:var(--r);padding:12px;margin-bottom:8px;
+  transition:border-left-color .2s;
+}
+.vstrip.ok{border-left-color:var(--green)}
+.vstrip.warn{border-left-color:var(--amber)}
+.vstrip.err{border-left-color:var(--red)}
+.vstrip-head{display:flex;align-items:center;gap:8px;margin-bottom:10px}
+.vstrip-name{font-family:var(--cond);font-size:12px;font-weight:600;letter-spacing:.04em;text-transform:uppercase;color:var(--text)}
+.sf-badge{
+  font-size:11px;font-family:var(--cond);font-weight:700;letter-spacing:.04em;
+  padding:3px 10px;border-radius:3px;margin-left:auto;
+}
+.sf-badge.ok{background:rgba(102,187,106,.12);border:1px solid rgba(102,187,106,.3);color:var(--green)}
+.sf-badge.warn{background:rgba(255,167,38,.12);border:1px solid rgba(255,167,38,.3);color:var(--amber)}
+.sf-badge.err{background:rgba(239,83,80,.12);border:1px solid rgba(239,83,80,.3);color:var(--red)}
+.sf-req{font-size:10px;color:var(--dim);white-space:nowrap}
+.vstrip-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:10px}
+.vval{font-size:10px;color:var(--muted);line-height:1.6}
+.vbig{font-size:15px;font-family:var(--cond);font-weight:700;color:var(--text)}
+.vunit{font-size:10px;color:var(--dim)}
+/* barra progresso: scala 0–200% di σ/σP; 50% della barra = σ/σP=100% */
+.pbar-wrap{height:8px;background:var(--bg3);border-radius:4px;overflow:visible;position:relative;margin-bottom:3px}
+.pbar{height:100%;border-radius:4px;transition:width .25s;position:relative;z-index:1}
+.pbar.ok{background:var(--green)}
+.pbar.warn{background:var(--amber)}
+.pbar.err{background:var(--red)}
+/* linea verticale al 50% = limite σHP */
+.pbar-limit{position:absolute;top:-2px;bottom:-2px;width:2px;left:50%;background:rgba(255,255,255,.25);z-index:2;border-radius:1px}
+.pbar-labels{display:flex;justify-content:space-between;font-size:9px;color:var(--dim);margin-top:1px}
+
+/* SHIFT STRIP */
+.shift-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.shift-cell{
+  background:var(--bg3);border:1px solid var(--border);border-radius:4px;
+  padding:8px;text-align:center;
+}
+.shift-cell .sc-lbl{font-size:9px;color:var(--muted);letter-spacing:.04em;text-transform:uppercase;margin-bottom:3px}
+.shift-cell .sc-val{font-size:1.1rem;font-family:var(--cond);font-weight:700;color:var(--acc)}
+
+/* CHART */
+.chart-wrap{position:relative;height:220px}
+
+/* HIDDEN */
+.hidden{display:none!important}
+
+/* INFO NOTE */
+.note{font-size:10px;color:var(--dim);padding:6px 8px;background:rgba(255,255,255,.02);border-radius:3px;border-left:2px solid var(--border2)}
+
+/* WARNING */
+.warn-note{font-size:10px;color:var(--amber);padding:6px 8px;background:rgba(255,167,38,.05);border-radius:3px;border-left:2px solid rgba(255,167,38,.3)}
+
+/* BACK BUTTON */
+.back-btn{font-family:var(--cond,'Barlow Condensed',sans-serif);font-size:10px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--muted,#7a7d8a);text-decoration:none;border:1px solid var(--border2,rgba(255,255,255,.13));border-radius:4px;padding:4px 10px;transition:all .15s;white-space:nowrap;flex-shrink:0}
+.back-btn:hover{color:var(--acc,#4fc3f7);border-color:var(--acc,#4fc3f7)}
+
+/* TOOLTIP */
+[data-tip]{position:relative;cursor:default}
+@keyframes tipIn{from{opacity:0}to{opacity:1}}
+[data-tip]:hover::after{content:attr(data-tip);position:absolute;bottom:calc(100% + 7px);left:0;background:#1e2130;border:1px solid rgba(79,195,247,.25);color:#c8cad4;font-size:10px;padding:7px 11px;border-radius:6px;white-space:pre-wrap;max-width:280px;min-width:180px;z-index:999;line-height:1.6;pointer-events:none;font-family:var(--mono);text-align:left;box-shadow:0 4px 20px rgba(0,0,0,.5);animation:tipIn .12s ease .6s both}
+[data-tip]:hover::before{content:'';position:absolute;bottom:calc(100% + 1px);left:20px;border:5px solid transparent;border-top-color:#1e2130;z-index:1000;pointer-events:none;animation:tipIn .12s ease .6s both}
+[data-tip].tr:hover::after{left:auto;right:0}
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<div class="hdr">
+  <a href="index.html" class="back-btn">← Ritorna</a>
+  <div>
+    <div class="hdr-title">Ruote Dentate</div>
+    <div class="hdr-sub">Geometria · Resistenza · ISO 6336 / ISO 10300 / ISO 1328</div>
+  </div>
+  <div class="hdr-badges">
+    <div class="badge blue">ISO 53/54</div>
+    <div class="badge blue">ISO 6336</div>
+    <div class="badge blue">ISO 1328</div>
+    <div class="badge blue">ISO 23509</div>
+    <div class="badge blue">ISO 10300</div>
+    <div class="live-dot" title="Calcolo in tempo reale"></div>
+  </div>
+</div>
+
+<div class="layout">
+
+<!-- SIDEBAR -->
+<div class="sidebar">
+
+  <!-- TAB SELECTOR -->
+  <div class="tabs">
+    <button class="tab-btn active" onclick="setTipo('cil_diritta')">Cil. Diritta</button>
+    <button class="tab-btn" onclick="setTipo('cil_elicoidale')">Cil. Elicoidale</button>
+    <button class="tab-btn" onclick="setTipo('con_diritta')">Con. Diritta</button>
+    <button class="tab-btn" onclick="setTipo('con_elicoidale')">Con. Elicoidale</button>
+  </div>
+
+  <!-- GEOMETRIA BASE -->
+  <div class="panel">
+    <div class="stitle">Geometria</div>
+
+    <div class="frow">
+      <span class="flabel" data-tip="Modulo normale mn — dimensione caratteristica del dente\nUnità: mm\nSerie normalizzata ISO: 1, 1.25, 1.5, 2, 2.5, 3, 4, 5, 6, 8, 10...\nDetermina la dimensione di tutti gli elementi del dente">Modulo normale</span>
+      <span class="fsym">m<sub>n</sub></span>
+      <div class="spin-wrap">
+        <div class="arr" onmousedown="holdStart('mn',-1,this)" onmouseup="holdStop()" onmouseleave="holdStop()">▼</div>
+        <input class="fval" id="i_mn" type="number" step="0.5" min="0.5" max="50" value="3" oninput="sv('mn',this.value)">
+        <div class="arr" onmousedown="holdStart('mn',1,this)" onmouseup="holdStop()" onmouseleave="holdStop()">▲</div>
+      </div>
+      <span class="funit">mm</span>
+    </div>
+
+    <div class="frow">
+      <span class="flabel" data-tip="Angolo di pressione normale αn — profilo del fianco del dente\nUnità: ° (gradi)\nValore standard: 20° (ISO 53)\nAngoli maggiori → denti più robusti ma cuscinetti più caricati">Angolo pressione</span>
+      <span class="fsym">α<sub>n</sub></span>
+      <div class="spin-wrap">
+        <div class="arr" onmousedown="holdStart('alpha_n',-0.5,this)" onmouseup="holdStop()" onmouseleave="holdStop()">▼</div>
+        <input class="fval" id="i_alpha_n" type="number" step="0.5" min="14.5" max="25" value="20" oninput="sv('alpha_n',this.value)">
+        <div class="arr" onmousedown="holdStart('alpha_n',0.5,this)" onmouseup="holdStop()" onmouseleave="holdStop()">▲</div>
+      </div>
+      <span class="funit">°</span>
+    </div>
+
+    <div class="frow" id="row_beta">
+      <span class="flabel" data-tip="Angolo d'elica β — inclinazione del dente rispetto all'asse\nUnità: ° (gradi)\n0° = denti diritti, 15°÷35° = elicoidali tipici\nElica maggiore → moto più silenzioso, componente assiale più elevata">Angolo elica</span>
+      <span class="fsym">β</span>
+      <div class="spin-wrap">
+        <div class="arr" onmousedown="holdStart('beta',-1,this)" onmouseup="holdStop()" onmouseleave="holdStop()">▼</div>
+        <input class="fval" id="i_beta" type="number" step="1" min="0" max="45" value="15" oninput="sv('beta',this.value)">
+        <div class="arr" onmousedown="holdStart('beta',1,this)" onmouseup="holdStop()" onmouseleave="holdStop()">▲</div>
+      </div>
+      <span class="funit">°</span>
+    </div>
+
+    <div class="frow" id="row_beta_m">
+      <span class="flabel" data-tip="Angolo spirale medio βm — per ruote coniche a denti elicoidali (Gleason/Klingelnberg)\nUnità: ° (gradi)\nValore tipico: 30°÷35°\nInfluisce su rapporto di condotta e silenziosità">Angolo spirale medio</span>
+      <span class="fsym">β<sub>m</sub></span>
+      <div class="spin-wrap">
+        <div class="arr" onmousedown="holdStart('beta_m',-1,this)" onmouseup="holdStop()" onmouseleave="holdStop()">▼</div>
+        <input class="fval" id="i_beta_m" type="number" step="1" min="0" max="45" value="35" oninput="sv('beta_m',this.value)">
+        <div class="arr" onmousedown="holdStart('beta_m',1,this)" onmouseup="holdStop()" onmouseleave="holdStop()">▲</div>
+      </div>
+      <span class="funit">°</span>
+    </div>
+
+    <div class="frow">
+      <span class="flabel" data-tip="Numero di denti ruota 1 (pignone, elemento motore)\nUnità: adimensionale — intero positivo\nRange tipico: 12 ÷ 200\nz1 minimo per evitare interferenza: ~17 (α=20°, β=0°)">Denti ruota 1</span>
+      <span class="fsym">z<sub>1</sub></span>
+      <div class="spin-wrap">
+        <div class="arr" onmousedown="holdStart('z1',-1,this)" onmouseup="holdStop()" onmouseleave="holdStop()">▼</div>
+        <input class="fval" id="i_z1" type="number" step="1" min="5" max="400" value="20" oninput="svInt('z1',this)" onkeydown="blockDecimal(event)">
+        <div class="arr" onmousedown="holdStart('z1',1,this)" onmouseup="holdStop()" onmouseleave="holdStop()">▲</div>
+      </div>
+      <span class="funit">—</span>
+    </div>
+
+    <div class="frow">
+      <span class="flabel" data-tip="Numero di denti ruota 2 (corona, elemento condotto)\nUnità: adimensionale — intero positivo\nRapporto di trasmissione: u = z2/z1\nValori tipici: u = 1 ÷ 8 per singolo stadio">Denti ruota 2</span>
+      <span class="fsym">z<sub>2</sub></span>
+      <div class="spin-wrap">
+        <div class="arr" onmousedown="holdStart('z2',-1,this)" onmouseup="holdStop()" onmouseleave="holdStop()">▼</div>
+        <input class="fval" id="i_z2" type="number" step="1" min="5" max="400" value="40" oninput="svInt('z2',this)" onkeydown="blockDecimal(event)">
+        <div class="arr" onmousedown="holdStart('z2',1,this)" onmouseup="holdStop()" onmouseleave="holdStop()">▲</div>
+      </div>
+      <span class="funit">—</span>
+    </div>
+
+    <div class="frow">
+      <span class="flabel" data-tip="Larghezza del dente b\nUnità: mm\nRange tipico: b = 6÷14 × mn (per ruote cilindriche)\nLarghezze maggiori aumentano la portata ma aggravano la distribuzione del carico">Larghezza dente</span>
+      <span class="fsym">b</span>
+      <div class="spin-wrap">
+        <div class="arr" onmousedown="holdStart('b',-1,this)" onmouseup="holdStop()" onmouseleave="holdStop()">▼</div>
+        <input class="fval" id="i_b" type="number" step="1" min="1" max="1000" value="30" oninput="sv('b',this.value)">
+        <div class="arr" onmousedown="holdStart('b',1,this)" onmouseup="holdStop()" onmouseleave="holdStop()">▲</div>
+      </div>
+      <span class="funit">mm</span>
+    </div>
+
+    <div class="frow">
+      <span class="flabel" data-tip="Interasse centro-centro a\nUnità: mm\nSe lasciato vuoto viene calcolato il valore standard: a = mn(z1+z2)/(2·cosβ)\nValori personalizzati permettono correzione profilo (addendum modification)">Interasse (vuoto=std)</span>
+      <span class="fsym">a'</span>
+      <input class="fval" id="i_aprime" type="number" step="0.1" min="1" placeholder="std" oninput="sv('a_prime',this.value)">
+      <span class="funit">mm</span>
+    </div>
+  </div>
+
+  <!-- CINEMATICA E CARICO -->
+  <div class="panel">
+    <div class="stitle">Cinematica e Carico</div>
+
+    <div class="frow">
+      <span class="flabel" data-tip="Velocità di rotazione della ruota 1 (pignone)\nUnità: rpm (giri al minuto)\nRange tipico: 50 ÷ 3600 rpm\nInfluisce su velocità periferica, potenza e durata">Velocità ruota 1</span>
+      <span class="fsym">n<sub>1</sub></span>
+      <div class="spin-wrap">
+        <div class="arr" onmousedown="holdStart('n1',-10,this)" onmouseup="holdStop()" onmouseleave="holdStop()">▼</div>
+        <input class="fval" id="i_n1" type="number" step="10" min="1" max="100000" value="1450" oninput="sv('n1',this.value)">
+        <div class="arr" onmousedown="holdStart('n1',10,this)" onmouseup="holdStop()" onmouseleave="holdStop()">▲</div>
+      </div>
+      <span class="funit">rpm</span>
+    </div>
+
+    <div class="frow">
+      <span class="flabel">Modalità input</span>
+      <span class="fsym"></span>
+      <div class="chip-row">
+        <div class="chip active" id="chip_P" onclick="setInputMode('P')">Potenza P</div>
+        <div class="chip" id="chip_T" onclick="setInputMode('T')">Coppia T</div>
+      </div>
+      <span class="funit"></span>
+    </div>
+
+    <div class="frow" id="row_P">
+      <span class="flabel" data-tip="Potenza nominale trasmessa dalla coppia\nUnità: kW\nRange tipico: 0.1 ÷ 1000 kW\nUsata per calcolare le forze sui denti e verificare la resistenza">Potenza trasmessa</span>
+      <span class="fsym">P</span>
+      <div class="spin-wrap">
+        <div class="arr" onmousedown="holdStart('P',-0.5,this)" onmouseup="holdStop()" onmouseleave="holdStop()">▼</div>
+        <input class="fval" id="i_P" type="number" step="0.5" min="0.01" max="10000" value="5" oninput="sv('P',this.value)">
+        <div class="arr" onmousedown="holdStart('P',0.5,this)" onmouseup="holdStop()" onmouseleave="holdStop()">▲</div>
+      </div>
+      <span class="funit">kW</span>
+    </div>
+
+    <div class="frow hidden" id="row_T">
+      <span class="flabel" data-tip="Coppia torcente applicata alla ruota 1 (pignone)\nUnità: N·m\nAlternativa all'inserimento della potenza\nT1 = P / ω1 = P × 60 / (2π × n1)">Coppia ruota 1</span>
+      <span class="fsym">T<sub>1</sub></span>
+      <div class="spin-wrap">
+        <div class="arr" onmousedown="holdStart('T1',-5,this)" onmouseup="holdStop()" onmouseleave="holdStop()">▼</div>
+        <input class="fval" id="i_T1" type="number" step="5" min="0.1" max="1000000" value="33" oninput="sv('T1',this.value)">
+        <div class="arr" onmousedown="holdStart('T1',5,this)" onmouseup="holdStop()" onmouseleave="holdStop()">▲</div>
+      </div>
+      <span class="funit">N·m</span>
+    </div>
+  </div>
+
+  <!-- MATERIALI -->
+  <div class="panel">
+    <div class="stitle">Materiale Ruota 1</div>
+    <div class="frow" style="flex-direction:column;align-items:stretch;gap:6px">
+      <select class="fval" id="sel_mat1" style="width:100%" onchange="setMat(1,this.value)">
+        <option value="42CrMo4_bonificato">42CrMo4 bonificato</option>
+        <option value="16MnCr5_cementato">16MnCr5 cementato</option>
+        <option value="18CrNiMo7_cementato">18CrNiMo7-6 cementato</option>
+        <option value="C45_normalizzato">C45 normalizzato</option>
+        <option value="GG25_ghisa">GG25 ghisa grigia</option>
+        <option value="CuSn12_bronzo">CuSn12 bronzo</option>
+        <option value="custom">Valori personalizzati</option>
+      </select>
+    </div>
+    <div class="frow">
+      <span class="flabel">σ<sub>b</sub></span><span class="fsym"></span>
+      <input class="fval" id="i_sb1" type="number" value="900" oninput="sv('sb1',this.value)">
+      <span class="funit">MPa</span>
+    </div>
+    <div class="frow">
+      <span class="flabel">σ<sub>Flim</sub></span><span class="fsym"></span>
+      <input class="fval" id="i_sFlim1" type="number" value="430" oninput="sv('sFlim1',this.value)">
+      <span class="funit">MPa</span>
+    </div>
+    <div class="frow">
+      <span class="flabel">σ<sub>Hlim</sub></span><span class="fsym"></span>
+      <input class="fval" id="i_sHlim1" type="number" value="1210" oninput="sv('sHlim1',this.value)">
+      <span class="funit">MPa</span>
+    </div>
+    <div class="frow">
+      <span class="flabel">Modulo elastico E</span><span class="fsym"></span>
+      <select class="fval" id="sel_E1" onchange="sv('E1',this.value)">
+        <option value="206000">Acciaio 206 GPa</option>
+        <option value="170000">Ghisa 170 GPa</option>
+        <option value="110000">Bronzo 110 GPa</option>
+      </select>
+      <span class="funit"></span>
+    </div>
+  </div>
+
+  <div class="panel">
+    <div class="stitle">Materiale Ruota 2</div>
+    <div class="frow" style="flex-direction:column;align-items:stretch;gap:6px">
+      <select class="fval" id="sel_mat2" style="width:100%" onchange="setMat(2,this.value)">
+        <option value="42CrMo4_bonificato">42CrMo4 bonificato</option>
+        <option value="16MnCr5_cementato">16MnCr5 cementato</option>
+        <option value="18CrNiMo7_cementato">18CrNiMo7-6 cementato</option>
+        <option value="C45_normalizzato">C45 normalizzato</option>
+        <option value="GG25_ghisa">GG25 ghisa grigia</option>
+        <option value="CuSn12_bronzo">CuSn12 bronzo</option>
+        <option value="custom">Valori personalizzati</option>
+      </select>
+    </div>
+    <div class="frow">
+      <span class="flabel">σ<sub>b</sub></span><span class="fsym"></span>
+      <input class="fval" id="i_sb2" type="number" value="900" oninput="sv('sb2',this.value)">
+      <span class="funit">MPa</span>
+    </div>
+    <div class="frow">
+      <span class="flabel">σ<sub>Flim</sub></span><span class="fsym"></span>
+      <input class="fval" id="i_sFlim2" type="number" value="430" oninput="sv('sFlim2',this.value)">
+      <span class="funit">MPa</span>
+    </div>
+    <div class="frow">
+      <span class="flabel">σ<sub>Hlim</sub></span><span class="fsym"></span>
+      <input class="fval" id="i_sHlim2" type="number" value="1210" oninput="sv('sHlim2',this.value)">
+      <span class="funit">MPa</span>
+    </div>
+    <div class="frow">
+      <span class="flabel">Modulo elastico E</span><span class="fsym"></span>
+      <select class="fval" id="sel_E2" onchange="sv('E2',this.value)">
+        <option value="206000">Acciaio 206 GPa</option>
+        <option value="170000">Ghisa 170 GPa</option>
+        <option value="110000">Bronzo 110 GPa</option>
+      </select>
+      <span class="funit"></span>
+    </div>
+  </div>
+
+  <!-- PARAMETRI DI SERVIZIO -->
+  <div class="panel">
+    <div class="stitle">Servizio e Precisione</div>
+
+    <div class="frow">
+      <span class="flabel">Grado precisione ISO 1328</span>
+      <span class="fsym">Q</span>
+      <select class="fval" id="sel_grado" onchange="sv('grado_prec',this.value)">
+        <option value="5">5 — Altissima prec.</option>
+        <option value="6">6 — Alta precisione</option>
+        <option value="7" selected>7 — Normale</option>
+        <option value="8">8 — Commerciale</option>
+        <option value="9">9 — Media</option>
+        <option value="10">10 — Grezza</option>
+        <option value="11">11</option>
+        <option value="12">12 — Molto grezza</option>
+      </select>
+      <span class="funit"></span>
+    </div>
+
+    <div class="frow">
+      <span class="flabel">Tipo carico (K<sub>A</sub>)</span>
+      <span class="fsym"></span>
+      <select class="fval" id="sel_KA" onchange="sv('KA_sel',this.value)">
+        <option value="1.00">Uniforme — 1.00</option>
+        <option value="1.25" selected>Moderato — 1.25</option>
+        <option value="1.50">Pesante — 1.50</option>
+        <option value="1.75">Molto pesante — 1.75</option>
+        <option value="custom">Manuale</option>
+      </select>
+      <span class="funit"></span>
+    </div>
+
+    <div class="frow" id="row_KA_man">
+      <span class="flabel" data-tip="Fattore applicazione del carico KA — inserimento manuale\nAdimensionale\nRange: 1.0 (carico uniforme) ÷ 2.5 (urti pesanti)\nSovrascrive la selezione automatica dal tipo di carico">K<sub>A</sub> manuale</span>
+      <span class="fsym">K<sub>A</sub></span>
+      <input class="fval" id="i_KA" type="number" step="0.05" min="1" max="3" value="1.25" oninput="sv('KA',this.value)">
+      <span class="funit">—</span>
+    </div>
+
+    <div class="frow">
+      <span class="flabel" data-tip="Fattore distribuzione del carico sulla larghezza KHβ\nAdimensionale\nRange: 1.0 (distribuzione uniforme) ÷ 2.0 (forte disomogeneità)\nDipende da rigidità albero, cuscinetti e montaggio">K<sub>Hβ</sub> (distrib. largh.)</span>
+      <span class="fsym">K<sub>Hβ</sub></span>
+      <div class="spin-wrap">
+        <div class="arr" onmousedown="holdStart('KHb',-0.05,this)" onmouseup="holdStop()" onmouseleave="holdStop()">▼</div>
+        <input class="fval" id="i_KHb" type="number" step="0.05" min="1" max="2.5" value="1.20" oninput="sv('KHb',this.value)">
+        <div class="arr" onmousedown="holdStart('KHb',0.05,this)" onmouseup="holdStop()" onmouseleave="holdStop()">▲</div>
+      </div>
+      <span class="funit">—</span>
+    </div>
+
+    <div class="frow">
+      <span class="flabel" data-tip="Durata richiesta in ore di servizio\nUnità: h (ore)\nRange tipico: 5000 ÷ 100000 h\nInfluisce sul numero di cicli di sollecitazione e sul fattore di vita">Ore di servizio</span>
+      <span class="fsym">L<sub>h</sub></span>
+      <div class="spin-wrap">
+        <div class="arr" onmousedown="holdStart('ore_servizio',-1000,this)" onmouseup="holdStop()" onmouseleave="holdStop()">▼</div>
+        <input class="fval" id="i_ore" type="number" step="1000" min="100" max="200000" value="20000" oninput="sv('ore_servizio',this.value)">
+        <div class="arr" onmousedown="holdStart('ore_servizio',1000,this)" onmouseup="holdStop()" onmouseleave="holdStop()">▲</div>
+      </div>
+      <span class="funit">h</span>
+    </div>
+
+    <div class="frow">
+      <span class="flabel" data-tip="Coefficiente di sicurezza minimo a pitting (fatica superficiale)\nAdimensionale\nValore minimo raccomandato ISO 6336: 1.2 ÷ 1.5\nValori più alti per applicazioni critiche o incertezza sul carico">S<sub>Hmin</sub></span>
+      <span class="fsym"></span>
+      <input class="fval" id="i_SHmin" type="number" step="0.05" min="0.8" max="2" value="1.00" oninput="sv('SHmin',this.value)">
+      <span class="funit">—</span>
+    </div>
+
+    <div class="frow">
+      <span class="flabel" data-tip="Coefficiente di sicurezza minimo a rottura del dente (fatica flessionale)\nAdimensionale\nValore minimo raccomandato ISO 6336: 1.4 ÷ 2.0\nPer applicazioni con rischio di sicurezza usare valori maggiori">S<sub>Fmin</sub></span>
+      <span class="fsym"></span>
+      <input class="fval" id="i_SFmin" type="number" step="0.05" min="1" max="3" value="1.40" oninput="sv('SFmin',this.value)">
+      <span class="funit">—</span>
+    </div>
+  </div>
+
+</div><!-- /sidebar -->
+
+<!-- MAIN CONTENT -->
+<div class="main">
+
+  <!-- KPI -->
+  <div class="kpi-row">
+    <div class="kpi c1">
+      <div class="kpi-lbl">Rapporto di trasmissione</div>
+      <div class="kpi-val" id="o_i">—</div>
+      <div class="kpi-unit">i = z₂/z₁</div>
+    </div>
+    <div class="kpi c2">
+      <div class="kpi-lbl">Interasse</div>
+      <div class="kpi-val" id="o_a">—</div>
+      <div class="kpi-unit" id="o_a_label">mm</div>
+    </div>
+    <div class="kpi c3">
+      <div class="kpi-lbl">Velocità periferica</div>
+      <div class="kpi-val" id="o_v">—</div>
+      <div class="kpi-unit">m/s</div>
+    </div>
+    <div class="kpi c4">
+      <div class="kpi-lbl">Coppia ruota 2</div>
+      <div class="kpi-val" id="o_T2">—</div>
+      <div class="kpi-unit">N·m</div>
+    </div>
+  </div>
+
+  <!-- CORREZIONE DENTATURA -->
+  <div class="rsec" id="sec_shift" style="display:none">
+    <div class="rsec-title">Correzione Dentatura (Spostamento del profilo)</div>
+    <div class="shift-grid">
+      <div class="shift-cell"><div class="sc-lbl">x₁+x₂</div><div class="sc-val" id="o_xsum">—</div></div>
+      <div class="shift-cell"><div class="sc-lbl">x₁</div><div class="sc-val" id="o_x1">—</div></div>
+      <div class="shift-cell"><div class="sc-lbl">x₂</div><div class="sc-val" id="o_x2">—</div></div>
+      <div class="shift-cell"><div class="sc-lbl">α't (°)</div><div class="sc-val" id="o_alphat_prime">—</div></div>
+      <div class="shift-cell"><div class="sc-lbl">Gioco radiale (mm)</div><div class="sc-val" id="o_gioco">—</div></div>
+      <div class="shift-cell"><div class="sc-lbl">Tipo accoppiamento</div><div class="sc-val" id="o_acc_type" style="font-size:.85rem">—</div></div>
+    </div>
+  </div>
+
+  <!-- GEOMETRIA -->
+  <div class="rsec">
+    <div class="rsec-title">Geometria</div>
+    <table class="gtable">
+      <thead>
+        <tr>
+          <th style="text-align:left">Grandezza</th>
+          <th>Simb.</th>
+          <th>Ruota 1</th>
+          <th>Ruota 2</th>
+          <th>Unità</th>
+        </tr>
+      </thead>
+      <tbody id="geo_body"></tbody>
+    </table>
+  </div>
+
+  <!-- TOLLERANZE ISO 1328 -->
+  <div class="rsec">
+    <div class="rsec-title">Tolleranze ISO 1328 — Grado <span id="o_grado_label">7</span></div>
+    <table class="toltable">
+      <thead>
+        <tr>
+          <th style="text-align:left">Tolleranza</th>
+          <th>Simbolo</th>
+          <th>Ruota 1</th>
+          <th>Ruota 2</th>
+          <th>Unità</th>
+        </tr>
+      </thead>
+      <tbody id="tol_body"></tbody>
+    </table>
+    <div class="note" style="margin-top:8px">Valori calcolati secondo ISO 1328-1:2013. d = diametro primitivo, m = modulo normale.</div>
+  </div>
+
+  <!-- VERIFICHE -->
+  <div class="rsec">
+    <div class="rsec-title">Verifiche di Resistenza</div>
+
+    <!-- Pitting Ruota 1 -->
+    <div class="vstrip" id="vs_H1">
+      <div class="vstrip-head">
+        <div class="vstrip-name">Pitting — Ruota 1</div>
+        <div class="sf-badge ok" id="badge_H1">SH = —</div>
+        <div class="sf-req" id="req_H1">richiesto ≥ —</div>
+      </div>
+      <div class="vstrip-grid">
+        <div class="vval">σ<sub>H</sub> calcolata<br><span class="vbig" id="o_sH1">—</span> <span class="vunit">MPa</span></div>
+        <div class="vval">σ<sub>HP</sub> ammissibile<br><span class="vbig" id="o_sHP1">—</span> <span class="vunit">MPa</span></div>
+        <div class="vval">Utilizzo<br><span class="vbig" id="o_util_H1">—</span> <span class="vunit">%</span></div>
+      </div>
+      <div class="pbar-wrap">
+        <div class="pbar-limit" id="pbl_H1"></div>
+        <div class="pbar ok" id="pb_H1" style="width:0%"></div>
+      </div>
+      <div class="pbar-labels"><span>0%</span><span>σ<sub>HP</sub></span><span>200%</span></div>
+    </div>
+
+    <!-- Pitting Ruota 2 -->
+    <div class="vstrip" id="vs_H2">
+      <div class="vstrip-head">
+        <div class="vstrip-name">Pitting — Ruota 2</div>
+        <div class="sf-badge ok" id="badge_H2">SH = —</div>
+        <div class="sf-req" id="req_H2">richiesto ≥ —</div>
+      </div>
+      <div class="vstrip-grid">
+        <div class="vval">σ<sub>H</sub> calcolata<br><span class="vbig" id="o_sH2">—</span> <span class="vunit">MPa</span></div>
+        <div class="vval">σ<sub>HP</sub> ammissibile<br><span class="vbig" id="o_sHP2">—</span> <span class="vunit">MPa</span></div>
+        <div class="vval">Utilizzo<br><span class="vbig" id="o_util_H2">—</span> <span class="vunit">%</span></div>
+      </div>
+      <div class="pbar-wrap">
+        <div class="pbar-limit" id="pbl_H2"></div>
+        <div class="pbar ok" id="pb_H2" style="width:0%"></div>
+      </div>
+      <div class="pbar-labels"><span>0%</span><span>σ<sub>HP</sub></span><span>200%</span></div>
+    </div>
+
+    <!-- Flessione Ruota 1 -->
+    <div class="vstrip" id="vs_F1">
+      <div class="vstrip-head">
+        <div class="vstrip-name">Flessione — Ruota 1</div>
+        <div class="sf-badge ok" id="badge_F1">SF = —</div>
+        <div class="sf-req" id="req_F1">richiesto ≥ —</div>
+      </div>
+      <div class="vstrip-grid">
+        <div class="vval">σ<sub>F</sub> calcolata<br><span class="vbig" id="o_sF1">—</span> <span class="vunit">MPa</span></div>
+        <div class="vval">σ<sub>FP</sub> ammissibile<br><span class="vbig" id="o_sFP1">—</span> <span class="vunit">MPa</span></div>
+        <div class="vval">Utilizzo<br><span class="vbig" id="o_util_F1">—</span> <span class="vunit">%</span></div>
+      </div>
+      <div class="pbar-wrap">
+        <div class="pbar-limit" id="pbl_F1"></div>
+        <div class="pbar ok" id="pb_F1" style="width:0%"></div>
+      </div>
+      <div class="pbar-labels"><span>0%</span><span>σ<sub>FP</sub></span><span>200%</span></div>
+    </div>
+
+    <!-- Flessione Ruota 2 -->
+    <div class="vstrip" id="vs_F2">
+      <div class="vstrip-head">
+        <div class="vstrip-name">Flessione — Ruota 2</div>
+        <div class="sf-badge ok" id="badge_F2">SF = —</div>
+        <div class="sf-req" id="req_F2">richiesto ≥ —</div>
+      </div>
+      <div class="vstrip-grid">
+        <div class="vval">σ<sub>F</sub> calcolata<br><span class="vbig" id="o_sF2">—</span> <span class="vunit">MPa</span></div>
+        <div class="vval">σ<sub>FP</sub> ammissibile<br><span class="vbig" id="o_sFP2">—</span> <span class="vunit">MPa</span></div>
+        <div class="vval">Utilizzo<br><span class="vbig" id="o_util_F2">—</span> <span class="vunit">%</span></div>
+      </div>
+      <div class="pbar-wrap">
+        <div class="pbar-limit" id="pbl_F2"></div>
+        <div class="pbar ok" id="pb_F2" style="width:0%"></div>
+      </div>
+      <div class="pbar-labels"><span>0%</span><span>σ<sub>FP</sub></span><span>200%</span></div>
+    </div>
+
+    <!-- Fattori di carico -->
+    <div style="margin-top:10px">
+      <div class="rsec-title" style="margin-bottom:8px">Fattori di Carico Applicati</div>
+      <table class="toltable">
+        <thead><tr><th style="text-align:left">Fattore</th><th>Simbolo</th><th>Valore</th><th>Note</th></tr></thead>
+        <tbody id="factor_body"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- GRAFICO -->
+  <div class="rsec">
+    <div class="rsec-title">Grafico Coefficienti di Sicurezza</div>
+    <div class="chart-wrap">
+      <canvas id="chartSF"></canvas>
+    </div>
+    <div class="note" style="margin-top:8px">Valori &gt; 1.0 indicano verifica superata. Linea rossa = limite minimo.</div>
+  </div>
+
+  <!-- NOTE NORME -->
+  <div class="rsec">
+    <div class="rsec-title">Note e Riferimenti Normativi</div>
+    <div class="note">
+      <b>ISO 6336</b> (cilindriche): calcolo capacità di carico metodo B — fattori K secondo grado di precisione e velocità.<br>
+      <b>ISO 10300</b> (coniche): calcolo riferito alle grandezze medie (d<sub>m</sub>, m<sub>mm</sub>) con fattore Z<sub>K</sub>.<br>
+      <b>ISO 1328</b>: tolleranze calcolate secondo le formule della norma — Fp, fpt, Fα, Fβ in funzione di d e m.<br>
+      <b>ISO 23509</b>: geometria ruote coniche — angoli di cono, diametri esterno e medio.<br>
+      <b>Correzione dentatura</b>: calcolata per interasse non standard; distribuzione x bilanciata (x₁ = x₂ = x_sum/2).
+    </div>
+  </div>
+
+</div><!-- /main -->
+</div><!-- /layout -->
+
+<script>
+// ============================================================
+// DATI
+// ============================================================
+const MATERIALS = {
+  '42CrMo4_bonificato':  {sb:900,  sFlim:430, sHlim:1210, E:206000, nu:0.3},
+  '16MnCr5_cementato':   {sb:1100, sFlim:500, sHlim:1500, E:206000, nu:0.3},
+  '18CrNiMo7_cementato': {sb:1300, sFlim:540, sHlim:1650, E:206000, nu:0.3},
+  'C45_normalizzato':    {sb:600,  sFlim:280, sHlim:870,  E:206000, nu:0.3},
+  'GG25_ghisa':          {sb:250,  sFlim:120, sHlim:460,  E:170000, nu:0.26},
+  'CuSn12_bronzo':       {sb:280,  sFlim:100, sHlim:500,  E:110000, nu:0.34},
+};
+
+// Fattori forma YF approssimati (ISO 6336-3 Figura 6) per z virtuale con x=0
+// Interpolazione lineare su valori tabulati
+const YF_DATA = [
+  [5,2.87],[6,2.74],[7,2.64],[8,2.57],[9,2.52],[10,2.47],[12,2.40],[14,2.35],
+  [16,2.31],[18,2.28],[20,2.25],[25,2.21],[30,2.17],[40,2.13],[50,2.10],
+  [60,2.08],[80,2.06],[100,2.05],[150,2.03],[200,2.02],[300,2.01],[400,2.00]
+];
+const YS_DATA = [
+  [5,1.56],[6,1.58],[7,1.60],[8,1.61],[9,1.63],[10,1.64],[12,1.66],[14,1.68],
+  [16,1.69],[18,1.70],[20,1.71],[25,1.73],[30,1.74],[40,1.76],[50,1.77],
+  [60,1.78],[80,1.79],[100,1.80],[150,1.81],[200,1.82],[300,1.83],[400,1.84]
+];
+
+// ============================================================
+// STATO
+// ============================================================
+const ST = {
+  tipo:'cil_diritta',
+  mn:3, alpha_n:20, beta:15, beta_m:35,
+  z1:20, z2:40, b:30,
+  a_prime:null,
+  n1:1450, P:5, T1:null, input_mode:'P',
+  mat1:'42CrMo4_bonificato', mat2:'42CrMo4_bonificato',
+  sb1:900, sFlim1:430, sHlim1:1210, E1:206000, nu1:0.3,
+  sb2:900, sFlim2:430, sHlim2:1210, E2:206000, nu2:0.3,
+  grado_prec:7,
+  KA_sel:'1.25', KA:1.25,
+  KHb:1.20,
+  ore_servizio:20000,
+  SHmin:1.00, SFmin:1.40,
+};
+
+// ============================================================
+// UTILITÀ MATEMATICA
+// ============================================================
+const R = Math.PI/180;
+const D = 180/Math.PI;
+const inv = a => Math.tan(a) - a;  // involuta (a in radianti)
+
+function lerp(x, table) {
+  if (x <= table[0][0]) return table[0][1];
+  if (x >= table[table.length-1][0]) return table[table.length-1][1];
+  for (let i=0; i<table.length-1; i++) {
+    if (x >= table[i][0] && x <= table[i+1][0]) {
+      const t = (x - table[i][0]) / (table[i+1][0] - table[i][0]);
+      return table[i][1] + t*(table[i+1][1]-table[i][1]);
+    }
+  }
+  return table[table.length-1][1];
+}
+
+function fp(v, d=3) {
+  if (!isFinite(v) || isNaN(v)) return '—';
+  return v.toFixed(d);
+}
+
+// ============================================================
+// CALCOLO
+// ============================================================
+function compute(st) {
+  const mn = st.mn, z1 = st.z1, z2 = st.z2, b = st.b;
+  const an_rad = st.alpha_n * R;
+  const tipo = st.tipo;
+  const isCilindrica = tipo === 'cil_diritta' || tipo === 'cil_elicoidale';
+  const isElicoidale = tipo === 'cil_elicoidale' || tipo === 'con_elicoidale';
+
+  let res = {};
+
+  // ---- Geometria cilindrica ----
+  if (isCilindrica) {
+    const beta_rad = isElicoidale ? st.beta * R : 0;
+    const cosB = Math.cos(beta_rad);
+    const sinB = Math.sin(beta_rad);
+
+    const mt = mn / cosB;
+    const tan_at = Math.tan(an_rad) / cosB;
+    const at_rad = Math.atan(tan_at);
+    const at_deg = at_rad * D;
+
+    const a_std = (z1 + z2) * mt / 2;
+    const i = z2 / z1;
+
+    // Correzione se interasse non standard
+    let x1 = 0, x2 = 0, xsum = 0, a_prime = a_std;
+    let hasShift = false;
+    let at_prime_rad = at_rad, at_prime_deg = at_deg;
+    if (st.a_prime && Math.abs(st.a_prime - a_std) > 0.01) {
+      a_prime = st.a_prime;
+      hasShift = true;
+      // αt' dall'interasse reale
+      const cosAt = Math.cos(at_rad);
+      const cos_at_prime = (z1+z2) * mt * cosAt / (2 * a_prime);
+      if (cos_at_prime > 0 && cos_at_prime <= 1) {
+        at_prime_rad = Math.acos(cos_at_prime);
+        at_prime_deg = at_prime_rad * D;
+        const inv_at = inv(at_rad);
+        const inv_at_prime = inv(at_prime_rad);
+        xsum = (z1+z2) / 2 * (inv_at_prime - inv_at) / Math.tan(an_rad);
+        x1 = xsum / 2;
+        x2 = xsum / 2;
+      }
+    }
+
+    const d1 = mt * z1;
+    const d2 = mt * z2;
+    const db1 = d1 * Math.cos(at_rad);
+    const db2 = d2 * Math.cos(at_rad);
+    const da1 = d1 + 2 * mn * (1 + x1);
+    const da2 = d2 + 2 * mn * (1 + x2);
+    const df1 = d1 - 2 * mn * (1.25 - x1);
+    const df2 = d2 - 2 * mn * (1.25 - x2);
+    const h = 2.25 * mn + (x1+x2 === 0 ? 0 : 0);
+    const ha1 = mn * (1 + x1), ha2 = mn * (1 + x2);
+    const hf1 = mn * (1.25 - x1), hf2 = mn * (1.25 - x2);
+
+    // Angoli di testa reali
+    const aa1 = Math.acos(db1 / da1);
+    const aa2 = Math.acos(db2 / da2);
+    const ea = (z1*(Math.tan(aa1)-Math.tan(at_prime_rad)) + z2*(Math.tan(aa2)-Math.tan(at_prime_rad))) / (2*Math.PI);
+    let eb = 0, eg = ea;
+    if (isElicoidale) {
+      eb = b * sinB / (Math.PI * mn);
+      eg = ea + eb;
+    }
+
+    const passo_normale = Math.PI * mn;
+    const passo_app = Math.PI * mt;
+
+    // Cinematica
+    const n2 = st.n1 / i;
+    const v = Math.PI * d1 * st.n1 / 60000;
+    let T1, T2, Ft;
+    if (st.input_mode === 'P') {
+      T1 = 60000 * st.P / (2 * Math.PI * st.n1);
+      T2 = T1 * i;
+      Ft = 2000 * T1 / d1;
+    } else {
+      T1 = st.T1;
+      T2 = T1 * i;
+      Ft = 2000 * T1 / d1;
+    }
+    const P_kW = T1 * 2 * Math.PI * st.n1 / 60000;
+
+    // Fattori di carico
+    const KA = st.KA_sel === 'custom' ? st.KA : parseFloat(st.KA_sel);
+    const u = i;
+    // Kv approssimato (ISO 6336 metodo C semplificato)
+    const Kv = calcKv(st.grado_prec, v, mn, u, Ft, b);
+    const KHb = st.KHb;
+    const KHa = Math.max(1.0, Math.min(1/(ea > 0 ? ea : 1), 2.0));
+    const KFb = Math.pow(KHb, isElicoidale ? 0.5 : 1.0);
+    const KFa = KHa;
+
+    // Resistenza (ISO 6336 Method B)
+    // βb = angolo di elica sul cerchio di base
+    const betab_rad = Math.atan(Math.tan(beta_rad) * Math.cos(at_rad));
+    // ZH = √(4·cos(βb) / sin(2·αwt))  — ISO 6336-2 eq.(8)
+    const ZH = Math.sqrt(4 * Math.cos(betab_rad) / Math.sin(2 * at_prime_rad));
+    const ZE = calcZE(st.E1, st.nu1, st.E2, st.nu2);
+    // Zε: diritta o elicoidale con εβ < 1
+    let Ze;
+    if (!isElicoidale || eb < 1) {
+      Ze = Math.sqrt((4 - ea) / 3);
+    } else {
+      Ze = Math.sqrt(1 / ea);
+    }
+    const Zbeta = Math.sqrt(Math.cos(beta_rad));
+
+    // σH = ZH·ZE·Zε·Zβ · √(Ft·K / (b·d1) · (u+1)/u)  — (u+1)/u al NUMERATORE
+    const Wt = Ft * KA * Kv * KHb * KHa;
+    const sH_common = ZH * ZE * Ze * Zbeta * Math.sqrt(Wt * (u + 1) / u / (b * d1));
+
+    // Cicli di vita
+    const NL1 = 60 * st.n1 * st.ore_servizio;
+    const NL2 = 60 * n2 * st.ore_servizio;
+    const ZNT1 = calcZNT(NL1);
+    const ZNT2 = calcZNT(NL2);
+    const YNT1 = calcYNT(NL1);
+    const YNT2 = calcYNT(NL2);
+
+    // σHP = tensione ammissibile a pitting (solo per display)
+    const sHP1 = st.sHlim1 * ZNT1 / st.SHmin;
+    const sHP2 = st.sHlim2 * ZNT2 / st.SHmin;
+    const sH1 = sH_common;
+    const sH2 = sH_common;
+    // SH = σHlim·ZNT / σH  (coefficiente di sicurezza reale, da confrontare con SHmin)
+    const SH1 = st.sHlim1 * ZNT1 / sH1;
+    const SH2 = st.sHlim2 * ZNT2 / sH2;
+
+    // Flessione (ISO 6336-3 Method B)
+    const zv1 = isElicoidale ? z1 / Math.pow(cosB, 3) : z1;
+    const zv2 = isElicoidale ? z2 / Math.pow(cosB, 3) : z2;
+    const YF1 = lerp(zv1, YF_DATA);
+    const YF2 = lerp(zv2, YF_DATA);
+    const YS1 = lerp(zv1, YS_DATA);
+    const YS2 = lerp(zv2, YS_DATA);
+    const Ybeta = isElicoidale ? Math.max(0.75, 1 - Math.min(30, st.beta) / 120) : 1.0;
+    // Yε: diritta 0.25+0.75/εα; elicoidale εβ≥1: 1/εα
+    const Ye = (!isElicoidale || eb < 1) ? (0.25 + 0.75 / ea) : (1 / ea);
+    const Wf = Ft * KA * Kv * KFb * KFa;
+    const sF1 = YF1 * YS1 * Ybeta * Ye * Wf / (b * mt);
+    const sF2 = YF2 * YS2 * Ybeta * Ye * Wf / (b * mt);
+    // σFP = tensione ammissibile a flessione (solo per display)
+    const sFP1 = st.sFlim1 * YNT1 / st.SFmin;
+    const sFP2 = st.sFlim2 * YNT2 / st.SFmin;
+    // SF = σFlim·YNT / σF  (coefficiente di sicurezza reale, da confrontare con SFmin)
+    const SF1 = st.sFlim1 * YNT1 / sF1;
+    const SF2 = st.sFlim2 * YNT2 / sF2;
+
+    // Tolleranze ISO 1328
+    const tol1 = calcTolerance(st.grado_prec, d1, mn);
+    const tol2 = calcTolerance(st.grado_prec, d2, mn);
+
+    // Gioco radiale (correzione)
+    const cr = hasShift ? 0.25*mn - (x1+x2)*mn*(a_prime/a_std - 1) : 0.25*mn;
+
+    res = {
+      tipo, isCilindrica, isElicoidale,
+      mn, mt, at_deg, an_deg: st.alpha_n, beta_deg: isElicoidale ? st.beta : 0,
+      a_std, a_eff: a_prime, i, n2, v, T1, T2, P_kW,
+      Ft, d1, d2, da1, da2, df1, df2, db1, db2,
+      ha1, ha2, hf1, hf2, h: 2.25*mn,
+      passo_normale, passo_app,
+      ea, eb, eg,
+      hasShift, xsum, x1, x2, at_prime_deg, cr,
+      KA, Kv, KHb, KHa, KFb, KFa,
+      ZH, ZE, Ze, Zbeta,
+      NL1, NL2, ZNT1, ZNT2, YNT1, YNT2,
+      sH1, sH2, sHP1, sHP2, SH1, SH2,
+      sF1, sF2, sFP1, sFP2, SF1, SF2,
+      YF1, YF2, YS1, YS2, Ybeta, Ye,
+      tol1, tol2,
+    };
+  }
+
+  // ---- Geometria conica ----
+  else {
+    const isCilEl = false;
+    const beta_m = tipo === 'con_elicoidale' ? st.beta_m : 0;
+    const beta_m_rad = beta_m * R;
+
+    // Angolo asse = 90° (ipotesi standard)
+    const delta1 = Math.atan(z1/z2);
+    const delta2 = Math.PI/2 - delta1;
+    const delta1_deg = delta1 * D;
+    const delta2_deg = delta2 * D;
+
+    // Modulo esterno (per coniche diritte mn = me)
+    const me = mn;
+    const de1 = me * z1 / Math.cos(delta1);
+    const de2 = me * z2 / Math.cos(delta2);
+    const Re = de1 / (2 * Math.sin(delta1));
+
+    const bmax = Re / 3;
+    const b_eff = Math.min(b, bmax);
+
+    // Modulo e diametro medio
+    const mmm = me * (1 - b_eff/(2*Re));
+    const dm1 = mmm * z1 / Math.cos(delta1);
+    const dm2 = mmm * z2 / Math.cos(delta2);
+
+    const theta_a = Math.atan(me / Re);
+    const theta_f = Math.atan(1.25 * me / Re);
+    const theta_a_deg = theta_a * D;
+    const theta_f_deg = theta_f * D;
+
+    const delta_a1 = delta1 + theta_a, delta_a1_deg = delta_a1 * D;
+    const delta_a2 = delta2 + theta_a, delta_a2_deg = delta_a2 * D;
+    const delta_f1 = delta1 - theta_f, delta_f1_deg = delta_f1 * D;
+    const delta_f2 = delta2 - theta_f, delta_f2_deg = delta_f2 * D;
+
+    const dae1 = de1 + 2*me*Math.cos(delta1);
+    const dae2 = de2 + 2*me*Math.cos(delta2);
+
+    // Ruota equivalente Tregold
+    const zv1 = z1 / Math.pow(Math.cos(delta1), 3);
+    const zv2 = z2 / Math.pow(Math.cos(delta2), 3);
+
+    // Cinematica
+    const i = z2/z1;
+    const n2 = st.n1 / i;
+    const v = Math.PI * dm1 * st.n1 / 60000;
+    let T1, T2, Ft;
+    if (st.input_mode === 'P') {
+      T1 = 60000 * st.P / (2 * Math.PI * st.n1);
+      T2 = T1 * i;
+      Ft = 2000 * T1 / dm1;
+    } else {
+      T1 = st.T1;
+      T2 = T1 * i;
+      Ft = 2000 * T1 / dm1;
+    }
+    const P_kW = T1 * 2 * Math.PI * st.n1 / 60000;
+
+    // Fattori di carico
+    const KA = st.KA_sel === 'custom' ? st.KA : parseFloat(st.KA_sel);
+    const u = i;
+    const Kv = calcKv(st.grado_prec, v, mmm, u, Ft, b_eff);
+    const KHb = st.KHb;
+    const Kbe = b_eff / (2*Re);
+    const KHa = 1.0;
+    const KFb = KHb;
+    const KFa = KHa;
+
+    // Resistenza ISO 10300 Method B
+    const at_rad = an_rad;
+    const ZH = Math.sqrt(2 / (Math.sin(at_rad)*Math.cos(at_rad)));
+    const ZE = calcZE(st.E1, st.nu1, st.E2, st.nu2);
+    const Ze = 1.0;  // εα~1 per coniche diritte
+    const ZK = tipo === 'con_elicoidale' ? 0.77 : 0.85;
+
+    const NL1 = 60 * st.n1 * st.ore_servizio;
+    const NL2 = 60 * n2 * st.ore_servizio;
+    const ZNT1 = calcZNT(NL1);
+    const ZNT2 = calcZNT(NL2);
+    const YNT1 = calcYNT(NL1);
+    const YNT2 = calcYNT(NL2);
+
+    const Wt = Ft * KA * Kv * KHb * KHa;
+    const sH = ZH * ZE * Ze * ZK * Math.sqrt(Wt / (b_eff * dm1 * u*u/(u*u+1)));
+    // σHP per display
+    const sHP1 = st.sHlim1 * ZNT1 / st.SHmin;
+    const sHP2 = st.sHlim2 * ZNT2 / st.SHmin;
+    // SH = σHlim·ZNT / σH
+    const SH1 = st.sHlim1 * ZNT1 / sH;
+    const SH2 = st.sHlim2 * ZNT2 / sH;
+
+    // Flessione su ruota equivalente Tregold
+    const YF1 = lerp(zv1, YF_DATA);
+    const YF2 = lerp(zv2, YF_DATA);
+    const YS1 = lerp(zv1, YS_DATA);
+    const YS2 = lerp(zv2, YS_DATA);
+    const Ybeta = tipo === 'con_elicoidale' ? Math.max(0.75, 1 - Math.min(30, beta_m) / 120) : 1.0;
+    const ea_approx = 1.6;
+    const Ye = 0.25 + 0.75 / ea_approx;
+    const Wf = Ft * KA * Kv * KFb * KFa;
+    const sF1 = YF1 * YS1 * Ybeta * Ye * Wf / (b_eff * mmm);
+    const sF2 = YF2 * YS2 * Ybeta * Ye * Wf / (b_eff * mmm);
+    // σFP per display
+    const sFP1 = st.sFlim1 * YNT1 / st.SFmin;
+    const sFP2 = st.sFlim2 * YNT2 / st.SFmin;
+    // SF = σFlim·YNT / σF
+    const SF1 = st.sFlim1 * YNT1 / sF1;
+    const SF2 = st.sFlim2 * YNT2 / sF2;
+
+    const tol1 = calcTolerance(st.grado_prec, dm1, mmm);
+    const tol2 = calcTolerance(st.grado_prec, dm2, mmm);
+
+    res = {
+      tipo, isCilindrica:false, isElicoidale: tipo==='con_elicoidale',
+      mn: me, mmm, at_deg: an_rad*D, an_deg: st.alpha_n, beta_deg: beta_m,
+      a_std: null, a_eff: null, i, n2, v, T1, T2, P_kW,
+      Ft, d1: dm1, d2: dm2, de1, de2, dae1, dae2,
+      Re, b_eff, bmax,
+      delta1_deg, delta2_deg,
+      delta_a1_deg, delta_a2_deg, delta_f1_deg, delta_f2_deg,
+      theta_a_deg, theta_f_deg,
+      zv1, zv2,
+      passo_normale: Math.PI*mn,
+      hasShift:false, xsum:0, x1:0, x2:0,
+      KA, Kv, KHb, KHa, KFb, KFa, ZK, Kbe,
+      ZH, ZE, Ze,
+      NL1, NL2, ZNT1, ZNT2, YNT1, YNT2,
+      sH1:sH, sH2:sH, sHP1, sHP2, SH1, SH2,
+      sF1, sF2, sFP1, sFP2, SF1, SF2,
+      YF1, YF2, YS1, YS2, Ybeta, Ye,
+      tol1, tol2,
+    };
+  }
+
+  return res;
+}
+
+// ============================================================
+// FATTORI AUSILIARI
+// ============================================================
+function calcZE(E1, nu1, E2, nu2) {
+  const denom = Math.PI * ((1-nu1*nu1)/E1 + (1-nu2*nu2)/E2);
+  return Math.sqrt(1/denom);
+}
+
+function calcZNT(NL) {
+  if (NL <= 1e5) return 1.6;
+  if (NL <= 1e6) return 1.6 - 0.6*(Math.log10(NL)-5);
+  if (NL <= 3e8) return 1.0 - 0.05*(Math.log10(NL)-6)/(Math.log10(3e8)-6);
+  return 0.85;
+}
+
+function calcYNT(NL) {
+  if (NL <= 1e4) return 2.5;
+  if (NL <= 3e6) return 2.5 - (Math.log10(NL)-4)/(Math.log10(3e6)-4);
+  if (NL <= 3e8) return 1.0;
+  return 0.85;
+}
+
+function calcKv(grade, v, mn, u, Ft_per_b_approx, b) {
+  // ISO 6336-1 Metodo C semplificato (approx. da Niemann)
+  // Errore di passo base fp secondo grado e modulo
+  const C_grade = [0, 0, 0, 0, 0, 1.0, 1.5, 2.0, 3.0, 4.5, 6.0, 9.0, 13.0];
+  const cv = C_grade[Math.min(12, Math.max(5, grade))] || 2.0;
+  // Kv approssimato
+  const N = v * Math.sqrt(u*u / (1+u*u)) * Math.sqrt(mn);
+  const Kv = 1 + cv * N / 100;
+  return Math.min(Math.max(Kv, 1.0), 2.5);
+}
+
+function calcTolerance(grade, d, m) {
+  // ISO 1328-1:2013 formule di calcolo
+  const A = 3.55;
+  const d_ref = Math.sqrt(d);
+  const m_ref = Math.sqrt(m);
+  const f_grade = Math.pow(2, (grade-1)/2);  // fattore gradi
+
+  // Fp = errore cumulativo del passo
+  const Fp = (0.3*m + 1.25*Math.sqrt(d) + 7) * f_grade * 0.001;
+  // fpt = deviazione singola del passo
+  const fpt = (0.3*m + 0.4*Math.sqrt(d) + 4) * f_grade * 0.001;
+  // Fα = errore di profilo
+  const Falpha = (2.5*Math.sqrt(m) + 0.17*Math.sqrt(d) + 0.5) * f_grade * 0.001;
+  // Fβ = errore di elica
+  const Fbeta = (0.1*Math.sqrt(d) + 0.63*Math.sqrt(10) + 4.2) * f_grade * 0.001;  // L=10 mm riferimento
+
+  return {
+    Fp: Math.max(Fp, 0.001),
+    fpt: Math.max(fpt, 0.001),
+    Falpha: Math.max(Falpha, 0.001),
+    Fbeta: Math.max(Fbeta, 0.001),
+  };
+}
+
+// ============================================================
+// RENDER
+// ============================================================
+let sfChart = null;
+
+function render(r) {
+  // KPI
+  el('o_i').textContent = fp(r.i, 3);
+  if (r.isCilindrica) {
+    el('o_a').textContent = fp(r.a_eff, 2);
+    el('o_a_label').textContent = r.hasShift ? 'mm (corretto)' : 'mm (standard)';
+  } else {
+    el('o_a').textContent = fp(r.Re, 2);
+    el('o_a_label').textContent = 'mm (generatrice Re)';
+  }
+  el('o_v').textContent = fp(r.v, 2);
+  el('o_T2').textContent = fp(r.T2, 1);
+
+  // Correzione dentatura
+  const secShift = el('sec_shift');
+  if (r.hasShift) {
+    secShift.style.display = '';
+    el('o_xsum').textContent = fp(r.xsum, 4);
+    el('o_x1').textContent = fp(r.x1, 4);
+    el('o_x2').textContent = fp(r.x2, 4);
+    el('o_alphat_prime').textContent = fp(r.at_prime_deg, 3);
+    el('o_gioco').textContent = fp(r.cr, 3);
+    el('o_acc_type').textContent = r.xsum > 0.05 ? 'Accorciato' : r.xsum < -0.05 ? 'Allungato' : 'Standard';
+  } else {
+    secShift.style.display = 'none';
+  }
+
+  // Tabella geometria
+  const gBody = el('geo_body');
+  gBody.innerHTML = '';
+  const gRows = buildGeoRows(r);
+  gRows.forEach(row => {
+    const tr = document.createElement('tr');
+    tr.innerHTML = `<td>${row[0]}</td><td class="sym">${row[1]}</td><td>${row[2]}</td><td>${row[3]}</td><td class="unit">${row[4]}</td>`;
+    gBody.appendChild(tr);
+  });
+
+  // Tolleranze
+  el('o_grado_label').textContent = ST.grado_prec;
+  const tBody = el('tol_body');
+  tBody.innerHTML = '';
+  const tolRows = [
+    ['Errore cumulativo passo','F<sub>p</sub>', r.tol1.Fp.toFixed(3), r.tol2.Fp.toFixed(3),'mm'],
+    ['Dev. passo singolo','f<sub>pt</sub>', r.tol1.fpt.toFixed(3), r.tol2.fpt.toFixed(3),'mm'],
+    ['Errore di profilo','F<sub>α</sub>', r.tol1.Falpha.toFixed(3), r.tol2.Falpha.toFixed(3),'mm'],
+    ['Errore di elica','F<sub>β</sub>', r.tol1.Fbeta.toFixed(3), r.tol2.Fbeta.toFixed(3),'mm'],
+  ];
+  tolRows.forEach(row => {
+    const tr = document.createElement('tr');
+    tr.innerHTML = `<td>${row[0]}</td><td style="text-align:center;font-style:italic">${row[1]}</td><td>${row[2]}</td><td>${row[3]}</td><td style="color:var(--dim);font-size:10px">${row[4]}</td>`;
+    tBody.appendChild(tr);
+  });
+
+  // Verifiche
+  renderVerifica('H1', r.sH1, r.sHP1, r.SH1, ST.SHmin, 1.2);
+  renderVerifica('H2', r.sH2, r.sHP2, r.SH2, ST.SHmin, 1.2);
+  renderVerifica('F1', r.sF1, r.sFP1, r.SF1, ST.SFmin, 1.7, true);
+  renderVerifica('F2', r.sF2, r.sFP2, r.SF2, ST.SFmin, 1.7, true);
+
+  // Fattori
+  const fBody = el('factor_body');
+  const fRows = [
+    ['Fattore di applicazione','K<sub>A</sub>', fp(r.KA,2), 'ISO 6336-1 Tab.1'],
+    ['Fattore dinamico','K<sub>v</sub>', fp(r.Kv,3), `Grado ${ST.grado_prec}, v=${fp(r.v,2)} m/s`],
+    ['Distribuz. larghezza pitting','K<sub>Hβ</sub>', fp(r.KHb,2), 'Input utente'],
+    ['Distribuz. denti pitting','K<sub>Hα</sub>', fp(r.KHa,3), 'da εα'],
+    ['Distribuz. larghezza flessione','K<sub>Fβ</sub>', fp(r.KFb,3), ''],
+    ['Distribuz. denti flessione','K<sub>Fα</sub>', fp(r.KFa,3), ''],
+    ['Fattore vita pitting R1','Z<sub>NT1</sub>', fp(r.ZNT1,3), `NL1=${r.NL1.toExponential(2)}`],
+    ['Fattore vita pitting R2','Z<sub>NT2</sub>', fp(r.ZNT2,3), `NL2=${r.NL2.toExponential(2)}`],
+    ['Fattore vita flessione R1','Y<sub>NT1</sub>', fp(r.YNT1,3), ''],
+    ['Fattore vita flessione R2','Y<sub>NT2</sub>', fp(r.YNT2,3), ''],
+    ['Fattore forma Hertz','Z<sub>H</sub>', fp(r.ZH,3), ''],
+    ['Fattore elastico','Z<sub>E</sub>', fp(r.ZE,1), '√MPa'],
+    ['Fattore condotta','Z<sub>ε</sub>', fp(r.Ze,3), ''],
+  ];
+  if (!r.isCilindrica) fRows.push(['Fattore cono','Z<sub>K</sub>', fp(r.ZK,2), 'ISO 10300']);
+  fBody.innerHTML = fRows.map(row =>
+    `<tr><td style="color:var(--muted)">${row[0]}</td><td style="text-align:center;font-style:italic">${row[1]}</td><td style="text-align:right">${row[2]}</td><td style="text-align:right;color:var(--dim);font-size:10px">${row[3]}</td></tr>`
+  ).join('');
+
+  // Grafico
+  renderChart(r);
+}
+
+function renderVerifica(id, sigma, sigmaP, SF, SFmin, SFgood, isBending=false) {
+  const letter = isBending ? 'F' : 'H';
+  const ruota = id.slice(-1);
+
+  // valori numerici
+  el(`o_s${id}`).textContent = fp(sigma, 1);
+  el(`o_s${letter}P${ruota}`).textContent = fp(sigmaP, 1);
+
+  // utilizzo %: sigma/sigmaP * 100
+  const util = sigmaP > 0 ? sigma / sigmaP * 100 : 0;
+  el(`o_util_${id}`).textContent = fp(util, 1);
+
+  // badge SF
+  const badge = el(`badge_${id}`);
+  badge.textContent = `S${letter} = ${fp(SF, 2)}`;
+
+  // testo requisito
+  el(`req_${id}`).textContent = `richiesto ≥ ${fp(SFmin, 2)}`;
+
+  // classe colore
+  let cls = 'ok';
+  if (SF < SFmin) cls = 'err';
+  else if (SF < SFgood) cls = 'warn';
+
+  badge.className = `sf-badge ${cls}`;
+
+  // barra: scala 0–200% di σ/σP → 0–100% larghezza barra
+  // il marcatore verticale (.pbar-limit) è fisso al 50% (= σ/σP = 100%)
+  const pb = el(`pb_${id}`);
+  const barW = Math.min(100, util / 2);  // 200% utilizzo = 100% barra
+  pb.style.width = barW + '%';
+  pb.className = `pbar ${cls}`;
+
+  // bordo sinistro della strip
+  const strip = el(`vs_${id}`);
+  strip.className = `vstrip ${cls}`;
+}
+
+function buildGeoRows(r) {
+  if (r.isCilindrica) {
+    const rows = [
+      ['Diametro primitivo', 'd', fp(r.d1,3), fp(r.d2,3), 'mm'],
+      ['Diametro di testa', 'd<sub>a</sub>', fp(r.da1,3), fp(r.da2,3), 'mm'],
+      ['Diametro di piede', 'd<sub>f</sub>', fp(r.df1,3), fp(r.df2,3), 'mm'],
+      ['Diametro di base', 'd<sub>b</sub>', fp(r.db1,3), fp(r.db2,3), 'mm'],
+      ['Addendum', 'h<sub>a</sub>', fp(r.ha1,3), fp(r.ha2,3), 'mm'],
+      ['Dedendum', 'h<sub>f</sub>', fp(r.hf1,3), fp(r.hf2,3), 'mm'],
+      ['Altezza dente', 'h', fp(r.h,3), fp(r.h,3), 'mm'],
+      ['Modulo apparente', 'm<sub>t</sub>', fp(r.mt,4), fp(r.mt,4), 'mm'],
+      ['Angolo pressione app.', 'α<sub>t</sub>', fp(r.at_deg,3)+'°', fp(r.at_deg,3)+'°', ''],
+      ['Passo normale', 'p<sub>n</sub>', fp(r.passo_normale,4), fp(r.passo_normale,4), 'mm'],
+      ['Passo apparente', 'p<sub>t</sub>', fp(r.passo_app,4), fp(r.passo_app,4), 'mm'],
+      ['Rapporto di condotta frontale', 'ε<sub>α</sub>', fp(r.ea,3), fp(r.ea,3), '—'],
+    ];
+    if (r.isElicoidale) {
+      rows.push(['Rapporto di condotta assiale','ε<sub>β</sub>', fp(r.eb,3), fp(r.eb,3), '—']);
+      rows.push(['Rapporto di condotta totale','ε<sub>γ</sub>', fp(r.eg,3), fp(r.eg,3), '—']);
+    }
+    rows.push(['Interasse standard', 'a<sub>std</sub>', fp(r.a_std,3), '—', 'mm']);
+    rows.push(['Larghezza dente', 'b', fp(ST.b,1), fp(ST.b,1), 'mm']);
+    return rows;
+  } else {
+    return [
+      ['Angolo primitivo', 'δ', fp(r.delta1_deg,3)+'°', fp(r.delta2_deg,3)+'°', ''],
+      ['Ang. cono di testa', 'δ<sub>a</sub>', fp(r.delta_a1_deg,3)+'°', fp(r.delta_a2_deg,3)+'°', ''],
+      ['Ang. cono di piede', 'δ<sub>f</sub>', fp(r.delta_f1_deg,3)+'°', fp(r.delta_f2_deg,3)+'°', ''],
+      ['Diametro prim. esterno', 'd<sub>e</sub>', fp(r.de1,3), fp(r.de2,3), 'mm'],
+      ['Diametro prim. medio', 'd<sub>m</sub>', fp(r.d1,3), fp(r.d2,3), 'mm'],
+      ['Diametro testa esterno', 'd<sub>ae</sub>', fp(r.dae1,3), fp(r.dae2,3), 'mm'],
+      ['Generatrice esterna', 'R<sub>e</sub>', fp(r.Re,3), '—', 'mm'],
+      ['Modulo esterno', 'm<sub>e</sub>', fp(r.mn,3), fp(r.mn,3), 'mm'],
+      ['Modulo medio', 'm<sub>mm</sub>', fp(r.mmm,4), fp(r.mmm,4), 'mm'],
+      ['Larghezza dente eff.', 'b', fp(r.b_eff,1), '—', 'mm (max '+fp(r.bmax,1)+')'],
+      ['Z ruota equiv. Tregold', 'z<sub>v</sub>', fp(r.zv1,1), fp(r.zv2,1), '—'],
+    ];
+  }
+}
+
+function initChart() {
+  const ctx = document.getElementById('chartSF').getContext('2d');
+  sfChart = new Chart(ctx, {
+    type:'bar',
+    data:{
+      labels:['SH Ruota 1','SH Ruota 2','SF Ruota 1','SF Ruota 2'],
+      datasets:[
+        {
+          label:'Coefficiente di sicurezza',
+          data:[0,0,0,0],
+          backgroundColor:['rgba(102,187,106,0.7)','rgba(102,187,106,0.7)','rgba(102,187,106,0.7)','rgba(102,187,106,0.7)'],
+          borderColor:['rgba(102,187,106,1)','rgba(102,187,106,1)','rgba(102,187,106,1)','rgba(102,187,106,1)'],
+          borderWidth:1,
+          borderRadius:3,
+        },
+        {
+          label:'Limite minimo',
+          data:[1,1,1,1],
+          type:'line',
+          borderColor:'rgba(239,83,80,0.9)',
+          borderWidth:2,
+          borderDash:[6,4],
+          pointRadius:0,
+          fill:false,
+          tension:0,
+        }
+      ]
+    },
+    options:{
+      responsive:true, maintainAspectRatio:false,
+      animation:{duration:0},
+      plugins:{
+        legend:{labels:{font:{family:"'DM Mono',monospace",size:11},color:'#7a7d8a'}},
+        tooltip:{
+          backgroundColor:'#1c1d23',borderColor:'rgba(255,255,255,.13)',borderWidth:1,
+          titleFont:{family:"'DM Mono',monospace"},bodyFont:{family:"'DM Mono',monospace"},
+          callbacks:{label: c => ` ${c.dataset.label}: ${c.parsed.y.toFixed(3)}`}
+        }
+      },
+      scales:{
+        x:{ticks:{font:{family:"'DM Mono',monospace",size:10},color:'#7a7d8a'},grid:{color:'rgba(255,255,255,.05)'},border:{display:false}},
+        y:{
+          min:0,
+          ticks:{font:{family:"'DM Mono',monospace",size:10},color:'#7a7d8a'},
+          grid:{color:'rgba(255,255,255,.05)'},border:{display:false}
+        }
+      }
+    }
+  });
+}
+
+function renderChart(r) {
+  if (!sfChart) return;
+  const data = [r.SH1, r.SH2, r.SF1, r.SF2];
+  const limits = [ST.SHmin, ST.SHmin, ST.SFmin, ST.SFmin];
+  const colors = data.map((v,i) => v >= limits[i]*1.2 ? 'rgba(102,187,106,0.7)' : v >= limits[i] ? 'rgba(255,167,38,0.7)' : 'rgba(239,83,80,0.7)');
+  const borderColors = colors.map(c => c.replace('0.7','1'));
+
+  sfChart.data.datasets[0].data = data;
+  sfChart.data.datasets[0].backgroundColor = colors;
+  sfChart.data.datasets[0].borderColor = borderColors;
+  sfChart.data.datasets[1].data = limits;
+  sfChart.update('none');
+}
+
+// ============================================================
+// CONTROLLI UI
+// ============================================================
+function el(id){ return document.getElementById(id); }
+
+function sv(key, val) {
+  if (key === 'a_prime') {
+    const v = parseFloat(val);
+    ST.a_prime = isNaN(v) || val === '' ? null : v;
+  } else if (key === 'KA_sel') {
+    ST.KA_sel = val;
+    el('row_KA_man').style.display = val==='custom' ? '' : 'none';
+  } else if (['E1','E2'].includes(key)) {
+    ST[key] = parseFloat(val);
+  } else {
+    const v = parseFloat(val);
+    if (!isNaN(v)) ST[key] = v;
+  }
+  recalc();
+}
+
+function setTipo(tipo) {
+  ST.tipo = tipo;
+  document.querySelectorAll('.tab-btn').forEach((b,i) => {
+    b.classList.toggle('active', ['cil_diritta','cil_elicoidale','con_diritta','con_elicoidale'][i] === tipo);
+  });
+  // Mostra/nasconde campi specifici
+  el('row_beta').style.display = tipo === 'cil_elicoidale' ? '' : 'none';
+  el('row_beta_m').style.display = tipo === 'con_elicoidale' ? '' : 'none';
+  recalc();
+}
+
+function setInputMode(mode) {
+  ST.input_mode = mode;
+  el('chip_P').classList.toggle('active', mode==='P');
+  el('chip_T').classList.toggle('active', mode==='T');
+  el('row_P').classList.toggle('hidden', mode!=='P');
+  el('row_T').classList.toggle('hidden', mode!=='T');
+  recalc();
+}
+
+function setMat(ruota, key) {
+  const m = MATERIALS[key];
+  if (m) {
+    ST[`sb${ruota}`] = m.sb;
+    ST[`sFlim${ruota}`] = m.sFlim;
+    ST[`sHlim${ruota}`] = m.sHlim;
+    ST[`E${ruota}`] = m.E;
+    ST[`nu${ruota}`] = m.nu;
+    el(`i_sb${ruota}`).value = m.sb;
+    el(`i_sFlim${ruota}`).value = m.sFlim;
+    el(`i_sHlim${ruota}`).value = m.sHlim;
+    el(`sel_E${ruota}`).value = m.E;
+    // Readonly se non custom
+    const ro = key !== 'custom';
+    el(`i_sb${ruota}`).readOnly = ro;
+    el(`i_sFlim${ruota}`).readOnly = ro;
+    el(`i_sHlim${ruota}`).readOnly = ro;
+  } else {
+    el(`i_sb${ruota}`).readOnly = false;
+    el(`i_sFlim${ruota}`).readOnly = false;
+    el(`i_sHlim${ruota}`).readOnly = false;
+  }
+  ST[`mat${ruota}`] = key;
+  recalc();
+}
+
+// SPIN BUTTONS
+let hTimer=null, hInt=null;
+function holdStart(key, step, btn) {
+  btn.style.background='var(--acc2)';
+  doStep(key, step);
+  hTimer = setTimeout(()=> { hInt = setInterval(()=>doStep(key,step),70); },350);
+}
+function holdStop(){
+  clearTimeout(hTimer); clearInterval(hInt);
+  document.querySelectorAll('.arr').forEach(b=>b.style.background='');
+}
+function doStep(key, step) {
+  const intKeys = ['z1','z2'];
+  if (intKeys.includes(key)) {
+    ST[key] = Math.round(ST[key] + step);
+  } else {
+    ST[key] = +(ST[key] + step).toFixed(6);
+  }
+  const inp = el('i_'+key);
+  if (inp) inp.value = ST[key];
+  recalc();
+}
+
+function blockDecimal(e) {
+  if (e.key === '.' || e.key === ',') e.preventDefault();
+}
+
+function svInt(key, input) {
+  const v = parseInt(input.value, 10);
+  if (!isNaN(v)) {
+    ST[key] = v;
+    input.value = v;
+  }
+  recalc();
+}
+
+function recalc() {
+  try {
+    const r = compute(ST);
+    render(r);
+  } catch(e) {
+    console.warn('Calcolo:', e);
+  }
+}
+
+// ============================================================
+// INIT
+// ============================================================
+// Imposta materiali readonly all'avvio
+setMat(1, ST.mat1);
+setMat(2, ST.mat2);
+// Nasconde campi non pertinenti (tipo default: cil_diritta)
+el('row_beta').style.display = 'none';
+el('row_beta_m').style.display = 'none';
+el('row_KA_man').style.display = 'none';
+initChart();
+recalc();
+</script>
+</body>
+</html>

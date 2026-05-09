@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Moduli di Calcolo</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@300;400;500&family=Barlow+Condensed:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#0e0f11;--bg1:#141519;--bg2:#1c1d23;--bg3:#23252d;
+  --border:rgba(255,255,255,.07);--border2:rgba(255,255,255,.13);
+  --text:#e8e9ec;--muted:#7a7d8a;--dim:#4a4d5a;
+  --acc:#4fc3f7;--acc2:#0288d1;
+  --up:#66bb6a;--dn:#ef5350;--amber:#ffa726;--violet:#b39ddb;
+  --mono:'DM Mono',monospace;--cond:'Barlow Condensed',sans-serif;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{background:var(--bg);color:var(--text);font-family:var(--mono);font-size:13px;min-height:100vh}
+body{display:flex;flex-direction:column;align-items:center;padding:40px 20px;min-height:100vh}
+
+header{text-align:center;margin-bottom:48px}
+header h1{font-family:var(--cond);font-size:2.2rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--text)}
+header p{font-size:11px;color:var(--muted);margin-top:6px;letter-spacing:.05em;text-transform:uppercase}
+
+.grid{
+  display:grid;
+  grid-template-columns:repeat(auto-fill,minmax(260px,1fr));
+  gap:16px;
+  width:100%;
+  max-width:900px;
+}
+
+.card{
+  background:var(--bg2);
+  border:1px solid var(--border);
+  border-radius:6px;
+  padding:24px 20px;
+  text-decoration:none;
+  color:var(--text);
+  display:flex;
+  flex-direction:column;
+  gap:10px;
+  transition:border-color .15s,background .15s;
+  cursor:pointer;
+}
+.card:hover{
+  border-color:var(--border2);
+  background:var(--bg3);
+}
+.card:hover .card-arrow{opacity:1;transform:translateX(4px)}
+
+.card-icon{font-size:1.6rem;line-height:1}
+.card-title{font-family:var(--cond);font-size:1.15rem;font-weight:600;letter-spacing:.04em;text-transform:uppercase}
+.card-desc{font-size:11px;color:var(--muted);line-height:1.6}
+.card-footer{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  margin-top:4px;
+}
+.card-tag{
+  font-size:10px;
+  color:var(--acc);
+  background:rgba(79,195,247,.08);
+  border:1px solid rgba(79,195,247,.2);
+  border-radius:3px;
+  padding:2px 7px;
+  letter-spacing:.04em;
+  text-transform:uppercase;
+}
+.card-arrow{
+  font-size:14px;
+  color:var(--muted);
+  opacity:.4;
+  transition:opacity .15s,transform .15s;
+}
+
+footer{margin-top:60px;font-size:10px;color:var(--dim);letter-spacing:.04em}
+</style>
+</head>
+<body>
+
+<header>
+  <h1>Moduli di Calcolo</h1>
+  <p>Strumenti di ingegneria meccanica</p>
+</header>
+
+<div class="grid">
+
+  <a class="card" href="calcolatore_lineare.html">
+    <div class="card-icon">📐</div>
+    <div class="card-title">Cinematica Lineare</div>
+    <div class="card-desc">Calcolo di posizione, velocità e accelerazione per moti lineari uniformi e uniformemente accelerati.</div>
+    <div class="card-footer">
+      <span class="card-tag">Cinematica</span>
+      <span class="card-arrow">→</span>
+    </div>
+  </a>
+
+  <a class="card" href="calcolatore_angolare.html">
+    <div class="card-icon">🔄</div>
+    <div class="card-title">Cinematica Angolare</div>
+    <div class="card-desc">Calcolo di velocità angolare, accelerazione angolare, coppia e potenza per sistemi rotanti.</div>
+    <div class="card-footer">
+      <span class="card-tag">Cinematica</span>
+      <span class="card-arrow">→</span>
+    </div>
+  </a>
+
+  <a class="card" href="calcolatore_cuscinetti.html">
+    <div class="card-icon">⚙️</div>
+    <div class="card-title">Cuscinetti</div>
+    <div class="card-desc">Selezione e verifica cuscinetti volventi: vita nominale L10, carico dinamico equivalente e fattori di correzione.</div>
+    <div class="card-footer">
+      <span class="card-tag">Organi di macchine</span>
+      <span class="card-arrow">→</span>
+    </div>
+  </a>
+
+  <a class="card" href="accoppiamenti_iso.html">
+    <div class="card-icon">🔩</div>
+    <div class="card-title">Accoppiamenti ISO</div>
+    <div class="card-desc">Calcolo di tolleranze e accoppiamenti secondo la norma ISO per alberi e fori.</div>
+    <div class="card-footer">
+      <span class="card-tag">Tolleranze</span>
+      <span class="card-arrow">→</span>
+    </div>
+  </a>
+
+  <a class="card" href="viti_madreviti.html">
+    <div class="card-icon">🪛</div>
+    <div class="card-title">Viti e Madreviti</div>
+    <div class="card-desc">Verifica di viti e madreviti: resistenza a trazione, taglio, pressione e coppia di serraggio.</div>
+    <div class="card-footer">
+      <span class="card-tag">Giunzioni</span>
+      <span class="card-arrow">→</span>
+    </div>
+  </a>
+
+  <a class="card" href="calcolo-forza-presa.html">
+    <div class="card-icon">✊</div>
+    <div class="card-title">Forza di Presa</div>
+    <div class="card-desc">Calcolo della forza di presa per sistemi di afferraggio: pinze, ventose e gripper meccanici.</div>
+    <div class="card-footer">
+      <span class="card-tag">Automazione</span>
+      <span class="card-arrow">→</span>
+    </div>
+  </a>
+
+  <a class="card" href="molle.html">
+    <div class="card-icon">🌀</div>
+    <div class="card-title">Molle</div>
+    <div class="card-desc">Calcolo e verifica di molle a compressione, trazione e torsione: rigidità, tensioni, lunghezza a blocco. UNI EN 13906.</div>
+    <div class="card-footer">
+      <span class="card-tag">Organi di macchine</span>
+      <span class="card-arrow">→</span>
+    </div>
+  </a>
+
+  <a class="card" href="ruote_dentate.html">
+    <div class="card-icon">⚙️</div>
+    <div class="card-title">Ruote Dentate</div>
+    <div class="card-desc">Geometria e verifica di resistenza per ruote cilindriche (diritte ed elicoidali) e coniche secondo ISO 6336, ISO 10300 e ISO 1328.</div>
+    <div class="card-footer">
+      <span class="card-tag">Trasmissioni</span>
+      <span class="card-arrow">→</span>
+    </div>
+  </a>
+
+</div>
+
+<footer>Andrea Cavani · Moduli calcolo HTML</footer>
+
+</body>
+</html>

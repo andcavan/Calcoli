@@ -1,0 +1,817 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Calcolatore Spostamenti Angolari</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@300;400;500&family=Barlow+Condensed:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<style>
+:root{
+  --bg:#0e0f11;--bg1:#141519;--bg2:#1c1d23;--bg3:#23252d;
+  --border:rgba(255,255,255,.07);--border2:rgba(255,255,255,.13);
+  --text:#e8e9ec;--muted:#7a7d8a;--dim:#4a4d5a;
+  --acc:#4fc3f7;--acc2:#0288d1;
+  --up:#66bb6a;--dn:#ef5350;--amber:#ffa726;--violet:#b39ddb;
+  --mono:'DM Mono',monospace;--cond:'Barlow Condensed',sans-serif;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{background:var(--bg);color:var(--text);font-family:var(--mono);font-size:13px}
+body{min-height:100vh}
+
+.header{border-bottom:1px solid var(--border);padding:11px 20px;display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.header h1{font-family:var(--cond);font-size:20px;font-weight:700;letter-spacing:.04em;text-transform:uppercase}
+.sub{font-size:10px;color:var(--muted);letter-spacing:.1em;text-transform:uppercase;flex:1}
+.dot{width:7px;height:7px;border-radius:50%;background:var(--acc);display:inline-block;margin-right:6px;animation:pulse 2s ease-in-out infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
+.inc-strip{display:flex;align-items:center;gap:3px;background:var(--bg2);border:1px solid var(--border2);border-radius:6px;padding:3px}
+.inc-lbl{font-size:9px;color:var(--dim);text-transform:uppercase;letter-spacing:.1em;padding:0 5px 0 3px;white-space:nowrap}
+.inc-btn{font-family:var(--mono);font-size:11px;padding:3px 9px;border:1px solid transparent;border-radius:4px;background:transparent;color:var(--muted);cursor:pointer;transition:all .12s}
+.inc-btn:hover{color:var(--text);background:var(--bg3)}
+.inc-btn.on{background:rgba(79,195,247,.15);border-color:var(--acc);color:var(--acc);font-weight:500}
+
+.layout{display:flex;flex-direction:column;min-height:calc(100vh - 51px)}
+.panels-top{display:grid;grid-template-columns:minmax(0,1.7fr) minmax(0,1.15fr) minmax(0,.75fr) minmax(0,1.05fr) minmax(0,.75fr) minmax(0,1.05fr);gap:8px;padding:10px 13px;border-bottom:1px solid var(--border);align-items:start}
+.panel{background:var(--bg2);border:1px solid var(--border2);border-radius:8px;padding:10px 11px}
+
+.stitle{font-family:var(--cond);font-size:10px;font-weight:600;letter-spacing:.17em;color:var(--muted);text-transform:uppercase;margin-bottom:8px;display:flex;align-items:center;gap:6px}
+.stitle::after{content:'';flex:1;height:1px;background:var(--border)}
+
+.field{margin-bottom:8px}.field:last-child{margin-bottom:0}
+.fhdr{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:4px}
+.flabel{color:var(--muted);font-size:11px;letter-spacing:.03em;cursor:default}
+.fval{color:var(--acc);font-size:12px;font-weight:500;min-width:74px;text-align:right;font-family:var(--mono)}
+.field.known .flabel{color:var(--acc)}
+.field.known .fval{color:var(--acc)}
+.field.derived .flabel{color:var(--amber)}
+.field.derived .fval{color:var(--amber)}
+.field.derived .numinput{opacity:.3;pointer-events:none}
+.field.derived .arr{opacity:.2;pointer-events:none;cursor:default}
+
+.srow{display:flex;align-items:center;gap:4px}
+.arr{flex-shrink:0;width:25px;height:25px;display:flex;align-items:center;justify-content:center;background:var(--bg2);border:1px solid var(--border2);border-radius:5px;cursor:pointer;color:var(--muted);font-size:10px;transition:all .12s;user-select:none;-webkit-user-select:none}
+.arr:hover{border-color:var(--acc);color:var(--acc);background:rgba(79,195,247,.08)}
+.arr:active{transform:scale(.88)}
+.arr.held{border-color:var(--acc);color:var(--acc);background:rgba(79,195,247,.18)}
+.numinput{flex:1;height:25px;background:var(--bg3);border:1px solid var(--border2);border-radius:5px;color:var(--acc);font-family:var(--mono);font-size:12px;font-weight:500;text-align:center;outline:none;padding:0 4px;min-width:0;transition:border-color .12s}
+.numinput:focus{border-color:var(--acc);background:var(--bg2)}
+.numinput:hover{border-color:rgba(79,195,247,.4)}
+.numinput::-webkit-outer-spin-button,.numinput::-webkit-inner-spin-button{-webkit-appearance:none;margin:0}
+.numinput[type=number]{-moz-appearance:textfield}
+
+.pgrid{display:grid;grid-template-columns:repeat(5,1fr);gap:4px;margin-bottom:6px}
+.pchip{border:1px solid var(--border2);border-radius:5px;padding:5px 2px 4px;cursor:pointer;text-align:center;background:transparent;color:var(--dim);transition:all .15s}
+.pchip:hover{border-color:var(--acc2);color:var(--muted);background:var(--bg2)}
+.pchip.on{border-color:var(--acc);background:rgba(79,195,247,.1);color:var(--acc)}
+.pchip svg{display:block;margin:0 auto}
+.pclbl{font-size:8px;display:block;margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-family:var(--cond);font-weight:500;letter-spacing:.04em}
+.pdesc{font-size:10px;color:var(--dim);min-height:20px;line-height:1.4;margin-bottom:6px}
+
+.mode-grid{display:grid;grid-template-columns:1fr 1fr;gap:4px}
+.mmode-btn{border:1px solid var(--border2);border-radius:6px;padding:6px 5px;cursor:pointer;background:transparent;color:var(--dim);font-family:var(--cond);font-size:10px;font-weight:600;letter-spacing:.05em;text-transform:uppercase;transition:all .14s;text-align:center;line-height:1.3}
+.mmode-btn:hover{background:var(--bg3);color:var(--muted)}
+.mmode-btn.on{border-color:var(--acc);background:rgba(79,195,247,.12);color:var(--acc)}
+.mmode-btn .mm-sub{font-size:8.5px;display:block;opacity:.7;margin-top:1.5px;font-weight:400;letter-spacing:.02em;font-family:var(--mono);text-transform:none}
+
+.solve-strip{background:rgba(79,195,247,.05);border:1px solid rgba(79,195,247,.2);border-radius:8px;padding:10px 14px;display:none}
+.solve-strip.show{display:block}
+.ss-title{font-family:var(--cond);font-size:10px;font-weight:700;letter-spacing:.14em;color:var(--acc);text-transform:uppercase;margin-bottom:8px;display:flex;align-items:center;gap:8px}
+.ss-title::after{content:'';flex:1;height:1px;background:rgba(79,195,247,.15)}
+.ss-grid{display:flex;flex-wrap:wrap;gap:8px}
+.ssc{background:rgba(79,195,247,.08);border:1px solid rgba(79,195,247,.18);border-radius:6px;padding:7px 12px;flex:1;min-width:120px}
+.ssc-l{font-size:9px;color:var(--acc2);text-transform:uppercase;letter-spacing:.1em;margin-bottom:2px;font-family:var(--cond)}
+.ssc-v{font-size:18px;font-weight:500;color:var(--acc)}
+.ssc-u{font-size:10px;color:rgba(79,195,247,.55);margin-left:3px}
+.warnbox{background:rgba(239,83,80,.08);border:1px solid rgba(239,83,80,.25);border-radius:6px;padding:7px 11px;font-size:11px;color:#ef9a9a;display:none;margin-top:6px;line-height:1.4}
+.warnbox.show{display:block}
+
+.dir-toggle{display:grid;grid-template-columns:1fr 1fr;gap:4px;margin-bottom:9px}
+.dir-btn{display:flex;align-items:center;justify-content:center;gap:5px;padding:6px 4px;border:1px solid var(--border2);border-radius:6px;cursor:pointer;background:transparent;color:var(--muted);font-family:var(--cond);font-size:11px;font-weight:600;letter-spacing:.05em;text-transform:uppercase;transition:all .14s}
+.dir-btn:hover{background:var(--bg3)}
+.dir-btn.cw.on{border-color:var(--up);background:rgba(102,187,106,.12);color:var(--up)}
+.dir-btn.ccw.on{border-color:var(--dn);background:rgba(239,83,80,.12);color:var(--dn)}
+.diag-wrap{display:flex;justify-content:center;margin-bottom:8px}
+.ang-lbl{text-anchor:middle;dominant-baseline:middle;font-family:'DM Mono',monospace;font-size:11px;fill:#4fc3f7;font-weight:500}
+
+.urow{display:flex;gap:4px;flex-wrap:wrap;margin-bottom:8px}
+.uchip{flex:1;min-width:48px;background:var(--bg3);border:1px solid var(--border);border-radius:4px;padding:5px 4px;text-align:center;cursor:pointer;transition:all .13s}
+.uchip:hover{border-color:var(--acc2)}
+.uchip.on{border-color:var(--acc);background:rgba(79,195,247,.1)}
+.uchip .ul{font-size:9px;color:var(--dim);text-transform:uppercase;letter-spacing:.04em;font-family:var(--cond);margin-bottom:1px}
+.uchip .uv{font-size:12px;font-weight:500;color:var(--text)}
+
+.irow{display:flex;gap:4px;flex-wrap:wrap}
+.ichip{flex:1;min-width:58px;background:var(--bg3);border:1px solid var(--border);border-radius:4px;padding:4px 4px;text-align:center}
+.ichip .il{font-size:9px;color:var(--dim);text-transform:uppercase;letter-spacing:.04em;font-family:var(--cond);margin-bottom:1px}
+.ichip .iv{font-size:12px;font-weight:500;color:var(--text)}
+.ichip .iu{font-size:9px;color:var(--dim);margin-left:1px}
+
+.main{padding:10px 13px;display:flex;flex-direction:column;gap:9px}
+.pbar{display:flex;height:23px;border-radius:5px;overflow:hidden;gap:2px}
+.pseg{display:flex;align-items:center;justify-content:center;font-family:var(--cond);font-size:10px;font-weight:600;letter-spacing:.07em;text-transform:uppercase;overflow:hidden;white-space:nowrap;transition:flex .3s cubic-bezier(.4,0,.2,1);padding:0 5px;border-radius:4px}
+.mrow{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:6px}
+.mc{background:var(--bg1);border:1px solid var(--border);border-radius:6px;padding:7px 9px;cursor:default}
+.mc.hi{border-color:rgba(79,195,247,.35);background:rgba(79,195,247,.05)}
+.mc.hi .mv{color:var(--acc)}
+.ml{font-size:9px;color:var(--muted);letter-spacing:.07em;text-transform:uppercase;margin-bottom:2px;font-family:var(--cond)}
+.mv{font-size:15px;font-weight:500;color:var(--text);line-height:1}
+.mu{font-size:9px;color:var(--dim);margin-top:2px}
+
+.cfull,.chalf{background:var(--bg1);border:1px solid var(--border);border-radius:8px;padding:10px 13px}
+.chrow{display:grid;grid-template-columns:1fr 1fr 1fr;gap:7px}
+.ctitle{font-family:var(--cond);font-size:10px;font-weight:600;letter-spacing:.11em;color:var(--muted);text-transform:uppercase;margin-bottom:7px;display:flex;justify-content:space-between}
+.ctitle span{color:var(--dim);font-weight:400}
+.dgrid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;background:var(--bg1);border:1px solid var(--border);border-radius:8px;padding:10px 13px}
+.dgtitle{font-family:var(--cond);font-size:9px;font-weight:700;letter-spacing:.18em;color:var(--acc2);text-transform:uppercase;margin-bottom:5px;padding-bottom:4px;border-bottom:1px solid var(--border)}
+.dr{display:flex;justify-content:space-between;align-items:center;padding:3px 0;border-bottom:1px solid rgba(255,255,255,.025)}
+.dr:last-child{border-bottom:none}
+.dk{color:var(--muted);font-size:11px}
+.dv{font-size:12px;font-weight:500;color:var(--text)}
+.dv .u{font-size:10px;color:var(--dim);font-weight:400;margin-left:2px}
+
+.tt{position:fixed;background:#1c1d23;border:1px solid var(--border2);border-radius:6px;padding:8px 11px;max-width:240px;font-size:11px;color:var(--text);line-height:1.45;pointer-events:none;z-index:9999;box-shadow:0 6px 24px rgba(0,0,0,.5);opacity:0;transition:opacity .12s}
+.tt.vis{opacity:1}
+.tt-ttl{font-family:var(--cond);font-size:9px;font-weight:700;letter-spacing:.14em;color:var(--acc);text-transform:uppercase;margin-bottom:4px}
+
+::-webkit-scrollbar{width:5px}::-webkit-scrollbar-track{background:var(--bg)}::-webkit-scrollbar-thumb{background:var(--bg3);border-radius:3px}
+.dfield{margin-top:6px;padding-top:6px;border-top:1px solid var(--border)}
+
+/* BACK BUTTON */
+.back-btn{font-family:var(--cond,'Barlow Condensed',sans-serif);font-size:10px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--muted,#7a7d8a);text-decoration:none;border:1px solid var(--border2,rgba(255,255,255,.13));border-radius:4px;padding:4px 10px;transition:all .15s;white-space:nowrap;flex-shrink:0}
+.back-btn:hover{color:var(--acc,#4fc3f7);border-color:var(--acc,#4fc3f7)}
+
+/* TOOLTIP */
+[data-tip]{position:relative;cursor:default}
+@keyframes tipIn{from{opacity:0}to{opacity:1}}
+[data-tip]:hover::after{content:attr(data-tip);position:absolute;bottom:calc(100% + 7px);left:0;background:#1e2130;border:1px solid rgba(79,195,247,.25);color:#c8cad4;font-size:10px;padding:7px 11px;border-radius:6px;white-space:pre-wrap;max-width:280px;min-width:180px;z-index:999;line-height:1.6;pointer-events:none;font-family:var(--mono);text-align:left;box-shadow:0 4px 20px rgba(0,0,0,.5);animation:tipIn .12s ease .6s both}
+[data-tip]:hover::before{content:'';position:absolute;bottom:calc(100% + 1px);left:20px;border:5px solid transparent;border-top-color:#1e2130;z-index:1000;pointer-events:none;animation:tipIn .12s ease .6s both}
+[data-tip].tr:hover::after{left:auto;right:0}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <a href="index.html" class="back-btn">← Ritorna</a>
+  <h1><span class="dot"></span>Spostamenti Angolari</h1>
+  <div class="sub">profili di moto · unità angolari · modalità calcolo</div>
+  <div class="inc-strip">
+    <span class="inc-lbl">Incremento</span>
+    <button class="inc-btn" onclick="setStep(0.01,this)">0.01</button>
+    <button class="inc-btn" onclick="setStep(0.1,this)">0.1</button>
+    <button class="inc-btn on" onclick="setStep(1,this)">1</button>
+    <button class="inc-btn" onclick="setStep(10,this)">10</button>
+  </div>
+</div>
+
+<div class="layout">
+<div class="panels-top">
+
+  <!-- 1. MODALITÀ CALCOLO -->
+  <div class="panel">
+    <div class="stitle">Modalità calcolo</div>
+    <div class="mode-grid" id="mode-grid">
+      <button class="mmode-btn on" id="btn-manual" onclick="setMode('manual')">
+        Manuale<span class="mm-sub">tutti i param.</span>
+      </button>
+      <button class="mmode-btn" id="btn-m1" onclick="setMode('m1')">
+        ω<sub>c</sub> + ω<sub>max</sub><span class="mm-sub">cruise + vel. max</span>
+      </button>
+      <button class="mmode-btn" id="btn-m2" onclick="setMode('m2')">
+        ω<sub>c</sub> + t<sub>tot</sub><span class="mm-sub">cruise + t. totale</span>
+      </button>
+      <button class="mmode-btn" id="btn-m3" onclick="setMode('m3')">
+        ω<sub>max</sub> + t<sub>tot</sub><span class="mm-sub">vel. max + t. tot.</span>
+      </button>
+      <button class="mmode-btn" style="grid-column:span 2" id="btn-m4" onclick="setMode('m4')">
+        t<sub>tot</sub> + Angolo<span class="mm-sub">tempo totale + spostamento angolare</span>
+      </button>
+    </div>
+    <div id="mode-inputs" style="margin-top:9px"></div>
+    <div class="warnbox" id="warnbox"></div>
+  </div>
+
+  <!-- 2. DIREZIONE + DIAGRAMMA -->
+  <div class="panel">
+    <div class="stitle">Rotazione</div>
+    <div class="dir-toggle">
+      <button class="dir-btn cw on" id="btn-cw" onclick="setDir('cw')"
+        data-tip="Rotazione oraria (CW): direzione positiva standard per la maggior parte dei motori e riduttori." data-ttl="Orario (CW)">
+        <svg width="13" height="13" viewBox="0 0 16 16" fill="none">
+          <path d="M 8 2 A 6 6 0 1 1 2 8" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" fill="none"/>
+          <polyline points="7,2 11,1 11,5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+        </svg>CW
+      </button>
+      <button class="dir-btn ccw" id="btn-ccw" onclick="setDir('ccw')"
+        data-tip="Rotazione antioraria (CCW): direzione negativa, usata ad es. in assi coordinati standard o per inversioni di moto." data-ttl="Antiorario (CCW)">
+        <svg width="13" height="13" viewBox="0 0 16 16" fill="none">
+          <path d="M 8 2 A 6 6 0 1 0 14 8" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" fill="none"/>
+          <polyline points="9,2 5,1 5,5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+        </svg>CCW
+      </button>
+    </div>
+    <div class="diag-wrap"><svg id="diag" width="100%" height="90" viewBox="0 0 212 90" preserveAspectRatio="xMidYMid meet"></svg></div>
+    <div class="irow" id="irow-conv"></div>
+  </div>
+
+  <!-- 3. UNITÀ + INERZIA -->
+  <div class="panel">
+    <div class="stitle">Unità</div>
+    <div class="urow" id="urow"></div>
+    <div class="field" style="margin-top:4px">
+      <div class="fhdr">
+        <span class="flabel" data-tip="Momento di inerzia del corpo rotante. Usato per calcolare la coppia: T = J · α. Per un disco pieno: J = ½·m·r²." data-ttl="Inerzia J">Inerzia J</span>
+        <span style="font-size:10px;color:var(--dim)">kg·m²</span>
+      </div>
+      <div class="srow">
+        <button class="arr" data-key="inerzia" data-dir="-1">&#9660;</button>
+        <input type="number" id="ri" class="numinput" value="0.5" min="0.001" step="0.01"
+          onchange="setVal('inerzia',+this.value)" oninput="slid('inerzia',+this.value)">
+        <button class="arr" data-key="inerzia" data-dir="1">&#9650;</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 4. ACCELERAZIONE -->
+  <div class="panel">
+    <div class="stitle">Accelerazione</div>
+    <div class="pgrid" id="chips-acc"></div>
+    <div class="pdesc" id="desc-acc"></div>
+    <div class="field">
+      <div class="fhdr">
+        <span class="flabel" data-tip="Durata della fase di accelerazione angolare: tempo per passare da ω₀ a ω_max secondo il profilo selezionato." data-ttl="Durata Accelerazione">Durata</span>
+        <span style="font-size:10px;color:var(--dim)">s</span>
+      </div>
+      <div class="srow">
+        <button class="arr" data-key="tacc" data-dir="-1">&#9660;</button>
+        <input type="number" id="ra" class="numinput" value="3" min="0.01"
+          onchange="setVal('tacc',+this.value)" oninput="slid('tacc',+this.value)">
+        <button class="arr" data-key="tacc" data-dir="1">&#9650;</button>
+      </div>
+    </div>
+    <div class="field dfield">
+      <div class="fhdr">
+        <span class="flabel" data-tip="Angolo percorso durante la fase di accelerazione. Modificando questo valore si aggiorna automaticamente la durata della fase." data-ttl="Angolo in Acc.">Angolo</span>
+        <span style="font-size:10px;color:var(--dim)" id="u-acc">°</span>
+      </div>
+      <div class="srow">
+        <button class="arr" data-key="sacc" data-dir="-1">&#9660;</button>
+        <input type="number" id="r-sacc" class="numinput" value="" min="0" step="0.001"
+          onchange="slidDist('acc',+this.value)" oninput="slidDist('acc',+this.value)">
+        <button class="arr" data-key="sacc" data-dir="1">&#9650;</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 5. VEL. COSTANTE -->
+  <div class="panel">
+    <div class="stitle">Vel. Costante</div>
+    <div class="field">
+      <div class="fhdr">
+        <span class="flabel" data-tip="Durata della fase a velocità angolare costante (ω_max). Impostare a 0 per profilo triangolare senza tratto a velocità costante." data-ttl="Durata Vel. Costante">Durata</span>
+        <span style="font-size:10px;color:var(--dim)">s</span>
+      </div>
+      <div class="srow">
+        <button class="arr" data-key="tcv" data-dir="-1">&#9660;</button>
+        <input type="number" id="rc" class="numinput" value="8" min="0"
+          onchange="setVal('tcv',+this.value)" oninput="slid('tcv',+this.value)">
+        <button class="arr" data-key="tcv" data-dir="1">&#9650;</button>
+      </div>
+    </div>
+    <div class="field dfield">
+      <div class="fhdr">
+        <span class="flabel" data-tip="Angolo percorso a velocità costante. Pari a ω_max × t_cv." data-ttl="Angolo Vel. Costante">Angolo</span>
+        <span style="font-size:10px;color:var(--dim)" id="u-cv">°</span>
+      </div>
+      <div class="srow">
+        <button class="arr" data-key="scv" data-dir="-1">&#9660;</button>
+        <input type="number" id="r-scv" class="numinput" value="" min="0" step="0.001"
+          onchange="slidDist('cv',+this.value)" oninput="slidDist('cv',+this.value)">
+        <button class="arr" data-key="scv" data-dir="1">&#9650;</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 6. DECELERAZIONE -->
+  <div class="panel">
+    <div class="stitle">Decelerazione</div>
+    <div class="pgrid" id="chips-dec"></div>
+    <div class="pdesc" id="desc-dec"></div>
+    <div class="field">
+      <div class="fhdr">
+        <span class="flabel" data-tip="Durata della fase di decelerazione angolare: tempo per passare da ω_max a ω_f." data-ttl="Durata Decelerazione">Durata</span>
+        <span style="font-size:10px;color:var(--dim)">s</span>
+      </div>
+      <div class="srow">
+        <button class="arr" data-key="tdec" data-dir="-1">&#9660;</button>
+        <input type="number" id="rd" class="numinput" value="2" min="0.01"
+          onchange="setVal('tdec',+this.value)" oninput="slid('tdec',+this.value)">
+        <button class="arr" data-key="tdec" data-dir="1">&#9650;</button>
+      </div>
+    </div>
+    <div class="field dfield">
+      <div class="fhdr">
+        <span class="flabel" data-tip="Angolo percorso durante la fase di decelerazione." data-ttl="Angolo in Dec.">Angolo</span>
+        <span style="font-size:10px;color:var(--dim)" id="u-dec">°</span>
+      </div>
+      <div class="srow">
+        <button class="arr" data-key="sdec" data-dir="-1">&#9660;</button>
+        <input type="number" id="r-sdec" class="numinput" value="" min="0" step="0.001"
+          onchange="slidDist('dec',+this.value)" oninput="slidDist('dec',+this.value)">
+        <button class="arr" data-key="sdec" data-dir="1">&#9650;</button>
+      </div>
+    </div>
+  </div>
+
+</div><!-- /panels-top -->
+
+<div class="main">
+  <div class="solve-strip" id="solve-strip">
+    <div class="ss-title" id="ss-title"></div>
+    <div class="ss-grid" id="ss-grid"></div>
+  </div>
+  <div class="pbar" id="pbar"></div>
+  <div class="mrow" id="mets"></div>
+  <div class="cfull">
+    <div class="ctitle">VELOCITÀ ANGOLARE <span>ω(t) — <span id="lbl-v">°/s</span></span></div>
+    <div style="position:relative;width:100%;height:165px"><canvas id="cv"></canvas></div>
+  </div>
+  <div class="chrow">
+    <div class="chalf">
+      <div class="ctitle">ACCELERAZIONE ANGOLARE <span>α(t) — <span id="lbl-a">°/s²</span></span></div>
+      <div style="position:relative;width:100%;height:128px"><canvas id="ca"></canvas></div>
+    </div>
+    <div class="chalf">
+      <div class="ctitle">JERK ANGOLARE <span>j(t) — <span id="lbl-j">°/s³</span></span></div>
+      <div style="position:relative;width:100%;height:128px"><canvas id="cj"></canvas></div>
+    </div>
+    <div class="chalf">
+      <div class="ctitle">POSIZIONE ANGOLARE <span>θ(t) — <span id="lbl-s">°</span></span></div>
+      <div style="position:relative;width:100%;height:128px"><canvas id="cs"></canvas></div>
+    </div>
+  </div>
+  <div class="dgrid" id="dtg"></div>
+</div>
+</div><!-- /layout -->
+
+<div class="tt" id="tt"><div class="tt-ttl" id="tt-ttl"></div><div id="tt-body"></div></div>
+
+<script>
+/* TOOLTIP */
+const ttEl=document.getElementById('tt'),ttTtl=document.getElementById('tt-ttl'),ttBody=document.getElementById('tt-body');
+document.addEventListener('mouseover',e=>{
+  const t=e.target.closest('[data-tip]');if(!t)return;
+  ttTtl.textContent=t.dataset.ttl||'';ttBody.textContent=t.dataset.tip||'';ttEl.classList.add('vis');
+});
+document.addEventListener('mouseout',e=>{if(e.target.closest('[data-tip]'))ttEl.classList.remove('vis');});
+document.addEventListener('mousemove',e=>{
+  let x=e.clientX+14,y=e.clientY+14;
+  if(x+250>window.innerWidth)x=e.clientX-254;
+  if(y+80>window.innerHeight)y=e.clientY-70;
+  ttEl.style.left=x+'px';ttEl.style.top=y+'px';
+});
+
+/* UNITÀ */
+const UNITS={
+  deg:{lbl:'Gradi',sym:'°',vSym:'°/s',aSym:'°/s²',jSym:'°/s³',sSym:'°',
+       toRad:v=>v*Math.PI/180,fromRad:v=>v*180/Math.PI},
+  rad:{lbl:'Rad',sym:'rad',vSym:'rad/s',aSym:'rad/s²',jSym:'rad/s³',sSym:'rad',
+       toRad:v=>v,fromRad:v=>v},
+  rev:{lbl:'Giri',sym:'rev',vSym:'rev/s',aSym:'rev/s²',jSym:'rev/s³',sSym:'rev',
+       toRad:v=>v*2*Math.PI,fromRad:v=>v/(2*Math.PI)},
+};
+let CU='deg';
+
+function mkUnitChips(){
+  return Object.entries(UNITS).map(([k,u])=>
+    `<div class="uchip${k===CU?' on':''}" onclick="setUnit('${k}')"
+      data-tip="Inserisci e visualizza angoli e velocità in ${u.lbl}." data-ttl="Unità: ${u.lbl}">
+      <div class="ul">${u.lbl}</div><div class="uv">${u.sym}</div></div>`
+  ).join('');
+}
+function setUnit(k){
+  CU=k;const u=UNITS[k];
+  document.getElementById('urow').innerHTML=mkUnitChips();
+  ['acc','cv','dec'].forEach(ph=>{
+    const el=document.getElementById('u-'+ph);if(el)el.textContent=u.sym;
+  });
+  document.getElementById('lbl-v').textContent=u.vSym;
+  document.getElementById('lbl-a').textContent=u.aSym;
+  document.getElementById('lbl-j').textContent=u.jSym;
+  document.getElementById('lbl-s').textContent=u.sSym;
+  SMFLD.m1_vc.unit=u.vSym; SMFLD.m2_vc.unit=u.vSym;
+  SMFLD.m3_vmax.unit=u.vSym; SMFLD.m4_spost.unit=u.sym;
+  recalc();
+}
+
+/* STATE */
+const ST={inerzia:.5,vmax:90,tacc:3,tcv:8,tdec:2,profAcc:'sinusoid',profDec:'lineare',dir:'cw'};
+const SM={mode:'manual',m1_vc:90,m2_vc:90,m2_ttot:13,m3_vmax:90,m3_ttot:13,m4_ttot:13,m4_spost:900};
+
+const FLD={
+  inerzia:{rid:'ri',min:.001,max:99999},
+  vmax:   {rid:'rv',min:.001,max:999999},
+  tacc:   {rid:'ra',min:.01, max:999},
+  tcv:    {rid:'rc',min:0,   max:9999},
+  tdec:   {rid:'rd',min:.01, max:999},
+};
+const SMFLD={
+  m1_vc:   {min:.001,max:999999,step:.1, unit:'°/s'},
+  m2_vc:   {min:.001,max:999999,step:.1, unit:'°/s'},
+  m2_ttot: {min:.01, max:99999, step:.01,unit:'s'},
+  m3_vmax: {min:.001,max:999999,step:.1, unit:'°/s'},
+  m3_ttot: {min:.01, max:99999, step:.01,unit:'s'},
+  m4_ttot: {min:.01, max:99999, step:.01,unit:'s'},
+  m4_spost:{min:.001,max:999999,step:1,  unit:'°'},
+};
+
+let STEP=1;
+function setStep(s,btn){STEP=s;document.querySelectorAll('.inc-btn').forEach(b=>b.classList.toggle('on',b===btn));}
+
+const fp=(v,d=3)=>isFinite(v)&&!isNaN(v)?v.toFixed(d):'∞';
+function numFmt(k,v){if(k==='inerzia')return v.toFixed(3);if(k==='vmax')return v.toFixed(2);return v.toFixed(2);}
+function fmtVal(k,v){
+  const u=UNITS[CU];
+  if(k==='inerzia')return v.toFixed(3)+' kg·m²';
+  if(k==='vmax')return v.toFixed(2)+' '+u.vSym;
+  return v.toFixed(2)+' s';
+}
+
+function setVal(k,raw){
+  const c=FLD[k];const v=Math.max(c.min,Math.min(c.max,parseFloat(raw)||0));ST[k]=v;
+  const inp=document.getElementById(c.rid);if(inp&&document.activeElement!==inp)inp.value=numFmt(k,v);
+  const lbl=document.getElementById('lbl-'+k);if(lbl)lbl.textContent=fmtVal(k,v);
+  recalc();
+}
+function slid(k,v){ST[k]=parseFloat(v)||0;recalc();}
+function setSMVal(k,raw){
+  const c=SMFLD[k];const v=Math.max(c.min,Math.min(c.max,parseFloat(raw)||0));SM[k]=v;
+  const inp=document.getElementById('si-'+k);if(inp&&document.activeElement!==inp)inp.value=v;
+  recalc();
+}
+function applyToST(obj){
+  ['vmax','tacc','tcv','tdec'].forEach(k=>{
+    if(obj[k]!==undefined){
+      const v=Math.max(FLD[k].min,+obj[k].toFixed(6));ST[k]=v;
+      const inp=document.getElementById(FLD[k].rid);if(inp)inp.value=numFmt(k,v);
+      const lbl=document.getElementById('lbl-'+k);if(lbl)lbl.textContent=fmtVal(k,v);
+    }
+  });
+}
+
+function slidDist(phase,sDisp){
+  const u=UNITS[CU];
+  const sRad=u.toRad(sDisp);
+  const vmaxRad=u.toRad(Math.max(ST.vmax,1e-9));
+  if(phase==='cv'){
+    const t=Math.max(0,sRad/vmaxRad);ST.tcv=t;
+    const inp=document.getElementById('rc');if(inp&&document.activeElement!==inp)inp.value=fp(t,4);
+  } else if(phase==='acc'){
+    const kA=profInt(ST.profAcc);
+    const t=Math.max(.001,sRad/(Math.max(kA,1e-9)*vmaxRad));ST.tacc=t;
+    const inp=document.getElementById('ra');if(inp&&document.activeElement!==inp)inp.value=fp(t,4);
+  } else {
+    const kD=profInt(ST.profDec);
+    const t=Math.max(.001,sRad/(Math.max(kD,1e-9)*vmaxRad));ST.tdec=t;
+    const inp=document.getElementById('rd');if(inp&&document.activeElement!==inp)inp.value=fp(t,4);
+  }
+  recalc();
+}
+
+/* HOLD ARROWS */
+let hTimer=null,hInt=null;
+function doStep(k,dir){
+  if(FLD[k])setVal(k,Math.round((ST[k]+dir*STEP)*1e6)/1e6);
+  else if(SMFLD[k])setSMVal(k,Math.round((SM[k]+dir*STEP)*1e6)/1e6);
+  else if(['sacc','scv','sdec'].includes(k)){
+    const ph=k==='sacc'?'acc':k==='scv'?'cv':'dec';
+    const inp=document.getElementById('r-'+k);
+    const cur=parseFloat(inp?.value)||0;
+    slidDist(ph,Math.max(0,Math.round((cur+dir*STEP)*1e6)/1e6));
+  }
+}
+function holdStart(k,dir,btn){btn.classList.add('held');doStep(k,dir);hTimer=setTimeout(()=>{hInt=setInterval(()=>doStep(k,dir),75);},360);}
+function holdStop(){clearTimeout(hTimer);clearInterval(hInt);hTimer=hInt=null;document.querySelectorAll('.arr.held').forEach(b=>b.classList.remove('held'));}
+document.addEventListener('mouseup',holdStop);document.addEventListener('touchend',holdStop);
+function bindArrows(){
+  document.querySelectorAll('.arr').forEach(btn=>{const f=btn.cloneNode(true);btn.parentNode.replaceChild(f,btn);});
+  document.querySelectorAll('.arr').forEach(btn=>{
+    const k=btn.dataset.key,d=+btn.dataset.dir;if(!k)return;
+    btn.addEventListener('mousedown',()=>holdStart(k,d,btn));
+    btn.addEventListener('touchstart',e=>{e.preventDefault();holdStart(k,d,btn);},{passive:false});
+  });
+}
+
+function setDir(d){
+  ST.dir=d;
+  document.getElementById('btn-cw').classList.toggle('on',d==='cw');
+  document.getElementById('btn-ccw').classList.toggle('on',d==='ccw');
+  drawDiag();recalc();
+}
+
+/* PROFILI */
+function erf(x){const t=1/(1+.3275911*Math.abs(x));const y=1-((((1.061405429*t-1.453152027)*t+1.421413741)*t-.284496736)*t+.254829592)*t*Math.exp(-x*x);return x>=0?y:-y;}
+const PROF={
+  lineare:  {sh:'LIN',d:'Rampa costante — jerk infinito. Profilo base.',v:t=>t},
+  sinusoid: {sh:'SIN',d:'Profilo sin² — jerk nullo agli estremi. Transizioni morbide.',v:t=>Math.sin(Math.PI/2*t)**2},
+  cubica:   {sh:'S³', d:'Smooth-step 3t²−2t³ — jerk zero agli estremi.',v:t=>3*t*t-2*t*t*t},
+  quintica: {sh:'S⁵', d:'10t³−15t⁴+6t⁵ — zero jerk e curvatura.',v:t=>10*t**3-15*t**4+6*t**5},
+  parab_su: {sh:'P↑', d:'Profilo t² — avvio dolce, accelerazione crescente.',v:t=>t*t},
+  parab_giu:{sh:'P↓', d:'Profilo 2t−t² — avvio rapido, fine dolce.',v:t=>2*t-t*t},
+  esponenz: {sh:'EXP',d:'Crescita esponenziale k=3 — quasi piatto poi esplosivo.',v:t=>(Math.exp(3*t)-1)/(Math.exp(3)-1)},
+  logaritm: {sh:'LOG',d:'Crescita logaritmica — rapida poi satura.',v:t=>Math.log(1+9*t)/Math.log(10)},
+  gaussiana:{sh:'GAU',d:'Campana σ=0.3 — picco acc. al centro della fase.',v:t=>{
+    const s=.3,m=.5,c0=.5*(1+erf((-m)/(s*1.41421))),c1=.5*(1+erf((1-m)/(s*1.41421)));
+    return(.5*(1+erf((t-m)/(s*1.41421)))-c0)/(c1-c0);}},
+  sjerk:    {sh:'SJK',d:'Trapezio di jerk — limite di jerk costante.',v:t=>{
+    if(t<=1/3)return 2.25*t*t;if(t<=2/3)return .25+1.5*(t-1/3);
+    const d=t-2/3;return .75+1.5*d-2.25*d*d;}}
+};
+const PK=Object.keys(PROF);
+function dvp(k,tn){const e=1e-5,f=PROF[k].v;return(f(Math.min(1,tn+e))-f(Math.max(0,tn-e)))/(2*e);}
+function ddvp(k,tn){const e=1e-4,f=PROF[k].v;return(f(Math.min(1,tn+e))-2*f(tn)+f(Math.max(0,tn-e)))/(e*e);}
+function profInt(key){const f=PROF[key].v;let s=0,N=200;for(let i=0;i<N;i++)s+=(f(i/N)+f((i+1)/N))/2/N;return s;}
+function mkSpark(k,W,H,mir){const f=PROF[k].v,p=2.5;return Array.from({length:25},(_,i)=>{const t=i/24,y=mir?f(1-t):f(t);return(i?'L':'M')+(t*W).toFixed(1)+','+((1-y)*(H-p*2)+p).toFixed(1);}).join('');}
+function mkChips(ph){
+  const sel=ph==='acc'?ST.profAcc:ST.profDec,mir=ph==='dec',W=36,H=22;
+  return PK.map(k=>`<button class="pchip${k===sel?' on':''}" onclick="setPr('${ph}','${k}')" data-tip="${PROF[k].d}" data-ttl="Profilo ${PROF[k].sh}"><svg width="${W}" height="${H}" viewBox="0 0 ${W} ${H}"><path d="${mkSpark(k,W,H,mir)}" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg><span class="pclbl">${PROF[k].sh}</span></button>`).join('');
+}
+function setPr(ph,k){if(ph==='acc')ST.profAcc=k;else ST.profDec=k;document.getElementById('chips-'+ph).innerHTML=mkChips(ph);document.getElementById('desc-'+ph).textContent=PROF[k].d;recalc();}
+
+/* SOLVE MODE */
+function solveMode(){
+  const mode=SM.mode,u=UNITS[CU];
+  const kA=profInt(ST.profAcc),kD=profInt(ST.profDec);
+  const{tacc,tcv,tdec}=ST;
+  const ttotShape=tacc+tcv+tdec;
+  const rA=tacc/ttotShape,rC=tcv/ttotShape,rD=tdec/ttotShape;
+  const K=kA*rA+rC+kD*rD;
+  const warn=m=>{document.getElementById('warnbox').className='warnbox show';document.getElementById('warnbox').textContent=m;};
+  const clrW=()=>{document.getElementById('warnbox').className='warnbox';};
+  if(mode==='manual'){clrW();return null;}
+  clrW();
+  if(mode==='m1'){
+    const vmax=ST.vmax,vmaxRad=u.toRad(vmax),ttot=ttotShape;
+    const sRad=vmaxRad*(kA*tacc+tcv+kD*tdec);
+    return{title:'Noti: ω<sub>cruise</sub> = ω<sub>max</sub>, forma profilo → derivato: angolo',
+      dr:{'dr-ttot':fp(ttot,3)+' s','dr-spost':fp(u.fromRad(sRad),4)+' '+u.sym},
+      items:[{l:'ω cruise=ω max',v:fp(vmax,2),u:u.vSym},{l:'Tempo totale',v:fp(ttot,3),u:'s'},{l:'Angolo totale',v:fp(u.fromRad(sRad),4),u:u.sym},{l:'Coeff. K',v:fp(K,4),u:''}]};
+  }
+  if(mode==='m2'){
+    const vc=SM.m2_vc,ttot=SM.m2_ttot;
+    if(ttot<.05){warn('Tempo totale troppo piccolo.');return null;}
+    const vcRad=u.toRad(vc),tA=rA*ttot,tC=rC*ttot,tD=rD*ttot;
+    if(tA<.005||tD<.005)warn('Con questa forma le fasi acc./dec. risultano troppo piccole.');
+    const sRad=vcRad*(kA*tA+tC+kD*tD);
+    applyToST({vmax:vc,tacc:tA,tcv:tC,tdec:tD});
+    return{title:'Noti: ω<sub>cruise</sub>, t<sub>tot</sub> → derivato: fasi temporali, angolo',
+      dr:{'dr-spost':fp(u.fromRad(sRad),4)+' '+u.sym},
+      items:[{l:'ω cruise',v:fp(vc,2),u:u.vSym},{l:'Tempo acc.',v:fp(tA,3),u:'s'},{l:'Tempo v.c.',v:fp(tC,3),u:'s'},{l:'Tempo dec.',v:fp(tD,3),u:'s'},{l:'Angolo',v:fp(u.fromRad(sRad),4),u:u.sym}]};
+  }
+  if(mode==='m3'){
+    const vmax=SM.m3_vmax,ttot=SM.m3_ttot;
+    if(ttot<.05){warn('Tempo totale troppo piccolo.');return null;}
+    const vmaxRad=u.toRad(vmax),tA=rA*ttot,tC=rC*ttot,tD=rD*ttot;
+    if(tA<.005||tD<.005)warn('Fasi troppo piccole. Aumenta t_tot.');
+    const sRad=vmaxRad*(kA*tA+tC+kD*tD);
+    applyToST({vmax,tacc:tA,tcv:tC,tdec:tD});
+    return{title:'Noti: ω<sub>max</sub>, t<sub>tot</sub> → derivato: fasi temporali, angolo',
+      dr:{'dr-spost':fp(u.fromRad(sRad),4)+' '+u.sym},
+      items:[{l:'ω max',v:fp(vmax,2),u:u.vSym},{l:'Tempo acc.',v:fp(tA,3),u:'s'},{l:'Tempo v.c.',v:fp(tC,3),u:'s'},{l:'Tempo dec.',v:fp(tD,3),u:'s'},{l:'Angolo',v:fp(u.fromRad(sRad),4),u:u.sym}]};
+  }
+  if(mode==='m4'){
+    const ttot=SM.m4_ttot,sDisp=SM.m4_spost;
+    if(ttot<.05){warn('Tempo totale troppo piccolo.');return null;}
+    if(sDisp<.001){warn('Angolo troppo piccolo.');return null;}
+    const sRad=u.toRad(sDisp),vmaxRad=sRad/(ttot*K),vmax=u.fromRad(vmaxRad);
+    const tA=rA*ttot,tC=rC*ttot,tD=rD*ttot;
+    applyToST({vmax,tacc:tA,tcv:tC,tdec:tD});
+    const sCheck=u.fromRad(vmaxRad*(kA*tA+tC+kD*tD));
+    return{title:'Noti: t<sub>tot</sub>, angolo → derivato: ω<sub>max</sub>, fasi',
+      dr:{'dr-vmax':fp(vmax,3)+' '+u.vSym},
+      items:[{l:'ω max calcolato',v:fp(vmax,3),u:u.vSym},{l:'Tempo acc.',v:fp(tA,3),u:'s'},{l:'Tempo v.c.',v:fp(tC,3),u:'s'},{l:'Tempo dec.',v:fp(tD,3),u:'s'},{l:'Verifica angolo',v:fp(sCheck,4),u:u.sym}]};
+  }
+  return null;
+}
+
+/* MODE UI */
+const MTIPS={vmax:'Velocità angolare massima/cruise raggiunta nella fase a velocità costante.',
+  m2_vc:'Velocità angolare di crociera (= ω_max nel profilo trapezoidale).',
+  m2_ttot:'Tempo totale del ciclo (acc. + vel. cost. + dec.).',
+  m3_vmax:'Velocità angolare massima: le fasi temporali vengono ridistribuite proporzionalmente.',
+  m3_ttot:'Tempo totale del ciclo angolare.',
+  m4_ttot:'Tempo totale entro cui completare la rotazione.',
+  m4_spost:'Angolo totale da percorrere, nelle unità selezionate.'};
+
+const MODE_DEF={
+  manual:{known:[{key:'vmax',st:true,lbl:'Velocità angolare massima'}],derived:[]},
+  m1:{known:[{key:'vmax',st:true,lbl:'Velocità cruise = ω max'}],derived:[{lbl:'Tempo totale',id:'dr-ttot'},{lbl:'Angolo totale',id:'dr-spost'}]},
+  m2:{known:[{key:'m2_vc',sm:true,lbl:'Velocità cruise'},{key:'m2_ttot',sm:true,lbl:'Tempo totale'}],derived:[{lbl:'Angolo totale',id:'dr-spost'}]},
+  m3:{known:[{key:'m3_vmax',sm:true,lbl:'Velocità massima'},{key:'m3_ttot',sm:true,lbl:'Tempo totale'}],derived:[{lbl:'Angolo totale',id:'dr-spost'}]},
+  m4:{known:[{key:'m4_ttot',sm:true,lbl:'Tempo totale'},{key:'m4_spost',sm:true,lbl:'Angolo bersaglio'}],derived:[{lbl:'Velocità massima',id:'dr-vmax'}]},
+};
+
+function mkFldHTML(f){
+  const u=UNITS[CU];
+  if(f.st){
+    return `<div class="field known"><div class="fhdr"><span class="flabel" data-tip="${MTIPS.vmax}" data-ttl="ω max">${f.lbl}</span><span style="font-size:10px;color:var(--dim)">${u.vSym}</span></div>
+    <div class="srow"><button class="arr" data-key="vmax" data-dir="-1">&#9660;</button>
+    <input type="number" id="rv" class="numinput" value="${numFmt('vmax',ST.vmax)}" min="0.001" step="0.1" onchange="setVal('vmax',+this.value)" oninput="slid('vmax',+this.value)">
+    <button class="arr" data-key="vmax" data-dir="1">&#9650;</button></div></div>`;
+  }
+  if(f.sm){
+    const c=SMFLD[f.key];
+    return `<div class="field known"><div class="fhdr"><span class="flabel" data-tip="${MTIPS[f.key]||f.lbl}" data-ttl="${f.lbl}">${f.lbl}</span><span style="font-size:10px;color:var(--dim)">${c.unit}</span></div>
+    <div class="srow"><button class="arr" data-key="${f.key}" data-dir="-1">&#9660;</button>
+    <input type="number" id="si-${f.key}" class="numinput" value="${SM[f.key]}" min="${c.min}" step="${c.step||.1}" onchange="setSMVal('${f.key}',+this.value)" oninput="setSMVal('${f.key}',+this.value)">
+    <button class="arr" data-key="${f.key}" data-dir="1">&#9650;</button></div></div>`;
+  }
+  return '';
+}
+function setMode(mode){
+  SM.mode=mode;
+  ['manual','m1','m2','m3','m4'].forEach(m=>document.getElementById('btn-'+m).classList.toggle('on',m===mode));
+  const cfg=MODE_DEF[mode]||{known:[],derived:[]};
+  const sep=cfg.derived.length
+    ?`<div style="margin-top:9px;padding-top:8px;border-top:1px solid var(--border)"><div style="font-size:9px;color:var(--amber);letter-spacing:.12em;text-transform:uppercase;font-family:var(--cond);font-weight:600;margin-bottom:6px">Calcolato</div>${cfg.derived.map(d=>`<div class="field" style="margin-bottom:6px"><div class="fhdr"><span class="flabel" style="color:var(--amber)">${d.lbl}</span><span class="fval" id="${d.id}" style="color:var(--amber)">—</span></div></div>`).join('')}</div>`:'';
+  document.getElementById('mode-inputs').innerHTML=cfg.known.map(mkFldHTML).join('')+sep;
+  bindArrows();recalc();
+}
+
+/* DIAGRAMMA */
+function drawDiag(){
+  const isCW=ST.dir==='cw',cx=106,cy=45,R=32,W=212,H=90;
+  const u=UNITS[CU],vmaxRad=u.toRad(ST.vmax);
+  let h='';
+  // circles
+  h+=`<circle cx="${cx}" cy="${cy}" r="${R}" fill="rgba(255,255,255,.025)" stroke="rgba(255,255,255,.1)" stroke-width="1"/>`;
+  h+=`<circle cx="${cx}" cy="${cy}" r="${R*.55}" fill="none" stroke="rgba(255,255,255,.04)" stroke-width="1" stroke-dasharray="2,4"/>`;
+  // cross
+  h+=`<line x1="${cx-R-8}" y1="${cy}" x2="${cx+R+8}" y2="${cy}" stroke="rgba(255,255,255,.06)" stroke-width="1" stroke-dasharray="3,3"/>`;
+  h+=`<line x1="${cx}" y1="${cy-R-8}" x2="${cx}" y2="${cy+R+8}" stroke="rgba(255,255,255,.06)" stroke-width="1" stroke-dasharray="3,3"/>`;
+  // arc arrow
+  const aR=R+9,clr=isCW?'#66bb6a':'#ef5350';
+  if(isCW){
+    h+=`<path d="M${cx+aR*.7},${cy-aR*.7} A${aR},${aR} 0 1,1 ${cx+aR*.7},${cy+aR*.7}" fill="none" stroke="${clr}" stroke-width="1.5"/>`;
+    h+=`<polygon points="${(cx+aR*.7).toFixed(1)},${(cy+aR*.7).toFixed(1)} ${(cx+aR*.7-5).toFixed(1)},${(cy+aR*.7-2).toFixed(1)} ${(cx+aR*.7-1).toFixed(1)},${(cy+aR*.7+5).toFixed(1)}" fill="${clr}"/>`;
+  } else {
+    h+=`<path d="M${cx+aR*.7},${cy+aR*.7} A${aR},${aR} 0 1,0 ${cx+aR*.7},${cy-aR*.7}" fill="none" stroke="${clr}" stroke-width="1.5"/>`;
+    h+=`<polygon points="${(cx+aR*.7).toFixed(1)},${(cy-aR*.7).toFixed(1)} ${(cx+aR*.7-5).toFixed(1)},${(cy-aR*.7+2).toFixed(1)} ${(cx+aR*.7-1).toFixed(1)},${(cy-aR*.7-5).toFixed(1)}" fill="${clr}"/>`;
+  }
+  // radius
+  h+=`<line x1="${cx}" y1="${cy}" x2="${cx+R}" y2="${cy}" stroke="rgba(255,255,255,.3)" stroke-width="1.5" stroke-linecap="round"/>`;
+  h+=`<circle cx="${cx}" cy="${cy}" r="3" fill="#4fc3f7"/>`;
+  // label
+  h+=`<text x="${cx}" y="${H-4}" text-anchor="middle" font-family="'DM Mono'" font-size="10" fill="${clr}" font-weight="500">${isCW?'ORARIO (CW)':'ANTIORARIO (CCW)'}</text>`;
+  document.getElementById('diag').innerHTML=h;
+  // conversion chips
+  const rpm=vmaxRad/(2*Math.PI)*60,rps=vmaxRad/(2*Math.PI);
+  document.getElementById('irow-conv').innerHTML=[
+    ['ω rad/s',vmaxRad.toFixed(3),''],['RPM',rpm.toFixed(1),''],['rev/s',rps.toFixed(3),''],
+  ].map(([l,v])=>`<div class="ichip"><div class="il">${l}</div><div class="iv">${v}</div></div>`).join('');
+}
+
+/* COMPUTE */
+function compute(){
+  const u=UNITS[CU];
+  const{inerzia,vmax,tacc,tcv,tdec,profAcc,profDec,dir}=ST;
+  const isCW=dir==='cw';
+  const vmaxRad=u.toRad(vmax);
+  const ttot=Math.max(tacc+tcv+tdec,.001),N=600;
+  const t=[],v=[],a=[],j=[],s=[];
+  let sp=0,vp=0,tp=0;
+  for(let i=0;i<=N;i++){
+    const ti=ttot*i/N;let vi,ai,ji;
+    if(ti<=tacc&&tacc>1e-9){const tn=Math.min(1,ti/tacc);vi=PROF[profAcc].v(tn)*vmaxRad;ai=dvp(profAcc,tn)*vmaxRad/tacc;ji=ddvp(profAcc,tn)*vmaxRad/(tacc*tacc);}
+    else if(ti<=tacc+tcv){vi=vmaxRad;ai=0;ji=0;}
+    else{const tf=Math.max(tdec,1e-9),tn=Math.max(0,Math.min(1,1-(ti-tacc-tcv)/tf));vi=Math.max(0,PROF[profDec].v(tn)*vmaxRad);ai=(tn>1e-4&&tn<1-1e-4)?-dvp(profDec,tn)*vmaxRad/tf:0;ji=(tn>1e-3&&tn<1-1e-3)?ddvp(profDec,tn)*vmaxRad/(tf*tf):0;}
+    if(i>0)sp+=(vp+vi)/2*(ti-tp);
+    const sign=isCW?1:-1;
+    t.push(+ti.toFixed(3));
+    v.push(+(u.fromRad(vi)*sign).toFixed(5));
+    a.push(+(u.fromRad(ai)*sign).toFixed(5));
+    j.push(+(u.fromRad(ji)*sign).toFixed(5));
+    s.push(+(u.fromRad(sp)*sign).toFixed(5));
+    vp=vi;tp=ti;
+  }
+  const iA=Math.min(Math.round(tacc/ttot*N),N),iC=Math.min(Math.round((tacc+tcv)/ttot*N),N);
+  const sARad=u.toRad(Math.abs(s[iA])),sCRad=u.toRad(Math.abs(s[iC])),sTRad=u.toRad(Math.abs(s[N]));
+  const sA=u.fromRad(sARad),sC=u.fromRad(sCRad),sT=u.fromRad(sTRad);
+  const sCv=sC-sA,sD=sT-sC;
+  const aMaxRad=Math.max(...a.map(x=>Math.abs(u.toRad(x))));
+  const aMinRad=Math.max(...a.map(x=>Math.abs(u.toRad(-x))));
+  const jMaxRad=Math.max(...j.map(x=>Math.abs(u.toRad(x))));
+  const TqAcc=inerzia*aMaxRad,TqDec=inerzia*aMinRad;
+  const EcMax=.5*inerzia*vmaxRad*vmaxRad;
+  return{t,v,a,j,s,ttot,sA,sCv,sD,sT,
+    aMax:u.fromRad(aMaxRad),aMin:u.fromRad(aMinRad),jMax:u.fromRad(jMaxRad),
+    TqAcc,TqDec,EcMax,PmAcc:TqAcc*vmaxRad,PmDec:TqDec*vmaxRad,
+    vMean:sT/ttot,vmaxDisp:vmax,tacc,tcv,tdec,isCW,vmaxRad};
+}
+
+/* RENDER */
+function render(r,solved){
+  const u=UNITS[CU];
+  const strip=document.getElementById('solve-strip');
+  if(solved){
+    strip.classList.add('show');
+    document.getElementById('ss-title').innerHTML=solved.title;
+    document.getElementById('ss-grid').innerHTML=solved.items.map(it=>
+      `<div class="ssc"><div class="ssc-l">${it.l}</div><div class="ssc-v">${it.v}<span class="ssc-u">${it.u}</span></div></div>`
+    ).join('');
+    if(solved.dr)Object.entries(solved.dr).forEach(([id,val])=>{const el=document.getElementById(id);if(el)el.textContent=val;});
+  } else strip.classList.remove('show');
+
+  const tot=r.ttot;
+  document.getElementById('pbar').innerHTML=[
+    [r.tacc,'ACC','#378ADD','rgba(55,138,221,.18)'],
+    [r.tcv,'V.C.','#1D9E75','rgba(29,158,117,.18)'],
+    [r.tdec,'DEC','#D85A30','rgba(216,90,48,.18)'],
+  ].map(([tt,lb,c,bg])=>`<div class="pseg" style="flex:${tt/tot};background:${bg};border:1px solid ${c};color:${c}">${lb} ${tt.toFixed(2)}s</div>`).join('');
+
+  const syncA=(id,v)=>{const el=document.getElementById(id);if(el&&document.activeElement!==el)el.value=fp(v,4);};
+  syncA('r-sacc',r.sA);syncA('r-scv',r.sCv);syncA('r-sdec',r.sD);
+
+  const hiS=SM.mode==='m4',hiV=SM.mode==='m4'||SM.mode==='m1';
+  const degTot=UNITS.deg.fromRad(UNITS[CU].toRad(r.sT));
+  document.getElementById('mets').innerHTML=[
+    ['Tempo tot.',   fp(r.ttot,2),      's',    false,  'Durata totale del ciclo di rotazione.'],
+    ['Angolo tot.',  fp(r.sT,3),        u.sym,  hiS,    'Spostamento angolare totale percorso.'],
+    ['ω massima',    fp(r.vmaxDisp,3),  u.vSym, hiV,    'Velocità angolare di crociera massima.'],
+    ['Coppia acc.',  fp(r.TqAcc,2),     'N·m',  false,  'Coppia motrice in accelerazione: T = J · α.'],
+    ['Coppia dec.',  fp(r.TqDec,2),     'N·m',  false,  'Coppia frenante in decelerazione: T = J · α_dec.'],
+    ['En. cin.',     fp(r.EcMax,2),     'J',    false,  'Energia cinetica massima: Ec = ½ · J · ω².'],
+  ].map(([l,v,uu,hi,tip])=>`<div class="mc${hi?' hi':''}" data-tip="${tip}" data-ttl="${l}"><div class="ml">${l}</div><div class="mv">${v}</div><div class="mu">${uu}</div></div>`).join('');
+
+  upCh(cV,r.t,r.v);upCh(cA,r.t,r.a);upCh(cJ,r.t,r.j);upCh(cS,r.t,r.s);
+
+  document.getElementById('dtg').innerHTML=[
+    ['Angoli',[
+      ['In acc.',       fp(r.sA,4),   u.sym],
+      ['A vel. cost.',  fp(r.sCv,4),  u.sym],
+      ['In dec.',       fp(r.sD,4),   u.sym],
+      ['Totale',        fp(r.sT,4),   u.sym],
+      ['Giri completi', Math.floor(degTot/360).toString(), 'rev'],
+      ['ω media',       fp(r.vMean,4),u.vSym],
+    ]],
+    ['Dinamica',[
+      ['α picco acc.',  fp(r.aMax,4), u.aSym],
+      ['α picco dec.',  fp(r.aMin,4), u.aSym],
+      ['Jerk max',      fp(r.jMax,3), u.jSym],
+      ['ω max rad/s',   fp(r.vmaxRad,4),'rad/s'],
+      ['RPM',           fp(r.vmaxRad/(2*Math.PI)*60,2),'rpm'],
+    ]],
+    ['Coppia / Inerzia',[
+      ['Coppia acc.',   fp(r.TqAcc,3),'N·m'],
+      ['Coppia dec.',   fp(r.TqDec,3),'N·m'],
+      ['Inerzia J',     fp(ST.inerzia,4),'kg·m²'],
+      ['Pot. max acc.', fp(r.PmAcc,2),'W'],
+      ['Pot. max dec.', fp(r.PmDec,2),'W'],
+    ]],
+    ['Info',[
+      ['En. cin. max',  fp(r.EcMax,2),'J'],
+      ['Direzione',     r.isCW?'CW (orario)':'CCW (antiorario)',''],
+      ['Profilo acc.',  PROF[ST.profAcc].sh,''],
+      ['Profilo dec.',  PROF[ST.profDec].sh,''],
+    ]],
+  ].map(([title,rows])=>`<div><div class="dgtitle">${title}</div>${rows.map(([k,v,uu])=>`<div class="dr"><span class="dk">${k}</span><span class="dv">${v}${uu?`<span class="u">${uu}</span>`:''}</span></div>`).join('')}</div>`).join('');
+
+  drawDiag();
+}
+
+/* CHARTS */
+let cV,cA,cJ,cS;
+function mkChart(id,col,fc,sm){
+  return new Chart(document.getElementById(id),{type:'line',
+    data:{labels:[],datasets:[{data:[],borderColor:col,borderWidth:1.5,pointRadius:0,tension:0,
+      fill:{target:'origin',above:fc,below:fc.replace('.12','.07')}}]},
+    options:{responsive:true,maintainAspectRatio:false,animation:{duration:55},
+      plugins:{legend:{display:false},tooltip:{mode:'index',intersect:false,
+        backgroundColor:'#1c1d23',titleColor:'#7a7d8a',bodyColor:'#e8e9ec',
+        borderColor:'rgba(255,255,255,0.1)',borderWidth:1,
+        titleFont:{family:"'DM Mono'",size:10},bodyFont:{family:"'DM Mono'",size:11},
+        callbacks:{label:c=>' '+c.parsed.y.toFixed(4)}}},
+      scales:{
+        x:{ticks:{maxTicksLimit:6,font:{family:"'DM Mono'",size:10},color:'#4a4d5a'},grid:{color:'rgba(255,255,255,0.04)'},border:{display:false}},
+        y:{suggestedMin:sm,ticks:{maxTicksLimit:4,font:{family:"'DM Mono'",size:10},color:'#4a4d5a'},grid:{color:'rgba(255,255,255,0.04)'},border:{display:false}}
+      }}});
+}
+function upCh(ch,l,d){ch.data.labels=l;ch.data.datasets[0].data=d;ch.update('none');}
+
+function recalc(){const solved=solveMode();const r=compute();render(r,solved);}
+
+/* INIT */
+document.getElementById('urow').innerHTML=mkUnitChips();
+document.getElementById('chips-acc').innerHTML=mkChips('acc');
+document.getElementById('chips-dec').innerHTML=mkChips('dec');
+document.getElementById('desc-acc').textContent=PROF[ST.profAcc].d;
+document.getElementById('desc-dec').textContent=PROF[ST.profDec].d;
+cV=mkChart('cv','#4fc3f7','rgba(79,195,247,.12)',0);
+cA=mkChart('ca','#ffa726','rgba(255,167,38,.12)',null);
+cJ=mkChart('cj','#ef5350','rgba(239,83,80,.10)',null);
+cS=mkChart('cs','#66bb6a','rgba(102,187,106,.10)',0);
+setMode('manual');
+drawDiag();
+</script>
+</body>
+</html>

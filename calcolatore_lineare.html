@@ -1,0 +1,997 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Calcolatore Cinematica</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@300;400;500&family=Barlow+Condensed:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<style>
+:root{
+  --bg:#0e0f11;--bg1:#141519;--bg2:#1c1d23;--bg3:#23252d;
+  --border:rgba(255,255,255,.07);--border2:rgba(255,255,255,.13);
+  --text:#e8e9ec;--muted:#7a7d8a;--dim:#4a4d5a;
+  --acc:#4fc3f7;--acc2:#0288d1;
+  --up:#66bb6a;--dn:#ef5350;--amber:#ffa726;--violet:#b39ddb;
+  --mono:'DM Mono',monospace;--cond:'Barlow Condensed',sans-serif;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{background:var(--bg);color:var(--text);font-family:var(--mono);font-size:13px}
+body{min-height:100vh}
+
+/* HEADER */
+.header{border-bottom:1px solid var(--border);padding:11px 20px;display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.header h1{font-family:var(--cond);font-size:20px;font-weight:700;letter-spacing:.04em;text-transform:uppercase}
+.sub{font-size:10px;color:var(--muted);letter-spacing:.1em;text-transform:uppercase;flex:1}
+.dot{width:7px;height:7px;border-radius:50%;background:var(--acc);display:inline-block;margin-right:6px;animation:pulse 2s ease-in-out infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
+.inc-strip{display:flex;align-items:center;gap:3px;background:var(--bg2);border:1px solid var(--border2);border-radius:6px;padding:3px}
+.inc-lbl{font-size:9px;color:var(--dim);text-transform:uppercase;letter-spacing:.1em;padding:0 5px 0 3px;white-space:nowrap}
+.inc-btn{font-family:var(--mono);font-size:11px;padding:3px 9px;border:1px solid transparent;border-radius:4px;background:transparent;color:var(--muted);cursor:pointer;transition:all .12s}
+.inc-btn:hover{color:var(--text);background:var(--bg3)}
+.inc-btn.on{background:rgba(79,195,247,.15);border-color:var(--acc);color:var(--acc);font-weight:500}
+
+/* LAYOUT — full width, panels on top then charts below */
+.layout{display:flex;flex-direction:column;min-height:calc(100vh - 51px)}
+.panels-top{display:grid;grid-template-columns:minmax(0,1.7fr) minmax(0,1.15fr) minmax(0,.75fr) minmax(0,1.05fr) minmax(0,.75fr) minmax(0,1.05fr);gap:8px;padding:10px 13px;border-bottom:1px solid var(--border);align-items:start}
+.panel{background:var(--bg2);border:1px solid var(--border2);border-radius:8px;padding:10px 11px}
+
+.stitle{font-family:var(--cond);font-size:10px;font-weight:600;letter-spacing:.17em;color:var(--muted);text-transform:uppercase;margin-bottom:8px;display:flex;align-items:center;gap:6px}
+.stitle::after{content:'';flex:1;height:1px;background:var(--border)}
+
+/* FIELD */
+.field{margin-bottom:8px}.field:last-child{margin-bottom:0}
+.fhdr{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:4px}
+.flabel{color:var(--muted);font-size:11px;letter-spacing:.03em}
+.fval{color:var(--acc);font-size:12px;font-weight:500;min-width:74px;text-align:right;font-family:var(--mono)}
+/* known input fields in solve modes */
+.field.known .flabel{color:var(--acc)}
+.field.known .fval{color:var(--acc)}
+/* derived output fields */
+.field.derived .flabel{color:var(--amber)}
+.field.derived .fval{color:var(--amber)}
+.field.derived .numinput{opacity:.3;pointer-events:none}
+.field.derived .arr{opacity:.2;pointer-events:none;cursor:default}
+
+.srow{display:flex;align-items:center;gap:4px}
+.arr{flex-shrink:0;width:25px;height:25px;display:flex;align-items:center;justify-content:center;background:var(--bg2);border:1px solid var(--border2);border-radius:5px;cursor:pointer;color:var(--muted);font-size:10px;transition:all .12s;user-select:none;-webkit-user-select:none}
+.arr:hover{border-color:var(--acc);color:var(--acc);background:rgba(79,195,247,.08)}
+.arr:active{transform:scale(.88)}
+.arr.held{border-color:var(--acc);color:var(--acc);background:rgba(79,195,247,.18)}
+.numinput{flex:1;height:25px;background:var(--bg3);border:1px solid var(--border2);border-radius:5px;color:var(--acc);font-family:var(--mono);font-size:12px;font-weight:500;text-align:center;outline:none;padding:0 4px;min-width:0;transition:border-color .12s}
+.numinput:focus{border-color:var(--acc);background:var(--bg2)}
+.numinput:hover{border-color:rgba(79,195,247,.4)}
+/* remove number spinners */
+.numinput::-webkit-outer-spin-button,.numinput::-webkit-inner-spin-button{-webkit-appearance:none;margin:0}
+.numinput[type=number]{-moz-appearance:textfield}
+
+/* PROFILE CHIPS */
+.pgrid{display:grid;grid-template-columns:repeat(5,1fr);gap:4px;margin-bottom:6px}
+.pchip{border:1px solid var(--border2);border-radius:5px;padding:5px 2px 4px;cursor:pointer;text-align:center;background:transparent;color:var(--dim);transition:all .15s}
+.pchip:hover{border-color:var(--acc2);color:var(--muted);background:var(--bg2)}
+.pchip.on{border-color:var(--acc);background:rgba(79,195,247,.1);color:var(--acc)}
+.pchip svg{display:block;margin:0 auto}
+.pclbl{font-size:8px;display:block;margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-family:var(--cond);font-weight:500;letter-spacing:.04em}
+.pdesc{font-size:10px;color:var(--dim);min-height:20px;line-height:1.4;margin-bottom:6px}
+
+/* ═══════════════════════════════════════════
+   SOLVE MODE PANEL
+═══════════════════════════════════════════ */
+.mode-panel{}
+.mode-grid{display:grid;grid-template-columns:1fr 1fr;gap:4px}
+.mmode-btn{border:1px solid var(--border2);border-radius:6px;padding:6px 5px;cursor:pointer;background:transparent;color:var(--dim);font-family:var(--cond);font-size:10px;font-weight:600;letter-spacing:.05em;text-transform:uppercase;transition:all .14s;text-align:center;line-height:1.3}
+.mmode-btn:hover{background:var(--bg3);color:var(--muted)}
+.mmode-btn.on{border-color:var(--acc);background:rgba(79,195,247,.12);color:var(--acc)}
+.mmode-btn .mm-sub{font-size:8.5px;display:block;opacity:.7;margin-top:1.5px;font-weight:400;letter-spacing:.02em;font-family:var(--mono);text-transform:none}
+
+/* Constraint badge */
+.cbadge{display:inline-flex;align-items:center;gap:4px;font-size:9px;font-family:var(--cond);font-weight:600;letter-spacing:.05em;text-transform:uppercase;padding:3px 7px;border-radius:3px;margin-bottom:7px}
+.cbadge.known{background:rgba(79,195,247,.12);border:1px solid rgba(79,195,247,.3);color:var(--acc)}
+.cbadge.solved{background:rgba(255,167,38,.1);border:1px solid rgba(255,167,38,.3);color:var(--amber)}
+
+/* SOLVE RESULT strip in main */
+.solve-strip{background:rgba(79,195,247,.05);border:1px solid rgba(79,195,247,.2);border-radius:8px;padding:10px 14px;display:none}
+.solve-strip.show{display:block}
+.ss-title{font-family:var(--cond);font-size:10px;font-weight:700;letter-spacing:.14em;color:var(--acc);text-transform:uppercase;margin-bottom:8px;display:flex;align-items:center;gap:8px}
+.ss-title::after{content:'';flex:1;height:1px;background:rgba(79,195,247,.15)}
+.ss-grid{display:flex;flex-wrap:wrap;gap:8px}
+.ssc{background:rgba(79,195,247,.08);border:1px solid rgba(79,195,247,.18);border-radius:6px;padding:7px 12px;flex:1;min-width:120px}
+.ssc-l{font-size:9px;color:var(--acc2);text-transform:uppercase;letter-spacing:.1em;margin-bottom:2px;font-family:var(--cond)}
+.ssc-v{font-size:18px;font-weight:500;color:var(--acc)}
+.ssc-u{font-size:10px;color:rgba(79,195,247,.55);margin-left:3px}
+
+/* warning box */
+.warnbox{background:rgba(239,83,80,.08);border:1px solid rgba(239,83,80,.25);border-radius:6px;padding:7px 11px;font-size:11px;color:#ef9a9a;display:none;margin-top:6px;line-height:1.4}
+.warnbox.show{display:block}
+
+/* INCLINAZIONE */
+.inc-section{}
+.dir-toggle{display:grid;grid-template-columns:1fr 1fr;gap:4px;margin-bottom:9px}
+.dir-btn{display:flex;align-items:center;justify-content:center;gap:5px;padding:6px 4px;border:1px solid var(--border2);border-radius:6px;cursor:pointer;background:transparent;color:var(--muted);font-family:var(--cond);font-size:11px;font-weight:600;letter-spacing:.05em;text-transform:uppercase;transition:all .14s}
+.dir-btn:hover{background:var(--bg3)}
+.dir-btn.up.on{border-color:var(--up);background:rgba(102,187,106,.12);color:var(--up)}
+.dir-btn.dn.on{border-color:var(--dn);background:rgba(239,83,80,.12);color:var(--dn)}
+.diag-wrap{display:flex;justify-content:center;margin-bottom:8px}
+.ang-lbl{text-anchor:middle;dominant-baseline:middle;font-family:'DM Mono',monospace;font-size:11px;fill:#4fc3f7;font-weight:500}
+.irow{display:flex;gap:4px;flex-wrap:wrap}
+.ichip{flex:1;min-width:58px;background:var(--bg3);border:1px solid var(--border);border-radius:4px;padding:4px 4px;text-align:center}
+.ichip .il{font-size:9px;color:var(--dim);text-transform:uppercase;letter-spacing:.04em;font-family:var(--cond);margin-bottom:1px}
+.ichip .iv{font-size:12px;font-weight:500;color:var(--text)}
+.ichip .iu{font-size:9px;color:var(--dim);margin-left:1px}
+
+/* MAIN */
+.main{padding:10px 13px;display:flex;flex-direction:column;gap:9px}
+.pbar{display:flex;height:23px;border-radius:5px;overflow:hidden;gap:2px}
+.pseg{display:flex;align-items:center;justify-content:center;font-family:var(--cond);font-size:10px;font-weight:600;letter-spacing:.07em;text-transform:uppercase;overflow:hidden;white-space:nowrap;transition:flex .3s cubic-bezier(.4,0,.2,1);padding:0 5px;border-radius:4px}
+.mrow{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:6px}
+.mc{background:var(--bg1);border:1px solid var(--border);border-radius:6px;padding:7px 9px}
+.mc.hi{border-color:rgba(79,195,247,.35);background:rgba(79,195,247,.05)}
+.mc.hi .mv{color:var(--acc)}
+.ml{font-size:9px;color:var(--muted);letter-spacing:.07em;text-transform:uppercase;margin-bottom:2px;font-family:var(--cond)}
+.mv{font-size:15px;font-weight:500;color:var(--text);line-height:1}
+.mu{font-size:9px;color:var(--dim);margin-top:2px}
+.cfull,.chalf{background:var(--bg1);border:1px solid var(--border);border-radius:8px;padding:10px 13px}
+.chrow{display:grid;grid-template-columns:1fr 1fr 1fr;gap:7px}
+.ctitle{font-family:var(--cond);font-size:10px;font-weight:600;letter-spacing:.11em;color:var(--muted);text-transform:uppercase;margin-bottom:7px;display:flex;justify-content:space-between}
+.ctitle span{color:var(--dim);font-weight:400}
+.dgrid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;background:var(--bg1);border:1px solid var(--border);border-radius:8px;padding:10px 13px}
+.dgtitle{font-family:var(--cond);font-size:9px;font-weight:700;letter-spacing:.18em;color:var(--acc2);text-transform:uppercase;margin-bottom:5px;padding-bottom:4px;border-bottom:1px solid var(--border)}
+.dr{display:flex;justify-content:space-between;align-items:center;padding:3px 0;border-bottom:1px solid rgba(255,255,255,.025)}
+.dr:last-child{border-bottom:none}
+.dk{color:var(--muted);font-size:11px}
+.dv{font-size:12px;font-weight:500;color:var(--text)}
+.dv .u{font-size:10px;color:var(--dim);font-weight:400;margin-left:2px}
+
+::-webkit-scrollbar{width:5px}::-webkit-scrollbar-track{background:var(--bg)}::-webkit-scrollbar-thumb{background:var(--bg3);border-radius:3px}
+
+/* BACK BUTTON */
+.back-btn{font-family:var(--cond,'Barlow Condensed',sans-serif);font-size:10px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--muted,#7a7d8a);text-decoration:none;border:1px solid var(--border2,rgba(255,255,255,.13));border-radius:4px;padding:4px 10px;transition:all .15s;white-space:nowrap;flex-shrink:0}
+.back-btn:hover{color:var(--acc,#4fc3f7);border-color:var(--acc,#4fc3f7)}
+
+/* TOOLTIP */
+[data-tip]{position:relative;cursor:default}
+@keyframes tipIn{from{opacity:0}to{opacity:1}}
+[data-tip]:hover::after{content:attr(data-tip);position:absolute;bottom:calc(100% + 7px);left:0;background:#1e2130;border:1px solid rgba(79,195,247,.25);color:#c8cad4;font-size:10px;padding:7px 11px;border-radius:6px;white-space:pre-wrap;max-width:280px;min-width:180px;z-index:999;line-height:1.6;pointer-events:none;font-family:var(--mono);text-align:left;box-shadow:0 4px 20px rgba(0,0,0,.5);animation:tipIn .12s ease .6s both}
+[data-tip]:hover::before{content:'';position:absolute;bottom:calc(100% + 1px);left:20px;border:5px solid transparent;border-top-color:#1e2130;z-index:1000;pointer-events:none;animation:tipIn .12s ease .6s both}
+[data-tip].tr:hover::after{left:auto;right:0}
+
+/* distance display field */
+.dfield{margin-top:6px;padding-top:6px;border-top:1px solid var(--border)}
+.dval{font-size:15px;font-weight:500;color:var(--amber);font-family:var(--mono);padding:2px 0}
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<div class="header">
+  <a href="index.html" class="back-btn">← Ritorna</a>
+  <h1><span class="dot"></span>Cinematica</h1>
+  <div class="sub">profili di moto · inclinazione · modalità calcolo</div>
+  <div class="inc-strip">
+    <span class="inc-lbl">Incremento</span>
+    <button class="inc-btn" onclick="setStep(0.01,this)">0.01</button>
+    <button class="inc-btn" onclick="setStep(0.1,this)">0.1</button>
+    <button class="inc-btn on" onclick="setStep(1,this)">1</button>
+    <button class="inc-btn" onclick="setStep(10,this)">10</button>
+  </div>
+</div>
+
+<div class="layout">
+
+<!-- ══════ PANNELLI IN ALTO AFFIANCATI ══════ -->
+<div class="panels-top">
+
+  <!-- 1. MODALITÀ CALCOLO -->
+  <div class="panel mode-panel">
+    <div class="stitle">Modalità calcolo</div>
+    <div class="mode-grid" id="mode-grid">
+      <button class="mmode-btn on" id="btn-manual" onclick="setMode('manual')">
+        Manuale
+        <span class="mm-sub">tutti i param.</span>
+      </button>
+      <button class="mmode-btn" id="btn-m1" onclick="setMode('m1')">
+        v<sub>c</sub> + v<sub>max</sub>
+        <span class="mm-sub">cruise + vel. max</span>
+      </button>
+      <button class="mmode-btn" id="btn-m2" onclick="setMode('m2')">
+        v<sub>c</sub> + t<sub>tot</sub>
+        <span class="mm-sub">cruise + t. totale</span>
+      </button>
+      <button class="mmode-btn" id="btn-m3" onclick="setMode('m3')">
+        v<sub>max</sub> + t<sub>tot</sub>
+        <span class="mm-sub">vel. max + t. tot.</span>
+      </button>
+      <button class="mmode-btn" style="grid-column:span 2" id="btn-m4" onclick="setMode('m4')">
+        t<sub>tot</sub> + Spostamento
+        <span class="mm-sub">tempo totale + distanza</span>
+      </button>
+    </div>
+    <div id="mode-inputs" style="margin-top:9px"></div>
+    <div class="warnbox" id="warnbox"></div>
+  </div>
+
+  <!-- 2. INCLINAZIONE -->
+  <div class="panel inc-section">
+    <div class="stitle">Inclinazione</div>
+    <div class="dir-toggle">
+      <button class="dir-btn up on" id="btn-up" onclick="setDir('su')">
+        <svg width="13" height="13" viewBox="0 0 16 16" fill="none">
+          <line x1="2" y1="14" x2="14" y2="2" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
+          <polyline points="8,2 14,2 14,8" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+        </svg>
+        Salita
+      </button>
+      <button class="dir-btn dn" id="btn-dn" onclick="setDir('giu')">
+        <svg width="13" height="13" viewBox="0 0 16 16" fill="none">
+          <line x1="2" y1="2" x2="14" y2="14" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
+          <polyline points="8,14 14,14 14,8" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+        </svg>
+        Discesa
+      </button>
+    </div>
+    <div class="diag-wrap"><svg id="diag" width="100%" height="90" viewBox="0 0 212 100" preserveAspectRatio="xMidYMid meet"></svg></div>
+    <div class="field">
+      <div class="fhdr"><span class="flabel" data-tip="Angolo di inclinazione del piano rispetto all'orizzontale\nUnità: ° (gradi)\nRange: 0° (piano) ÷ 90° (verticale)\nInfluisce su forze gravitazionali e dinamica">Angolo</span><span style="font-size:10px;color:var(--dim)">°</span></div>
+      
+      <div class="srow">
+        <button class="arr" data-key="angolo" data-dir="-1">&#9660;</button>
+        <input type="number" id="rang" class="numinput" value="0" min="0" max="90" step="0.1" onchange="setVal('angolo',+this.value)" oninput="slid('angolo',+this.value)">
+        <button class="arr" data-key="angolo" data-dir="1">&#9650;</button>
+      </div>
+    </div>
+    <div class="irow" id="irow" style="margin-top:7px"></div>
+  </div>
+
+  <!-- 3. MASSA -->
+  <div class="panel">
+    <div class="stitle">Oggetto</div>
+    <div class="field" id="fld-massa">
+      <div class="fhdr"><span class="flabel" data-tip="Massa del corpo in movimento\nUnità: kg\nRange tipico: 0.01 ÷ 5000 kg\nInfluisce su forza motrice, inerzia ed energia cinetica">Massa</span><span style="font-size:10px;color:var(--dim)">kg</span></div>
+      
+      <div class="srow">
+        <button class="arr" data-key="massa" data-dir="-1">&#9660;</button>
+        <input type="number" id="rm" class="numinput" value="100" min="0.01" max="5000" onchange="setVal('massa',+this.value)" oninput="slid('massa',+this.value)">
+        <button class="arr" data-key="massa" data-dir="1">&#9650;</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 4. ACCELERAZIONE -->
+  <div class="panel">
+    <div class="stitle">Accelerazione</div>
+    <div class="pgrid" id="chips-acc"></div>
+    <div class="pdesc" id="desc-acc"></div>
+    <div class="field" id="fld-tacc">
+      <div class="fhdr"><span class="flabel" data-tip="Durata della fase di accelerazione\nUnità: s (secondi)\nRange tipico: 0.1 ÷ 120 s\nTempi brevi → accelerazione elevata → forze maggiori">Durata</span><span style="font-size:10px;color:var(--dim)">s</span></div>
+      <div class="srow">
+        <button class="arr" data-key="tacc" data-dir="-1">&#9660;</button>
+        <input type="number" id="ra" class="numinput" value="3" min="0.01" onchange="setVal('tacc',+this.value)" oninput="slid('tacc',+this.value)">
+        <button class="arr" data-key="tacc" data-dir="1">&#9650;</button>
+      </div>
+    </div>
+    <div class="field dfield">
+      <div class="fhdr"><span class="flabel" data-tip="Distanza percorsa durante l'accelerazione\nUnità: m\nCalcolata automaticamente dal profilo e dalla durata\nModificabile: aggiusta la durata di conseguenza">Distanza</span><span style="font-size:10px;color:var(--dim)">m</span></div>
+      <div class="srow">
+        <button class="arr" data-key="sacc" data-dir="-1">&#9660;</button>
+        <input type="number" id="r-sacc" class="numinput" value="" min="0" step="0.001"
+          onchange="slidDist('acc',+this.value)" oninput="slidDist('acc',+this.value)">
+        <button class="arr" data-key="sacc" data-dir="1">&#9650;</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 5. VEL. COSTANTE -->
+  <div class="panel">
+    <div class="stitle">Vel. Costante</div>
+    <div class="field" id="fld-tcv">
+      <div class="fhdr"><span class="flabel" data-tip="Durata della fase a velocità costante (cruise)\nUnità: s (secondi)\nRange tipico: 0 ÷ 300 s\nImpostare a 0 per profili puramente acc/dec">Durata</span><span style="font-size:10px;color:var(--dim)">s</span></div>
+      <div class="srow">
+        <button class="arr" data-key="tcv" data-dir="-1">&#9660;</button>
+        <input type="number" id="rc" class="numinput" value="8" min="0" onchange="setVal('tcv',+this.value)" oninput="slid('tcv',+this.value)">
+        <button class="arr" data-key="tcv" data-dir="1">&#9650;</button>
+      </div>
+    </div>
+    <div class="field dfield">
+      <div class="fhdr"><span class="flabel" data-tip="Distanza percorsa a velocità costante\nUnità: m\nFormula: s = v_max × t_cv\nModificabile: aggiusta la durata di conseguenza">Distanza</span><span style="font-size:10px;color:var(--dim)">m</span></div>
+      <div class="srow">
+        <button class="arr" data-key="scv" data-dir="-1">&#9660;</button>
+        <input type="number" id="r-scv" class="numinput" value="" min="0" step="0.001"
+          onchange="slidDist('cv',+this.value)" oninput="slidDist('cv',+this.value)">
+        <button class="arr" data-key="scv" data-dir="1">&#9650;</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 6. DECELERAZIONE -->
+  <div class="panel">
+    <div class="stitle">Decelerazione</div>
+    <div class="pgrid" id="chips-dec"></div>
+    <div class="pdesc" id="desc-dec"></div>
+    <div class="field" id="fld-tdec">
+      <div class="fhdr"><span class="flabel" data-tip="Durata della fase di decelerazione (frenata)\nUnità: s (secondi)\nRange tipico: 0.1 ÷ 120 s\nTempi brevi → decelerazione intensa → forze frenanti elevate">Durata</span><span style="font-size:10px;color:var(--dim)">s</span></div>
+      <div class="srow">
+        <button class="arr" data-key="tdec" data-dir="-1">&#9660;</button>
+        <input type="number" id="rd" class="numinput" value="2" min="0.01" onchange="setVal('tdec',+this.value)" oninput="slid('tdec',+this.value)">
+        <button class="arr" data-key="tdec" data-dir="1">&#9650;</button>
+      </div>
+    </div>
+    <div class="field dfield">
+      <div class="fhdr"><span class="flabel" data-tip="Distanza percorsa durante la decelerazione\nUnità: m\nCalcolata dal profilo selezionato e dalla durata\nModificabile: aggiusta la durata di conseguenza">Distanza</span><span style="font-size:10px;color:var(--dim)">m</span></div>
+      <div class="srow">
+        <button class="arr" data-key="sdec" data-dir="-1">&#9660;</button>
+        <input type="number" id="r-sdec" class="numinput" value="" min="0" step="0.001"
+          onchange="slidDist('dec',+this.value)" oninput="slidDist('dec',+this.value)">
+        <button class="arr" data-key="sdec" data-dir="1">&#9650;</button>
+      </div>
+    </div>
+  </div>
+
+</div><!-- /panels-top -->
+
+<!-- ══════ CHARTS + DATA ══════ -->
+<div class="main">
+  <div class="solve-strip" id="solve-strip">
+    <div class="ss-title" id="ss-title">Parametri calcolati</div>
+    <div class="ss-grid" id="ss-grid"></div>
+  </div>
+  <div class="pbar" id="pbar"></div>
+  <div class="mrow" id="mets"></div>
+  <div class="cfull">
+    <div class="ctitle">VELOCITÀ <span>v(t) — m/s</span></div>
+    <div style="position:relative;width:100%;height:165px"><canvas id="cv"></canvas></div>
+  </div>
+  <div class="chrow">
+    <div class="chalf"><div class="ctitle">ACCELERAZIONE <span>a(t) — m/s²</span></div><div style="position:relative;width:100%;height:128px"><canvas id="ca"></canvas></div></div>
+    <div class="chalf"><div class="ctitle">JERK <span>j(t) — m/s³</span></div><div style="position:relative;width:100%;height:128px"><canvas id="cj"></canvas></div></div>
+    <div class="chalf"><div class="ctitle">POSIZIONE <span>s(t) — m</span></div><div style="position:relative;width:100%;height:128px"><canvas id="cs"></canvas></div></div>
+  </div>
+  <div class="dgrid" id="dtg"></div>
+</div>
+
+</div><!-- /layout -->
+
+<script>
+const G=9.81;
+
+/* ══════════════════════════════════════
+   STATE
+══════════════════════════════════════ */
+// Main motion parameters
+const ST={massa:100,vmax:1,tacc:3,tcv:8,tdec:2,
+          profAcc:'sinusoid',profDec:'lineare',angolo:0,dir:'su'};
+
+// Solve mode state — stores user-entered known values for each mode
+const SM={
+  mode:'manual',
+  // m1: vc + vmax  → known: vc(=vmax), tcv_ratio  → derives: ttot, spost
+  m1_vc: 1.0,      // cruise speed = vmax (locked to ST.vmax in mode m1)
+  // m2: vc + ttot  → known: vc(=vmax), ttot      → derives: tacc,tcv,tdec,spost
+  m2_vc: 1.0,
+  m2_ttot: 13.0,
+  // m3: vmax + ttot → known: vmax, ttot           → derives: tacc,tcv,tdec,spost
+  m3_vmax: 1.0,
+  m3_ttot: 13.0,
+  // m4: ttot + spost → known: ttot, spost         → derives: vmax,tacc,tcv,tdec
+  m4_ttot: 13.0,
+  m4_spost: 10.25,
+};
+
+// Field registry for main ST params
+const FLD={
+  massa: {rid:'rm',lid:'lm',min:.01, max:5000},
+  vmax:  {rid:'rv',lid:'lv',min:.001,max:99999},
+  tacc:  {rid:'ra',lid:'la',min:.01, max:120},
+  tcv:   {rid:'rc',lid:'lc',min:0,   max:300},
+  tdec:  {rid:'rd',lid:'ld',min:.01, max:120},
+  angolo:{rid:'rang',lid:'lang',min:0,max:90},
+};
+// Solve-input field registry (injected extra sliders)
+const SMFLD={
+  m1_vc:   {min:.001,max:99999,step:.001,unit:'m/s', fmt:v=>v.toFixed(3)+' m/s'},
+  m2_vc:   {min:.001,max:99999,step:.001,unit:'m/s', fmt:v=>v.toFixed(3)+' m/s'},
+  m2_ttot: {min:.01, max:99999,step:.01, unit:'s',   fmt:v=>v.toFixed(2)+' s'},
+  m3_vmax: {min:.001,max:99999,step:.001,unit:'m/s', fmt:v=>v.toFixed(3)+' m/s'},
+  m3_ttot: {min:.01, max:99999,step:.01, unit:'s',   fmt:v=>v.toFixed(2)+' s'},
+  m4_ttot: {min:.01, max:99999,step:.01, unit:'s',   fmt:v=>v.toFixed(2)+' s'},
+  m4_spost:{min:.001,max:99999,step:.001,unit:'m',   fmt:v=>v.toFixed(3)+' m'},
+};
+
+let STEP=1;
+function setStep(s,btn){STEP=s;document.querySelectorAll('.inc-btn').forEach(b=>b.classList.toggle('on',b===btn));}
+
+/* ══════════════════════════════════════
+   FORMAT HELPERS
+══════════════════════════════════════ */
+function fmtVal(key,v){
+  const d=STEP<.1?2:STEP<1?1:2;
+  if(key==='massa') return v%1===0?v+' kg':v.toFixed(d)+' kg';
+  if(key==='vmax')  return v.toFixed(Math.max(d,3))+' m/s';
+  if(key==='angolo')return v.toFixed(Math.max(d,1))+' °';
+  return v.toFixed(d)+' s';
+}
+const fp=(v,d=3)=>isFinite(v)?v.toFixed(d):'∞';
+// Format value for number input (no unit suffix, sensible decimals)
+function numFmt(key,v){
+  if(key==='massa') return v%1===0?String(v):v.toFixed(2);
+  if(key==='angolo')return v.toFixed(1);
+  if(key==='vmax')  return v.toFixed(3);
+  return v.toFixed(2);
+}
+
+/* ══════════════════════════════════════
+   VALUE SETTERS
+══════════════════════════════════════ */
+function setVal(key,raw){
+  const c=FLD[key];
+  const v=Math.max(c.min,Math.min(c.max,parseFloat(raw)||0));
+  ST[key]=v;
+  // update number input value
+  const inp=document.getElementById(c.rid);
+  if(inp&&document.activeElement!==inp)inp.value=numFmt(key,v);
+  // update dynamic label (only exists for vmax inside mode-inputs)
+  const lbl=document.getElementById(c.lid);
+  if(lbl)lbl.textContent=fmtVal(key,v);
+  if(key==='angolo')drawDiag();
+  recalc();
+}
+function slid(key,v){
+  ST[key]=parseFloat(v)||0;
+  if(key==='angolo')drawDiag();
+  recalc();
+}
+function setSMVal(key,raw){
+  const c=SMFLD[key];
+  const v=Math.max(c.min,Math.min(c.max,parseFloat(raw)||0));
+  SM[key]=v;
+  const inp=document.getElementById('si-'+key);
+  if(inp&&document.activeElement!==inp)inp.value=v;
+  recalc();
+}
+// Apply solved values back to ST and update UI inputs+labels
+function applyToST(obj){
+  ['vmax','tacc','tcv','tdec'].forEach(k=>{
+    if(obj[k]!==undefined){
+      const v=Math.max(FLD[k].min,+obj[k].toFixed(6));
+      ST[k]=v;
+      const inp=document.getElementById(FLD[k].rid);
+      if(inp)inp.value=numFmt(k,v);
+      const lbl=document.getElementById(FLD[k].lid);
+      if(lbl)lbl.textContent=fmtVal(k,v);
+    }
+  });
+}
+
+/* ══════════════════════════════════════
+   HOLD-TO-REPEAT ARROWS
+══════════════════════════════════════ */
+let hTimer=null,hInt=null;
+function doStep(key,dir){
+  if(FLD[key]){
+    setVal(key,Math.round((ST[key]+dir*STEP)*1e6)/1e6);
+  } else if(SMFLD[key]){
+    setSMVal(key,Math.round((SM[key]+dir*STEP)*1e6)/1e6);
+  } else if(key==='sacc'||key==='scv'||key==='sdec'){
+    const phase=key==='sacc'?'acc':key==='scv'?'cv':'dec';
+    const inp=document.getElementById('r-'+key);
+    const cur=parseFloat(inp?.value)||0;
+    const nxt=Math.max(0,Math.round((cur+dir*STEP)*1e6)/1e6);
+    slidDist(phase,nxt);
+  }
+}
+
+// Inverse: given distance for a phase, compute and set the corresponding duration
+function slidDist(phase, s){
+  const vmax=Math.max(ST.vmax,1e-9);
+  if(phase==='cv'){
+    // s_cv = vmax * tcv  →  tcv = s / vmax
+    const t=Math.max(0, s/vmax);
+    ST.tcv=t;
+    const inp=document.getElementById('rc');
+    if(inp&&document.activeElement!==inp) inp.value=fp(t,4);
+    recalc();
+  } else if(phase==='acc'){
+    // s_acc = kA * vmax * tacc  →  tacc = s / (kA * vmax)
+    const kA=profInt(ST.profAcc);
+    const t=Math.max(0.001, s/(Math.max(kA,1e-9)*vmax));
+    ST.tacc=t;
+    const inp=document.getElementById('ra');
+    if(inp&&document.activeElement!==inp) inp.value=fp(t,4);
+    recalc();
+  } else if(phase==='dec'){
+    // s_dec = kD * vmax * tdec  →  tdec = s / (kD * vmax)
+    const kD=profInt(ST.profDec);
+    const t=Math.max(0.001, s/(Math.max(kD,1e-9)*vmax));
+    ST.tdec=t;
+    const inp=document.getElementById('rd');
+    if(inp&&document.activeElement!==inp) inp.value=fp(t,4);
+    recalc();
+  }
+}
+function holdStart(key,dir,btn){btn.classList.add('held');doStep(key,dir);hTimer=setTimeout(()=>{hInt=setInterval(()=>doStep(key,dir),75);},360);}
+function holdStop(){clearTimeout(hTimer);clearInterval(hInt);hTimer=hInt=null;document.querySelectorAll('.arr.held').forEach(b=>b.classList.remove('held'));}
+document.addEventListener('mouseup',holdStop);
+document.addEventListener('touchend',holdStop);
+function bindArrows(){
+  document.querySelectorAll('.arr').forEach(btn=>{
+    const fresh=btn.cloneNode(true);
+    btn.parentNode.replaceChild(fresh,btn);
+  });
+  document.querySelectorAll('.arr').forEach(btn=>{
+    const key=btn.dataset.key,dir=+btn.dataset.dir;
+    if(!key)return;
+    btn.addEventListener('mousedown',()=>holdStart(key,dir,btn));
+    btn.addEventListener('touchstart',e=>{e.preventDefault();holdStart(key,dir,btn);},{passive:false});
+  });
+}
+
+/* ══════════════════════════════════════
+   DIRECTION (salita/discesa)
+══════════════════════════════════════ */
+function setDir(d){
+  ST.dir=d;
+  document.getElementById('btn-up').classList.toggle('on',d==='su');
+  document.getElementById('btn-dn').classList.toggle('on',d==='giu');
+  drawDiag();recalc();
+}
+
+/* ══════════════════════════════════════
+   PROFILE FUNCTIONS
+══════════════════════════════════════ */
+function erf(x){const t=1/(1+.3275911*Math.abs(x));const y=1-((((1.061405429*t-1.453152027)*t+1.421413741)*t-.284496736)*t+.254829592)*t*Math.exp(-x*x);return x>=0?y:-y;}
+const PROF={
+  lineare:  {sh:'LIN',d:'Rampa costante — jerk infinito. Profilo base.',v:t=>t},
+  sinusoid: {sh:'SIN',d:'Profilo sin² — jerk nullo agli estremi. Transizioni morbide.',v:t=>Math.sin(Math.PI/2*t)**2},
+  cubica:   {sh:'S³', d:'Smooth-step 3t²−2t³ — jerk zero agli estremi.',v:t=>3*t*t-2*t*t*t},
+  quintica: {sh:'S⁵', d:'10t³−15t⁴+6t⁵ — zero jerk e curvatura.',v:t=>10*t**3-15*t**4+6*t**5},
+  parab_su: {sh:'P↑', d:'Profilo t² — avvio dolce, acc. crescente.',v:t=>t*t},
+  parab_giu:{sh:'P↓', d:'Profilo 2t−t² — avvio rapido, fine dolce.',v:t=>2*t-t*t},
+  esponenz: {sh:'EXP',d:'Crescita esponenziale k=3 — quasi piatto poi esplosivo.',v:t=>(Math.exp(3*t)-1)/(Math.exp(3)-1)},
+  logaritm: {sh:'LOG',d:'Crescita logaritmica — rapida poi satura.',v:t=>Math.log(1+9*t)/Math.log(10)},
+  gaussiana:{sh:'GAU',d:'Campana σ=0.3 — picco acc. al centro della fase.',v:t=>{
+    const s=.3,m=.5,c0=.5*(1+erf((-m)/(s*1.41421))),c1=.5*(1+erf((1-m)/(s*1.41421)));
+    return(.5*(1+erf((t-m)/(s*1.41421)))-c0)/(c1-c0);}},
+  sjerk:    {sh:'SJK',d:'Trapezio di jerk — limite di jerk costante.',v:t=>{
+    if(t<=1/3)return 2.25*t*t;if(t<=2/3)return .25+1.5*(t-1/3);
+    const d=t-2/3;return .75+1.5*d-2.25*d*d;}}
+};
+const PK=Object.keys(PROF);
+function dv(k,tn){const e=1e-5,f=PROF[k].v;return(f(Math.min(1,tn+e))-f(Math.max(0,tn-e)))/(2*e);}
+function ddv(k,tn){const e=1e-4,f=PROF[k].v;return(f(Math.min(1,tn+e))-2*f(tn)+f(Math.max(0,tn-e)))/(e*e);}
+function profInt(key){const f=PROF[key].v;let s=0,N=200;for(let i=0;i<N;i++)s+=(f(i/N)+f((i+1)/N))/2/N;return s;}
+function mkSpark(k,W,H,mir){const f=PROF[k].v,p=2.5;return Array.from({length:25},(_,i)=>{const t=i/24,y=mir?f(1-t):f(t);return(i?'L':'M')+(t*W).toFixed(1)+','+((1-y)*(H-p*2)+p).toFixed(1);}).join('');}
+function mkChips(ph){const sel=ph==='acc'?ST.profAcc:ST.profDec,mir=ph==='dec',W=36,H=22;return PK.map(k=>`<button class="pchip${k===sel?' on':''}" onclick="setPr('${ph}','${k}')"><svg width="${W}" height="${H}" viewBox="0 0 ${W} ${H}"><path d="${mkSpark(k,W,H,mir)}" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg><span class="pclbl">${PROF[k].sh}</span></button>`).join('');}
+function setPr(ph,k){if(ph==='acc')ST.profAcc=k;else ST.profDec=k;document.getElementById('chips-'+ph).innerHTML=mkChips(ph);document.getElementById('desc-'+ph).textContent=PROF[k].d;recalc();}
+
+/* ══════════════════════════════════════
+   SOLVE MODE ENGINE
+   
+   Shape: the user-defined tacc:tcv:tdec ratio + profile shape
+   Constraint pair → solve for unknowns maintaining shape.
+   
+   Key formula:
+     sTotal = vmax * (kA*tacc + tcv + kD*tdec)
+     ttot   = tacc + tcv + tdec
+   
+   Define shape fractions: rA=tacc/ttot, rC=tcv/ttot, rD=tdec/ttot
+   Then:  sTotal = vmax * ttot * (kA*rA + rC + kD*rD)
+   Let K  = kA*rA + rC + kD*rD  (scalar 0–1)
+
+   Mode m1 — known: vc (=vmax), ratio tacc:tcv:tdec (shape from sliders)
+     → the user also sets vmax via the normal vmax slider (vc = vmax here)
+     → derived: spost, ttot  [shape is already set by the user's time sliders]
+     → this mode just shows what distance/time results from current settings
+
+   Mode m2 — known: vc (=vmax), ttot
+     → scale time phases: tacc=rA*ttot, tcv=rC*ttot, tdec=rD*ttot
+     → derived: spost (and updated time sliders)
+
+   Mode m3 — known: vmax, ttot
+     → identical to m2 (vmax = vc in trapezoidal profile)
+     → same resolution
+
+   Mode m4 — known: ttot, spost
+     → vmax = spost / (ttot * K)
+     → scale time phases as above
+
+══════════════════════════════════════ */
+function solveMode(){
+  const mode=SM.mode;
+  const kA=profInt(ST.profAcc), kD=profInt(ST.profDec);
+  const {tacc,tcv,tdec}=ST;
+  const ttotShape=tacc+tcv+tdec;
+  const rA=tacc/ttotShape, rC=tcv/ttotShape, rD=tdec/ttotShape;
+  const K=kA*rA+rC+kD*rD; // effective distance coefficient
+
+  const warn=el=>{document.getElementById('warnbox').className='warnbox show';document.getElementById('warnbox').textContent=el;};
+  const clearWarn=()=>{document.getElementById('warnbox').className='warnbox';};
+
+  if(mode==='manual'){
+    clearWarn();
+    return null;
+  }
+
+  clearWarn();
+
+  if(mode==='m1'){
+    // Known: vmax (from ST.vmax) + shape ratios
+    // vmax and tcv are both "known" in the sense that vc=vmax
+    // Derive: spost, ttot — no time changes needed
+    const vmax=ST.vmax;
+    const ttot=ttotShape;
+    const spost=vmax*(kA*tacc+tcv+kD*tdec);
+    return{
+      title:'Noti: v<sub>cruise</sub> = v<sub>max</sub>, forma profilo → derivato: distanza',
+      dr:{'dr-ttot':fp(ttot,3)+' s','dr-spost':fp(spost,4)+' m'},
+      items:[
+        {l:'v cruise = v max', v:fp(vmax,3), u:'m/s'},
+        {l:'Tempo totale',      v:fp(ttot,3), u:'s'},
+        {l:'Distanza totale',   v:fp(spost,4),u:'m'},
+        {l:'Coeff. K',         v:fp(K,4),    u:''},
+      ]
+    };
+  }
+
+  if(mode==='m2'){
+    // Known: vc (=vmax), ttot  → derive tacc,tcv,tdec,spost
+    const vc=SM.m2_vc;
+    const ttot=SM.m2_ttot;
+    if(ttot<.05){warn('Tempo totale troppo piccolo.');return null;}
+    const taccS=rA*ttot, tcvS=rC*ttot, tdecS=rD*ttot;
+    if(taccS<.005||tdecS<.005){warn('Con questa forma il tempo acc./dec. risulta troppo piccolo. Aumenta t_tot o modifica le proporzioni.');}
+    const spost=vc*(kA*taccS+tcvS+kD*tdecS);
+    applyToST({vmax:vc, tacc:taccS, tcv:tcvS, tdec:tdecS});
+    return{
+      title:'Noti: v<sub>cruise</sub>, t<sub>tot</sub> → derivato: fasi temporali, distanza',
+      dr:{'dr-spost':fp(spost,4)+' m'},
+      items:[
+        {l:'v cruise = v max', v:fp(vc,3),    u:'m/s'},
+        {l:'Tempo acc.',       v:fp(taccS,3), u:'s'},
+        {l:'Tempo v.c.',       v:fp(tcvS,3),  u:'s'},
+        {l:'Tempo dec.',       v:fp(tdecS,3), u:'s'},
+        {l:'Distanza',         v:fp(spost,4), u:'m'},
+      ]
+    };
+  }
+
+  if(mode==='m3'){
+    // Known: vmax, ttot → identical resolution to m2
+    const vmax=SM.m3_vmax;
+    const ttot=SM.m3_ttot;
+    if(ttot<.05){warn('Tempo totale troppo piccolo.');return null;}
+    const taccS=rA*ttot, tcvS=rC*ttot, tdecS=rD*ttot;
+    if(taccS<.005||tdecS<.005){warn('Fasi troppo piccole. Aumenta t_tot o modifica le proporzioni.');}
+    const spost=vmax*(kA*taccS+tcvS+kD*tdecS);
+    applyToST({vmax, tacc:taccS, tcv:tcvS, tdec:tdecS});
+    return{
+      title:'Noti: v<sub>max</sub>, t<sub>tot</sub> → derivato: fasi temporali, distanza',
+      dr:{'dr-spost':fp(spost,4)+' m'},
+      items:[
+        {l:'v max',      v:fp(vmax,3),  u:'m/s'},
+        {l:'Tempo acc.', v:fp(taccS,3), u:'s'},
+        {l:'Tempo v.c.', v:fp(tcvS,3),  u:'s'},
+        {l:'Tempo dec.', v:fp(tdecS,3), u:'s'},
+        {l:'Distanza',   v:fp(spost,4), u:'m'},
+      ]
+    };
+  }
+
+  if(mode==='m4'){
+    // Known: ttot, spost → solve vmax
+    const ttot=SM.m4_ttot;
+    const spost=SM.m4_spost;
+    if(K<1e-9||ttot<.05){warn('Parametri non validi (profili o tempi errati).');return null;}
+    const vmaxS=spost/(ttot*K);
+    if(vmaxS<.001){warn('Spostamento troppo piccolo per il tempo indicato. Verifica i valori.');return null;}
+    if(vmaxS>FLD.vmax.max){warn(`v max calcolata (${vmaxS.toFixed(2)} m/s) supera il limite (${FLD.vmax.max} m/s).`);}
+    const taccS=rA*ttot, tcvS=rC*ttot, tdecS=rD*ttot;
+    const spostCheck=vmaxS*(kA*taccS+tcvS+kD*tdecS);
+    applyToST({vmax:vmaxS, tacc:taccS, tcv:tcvS, tdec:tdecS});
+    return{
+      title:'Noti: t<sub>tot</sub>, spostamento → derivato: v<sub>max</sub>, fasi temporali',
+      dr:{'dr-vmax':fp(vmaxS,4)+' m/s'},
+      items:[
+        {l:'v max calcolata', v:fp(vmaxS,4), u:'m/s'},
+        {l:'Tempo acc.',      v:fp(taccS,3), u:'s'},
+        {l:'Tempo v.c.',      v:fp(tcvS,3),  u:'s'},
+        {l:'Tempo dec.',      v:fp(tdecS,3), u:'s'},
+        {l:'Verifica spost.', v:fp(spostCheck,4), u:'m'},
+      ]
+    };
+  }
+  return null;
+}
+
+/* ══════════════════════════════════════
+   MODE UI
+══════════════════════════════════════ */
+// Each entry in known[]: st:true = bound to ST via slider, sm:true = SM solve input
+// derived[]: read-only result labels shown below a separator
+const MODE_INPUTS={
+  manual:{
+    known:[{key:'vmax',st:true,lbl:'Velocità massima'}],
+    derived:[]
+  },
+  m1:{
+    known:[{key:'vmax',st:true,lbl:'Velocità cruise = v max'}],
+    derived:[
+      {lbl:'Tempo totale',   id:'dr-ttot'},
+      {lbl:'Distanza totale',id:'dr-spost'},
+    ]
+  },
+  m2:{
+    known:[
+      {key:'m2_vc',   sm:true,lbl:'Velocità cruise'},
+      {key:'m2_ttot', sm:true,lbl:'Tempo totale'},
+    ],
+    derived:[{lbl:'Distanza totale',id:'dr-spost'}]
+  },
+  m3:{
+    known:[
+      {key:'m3_vmax', sm:true,lbl:'Velocità massima'},
+      {key:'m3_ttot', sm:true,lbl:'Tempo totale'},
+    ],
+    derived:[{lbl:'Distanza totale',id:'dr-spost'}]
+  },
+  m4:{
+    known:[
+      {key:'m4_ttot',  sm:true,lbl:'Tempo totale'},
+      {key:'m4_spost', sm:true,lbl:'Spostamento'},
+    ],
+    derived:[{lbl:'Velocità massima',id:'dr-vmax'}]
+  },
+};
+
+function mkFieldHTML(f){
+  if(f.st){
+    return `<div class="field known" id="fld-vmax">
+      <div class="fhdr"><span class="flabel">${f.lbl}</span><span style="font-size:10px;color:var(--dim)">m/s</span></div>
+      <div class="srow">
+        <button class="arr" data-key="vmax" data-dir="-1">&#9660;</button>
+        <input type="number" id="rv" class="numinput" value="${numFmt('vmax',ST.vmax)}" min="0.001" step="0.001" onchange="setVal('vmax',+this.value)" oninput="slid('vmax',+this.value)">
+        <button class="arr" data-key="vmax" data-dir="1">&#9650;</button>
+      </div></div>`;
+  }
+  if(f.sm){
+    const c=SMFLD[f.key];
+    return `<div class="field known">
+      <div class="fhdr"><span class="flabel">${f.lbl}</span><span style="font-size:10px;color:var(--dim)">${c.unit||''}</span></div>
+      <div class="srow">
+        <button class="arr" data-key="${f.key}" data-dir="-1">&#9660;</button>
+        <input type="number" id="si-${f.key}" class="numinput" value="${SM[f.key]}" min="${c.min}" step="${c.step||0.01}" onchange="setSMVal('${f.key}',+this.value)" oninput="setSMVal('${f.key}',+this.value)">
+        <button class="arr" data-key="${f.key}" data-dir="1">&#9650;</button>
+      </div></div>`;
+  }
+  return '';
+}
+
+function setMode(mode){
+  SM.mode=mode;
+  ['manual','m1','m2','m3','m4'].forEach(m=>document.getElementById('btn-'+m).classList.toggle('on',m===mode));
+
+  const cfg=MODE_INPUTS[mode]||{known:[],derived:[]};
+  const container=document.getElementById('mode-inputs');
+
+  const knownHTML=cfg.known.map(mkFieldHTML).join('');
+
+  const sep=cfg.derived.length
+    ? `<div style="margin-top:9px;padding-top:8px;border-top:1px solid var(--border)">
+        <div style="font-size:9px;color:var(--amber);letter-spacing:.12em;text-transform:uppercase;font-family:var(--cond);font-weight:600;margin-bottom:6px">Calcolato</div>
+        ${cfg.derived.map(d=>`
+          <div class="field" style="margin-bottom:6px">
+            <div class="fhdr">
+              <span class="flabel" style="color:var(--amber)">${d.lbl}</span>
+              <span class="fval" id="${d.id}" style="color:var(--amber)">—</span>
+            </div>
+          </div>`).join('')}
+      </div>`
+    : '';
+
+  container.innerHTML=knownHTML+sep;
+
+  // Time panels are always editable regardless of mode
+
+  bindArrows();
+  recalc();
+}
+
+/* ══════════════════════════════════════
+   INCLINAZIONE DIAGRAM
+══════════════════════════════════════ */
+function drawDiag(){
+  const ang=ST.angolo,dir=ST.dir,rad=ang*Math.PI/180;
+  const W=212,H=100,ox=11,oy=H-11,L=152;
+  const rx=ox+L*Math.cos(rad),ry=oy-L*Math.sin(rad);
+  const isUp=dir==='su';
+  const clrDir=isUp?'#66bb6a':'#ef5350';
+  let h='';
+  h+=`<line x1="${ox}" y1="${oy}" x2="${ox+L+8}" y2="${oy}" stroke="rgba(255,255,255,.1)" stroke-width="1" stroke-dasharray="4,3"/>`;
+  h+=`<polygon points="${ox},${oy} ${rx},${ry} ${rx},${oy}" fill="rgba(255,255,255,.04)"/>`;
+  h+=`<line x1="${ox}" y1="${oy}" x2="${rx}" y2="${ry}" stroke="rgba(255,255,255,.22)" stroke-width="1.5" stroke-linecap="round"/>`;
+  h+=`<line x1="${rx}" y1="${ry}" x2="${rx}" y2="${oy}" stroke="rgba(255,255,255,.1)" stroke-width="1" stroke-dasharray="3,3"/>`;
+  if(ang>1){
+    const aR=28,x1=ox+aR,y1=oy,x2=ox+aR*Math.cos(rad),y2=oy-aR*Math.sin(rad);
+    h+=`<path d="M${x1},${y1} A${aR},${aR} 0 0,1 ${x2.toFixed(1)},${y2.toFixed(1)}" fill="none" stroke="#4fc3f7" stroke-width="1" opacity=".7"/>`;
+    const lx=ox+(aR+12)*Math.cos(rad/2),ly=oy-(aR+12)*Math.sin(rad/2);
+    h+=`<text x="${lx.toFixed(1)}" y="${ly.toFixed(1)}" class="ang-lbl">${ang.toFixed(ang>=10?1:2)}°</text>`;
+  } else {
+    h+=`<text x="${ox+16}" y="${oy-5}" class="ang-lbl">0°</text>`;
+  }
+  const bp=.32,bx=ox+L*bp*Math.cos(rad),by=oy-L*bp*Math.sin(rad);
+  h+=`<g transform="translate(${bx.toFixed(1)},${by.toFixed(1)}) rotate(${(-ang).toFixed(1)})">
+    <rect x="-11" y="-13" width="22" height="13" rx="3" fill="${clrDir}22" stroke="${clrDir}" stroke-width="1.2"/>
+    <text x="0" y="-6" text-anchor="middle" dominant-baseline="middle" font-family="'DM Mono'" font-size="8" fill="${clrDir}" font-weight="500">m</text></g>`;
+  if(ang>0.5){
+    const gL=26;
+    h+=`<line x1="${bx.toFixed(1)}" y1="${by.toFixed(1)}" x2="${bx.toFixed(1)}" y2="${(by+gL).toFixed(1)}" stroke="#ffa726" stroke-width="1.5" stroke-dasharray="3,2"/>`;
+    h+=`<polygon points="${bx.toFixed(1)},${(by+gL+4).toFixed(1)} ${(bx-3).toFixed(1)},${(by+gL).toFixed(1)} ${(bx+3).toFixed(1)},${(by+gL).toFixed(1)}" fill="#ffa726"/>`;
+  }
+  const aS=isUp?.54:.40,aE=isUp?.74:.24;
+  const ax1=ox+L*aS*Math.cos(rad),ay1=oy-L*aS*Math.sin(rad),ax2=ox+L*aE*Math.cos(rad),ay2=oy-L*aE*Math.sin(rad);
+  const dx=ax2-ax1,dy=ay2-ay1,dn=Math.sqrt(dx*dx+dy*dy);
+  const adx=dx/dn,ady=dy/dn,hx=ax2-adx*7,hy=ay2-ady*7,px=-ady*3.5,py=adx*3.5;
+  h+=`<line x1="${ax1.toFixed(1)}" y1="${ay1.toFixed(1)}" x2="${hx.toFixed(1)}" y2="${hy.toFixed(1)}" stroke="${clrDir}" stroke-width="2" stroke-linecap="round"/>`;
+  h+=`<polygon points="${ax2.toFixed(1)},${ay2.toFixed(1)} ${(hx+px).toFixed(1)},${(hy+py).toFixed(1)} ${(hx-px).toFixed(1)},${(hy-py).toFixed(1)}" fill="${clrDir}"/>`;
+  const sinA=Math.sin(rad),cosA=Math.cos(rad);
+  document.getElementById('irow').innerHTML=[
+    ['sinθ',sinA.toFixed(3),''],['cosθ',cosA.toFixed(3),''],
+    ['g·sinθ',(G*sinA).toFixed(2),'m/s²'],['g·cosθ',(G*cosA).toFixed(2),'m/s²'],
+  ].map(([l,v,u])=>`<div class="ichip"><div class="il">${l}</div><div class="iv">${v}<span class="iu">${u}</span></div></div>`).join('');
+  document.getElementById('diag').innerHTML=h;
+}
+
+/* ══════════════════════════════════════
+   COMPUTE KINEMATICS
+══════════════════════════════════════ */
+function compute(){
+  const{massa,vmax,tacc,tcv,tdec,profAcc,profDec,angolo,dir}=ST;
+  const rad=angolo*Math.PI/180,sinA=Math.sin(rad),cosA=Math.cos(rad);
+  const gComp=G*sinA,isUp=dir==='su';
+  const ttot=Math.max(tacc+tcv+tdec,.001),N=600;
+  const t=[],v=[],a=[],j=[],s=[];
+  let sp=0,vp=0,tp=0;
+  for(let i=0;i<=N;i++){
+    const ti=ttot*i/N;let vi,ai,ji;
+    if(ti<=tacc&&tacc>1e-9){const tn=Math.min(1,ti/tacc);vi=PROF[profAcc].v(tn)*vmax;ai=dv(profAcc,tn)*vmax/tacc;ji=ddv(profAcc,tn)*vmax/(tacc*tacc);}
+    else if(ti<=tacc+tcv){vi=vmax;ai=0;ji=0;}
+    else{const tf=Math.max(tdec,1e-9),tn=Math.max(0,Math.min(1,1-(ti-tacc-tcv)/tf));vi=Math.max(0,PROF[profDec].v(tn)*vmax);ai=(tn>1e-4&&tn<1-1e-4)?-dv(profDec,tn)*vmax/tf:0;ji=(tn>1e-3&&tn<1-1e-3)?ddv(profDec,tn)*vmax/(tf*tf):0;}
+    if(i>0)sp+=(vp+vi)/2*(ti-tp);
+    t.push(+ti.toFixed(3));v.push(+vi.toFixed(5));a.push(+ai.toFixed(5));j.push(+ji.toFixed(5));s.push(+sp.toFixed(5));
+    vp=vi;tp=ti;
+  }
+  const iA=Math.min(Math.round(tacc/ttot*N),N),iC=Math.min(Math.round((tacc+tcv)/ttot*N),N);
+  const sA=s[iA],sC=s[iC],sT=s[N];
+  const aMax=Math.max(...a),aMin=Math.min(...a),jMax=Math.max(...j.map(Math.abs));
+  const Fpeso=massa*G,FpesoP=massa*gComp,FpesoN=massa*G*cosA;
+  const FmotAcc=isUp?massa*aMax+FpesoP:Math.max(0,massa*aMax-FpesoP);
+  const FfrenDec=isUp?Math.max(0,massa*(-aMin)-FpesoP):massa*(-aMin)+FpesoP;
+  const hTot=sT*sinA,EpTot=massa*G*hTot,EcMax=.5*massa*vmax*vmax;
+  const lavoroMotore=isUp?EcMax+EpTot:EcMax-EpTot;
+  return{t,v,a,j,s,ttot,sA,sCv:sC-sA,sD:sT-sC,sT,aMax,aMin,aPeak:Math.max(aMax,-aMin),jMax,
+    Fpeso,FpesoP,FpesoN,FmotAcc,FfrenDec,hTot,EpTot,EcMax,lavoroMotore,
+    PmAcc:FmotAcc*vmax,PmDec:FfrenDec*vmax,
+    vMean:sT/ttot,sinA,cosA,isUp,angolo,tacc,tcv,tdec,massa,vmax};
+}
+
+/* ══════════════════════════════════════
+   RENDER
+══════════════════════════════════════ */
+function render(r,solved){
+  // Solve strip
+  const strip=document.getElementById('solve-strip');
+  if(solved){
+    strip.classList.add('show');
+    document.getElementById('ss-title').innerHTML=solved.title;
+    document.getElementById('ss-grid').innerHTML=solved.items.map(it=>
+      `<div class="ssc"><div class="ssc-l">${it.l}</div><div class="ssc-v">${it.v}<span class="ssc-u">${it.u}</span></div></div>`
+    ).join('');
+    // Update derived labels inside mode panel
+    if(solved.dr){Object.entries(solved.dr).forEach(([id,val])=>{const el=document.getElementById(id);if(el)el.textContent=val;});}
+  } else {
+    strip.classList.remove('show');
+  }
+
+  const tot=r.ttot;
+  document.getElementById('pbar').innerHTML=[
+    [r.tacc,'ACC','#378ADD','rgba(55,138,221,.18)'],
+    [r.tcv,'V.C.','#1D9E75','rgba(29,158,117,.18)'],
+    [r.tdec,'DEC','#D85A30','rgba(216,90,48,.18)'],
+  ].map(([tt,lb,c,bg])=>`<div class="pseg" style="flex:${tt/tot};background:${bg};border:1px solid ${c};color:${c}">${lb} ${tt.toFixed(2)}s</div>`).join('');
+
+  // Sync distance inputs (only when not focused)
+  const syncDist=(id,v)=>{const el=document.getElementById(id);if(el&&document.activeElement!==el)el.value=fp(v,4);};
+  syncDist('r-sacc', r.sA);
+  syncDist('r-scv',  r.sCv);
+  syncDist('r-sdec', r.sD);
+
+  const isSolve=SM.mode!=='manual';
+  const hiDist=SM.mode==='m4';
+  const hiVmax=SM.mode==='m4'||SM.mode==='m1';
+  document.getElementById('mets').innerHTML=[
+    ['Tempo tot.',  fp(r.ttot,2), 's',   false],
+    ['Distanza',    fp(r.sT,3),  'm',    hiDist],
+    ['Dislivello',  fp(r.hTot,3),'m',    false],
+    ['v massima',   fp(r.vmax,3),'m/s',  hiVmax],
+    ['F motrice',   fp(r.FmotAcc,1),'N', false],
+    ['En. totale',  fp(r.lavoroMotore,1),'J',false],
+  ].map(([l,v,u,hi])=>`<div class="mc${hi?' hi':''}"><div class="ml">${l}</div><div class="mv">${v}</div><div class="mu">${u}</div></div>`).join('');
+
+  upCh(cV,r.t,r.v);upCh(cA,r.t,r.a);upCh(cJ,r.t,r.j);upCh(cS,r.t,r.s);
+
+  document.getElementById('dtg').innerHTML=[
+    ['Distanze',[
+      ['In acc.',     fp(r.sA,4), 'm'],
+      ['A v.c.',      fp(r.sCv,4),'m'],
+      ['In dec.',     fp(r.sD,4), 'm'],
+      ['Totale',      fp(r.sT,4), 'm'],
+      ['Dislivello h',fp(r.hTot,4),'m'],
+      ['v media',     fp(r.vMean,4),'m/s'],
+    ]],
+    ['Dinamica',[
+      ['Acc. picco',  fp(r.aMax,4),'m/s²'],
+      ['Acc. [g]',    fp(r.aMax/G,4),'g'],
+      ['Dec. picco',  fp(-r.aMin,4),'m/s²'],
+      ['Dec. [g]',    fp(-r.aMin/G,4),'g'],
+      ['Jerk max',    fp(r.jMax,3),'m/s³'],
+    ]],
+    ['Forze',[
+      ['Peso',        fp(r.Fpeso,2),'N'],
+      ['F‖ parallela',fp(r.FpesoP,2),'N'],
+      ['F⊥ normale',  fp(r.FpesoN,2),'N'],
+      ['F mot. acc.', fp(r.FmotAcc,2),'N'],
+      ['F fren. dec.',fp(r.FfrenDec,2),'N'],
+      ['Direzione',   r.isUp?'salita':'discesa',''],
+    ]],
+    ['Energia',[
+      ['En. cin.',    fp(r.EcMax,2),'J'],
+      ['En. pot.',    fp(r.EpTot,2),'J'],
+      ['Lavoro mot.', fp(r.lavoroMotore,2),'J'],
+      ['P max acc.',  fp(r.PmAcc,2),'W'],
+      ['P max dec.',  fp(r.PmDec,2),'W'],
+    ]],
+  ].map(([title,rows])=>`<div><div class="dgtitle">${title}</div>${rows.map(([k,v,u])=>`<div class="dr"><span class="dk">${k}</span><span class="dv">${v}${u?`<span class="u">${u}</span>`:''}</span></div>`).join('')}</div>`).join('');
+}
+
+/* ══════════════════════════════════════
+   CHARTS
+══════════════════════════════════════ */
+let cV,cA,cJ,cS;
+function mkChart(id,col,fc,sm){
+  return new Chart(document.getElementById(id),{type:'line',
+    data:{labels:[],datasets:[{data:[],borderColor:col,borderWidth:1.5,pointRadius:0,tension:0,
+      fill:{target:'origin',above:fc,below:fc.replace('.12','.07')}}]},
+    options:{responsive:true,maintainAspectRatio:false,animation:{duration:55},
+      plugins:{legend:{display:false},tooltip:{mode:'index',intersect:false,
+        backgroundColor:'#1c1d23',titleColor:'#7a7d8a',bodyColor:'#e8e9ec',
+        borderColor:'rgba(255,255,255,0.1)',borderWidth:1,
+        titleFont:{family:"'DM Mono'",size:10},bodyFont:{family:"'DM Mono'",size:11},
+        callbacks:{label:c=>' '+c.parsed.y.toFixed(4)}}},
+      scales:{
+        x:{ticks:{maxTicksLimit:6,font:{family:"'DM Mono'",size:10},color:'#4a4d5a'},grid:{color:'rgba(255,255,255,0.04)'},border:{display:false}},
+        y:{suggestedMin:sm,ticks:{maxTicksLimit:4,font:{family:"'DM Mono'",size:10},color:'#4a4d5a'},grid:{color:'rgba(255,255,255,0.04)'},border:{display:false}}
+      }}});
+}
+function upCh(ch,l,d){ch.data.labels=l;ch.data.datasets[0].data=d;ch.update('none');}
+
+function recalc(){
+  const solved=solveMode();
+  const r=compute();
+  render(r,solved);
+}
+
+/* ══════════════════════════════════════
+   INIT
+══════════════════════════════════════ */
+document.getElementById('chips-acc').innerHTML=mkChips('acc');
+document.getElementById('chips-dec').innerHTML=mkChips('dec');
+document.getElementById('desc-acc').textContent=PROF[ST.profAcc].d;
+document.getElementById('desc-dec').textContent=PROF[ST.profDec].d;
+cV=mkChart('cv','#4fc3f7','rgba(79,195,247,.12)',0);
+cA=mkChart('ca','#ffa726','rgba(255,167,38,.12)',null);
+cJ=mkChart('cj','#ef5350','rgba(239,83,80,.10)',null);
+cS=mkChart('cs','#66bb6a','rgba(102,187,106,.10)',0);
+setMode('manual'); // renders mode-inputs, binds arrows, calls recalc
+drawDiag();
+</script>
+</body>
+</html>
