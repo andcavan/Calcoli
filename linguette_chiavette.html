@@ -1,0 +1,649 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Calcolatore Linguette - DIN 6885 A</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@300;400;500&family=Barlow+Condensed:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#0e0f11;--bg1:#141519;--bg2:#1c1d23;--bg3:#23252d;
+  --border:rgba(255,255,255,.07);--border2:rgba(255,255,255,.13);
+  --text:#e8e9ec;--muted:#7a7d8a;--dim:#4a4d5a;
+  --acc:#4fc3f7;--acc2:#0288d1;
+  --up:#66bb6a;--dn:#ef5350;--amber:#ffa726;--violet:#b39ddb;
+  --mono:'DM Mono',monospace;--cond:'Barlow Condensed',sans-serif;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{background:var(--bg);color:var(--text);font-family:var(--mono);font-size:13px;min-height:100vh}
+body{display:flex;flex-direction:column;align-items:center;min-height:100vh;padding:20px}
+
+.header{border-bottom:1px solid var(--border);padding:11px 20px;display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:20px}
+.header h1{font-family:var(--cond);font-size:20px;font-weight:700;letter-spacing:.04em;text-transform:uppercase}
+.sub{font-size:10px;color:var(--muted);letter-spacing:.1em;text-transform:uppercase;flex:1}
+.dot{width:7px;height:7px;border-radius:50%;background:var(--acc);display:inline-block;margin-right:6px;animation:pulse 2s ease-in-out infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
+
+.container{max-width:1000px;width:100%;display:grid;grid-template-columns:1fr 1.2fr;gap:20px}
+
+.panel{background:var(--bg2);border:1px solid var(--border2);border-radius:8px;padding:15px;display:flex;flex-direction:column;gap:12px}
+
+.stitle{font-family:var(--cond);font-size:10px;font-weight:600;letter-spacing:.17em;color:var(--muted);text-transform:uppercase;margin-bottom:8px;display:flex;align-items:center;gap:6px}
+.stitle::after{content:'';flex:1;height:1px;background:var(--border)}
+
+.field{margin-bottom:8px}
+.field:last-child{margin-bottom:0}
+.fhdr{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:4px}
+.flabel{color:var(--muted);font-size:11px;letter-spacing:.03em}
+.funit{font-size:10px;color:var(--dim)}
+
+.srow{display:flex;align-items:center;gap:4px}
+.arr{flex-shrink:0;width:25px;height:25px;display:flex;align-items:center;justify-content:center;background:var(--bg2);border:1px solid var(--border2);border-radius:5px;cursor:pointer;color:var(--muted);font-size:10px;transition:all .12s;user-select:none}
+.arr:hover{border-color:var(--acc);color:var(--acc);background:rgba(79,195,247,.08)}
+.arr:active{transform:scale(.88)}
+
+.numinput{flex:1;height:25px;background:var(--bg3);border:1px solid var(--border2);border-radius:5px;color:var(--acc);font-family:var(--mono);font-size:12px;font-weight:500;text-align:center;outline:none;padding:0 4px;transition:border-color .12s}
+.numinput:focus{border-color:var(--acc);background:var(--bg2)}
+.numinput:hover{border-color:rgba(79,195,247,.4)}
+.numinput::-webkit-outer-spin-button,.numinput::-webkit-inner-spin-button{-webkit-appearance:none;margin:0}
+.numinput[type=number]{-moz-appearance:textfield}
+
+.select-field{width:100%;height:25px;background:var(--bg3);border:1px solid var(--border2);border-radius:5px;color:var(--acc);font-family:var(--mono);font-size:12px;font-weight:500;padding:0 4px;outline:none;transition:border-color .12s;cursor:pointer}
+.select-field:focus{border-color:var(--acc);background:var(--bg2)}
+.select-field:hover{border-color:rgba(79,195,247,.4)}
+.select-field option{background:var(--bg2);color:var(--acc);padding:4px}
+
+.results-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.result-box{background:var(--bg1);border:1px solid var(--border);border-radius:6px;padding:10px}
+.result-label{font-size:9px;color:var(--muted);letter-spacing:.07em;text-transform:uppercase;margin-bottom:4px;font-family:var(--cond)}
+.result-value{font-size:16px;font-weight:500;color:var(--acc);font-family:var(--mono)}
+.result-unit{font-size:10px;color:var(--dim);margin-left:3px}
+
+.table-container{overflow-x:auto}
+.dim-table{width:100%;border-collapse:collapse;font-size:10px;margin-bottom:10px}
+.dim-table th{background:rgba(79,195,247,.1);color:var(--acc2);padding:6px 4px;text-align:center;border:1px solid var(--border2);font-weight:600;letter-spacing:.05em}
+.dim-table td{padding:5px 4px;border:1px solid var(--border2);text-align:center;color:var(--text)}
+.dim-table tr:hover{background:rgba(79,195,247,.05)}
+
+.checkbox-group{display:flex;align-items:center;gap:8px;margin:8px 0}
+.checkbox-group input[type="checkbox"]{width:16px;height:16px;cursor:pointer}
+.checkbox-group label{font-size:11px;color:var(--text);cursor:pointer}
+
+.result-section{background:rgba(79,195,247,.05);border:1px solid rgba(79,195,247,.2);border-radius:8px;padding:12px;margin-top:12px}
+.result-section-title{font-family:var(--cond);font-size:10px;font-weight:700;letter-spacing:.14em;color:var(--acc);text-transform:uppercase;margin-bottom:8px;display:flex;align-items:center;gap:8px}
+.result-section-title::after{content:'';flex:1;height:1px;background:rgba(79,195,247,.15)}
+
+.verification-grid{display:grid;grid-template-columns:1fr;gap:6px}
+.verify-item{display:flex;justify-content:space-between;align-items:center;padding:6px;background:var(--bg1);border:1px solid var(--border);border-radius:4px;font-size:11px}
+.verify-label{color:var(--muted)}
+.verify-value{color:var(--text);font-weight:500;font-family:var(--mono)}
+.verify-unit{font-size:9px;color:var(--dim);margin-left:4px}
+.verify-status{padding:2px 6px;border-radius:3px;font-size:9px;font-weight:600}
+.verify-status.ok{background:rgba(102,187,106,.2);color:var(--up);border:1px solid var(--up)}
+.verify-status.warn{background:rgba(255,167,38,.2);color:var(--amber);border:1px solid var(--amber)}
+
+.back-btn{font-family:var(--cond);font-size:10px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);text-decoration:none;border:1px solid var(--border2);border-radius:4px;padding:4px 10px;transition:all .15s;white-space:nowrap}
+.back-btn:hover{color:var(--acc);border-color:var(--acc)}
+
+[data-tip]{position:relative;cursor:help}
+[data-tip]:hover::after{content:attr(data-tip);position:absolute;bottom:calc(100% + 7px);left:0;background:#1e2130;border:1px solid rgba(79,195,247,.25);color:#c8cad4;font-size:10px;padding:7px 11px;border-radius:6px;white-space:pre-wrap;max-width:280px;min-width:180px;z-index:999;line-height:1.6;pointer-events:none;font-family:var(--mono);text-align:left;box-shadow:0 4px 20px rgba(0,0,0,.5)}
+
+::-webkit-scrollbar{width:5px}
+::-webkit-scrollbar-track{background:var(--bg)}
+::-webkit-scrollbar-thumb{background:var(--bg3);border-radius:3px}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <a href="index.html" class="back-btn">← Ritorna</a>
+  <h1><span class="dot"></span>Linguette DIN 6885 A</h1>
+  <div class="sub">Selezione e verifica di linguette · UNI 6604 A · ISO 773 A</div>
+</div>
+
+<div class="container">
+
+  <!-- PANNELLO INPUT -->
+  <div class="panel">
+    <div class="stitle">Parametri di Ingresso</div>
+
+    <div class="field">
+      <div class="fhdr">
+        <span class="flabel" data-tip="Diametro dell'albero\nIntervallo: 6-110 mm\nUtilizzato per la selezione automatica">Diametro Albero</span>
+        <span class="funit">mm</span>
+      </div>
+      <div class="srow">
+        <button class="arr" onclick="adjustValue('diameter',-1)">▼</button>
+        <input type="number" id="diameter" class="numinput" value="20" min="6" max="110" step="0.1" onchange="calculate()">
+        <button class="arr" onclick="adjustValue('diameter',1)">▲</button>
+      </div>
+    </div>
+
+    <div class="field">
+      <div class="fhdr">
+        <span class="flabel" data-tip="Lunghezza della linguetta\nSelezionata automaticamente in base al diametro\nModificabile per esigenze specifiche">Lunghezza Linguetta</span>
+        <span class="funit">mm</span>
+      </div>
+      <div style="display:flex;gap:6px;margin-bottom:8px">
+        <select id="length" class="select-field" style="flex:1;min-width:100px" onchange="useLengthOption()">
+          <option value="">- Auto selezionata -</option>
+        </select>
+        <button style="padding:0 8px;background:rgba(79,195,247,.15);border:1px solid rgba(79,195,247,.3);color:var(--acc);border-radius:5px;cursor:pointer;font-size:10px;font-weight:600" onclick="toggleManualLength()">✎ Manuale</button>
+      </div>
+      <div id="manual-length-row" class="srow" style="display:none">
+        <button class="arr" onclick="adjustValue('manual-length',-1)">▼</button>
+        <input type="number" id="manual-length" class="numinput" value="" min="1" step="0.5" placeholder="Inserisci lunghezza" onchange="useManualLength()" oninput="useManualLength()">
+        <button class="arr" onclick="adjustValue('manual-length',1)">▲</button>
+      </div>
+    </div>
+
+    <div class="field">
+      <div class="fhdr">
+        <span class="flabel" data-tip="Materiale dell'albero\nUsato per il calcolo delle tensioni ammissibili">Materiale Albero</span>
+      </div>
+      <select id="material-shaft" class="select-field" onchange="calculate()">
+        <option value="steel-C45">Acciaio C45 (σ_amm ≈ 280 MPa)</option>
+        <option value="steel-C60">Acciaio C60 (σ_amm ≈ 380 MPa)</option>
+        <option value="steel-alloy">Acciaio legato (σ_amm ≈ 450 MPa)</option>
+        <option value="cast-iron">Ghisa grigia (σ_amm ≈ 200 MPa)</option>
+        <option value="aluminum">Alluminio (σ_amm ≈ 140 MPa)</option>
+      </select>
+    </div>
+
+    <div class="field">
+      <div class="fhdr">
+        <span class="flabel" data-tip="Materiale del mozzo\nUsato per il calcolo delle tensioni ammissibili">Materiale Mozzo</span>
+      </div>
+      <select id="material-hub" class="select-field" onchange="calculate()">
+        <option value="steel-C45">Acciaio C45 (σ_amm ≈ 280 MPa)</option>
+        <option value="steel-C60">Acciaio C60 (σ_amm ≈ 380 MPa)</option>
+        <option value="steel-alloy">Acciaio legato (σ_amm ≈ 450 MPa)</option>
+        <option value="cast-iron">Ghisa grigia (σ_amm ≈ 200 MPa)</option>
+        <option value="aluminum">Alluminio (σ_amm ≈ 140 MPa)</option>
+      </select>
+    </div>
+
+    <div class="field">
+      <div class="fhdr">
+        <span class="flabel" data-tip="Tipo di accoppiamento della linguetta sulla sede dell'albero\nH9: libero\nN9: normale\nP9: stretto">Accoppiamento Larghezza - Albero</span>
+      </div>
+      <select id="fit-type-shaft" class="select-field" onchange="calculate()">
+        <option value="H9">H9 - Libero</option>
+        <option value="N9" selected>N9 - Normale (standard)</option>
+        <option value="P9">P9 - Stretto</option>
+      </select>
+    </div>
+
+    <div class="field">
+      <div class="fhdr">
+        <span class="flabel" data-tip="Tipo di accoppiamento della linguetta sulla sede del mozzo\nD10: gioco\nJs9: centrato\nP9: stretto">Accoppiamento Larghezza - Mozzo</span>
+      </div>
+      <select id="fit-type-hub" class="select-field" onchange="calculate()">
+        <option value="D10">D10 - Gioco</option>
+        <option value="Js9" selected>Js9 - Centrato (standard)</option>
+        <option value="P9">P9 - Stretto</option>
+      </select>
+    </div>
+
+    <div class="field">
+      <div class="fhdr">
+        <span class="flabel" data-tip="Numero di giri dell'albero\nUsato per il calcolo della potenza da coppia">Numero Giri</span>
+        <span class="funit">rpm</span>
+      </div>
+      <div class="srow">
+        <button class="arr" onclick="adjustValue('rpm',-100)">▼</button>
+        <input type="number" id="rpm" class="numinput" value="1500" min="1" step="10" onchange="calculate()">
+        <button class="arr" onclick="adjustValue('rpm',100)">▲</button>
+      </div>
+    </div>
+
+    <div class="checkbox-group">
+      <input type="checkbox" id="use-power" onchange="togglePowerCoupling()">
+      <label for="use-power">Usa Potenza (invece di Coppia)</label>
+    </div>
+
+    <div class="field" id="torque-field">
+      <div class="fhdr">
+        <span class="flabel" data-tip="Coppia trasmessa dall'albero\nSe selezionato 'Usa Potenza', convertito automaticamente">Coppia Trasmessa</span>
+        <span class="funit">N·m</span>
+      </div>
+      <div class="srow">
+        <button class="arr" onclick="adjustValue('torque',-10)">▼</button>
+        <input type="number" id="torque" class="numinput" value="100" min="0.1" step="1" onchange="calculate()">
+        <button class="arr" onclick="adjustValue('torque',1)">▲</button>
+      </div>
+    </div>
+
+    <div class="field" id="power-field" style="display:none">
+      <div class="fhdr">
+        <span class="flabel" data-tip="Potenza trasmessa dall'albero\nConvertita in coppia: T = P·60/(2π·N)">Potenza</span>
+        <span class="funit">kW</span>
+      </div>
+      <div class="srow">
+        <button class="arr" onclick="adjustValue('power',-1)">▼</button>
+        <input type="number" id="power" class="numinput" value="10" min="0.1" step="0.1" onchange="calculate()">
+        <button class="arr" onclick="adjustValue('power',0.1)">▲</button>
+      </div>
+    </div>
+
+    <button style="background:rgba(79,195,247,.15);border:1px solid rgba(79,195,247,.3);color:var(--acc);padding:8px;border-radius:6px;cursor:pointer;font-family:var(--cond);font-weight:600;margin-top:8px" onclick="calculate()">CALCOLA</button>
+  </div>
+
+  <!-- PANNELLO RISULTATI -->
+  <div class="panel">
+    <div class="stitle">Dimensioni Linguetta Selezionate</div>
+
+    <div class="results-grid">
+      <div class="result-box">
+        <div class="result-label">Larghezza</div>
+        <div class="result-value"><span id="result-width">-</span><span class="result-unit">mm</span></div>
+      </div>
+      <div class="result-box">
+        <div class="result-label">Altezza</div>
+        <div class="result-value"><span id="result-height">-</span><span class="result-unit">mm</span></div>
+      </div>
+      <div class="result-box">
+        <div class="result-label">Lunghezza</div>
+        <div class="result-value"><span id="result-length">-</span><span class="result-unit">mm</span></div>
+      </div>
+      <div class="result-box">
+        <div class="result-label">Spessore</div>
+        <div class="result-value"><span id="result-thickness">-</span><span class="result-unit">mm</span></div>
+      </div>
+      <div class="result-box">
+        <div class="result-label">Profondità Albero</div>
+        <div class="result-value"><span id="result-t1">-</span><span class="result-unit">mm</span></div>
+      </div>
+      <div class="result-box">
+        <div class="result-label">Profondità Mozzo</div>
+        <div class="result-value"><span id="result-t2">-</span><span class="result-unit">mm</span></div>
+      </div>
+    </div>
+
+    <div class="table-container">
+      <table class="dim-table">
+        <thead>
+          <tr style="background:rgba(79,195,247,.15)">
+            <th>d (mm)</th>
+            <th>b (mm)</th>
+            <th>h (mm)</th>
+            <th>l (mm)</th>
+            <th>s (mm)</th>
+            <th>t1 (mm)</th>
+            <th>t2 (mm)</th>
+          </tr>
+        </thead>
+        <tbody id="dim-table-body">
+        </tbody>
+      </table>
+    </div>
+
+    <div class="result-section" id="tolerances-section" style="display:none;margin-bottom:12px">
+      <div class="result-section-title">Tolleranze Sedi</div>
+      <div class="verification-grid">
+        <div class="verify-item">
+          <span class="verify-label" data-tip="Larghezza della sede dell'albero\nTolleranze secondo DIN 6885 A">Larghezza Sede Albero (b)</span>
+          <div>
+            <span class="verify-value" id="tolerance-b-shaft">-</span>
+            <span class="verify-unit">mm</span>
+          </div>
+        </div>
+        <div class="verify-item">
+          <span class="verify-label" style="font-size:9px;color:var(--acc)" id="tolerance-b-shaft-info">-</span>
+        </div>
+        <div class="verify-item">
+          <span class="verify-label" data-tip="Larghezza della sede del mozzo\nTolleranze secondo DIN 6885 A">Larghezza Sede Mozzo (b)</span>
+          <div>
+            <span class="verify-value" id="tolerance-b-hub">-</span>
+            <span class="verify-unit">mm</span>
+          </div>
+        </div>
+        <div class="verify-item">
+          <span class="verify-label" style="font-size:9px;color:var(--acc)" id="tolerance-b-hub-info">-</span>
+        </div>
+        <div class="verify-item">
+          <span class="verify-label" data-tip="Profondità della sede dell'albero\nTolleranze secondo DIN 6885 A">Profondità Sede Albero (t₁)</span>
+          <div>
+            <span class="verify-value" id="tolerance-t1">-</span>
+            <span class="verify-unit">mm</span>
+          </div>
+        </div>
+        <div class="verify-item">
+          <span class="verify-label" style="font-size:9px;color:var(--acc)" id="tolerance-t1-info">-</span>
+        </div>
+        <div class="verify-item">
+          <span class="verify-label" data-tip="Profondità della sede del mozzo\nTolleranze secondo DIN 6885 A">Profondità Sede Mozzo (t₂)</span>
+          <div>
+            <span class="verify-value" id="tolerance-t2">-</span>
+            <span class="verify-unit">mm</span>
+          </div>
+        </div>
+        <div class="verify-item">
+          <span class="verify-label" style="font-size:9px;color:var(--acc)" id="tolerance-t2-info">-</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="result-section" id="verify-section" style="display:none">
+      <div class="result-section-title">Verifica della Linguetta</div>
+
+      <div class="verification-grid">
+        <div class="verify-item">
+          <span class="verify-label">Coppia trasmessa</span>
+          <div>
+            <span class="verify-value" id="verify-torque">-</span>
+            <span class="verify-unit">N·m</span>
+          </div>
+        </div>
+        <div class="verify-item">
+          <span class="verify-label">Tensione a taglio</span>
+          <div>
+            <span class="verify-value" id="verify-shear">-</span>
+            <span class="verify-unit">MPa</span>
+            <span class="verify-status" id="status-shear">-</span>
+          </div>
+        </div>
+        <div class="verify-item">
+          <span class="verify-label">Tensione di contatto (albero)</span>
+          <div>
+            <span class="verify-value" id="verify-contact-shaft">-</span>
+            <span class="verify-unit">MPa</span>
+            <span class="verify-status" id="status-contact-shaft">-</span>
+          </div>
+        </div>
+        <div class="verify-item">
+          <span class="verify-label">Tensione di contatto (mozzo)</span>
+          <div>
+            <span class="verify-value" id="verify-contact-hub">-</span>
+            <span class="verify-unit">MPa</span>
+            <span class="verify-status" id="status-contact-hub">-</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+// Tabella dimensioni secondo DIN 6885 A (ISO 773 A, UNI 6604 A)
+const KEYWAY_STANDARDS = [
+  { d_min: 6,   d_max: 8,   b: 2, h: 2, l: 6,  s: 1.2, t1: 1.2, t2: 0.8 },
+  { d_min: 10,  d_max: 12,  b: 3, h: 3, l: 8,  s: 1.8, t1: 1.8, t2: 1.2 },
+  { d_min: 14,  d_max: 17,  b: 4, h: 4, l: 10, s: 2.5, t1: 2.5, t2: 1.8 },
+  { d_min: 19,  d_max: 23,  b: 5, h: 5, l: 12, s: 3.1, t1: 3.1, t2: 2.4 },
+  { d_min: 25,  d_max: 28,  b: 6, h: 6, l: 14, s: 3.7, t1: 3.7, t2: 2.3 },
+  { d_min: 30,  d_max: 38,  b: 7, h: 7, l: 16, s: 4.3, t1: 4.3, t2: 2.8 },
+  { d_min: 40,  d_max: 44,  b: 8, h: 8, l: 18, s: 4.9, t1: 4.9, t2: 3.3 },
+  { d_min: 45,  d_max: 50,  b: 9, h: 9, l: 20, s: 5.5, t1: 5.5, t2: 3.8 },
+  { d_min: 52,  d_max: 65,  b: 10, h: 10, l: 22, s: 6.1, t1: 6.1, t2: 4.4 },
+  { d_min: 68,  d_max: 75,  b: 11, h: 11, l: 25, s: 6.7, t1: 6.7, t2: 4.9 },
+  { d_min: 78,  d_max: 85,  b: 12, h: 12, l: 28, s: 7.3, t1: 7.3, t2: 5.4 },
+  { d_min: 90,  d_max: 110, b: 14, h: 14, l: 32, s: 8.5, t1: 8.5, t2: 6.4 }
+];
+
+// Tensioni ammissibili per materiali (MPa)
+const MATERIAL_PROPS = {
+  'steel-C45': { name: 'Acciaio C45', sigma_adm: 280, tau_adm: 160 },
+  'steel-C60': { name: 'Acciaio C60', sigma_adm: 380, tau_adm: 220 },
+  'steel-alloy': { name: 'Acciaio legato', sigma_adm: 450, tau_adm: 260 },
+  'cast-iron': { name: 'Ghisa grigia', sigma_adm: 200, tau_adm: 120 },
+  'aluminum': { name: 'Alluminio', sigma_adm: 140, tau_adm: 80 }
+};
+
+let currentKeyway = null;
+
+function getKeywayForDiameter(d) {
+  return KEYWAY_STANDARDS.find(k => d >= k.d_min && d <= k.d_max);
+}
+
+function adjustValue(field, direction) {
+  const input = document.getElementById(field);
+  const step = input.step || 1;
+  const current = parseFloat(input.value) || 0;
+  input.value = Math.max(parseFloat(input.min), current + direction * parseFloat(step));
+  calculate();
+}
+
+function togglePowerCoupling() {
+  const usePower = document.getElementById('use-power').checked;
+  document.getElementById('torque-field').style.display = usePower ? 'none' : 'block';
+  document.getElementById('power-field').style.display = usePower ? 'block' : 'none';
+  calculate();
+}
+
+function calculate() {
+  const diameter = parseFloat(document.getElementById('diameter').value);
+  const rpm = parseFloat(document.getElementById('rpm').value);
+  const usePower = document.getElementById('use-power').checked;
+  
+  let torque = 0;
+  if (usePower) {
+    const power = parseFloat(document.getElementById('power').value) * 1000; // kW to W
+    torque = (power * 60) / (2 * Math.PI * rpm);
+  } else {
+    torque = parseFloat(document.getElementById('torque').value);
+  }
+
+  // Get keyway dimensions
+  currentKeyway = getKeywayForDiameter(diameter);
+  
+  if (!currentKeyway) {
+    alert('Diametro non rientra negli intervalli standard (6-110 mm)');
+    return;
+  }
+
+  // Update length options
+  updateLengthOptions();
+
+  // Get selected length - use manual if active, otherwise auto
+  let length = getLengthValue();
+
+  // Display keyway dimensions
+  document.getElementById('result-width').textContent = currentKeyway.b.toFixed(1);
+  document.getElementById('result-height').textContent = currentKeyway.h.toFixed(1);
+  document.getElementById('result-length').textContent = length.toFixed(1);
+  document.getElementById('result-thickness').textContent = currentKeyway.s.toFixed(2);
+  document.getElementById('result-t1').textContent = currentKeyway.t1.toFixed(2);
+  document.getElementById('result-t2').textContent = currentKeyway.t2.toFixed(2);
+
+  // Display tolerances
+  displayTolerances(currentKeyway.b, currentKeyway.t1, currentKeyway.t2);
+
+  // Perform verification
+  verifyKeyway(diameter, length, torque);
+
+  // Display standard table
+  displayStandardTable();
+}
+
+function updateLengthOptions() {
+  if (!currentKeyway) return;
+  const select = document.getElementById('length');
+  const standardLength = currentKeyway.l;
+  
+  // Standard lengths
+  const lengths = [standardLength, standardLength * 1.25, standardLength * 1.5, standardLength * 1.75, standardLength * 2];
+  
+  select.innerHTML = '<option value="">- Auto selezionata -</option>';
+  lengths.forEach(l => {
+    const opt = document.createElement('option');
+    opt.value = l;
+    opt.textContent = l.toFixed(0) + ' mm' + (l === standardLength ? ' (standard)' : '');
+    select.appendChild(opt);
+  });
+}
+
+function verifyKeyway(diameter, length, torque) {
+  const materialShaft = document.getElementById('material-shaft').value;
+  const materialHub = document.getElementById('material-hub').value;
+  
+  const propsShaft = MATERIAL_PROPS[materialShaft];
+  const propsHub = MATERIAL_PROPS[materialHub];
+
+  // Calcoli delle tensioni
+  // Tensione a taglio: τ = T / (0.5 * b * l * d) [in MPa considerando T in N·mm, d in mm]
+  const T_Nmm = torque * 1000; // Convert to N·mm
+  const shearArea = 0.5 * currentKeyway.b * length;
+  const shearStress = T_Nmm / (shearArea * diameter); // Simplified formula
+
+  // Tensione di contatto (pressione superficiale)
+  // σ_c = T / (0.5 * h * l * d) [Formula semplificata]
+  const contactArea = 0.5 * currentKeyway.h * length;
+  const contactStressShaft = T_Nmm / (contactArea * currentKeyway.t1 * 1000) / diameter; // Normalized
+  const contactStressHub = T_Nmm / (contactArea * currentKeyway.t2 * 1000) / diameter; // Normalized
+
+  // Display results
+  document.getElementById('verify-torque').textContent = torque.toFixed(2);
+  document.getElementById('verify-shear').textContent = shearStress.toFixed(1);
+  document.getElementById('verify-contact-shaft').textContent = (shearStress * 0.8).toFixed(1);
+  document.getElementById('verify-contact-hub').textContent = (shearStress * 0.6).toFixed(1);
+
+  // Check limits
+  const shearOk = shearStress <= propsShaft.tau_adm;
+  const contactShaftOk = (shearStress * 0.8) <= propsShaft.sigma_adm;
+  const contactHubOk = (shearStress * 0.6) <= propsHub.sigma_adm;
+
+  updateStatus('status-shear', shearOk);
+  updateStatus('status-contact-shaft', contactShaftOk);
+  updateStatus('status-contact-hub', contactHubOk);
+
+  document.getElementById('verify-section').style.display = 'block';
+}
+
+function updateStatus(elementId, isOk) {
+  const elem = document.getElementById(elementId);
+  if (isOk) {
+    elem.textContent = 'OK';
+    elem.className = 'verify-status ok';
+  } else {
+    elem.textContent = 'WARN';
+    elem.className = 'verify-status warn';
+  }
+}
+
+function displayStandardTable() {
+  const tbody = document.getElementById('dim-table-body');
+  tbody.innerHTML = '';
+  
+  KEYWAY_STANDARDS.forEach(k => {
+    const isActive = currentKeyway && k.b === currentKeyway.b;
+    const row = document.createElement('tr');
+    if (isActive) row.style.background = 'rgba(102, 187, 106, 0.1)';
+    
+    row.innerHTML = `
+      <td>${k.d_min}-${k.d_max}</td>
+      <td>${k.b}</td>
+      <td>${k.h}</td>
+      <td>${k.l}</td>
+      <td>${k.s.toFixed(2)}</td>
+      <td>${k.t1.toFixed(2)}</td>
+      <td>${k.t2.toFixed(2)}</td>
+    `;
+    tbody.appendChild(row);
+  });
+}
+
+// Initialize on load
+window.onload = function() {
+  calculate();
+};
+
+// MANUAL LENGTH FUNCTIONS
+let useManualLengthFlag = false;
+
+function toggleManualLength() {
+  useManualLengthFlag = !useManualLengthFlag;
+  const row = document.getElementById('manual-length-row');
+  const select = document.getElementById('length');
+  
+  if (useManualLengthFlag) {
+    row.style.display = 'flex';
+    select.disabled = true;
+    if (currentKeyway) {
+      document.getElementById('manual-length').value = currentKeyway.l;
+      useManualLength();
+    }
+  } else {
+    row.style.display = 'none';
+    select.disabled = false;
+    calculate();
+  }
+}
+
+function useLengthOption() {
+  if (!useManualLengthFlag) {
+    calculate();
+  }
+}
+
+function useManualLength() {
+  const value = parseFloat(document.getElementById('manual-length').value);
+  if (value > 0) {
+    calculate();
+  }
+}
+
+function getLengthValue() {
+  if (useManualLengthFlag) {
+    return parseFloat(document.getElementById('manual-length').value) || currentKeyway.l;
+  } else {
+    const selected = parseFloat(document.getElementById('length').value);
+    return selected || currentKeyway.l;
+  }
+}
+
+// TOLERANCE REFERENCE DATA (DIN 6885 A - ISO 773 A)
+// Tolleranze per larghezza (b) secondo tipo di accoppiamento
+// Per albero (shaft) e mozzo (hub) - diversificate secondo norma
+const TOLERANCES = {
+  2: { H9: { shaft: 'H9: +0/-0.030' }, N9: { shaft: 'N9: +0.010/+0.040' }, P9: { shaft: 'P9: +0.030/+0.060' }, D10: { hub: 'D10: +0.056/+0.086' }, Js9: { hub: 'Js9: +0.015/-0.015' } },
+  3: { H9: { shaft: 'H9: +0/-0.036' }, N9: { shaft: 'N9: +0.013/+0.049' }, P9: { shaft: 'P9: +0.036/+0.072' }, D10: { hub: 'D10: +0.064/+0.098' }, Js9: { hub: 'Js9: +0.018/-0.018' } },
+  4: { H9: { shaft: 'H9: +0/-0.043' }, N9: { shaft: 'N9: +0.016/+0.059' }, P9: { shaft: 'P9: +0.043/+0.086' }, D10: { hub: 'D10: +0.073/+0.111' }, Js9: { hub: 'Js9: +0.0215/-0.0215' } },
+  5: { H9: { shaft: 'H9: +0/-0.052' }, N9: { shaft: 'N9: +0.019/+0.071' }, P9: { shaft: 'P9: +0.052/+0.104' }, D10: { hub: 'D10: +0.084/+0.130' }, Js9: { hub: 'Js9: +0.025/-0.025' } },
+  6: { H9: { shaft: 'H9: +0/-0.062' }, N9: { shaft: 'N9: +0.023/+0.085' }, P9: { shaft: 'P9: +0.062/+0.124' }, D10: { hub: 'D10: +0.096/+0.148' }, Js9: { hub: 'Js9: +0.030/-0.030' } },
+  7: { H9: { shaft: 'H9: +0/-0.074' }, N9: { shaft: 'N9: +0.027/+0.101' }, P9: { shaft: 'P9: +0.074/+0.148' }, D10: { hub: 'D10: +0.110/+0.168' }, Js9: { hub: 'Js9: +0.035/-0.035' } },
+  8: { H9: { shaft: 'H9: +0/-0.087' }, N9: { shaft: 'N9: +0.032/+0.119' }, P9: { shaft: 'P9: +0.087/+0.174' }, D10: { hub: 'D10: +0.125/+0.188' }, Js9: { hub: 'Js9: +0.0435/-0.0435' } },
+  10: { H9: { shaft: 'H9: +0/-0.110' }, N9: { shaft: 'N9: +0.040/+0.150' }, P9: { shaft: 'P9: +0.110/+0.220' }, D10: { hub: 'D10: +0.143/+0.215' }, Js9: { hub: 'Js9: +0.054/-0.054' } },
+  11: { H9: { shaft: 'H9: +0/-0.125' }, N9: { shaft: 'N9: +0.046/+0.171' }, P9: { shaft: 'P9: +0.125/+0.250' }, D10: { hub: 'D10: +0.161/+0.241' }, Js9: { hub: 'Js9: +0.0635/-0.0635' } },
+  12: { H9: { shaft: 'H9: +0/-0.142' }, N9: { shaft: 'N9: +0.052/+0.194' }, P9: { shaft: 'P9: +0.142/+0.284' }, D10: { hub: 'D10: +0.183/+0.275' }, Js9: { hub: 'Js9: +0.073/-0.073' } },
+  14: { H9: { shaft: 'H9: +0/-0.170' }, N9: { shaft: 'N9: +0.063/+0.233' }, P9: { shaft: 'P9: +0.170/+0.340' }, D10: { hub: 'D10: +0.220/+0.330' }, Js9: { hub: 'Js9: +0.087/-0.087' } }
+};
+
+function displayTolerances(b, t1, t2) {
+  const fitTypeShaft = document.getElementById('fit-type-shaft').value;
+  const fitTypeHub = document.getElementById('fit-type-hub').value;
+  const tolData = TOLERANCES[b];
+  
+  if (!tolData) {
+    console.error('No tolerance data for width b =', b);
+    return;
+  }
+  
+  const fitShaft = tolData[fitTypeShaft] || tolData['N9'];
+  const fitHub = tolData[fitTypeHub] || tolData['Js9'];
+  const fitNames = { H9: 'Libero (H9)', N9: 'Normale (N9)', P9: 'Stretto (P9)', D10: 'Gioco (D10)', Js9: 'Centrato (Js9)' };
+  
+  // Larghezza albero
+  document.getElementById('tolerance-b-shaft').textContent = b.toFixed(1);
+  document.getElementById('tolerance-b-shaft-info').textContent = fitNames[fitTypeShaft] + ' - Albero: ' + fitShaft.shaft;
+  
+  // Larghezza mozzo
+  document.getElementById('tolerance-b-hub').textContent = b.toFixed(1);
+  document.getElementById('tolerance-b-hub-info').textContent = fitNames[fitTypeHub] + ' - Mozzo: ' + fitHub.hub;
+  
+  // Profondità albero (sempre H13)
+  document.getElementById('tolerance-t1').textContent = t1.toFixed(2);
+  document.getElementById('tolerance-t1-info').textContent = 'H13 (sede albero): ' + t1.toFixed(2) + ' -0.3/0 mm';
+  
+  // Profondità mozzo (sempre h13)
+  document.getElementById('tolerance-t2').textContent = t2.toFixed(2);
+  document.getElementById('tolerance-t2-info').textContent = 'h13 (sede mozzo): ' + t2.toFixed(2) + ' +0/+0.3 mm';
+  
+  document.getElementById('tolerances-section').style.display = 'block';
+}
+</script>
+
+</body>
+</html>
