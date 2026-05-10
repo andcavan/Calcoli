@@ -1,0 +1,933 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Anelli Elastici - DIN 471 / DIN 472</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@300;400;500&family=Barlow+Condensed:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#0e0f11;--bg1:#141519;--bg2:#1c1d23;--bg3:#23252d;
+  --border:rgba(255,255,255,.07);--border2:rgba(255,255,255,.13);
+  --text:#e8e9ec;--muted:#7a7d8a;--dim:#4a4d5a;
+  --acc:#4fc3f7;--acc2:#0288d1;
+  --up:#66bb6a;--dn:#ef5350;--amber:#ffa726;--violet:#b39ddb;
+  --mono:'DM Mono',monospace;--cond:'Barlow Condensed',sans-serif;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{background:var(--bg);color:var(--text);font-family:var(--mono);font-size:13px;min-height:100vh}
+body{display:flex;flex-direction:column;align-items:center;min-height:100vh;padding:20px}
+
+.header{border-bottom:1px solid var(--border);padding:11px 20px;display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:20px;width:100%;max-width:1100px}
+.header h1{font-family:var(--cond);font-size:20px;font-weight:700;letter-spacing:.04em;text-transform:uppercase}
+.sub{font-size:10px;color:var(--muted);letter-spacing:.1em;text-transform:uppercase;flex:1}
+.dot{width:7px;height:7px;border-radius:50%;background:var(--acc);display:inline-block;margin-right:6px;animation:pulse 2s ease-in-out infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
+
+.container{max-width:1100px;width:100%;display:grid;grid-template-columns:340px 1fr;gap:20px}
+
+.panel{background:var(--bg2);border:1px solid var(--border2);border-radius:8px;padding:15px;display:flex;flex-direction:column;gap:12px}
+
+.stitle{font-family:var(--cond);font-size:10px;font-weight:600;letter-spacing:.17em;color:var(--muted);text-transform:uppercase;margin-bottom:4px;display:flex;align-items:center;gap:6px}
+.stitle::after{content:'';flex:1;height:1px;background:var(--border)}
+
+.field{margin-bottom:6px}
+.field:last-child{margin-bottom:0}
+.fhdr{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:4px}
+.flabel{color:var(--muted);font-size:11px;letter-spacing:.03em}
+.funit{font-size:10px;color:var(--dim)}
+
+.srow{display:flex;align-items:center;gap:4px}
+.arr{flex-shrink:0;width:25px;height:25px;display:flex;align-items:center;justify-content:center;background:var(--bg2);border:1px solid var(--border2);border-radius:5px;cursor:pointer;color:var(--muted);font-size:10px;transition:all .12s;user-select:none}
+.arr:hover{border-color:var(--acc);color:var(--acc);background:rgba(79,195,247,.08)}
+.arr:active{transform:scale(.88)}
+
+.numinput{flex:1;height:25px;background:var(--bg3);border:1px solid var(--border2);border-radius:5px;color:var(--acc);font-family:var(--mono);font-size:12px;font-weight:500;text-align:center;outline:none;padding:0 4px;transition:border-color .12s}
+.numinput:focus{border-color:var(--acc);background:var(--bg2)}
+.numinput:hover{border-color:rgba(79,195,247,.4)}
+.numinput::-webkit-outer-spin-button,.numinput::-webkit-inner-spin-button{-webkit-appearance:none;margin:0}
+.numinput[type=number]{-moz-appearance:textfield}
+
+.select-field{width:100%;height:25px;background:var(--bg3);border:1px solid var(--border2);border-radius:5px;color:var(--acc);font-family:var(--mono);font-size:12px;font-weight:500;padding:0 4px;outline:none;transition:border-color .12s;cursor:pointer}
+.select-field:focus{border-color:var(--acc);background:var(--bg2)}
+.select-field:hover{border-color:rgba(79,195,247,.4)}
+.select-field option{background:var(--bg2);color:var(--acc)}
+
+
+/* Results grid */
+.results-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.results-grid-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px}
+.result-box{background:var(--bg1);border:1px solid var(--border);border-radius:6px;padding:10px}
+.result-label{font-size:9px;color:var(--muted);letter-spacing:.07em;text-transform:uppercase;margin-bottom:4px;font-family:var(--cond)}
+.result-value{font-size:16px;font-weight:500;color:var(--acc);font-family:var(--mono)}
+.result-unit{font-size:10px;color:var(--dim);margin-left:3px}
+
+/* Schematic */
+.schematic-wrap{background:var(--bg1);border:1px solid var(--border);border-radius:6px;padding:10px;display:flex;justify-content:center}
+.schematic-wrap svg{width:100%;max-width:440px;height:auto}
+
+/* Verification */
+.result-section{background:rgba(79,195,247,.05);border:1px solid rgba(79,195,247,.2);border-radius:8px;padding:12px}
+.result-section-title{font-family:var(--cond);font-size:10px;font-weight:700;letter-spacing:.14em;color:var(--acc);text-transform:uppercase;margin-bottom:8px;display:flex;align-items:center;gap:8px}
+.result-section-title::after{content:'';flex:1;height:1px;background:rgba(79,195,247,.15)}
+.verification-grid{display:grid;grid-template-columns:1fr;gap:5px}
+.verify-item{display:flex;justify-content:space-between;align-items:center;padding:5px 8px;background:var(--bg1);border:1px solid var(--border);border-radius:4px;font-size:11px}
+.verify-label{color:var(--muted)}
+.verify-value{color:var(--text);font-weight:500;font-family:var(--mono)}
+.verify-unit{font-size:9px;color:var(--dim);margin-left:4px}
+.verify-status{padding:2px 6px;border-radius:3px;font-size:9px;font-weight:600;margin-left:6px}
+.verify-status.ok{background:rgba(102,187,106,.2);color:var(--up);border:1px solid var(--up)}
+.verify-status.warn{background:rgba(255,167,38,.2);color:var(--amber);border:1px solid var(--amber)}
+.verify-status.err{background:rgba(239,83,80,.2);color:var(--dn);border:1px solid var(--dn)}
+
+/* Table */
+.table-container{overflow-x:auto;max-height:200px;overflow-y:auto}
+.dim-table{width:100%;border-collapse:collapse;font-size:10px}
+.dim-table th{background:rgba(79,195,247,.1);color:var(--acc2);padding:5px 4px;text-align:center;border:1px solid var(--border2);font-weight:600;letter-spacing:.05em;position:sticky;top:0}
+.dim-table td{padding:4px;border:1px solid var(--border2);text-align:center;color:var(--text)}
+.dim-table tr.active-row{background:rgba(79,195,247,.12)}
+.dim-table tr:hover{background:rgba(79,195,247,.05)}
+
+.back-btn{font-family:var(--cond);font-size:10px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);text-decoration:none;border:1px solid var(--border2);border-radius:4px;padding:4px 10px;transition:all .15s;white-space:nowrap}
+.back-btn:hover{color:var(--acc);border-color:var(--acc)}
+
+.calc-btn{background:rgba(79,195,247,.15);border:1px solid rgba(79,195,247,.3);color:var(--acc);padding:8px;border-radius:6px;cursor:pointer;font-family:var(--cond);font-weight:700;letter-spacing:.08em;font-size:12px;width:100%;margin-top:4px;transition:all .15s}
+.calc-btn:hover{background:rgba(79,195,247,.25)}
+
+[data-tip]{position:relative;cursor:help}
+[data-tip]:hover::after{content:attr(data-tip);position:absolute;bottom:calc(100% + 7px);left:0;background:#1e2130;border:1px solid rgba(79,195,247,.25);color:#c8cad4;font-size:10px;padding:7px 11px;border-radius:6px;white-space:pre-wrap;max-width:280px;min-width:160px;z-index:999;line-height:1.6;pointer-events:none;font-family:var(--mono);text-align:left;box-shadow:0 4px 20px rgba(0,0,0,.5)}
+
+::-webkit-scrollbar{width:5px;height:5px}
+::-webkit-scrollbar-track{background:var(--bg)}
+::-webkit-scrollbar-thumb{background:var(--bg3);border-radius:3px}
+
+.warn-box{background:rgba(255,167,38,.07);border:1px solid rgba(255,167,38,.25);border-radius:5px;padding:8px 10px;font-size:10px;color:var(--amber);display:none}
+.info-box{background:rgba(79,195,247,.06);border:1px solid rgba(79,195,247,.18);border-radius:5px;padding:8px 10px;font-size:10px;color:var(--acc)}
+
+.tag-shaft{display:inline-block;font-size:9px;padding:1px 6px;border-radius:3px;background:rgba(102,187,106,.15);color:var(--up);border:1px solid rgba(102,187,106,.3);font-family:var(--cond);letter-spacing:.04em}
+.tag-bore{display:inline-block;font-size:9px;padding:1px 6px;border-radius:3px;background:rgba(179,157,219,.15);color:var(--violet);border:1px solid rgba(179,157,219,.3);font-family:var(--cond);letter-spacing:.04em}
+
+/* Primary shaft/bore toggle */
+.mount-toggle{display:grid;grid-template-columns:1fr 1fr;gap:0;border:1px solid var(--border2);border-radius:7px;overflow:hidden}
+.mount-btn{background:var(--bg3);border:none;padding:12px 8px;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:5px;transition:all .18s;color:var(--muted);font-family:var(--mono)}
+.mount-btn + .mount-btn{border-left:1px solid var(--border2)}
+.mount-btn:hover{background:var(--bg2)}
+.mount-btn.active-shaft{background:rgba(102,187,106,.12);color:var(--up)}
+.mount-btn.active-bore{background:rgba(179,157,219,.15);color:var(--violet)}
+.mount-btn svg{width:52px;height:42px}
+.mount-btn .mlabel{font-family:var(--cond);font-size:14px;font-weight:700;letter-spacing:.06em;text-transform:uppercase}
+.mount-btn .mnorm{font-size:9px;opacity:.7;letter-spacing:.04em}
+
+/* Variant row */
+.variant-row{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}
+.var-btn{background:var(--bg3);border:1px solid var(--border2);border-radius:6px;padding:7px 4px 5px;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:3px;transition:all .15s;color:var(--muted);font-family:var(--mono)}
+.var-btn:hover{border-color:rgba(79,195,247,.35)}
+.var-btn svg{width:40px;height:32px}
+.var-btn .vname{font-family:var(--cond);font-size:12px;font-weight:700;letter-spacing:.04em}
+.var-btn .vsub{font-size:8px;color:var(--dim);text-align:center;line-height:1.2}
+/* active variants coloured by category */
+.var-btn.active-shaft{border-color:var(--up);background:rgba(102,187,106,.1);color:var(--up)}
+.var-btn.active-shaft .vsub{color:rgba(102,187,106,.6)}
+.var-btn.active-bore{border-color:var(--violet);background:rgba(179,157,219,.1);color:var(--violet)}
+.var-btn.active-bore .vsub{color:rgba(179,157,219,.6)}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <a href="index.html" class="back-btn">← Ritorna</a>
+  <h1><span class="dot"></span>Anelli Elastici</h1>
+  <div class="sub">Sedi e Verifica · DIN 471 / UNI 7437 (alberi) · DIN 472 / UNI 7438 (fori)</div>
+</div>
+
+<div class="container">
+
+<!-- ═══ PANNELLO INPUT ═══ -->
+<div class="panel">
+  <div class="stitle">Sede</div>
+
+  <!-- PRIMARY TOGGLE: SHAFT vs BORE -->
+  <div class="mount-toggle">
+
+    <button class="mount-btn active-shaft" id="btn-shaft" onclick="selectMount('shaft')">
+      <!-- Shaft cross-section icon -->
+      <svg viewBox="0 0 52 42" fill="none">
+        <rect x="4" y="17" width="44" height="8" fill="currentColor" rx="1" opacity=".25"/>
+        <rect x="4" y="17" width="44" height="8" stroke="currentColor" stroke-width="1.2" rx="1" fill="none"/>
+        <!-- groove cut out top -->
+        <rect x="20" y="13" width="12" height="4" fill="#0e0f11" stroke="currentColor" stroke-width="1"/>
+        <!-- groove cut out bottom -->
+        <rect x="20" y="25" width="12" height="4" fill="#0e0f11" stroke="currentColor" stroke-width="1"/>
+        <!-- ring in groove -->
+        <rect x="21" y="13.5" width="10" height="3" fill="currentColor" rx="0.5"/>
+        <rect x="21" y="25.5" width="10" height="3" fill="currentColor" rx="0.5"/>
+      </svg>
+      <div class="mlabel">Albero</div>
+      <div class="mnorm">DIN 471 · UNI 7437</div>
+    </button>
+
+    <button class="mount-btn" id="btn-bore" onclick="selectMount('bore')">
+      <!-- Bore cross-section icon -->
+      <svg viewBox="0 0 52 42" fill="none">
+        <!-- housing walls -->
+        <rect x="4" y="4" width="12" height="34" fill="currentColor" rx="1" opacity=".25"/>
+        <rect x="4" y="4" width="12" height="34" stroke="currentColor" stroke-width="1.2" rx="1" fill="none"/>
+        <rect x="36" y="4" width="12" height="34" fill="currentColor" rx="1" opacity=".25"/>
+        <rect x="36" y="4" width="12" height="34" stroke="currentColor" stroke-width="1.2" rx="1" fill="none"/>
+        <!-- bore gap (empty) -->
+        <!-- groove cut into wall -->
+        <rect x="16" y="16" width="4" height="10" fill="#0e0f11" stroke="currentColor" stroke-width="1"/>
+        <rect x="32" y="16" width="4" height="10" fill="#0e0f11" stroke="currentColor" stroke-width="1"/>
+        <!-- ring in groove -->
+        <rect x="16.5" y="17" width="3" height="8" fill="currentColor" rx="0.5"/>
+        <rect x="32.5" y="17" width="3" height="8" fill="currentColor" rx="0.5"/>
+      </svg>
+      <div class="mlabel">Foro</div>
+      <div class="mnorm">DIN 472 · UNI 7438</div>
+    </button>
+
+  </div>
+
+  <!-- VARIANT SUB-SELECTOR -->
+  <div>
+    <!-- Shaft types: 2 rows × 3 -->
+    <div id="variants-shaft" style="display:grid;grid-template-columns:repeat(3,1fr);gap:5px">
+      <button class="var-btn active-shaft" data-type="A"   data-kh="1.0" onclick="selectVariant(this)">
+        <svg viewBox="0 0 40 30" fill="none">
+          <path d="M20 3 A15 15 0 1 0 6 24" stroke="currentColor" stroke-width="3.8" stroke-linecap="round"/>
+          <circle cx="20" cy="3" r="2.2" fill="currentColor"/>
+          <circle cx="6"  cy="24" r="2.2" fill="currentColor"/>
+        </svg>
+        <div class="vname">A</div>
+        <div class="vsub">standard</div>
+      </button>
+      <button class="var-btn" data-type="AS" data-kh="1.0" onclick="selectVariant(this)">
+        <svg viewBox="0 0 40 30" fill="none">
+          <path d="M20 3 A15 15 0 1 0 6 24" stroke="currentColor" stroke-width="3.8" stroke-linecap="round"/>
+          <circle cx="20" cy="3" r="2.2" fill="currentColor"/>
+          <circle cx="6"  cy="24" r="2.2" fill="currentColor"/>
+          <!-- chamfer mark -->
+          <line x1="15" y1="3" x2="20" y2="7" stroke="currentColor" stroke-width="1.2" opacity=".6"/>
+        </svg>
+        <div class="vname">AS</div>
+        <div class="vsub">con smusso</div>
+      </button>
+      <button class="var-btn" data-type="AV" data-kh="1.0" onclick="selectVariant(this)">
+        <svg viewBox="0 0 40 30" fill="none">
+          <path d="M20 3 A15 15 0 1 0 6 24" stroke="currentColor" stroke-width="3.8" stroke-linecap="round"/>
+        </svg>
+        <div class="vname">AV</div>
+        <div class="vsub">senza fori</div>
+      </button>
+      <button class="var-btn" data-type="NA"  data-kh="1.6" onclick="selectVariant(this)">
+        <svg viewBox="0 0 40 30" fill="none">
+          <path d="M20 3 A15 15 0 1 0 6 24" stroke="currentColor" stroke-width="5.5" stroke-linecap="round"/>
+          <circle cx="20" cy="3" r="2.2" fill="currentColor"/>
+          <circle cx="6"  cy="24" r="2.2" fill="currentColor"/>
+        </svg>
+        <div class="vname">NA</div>
+        <div class="vsub">rinforzato</div>
+      </button>
+      <button class="var-btn" data-type="NAS" data-kh="1.6" onclick="selectVariant(this)">
+        <svg viewBox="0 0 40 30" fill="none">
+          <path d="M20 3 A15 15 0 1 0 6 24" stroke="currentColor" stroke-width="5.5" stroke-linecap="round"/>
+          <circle cx="20" cy="3" r="2.2" fill="currentColor"/>
+          <circle cx="6"  cy="24" r="2.2" fill="currentColor"/>
+          <line x1="15" y1="3" x2="20" y2="7" stroke="currentColor" stroke-width="1.2" opacity=".6"/>
+        </svg>
+        <div class="vname">NAS</div>
+        <div class="vsub">rinf. + smusso</div>
+      </button>
+      <button class="var-btn" data-type="AK"  data-kh="1.0" onclick="selectVariant(this)">
+        <svg viewBox="0 0 40 30" fill="none">
+          <path d="M20 3 A15 15 0 1 0 6 24" stroke="currentColor" stroke-width="3.8" stroke-linecap="round"/>
+          <rect x="17" y="0" width="6" height="3.5" rx="1" fill="currentColor"/>
+          <rect x="2"  y="22" width="6" height="3.5" rx="1" fill="currentColor"/>
+        </svg>
+        <div class="vname">AK</div>
+        <div class="vsub">con linguette</div>
+      </button>
+    </div>
+
+    <!-- Bore types: 2 rows × 3 (last cell empty) -->
+    <div id="variants-bore" style="display:none;grid-template-columns:repeat(3,1fr);gap:5px">
+      <button class="var-btn active-bore" data-type="J"   data-kh="1.0" onclick="selectVariant(this)">
+        <svg viewBox="0 0 40 30" fill="none">
+          <path d="M5 8 A15 15 0 1 1 35 8" stroke="currentColor" stroke-width="3.8" stroke-linecap="round"/>
+          <circle cx="5"  cy="8" r="2.2" fill="currentColor"/>
+          <circle cx="35" cy="8" r="2.2" fill="currentColor"/>
+        </svg>
+        <div class="vname">J</div>
+        <div class="vsub">standard</div>
+      </button>
+      <button class="var-btn" data-type="JS"  data-kh="1.0" onclick="selectVariant(this)">
+        <svg viewBox="0 0 40 30" fill="none">
+          <path d="M5 8 A15 15 0 1 1 35 8" stroke="currentColor" stroke-width="3.8" stroke-linecap="round"/>
+          <circle cx="5"  cy="8" r="2.2" fill="currentColor"/>
+          <circle cx="35" cy="8" r="2.2" fill="currentColor"/>
+          <line x1="20" y1="6" x2="25" y2="10" stroke="currentColor" stroke-width="1.2" opacity=".6"/>
+        </svg>
+        <div class="vname">JS</div>
+        <div class="vsub">con smusso</div>
+      </button>
+      <button class="var-btn" data-type="JV"  data-kh="1.0" onclick="selectVariant(this)">
+        <svg viewBox="0 0 40 30" fill="none">
+          <path d="M5 8 A15 15 0 1 1 35 8" stroke="currentColor" stroke-width="3.8" stroke-linecap="round"/>
+        </svg>
+        <div class="vname">JV</div>
+        <div class="vsub">senza fori</div>
+      </button>
+      <button class="var-btn" data-type="NJ"  data-kh="1.6" onclick="selectVariant(this)">
+        <svg viewBox="0 0 40 30" fill="none">
+          <path d="M5 8 A15 15 0 1 1 35 8" stroke="currentColor" stroke-width="5.5" stroke-linecap="round"/>
+          <circle cx="5"  cy="8" r="2.2" fill="currentColor"/>
+          <circle cx="35" cy="8" r="2.2" fill="currentColor"/>
+        </svg>
+        <div class="vname">NJ</div>
+        <div class="vsub">rinforzato</div>
+      </button>
+      <button class="var-btn" data-type="JK"  data-kh="1.0" onclick="selectVariant(this)">
+        <svg viewBox="0 0 40 30" fill="none">
+          <path d="M5 8 A15 15 0 1 1 35 8" stroke="currentColor" stroke-width="3.8" stroke-linecap="round"/>
+          <rect x="2"  y="5" width="6" height="3.5" rx="1" fill="currentColor"/>
+          <rect x="32" y="5" width="6" height="3.5" rx="1" fill="currentColor"/>
+        </svg>
+        <div class="vname">JK</div>
+        <div class="vsub">con linguette</div>
+      </button>
+      <!-- empty cell to keep grid alignment -->
+      <div></div>
+    </div>
+  </div>
+
+  <div class="field">
+    <div class="fhdr">
+      <span class="flabel" id="diam-label" data-tip="Diametro nominale dell'albero o del foro\nSeleziona il tipo anello prima di inserire il diametro">Diametro Albero</span>
+      <span class="funit">mm</span>
+    </div>
+    <div class="srow">
+      <button class="arr" onclick="adjustValue('diam',-1)">▼</button>
+      <input type="number" id="diam" class="numinput" value="30" min="10" max="100" step="1" onchange="calculate()">
+      <button class="arr" onclick="adjustValue('diam',1)">▲</button>
+    </div>
+  </div>
+
+  <div class="field">
+    <div class="fhdr">
+      <span class="flabel" data-tip="Materiale della sede (albero o foro)\nInfluenza la forza assiale ammissibile del bordo gola">Materiale Sede</span>
+    </div>
+    <select id="mat-seat" class="select-field" onchange="calculate()">
+      <option value="1.0">Acciaio C45 / bonif. ≥ 150 HB</option>
+      <option value="1.3">Acciaio legato / bonif. > 250 HB</option>
+      <option value="0.7">Ghisa grigia GG-25</option>
+      <option value="0.5">Alluminio / lega leggera</option>
+      <option value="0.35">Plastica tecnica (PA/POM)</option>
+    </select>
+  </div>
+
+  <div class="field">
+    <div class="fhdr">
+      <span class="flabel" data-tip="Materiale dell'anello\nAcciaio molla: massima portata\nInox 1.4122: resistenza alla corrosione, Fa ridotta ~25%">Materiale Anello</span>
+    </div>
+    <select id="mat-ring" class="select-field" onchange="calculate()">
+      <option value="1.0">Acciaio molla C75S (standard)</option>
+      <option value="0.75">Inox 1.4122 / 1.4310</option>
+    </select>
+  </div>
+
+  <div class="field">
+    <div class="fhdr">
+      <span class="flabel" data-tip="Forza assiale applicata sull'anello\nVerificata contro la portata del catalogo">Forza Assiale Applicata</span>
+      <span class="funit">N</span>
+    </div>
+    <div class="srow">
+      <button class="arr" onclick="adjustValue('force',-100)">▼</button>
+      <input type="number" id="force" class="numinput" value="2000" min="0" step="100" onchange="calculate()">
+      <button class="arr" onclick="adjustValue('force',100)">▲</button>
+    </div>
+  </div>
+
+  <div class="warn-box" id="warn-box">⚠ Diametro non presente nelle tabelle DIN 471/472. Seleziona un diametro standard.</div>
+
+  <button class="calc-btn" onclick="calculate()">CALCOLA</button>
+
+  <div class="info-box" style="font-size:9px;line-height:1.7">
+    <strong>Norme di riferimento</strong><br>
+    Alberi: <strong>DIN 471</strong> · UNI 7437 · BS 3673-1<br>
+    Fori: &nbsp;&nbsp;<strong>DIN 472</strong> · UNI 7438 · BS 3673-2<br>
+    NA/NAS/NJ rinforzati: stessa gola, anello più spesso (Fa × 1.6)<br>
+    Inox: anello in 1.4122 o 1.4310 — Fa ridotta ≈ 25%<br>
+    Forza Fa da catalogo (sede C45 ≥ 150 HB, T = 20 °C)
+  </div>
+</div>
+
+<!-- ═══ PANNELLO RISULTATI ═══ -->
+<div class="panel">
+
+  <div class="stitle">Schema Geometria Sede</div>
+
+  <div class="schematic-wrap">
+    <svg id="schematic-svg" viewBox="0 0 440 160" xmlns="http://www.w3.org/2000/svg">
+      <text x="220" y="80" text-anchor="middle" fill="#4a4d5a" font-size="12" font-family="DM Mono,monospace">Inserire i parametri e calcolare</text>
+    </svg>
+  </div>
+
+  <div class="stitle" style="margin-top:4px">Dimensioni Sede (Gola)</div>
+  <div class="results-grid-3">
+    <div class="result-box" data-tip="Diametro della gola\nAlbero: d1 < d (scanalatura interna)\nForo: D1 > D (scanalatura esterna)">
+      <div class="result-label" id="lbl-d1">Ø Gola d₁</div>
+      <div class="result-value"><span id="res-d1">—</span><span class="result-unit">mm</span></div>
+    </div>
+    <div class="result-box" data-tip="Larghezza della gola\nTolleranza: H13 (standard DIN)">
+      <div class="result-label">Larghezza b</div>
+      <div class="result-value"><span id="res-b">—</span><span class="result-unit">mm</span></div>
+    </div>
+    <div class="result-box" data-tip="Profondità radiale della gola\nt = (d – d₁)/2 per albero\nt = (D₁ – D)/2 per foro">
+      <div class="result-label">Profondità t</div>
+      <div class="result-value"><span id="res-t">—</span><span class="result-unit">mm</span></div>
+    </div>
+  </div>
+
+  <div class="stitle">Tolleranze Sede</div>
+  <div class="results-grid">
+    <div class="result-box" data-tip="Diametro gola: tolleranza H11 per fori (DIN 472)\noppure h11 per alberi (DIN 471)">
+      <div class="result-label" id="lbl-tol-d">Tolleranza Ø Gola</div>
+      <div class="result-value" style="font-size:12px"><span id="res-tol-d">—</span></div>
+    </div>
+    <div class="result-box" data-tip="Larghezza gola: tolleranza H13 (entrambe le norme)">
+      <div class="result-label">Tolleranza Larghezza</div>
+      <div class="result-value" style="font-size:12px"><span id="res-tol-b">—</span></div>
+    </div>
+  </div>
+
+  <div class="stitle">Dimensioni Anello (libero)</div>
+  <div class="results-grid-3">
+    <div class="result-box" data-tip="Diametro esterno dell'anello in condizione libera (non installato)">
+      <div class="result-label" id="lbl-d3">Ø Esterno d₃</div>
+      <div class="result-value"><span id="res-d3">—</span><span class="result-unit">mm</span></div>
+    </div>
+    <div class="result-box" data-tip="Spessore del nastro dell'anello (lamiera)">
+      <div class="result-label">Spessore m</div>
+      <div class="result-value"><span id="res-m">—</span><span class="result-unit">mm</span></div>
+    </div>
+    <div class="result-box" data-tip="Forza assiale massima ammissibile\nValori da catalogo DIN 471/472 (Lühr+Kierfeld)\nAnello in C75S, sede in acciaio ≥ 150 HB">
+      <div class="result-label">Fa catalog.</div>
+      <div class="result-value" style="font-size:13px"><span id="res-fa-cat">—</span><span class="result-unit">N</span></div>
+    </div>
+  </div>
+
+  <div class="result-section" id="verify-section" style="display:none">
+    <div class="result-section-title">Verifica Forza Assiale</div>
+    <div class="verification-grid">
+      <div class="verify-item">
+        <span class="verify-label">Fa catalogo (anello std/sede C45)</span>
+        <div><span class="verify-value" id="vfy-fa-base">—</span><span class="verify-unit">N</span></div>
+      </div>
+      <div class="verify-item">
+        <span class="verify-label">Fattore materiale sede</span>
+        <div><span class="verify-value" id="vfy-ks">—</span></div>
+      </div>
+      <div class="verify-item">
+        <span class="verify-label">Fattore materiale anello</span>
+        <div><span class="verify-value" id="vfy-kr">—</span></div>
+      </div>
+      <div class="verify-item">
+        <span class="verify-label">Tipo anello · fattore</span>
+        <div><span class="verify-value" id="vfy-kh">—</span></div>
+      </div>
+      <div class="verify-item" style="border-color:rgba(79,195,247,.3)">
+        <span class="verify-label" style="color:var(--acc)">Fa ammissibile corretto</span>
+        <div><span class="verify-value" style="color:var(--acc);font-size:14px" id="vfy-fa-adm">—</span><span class="verify-unit">N</span></div>
+      </div>
+      <div class="verify-item" style="border-color:rgba(79,195,247,.3)">
+        <span class="verify-label">Fa applicata</span>
+        <div><span class="verify-value" id="vfy-fa-app">—</span><span class="verify-unit">N</span></div>
+      </div>
+      <div class="verify-item">
+        <span class="verify-label">Coefficiente di sicurezza s</span>
+        <div>
+          <span class="verify-value" id="vfy-sf">—</span>
+          <span class="verify-status" id="vfy-status">—</span>
+        </div>
+      </div>
+      <div class="verify-item">
+        <span class="verify-label">Utilizzo Fa</span>
+        <div><span class="verify-value" id="vfy-pct">—</span><span class="verify-unit">%</span></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="stitle" style="margin-top:4px">Tabella Standard <span id="tbl-norm-label" style="font-size:9px;color:var(--dim);font-family:var(--mono);font-weight:400;margin-left:6px"></span></div>
+  <div class="table-container">
+    <table class="dim-table">
+      <thead id="tbl-head"></thead>
+      <tbody id="tbl-body"></tbody>
+    </table>
+  </div>
+
+</div>
+</div>
+
+<script>
+/* ─── DATA TABLES ─── */
+
+// DIN 471 – External rings for shafts
+// d, d1, b, m, t, d3, Fa(N)
+const DIN471 = [
+  [10,  9.6,  1.0,  0.8,  0.20,  12.4,   870],
+  [11, 10.5,  1.0,  0.8,  0.25,  13.5,  1010],
+  [12, 11.5,  1.1,  1.0,  0.25,  14.7,  1080],
+  [13, 12.4,  1.1,  1.0,  0.30,  15.8,  1200],
+  [14, 13.4,  1.1,  1.0,  0.30,  16.9,  1330],
+  [15, 14.3,  1.1,  1.0,  0.35,  17.9,  1480],
+  [16, 15.2,  1.1,  1.0,  0.40,  18.9,  1680],
+  [17, 16.2,  1.1,  1.0,  0.40,  19.9,  1800],
+  [18, 17.0,  1.2,  1.0,  0.50,  21.1,  2000],
+  [19, 18.0,  1.2,  1.0,  0.50,  22.1,  2150],
+  [20, 19.0,  1.2,  1.0,  0.50,  23.5,  2400],
+  [21, 20.0,  1.2,  1.0,  0.50,  24.5,  2600],
+  [22, 21.0,  1.2,  1.0,  0.50,  25.5,  2750],
+  [24, 22.9,  1.2,  1.0,  0.55,  27.5,  3100],
+  [25, 23.9,  1.3,  1.2,  0.55,  29.0,  3500],
+  [26, 24.9,  1.3,  1.2,  0.55,  30.1,  3700],
+  [28, 26.6,  1.3,  1.2,  0.70,  32.1,  4200],
+  [30, 28.6,  1.5,  1.2,  0.70,  34.7,  4700],
+  [32, 30.3,  1.5,  1.5,  0.85,  36.8,  5800],
+  [34, 32.3,  1.5,  1.5,  0.85,  39.0,  6300],
+  [35, 33.3,  1.5,  1.5,  0.85,  40.3,  6700],
+  [36, 34.0, 1.75,  1.5,  1.00,  41.3,  7400],
+  [38, 36.0, 1.75,  1.5,  1.00,  43.5,  8000],
+  [40, 38.0, 1.75, 1.75,  1.00,  45.5,  9500],
+  [42, 39.5, 1.75, 1.75,  1.25,  47.8, 11000],
+  [45, 42.5, 1.75, 1.75,  1.25,  51.0, 12000],
+  [48, 45.5, 1.75, 1.75,  1.25,  54.2, 13000],
+  [50, 47.0,  2.0,  2.0,  1.50,  57.0, 16500],
+  [52, 49.0,  2.0,  2.0,  1.50,  59.5, 17500],
+  [55, 52.0,  2.0,  2.0,  1.50,  62.5, 19000],
+  [58, 55.0,  2.0,  2.0,  1.50,  65.5, 20500],
+  [60, 57.0,  2.0,  2.0,  1.50,  68.0, 22000],
+  [62, 59.0,  2.0,  2.0,  1.50,  70.5, 23500],
+  [65, 61.5,  2.5,  2.5,  1.75,  74.0, 29000],
+  [68, 64.5,  2.5,  2.5,  1.75,  77.5, 31000],
+  [70, 66.5,  2.5,  2.5,  1.75,  79.5, 33000],
+  [72, 68.5,  2.5,  2.5,  1.75,  81.5, 35000],
+  [75, 70.5,  2.5,  2.5,  2.25,  85.0, 44000],
+  [80, 74.5,  3.0,  3.0,  2.75,  90.5, 57000],
+  [85, 79.5,  3.0,  3.0,  2.75,  96.0, 61000],
+  [90, 84.5,  3.0,  3.0,  2.75, 101.5, 66000],
+  [95, 89.5,  3.0,  3.0,  2.75, 107.0, 72000],
+  [100, 94.0, 4.0,  4.0,  3.00, 113.0, 98000],
+];
+
+// DIN 472 – Internal rings for bores
+// D, D1, b, m, t, d3, Fa(N)
+const DIN472 = [
+  [10, 10.4,  1.0,  0.8,  0.20,   7.2,   600],
+  [11, 11.4,  1.0,  0.8,  0.20,   8.2,   700],
+  [12, 12.5,  1.1,  1.0,  0.25,   9.0,   800],
+  [13, 13.6,  1.1,  1.0,  0.30,  10.0,   950],
+  [14, 14.6,  1.1,  1.0,  0.30,  10.8,  1050],
+  [15, 15.7,  1.1,  1.0,  0.35,  11.8,  1150],
+  [16, 16.8,  1.1,  1.0,  0.40,  12.8,  1300],
+  [17, 17.8,  1.1,  1.0,  0.40,  13.8,  1400],
+  [18, 19.0,  1.2,  1.0,  0.50,  14.7,  1600],
+  [19, 20.0,  1.2,  1.0,  0.50,  15.7,  1700],
+  [20, 21.0,  1.2,  1.0,  0.50,  16.5,  1850],
+  [21, 22.0,  1.2,  1.0,  0.50,  17.5,  2000],
+  [22, 23.1,  1.2,  1.0,  0.55,  18.5,  2150],
+  [24, 25.2,  1.2,  1.0,  0.60,  20.4,  2400],
+  [25, 26.2,  1.3,  1.2,  0.60,  21.3,  2900],
+  [26, 27.2,  1.3,  1.2,  0.60,  22.2,  3050],
+  [28, 29.4,  1.3,  1.2,  0.70,  24.1,  3450],
+  [30, 31.4,  1.5,  1.2,  0.70,  25.9,  3800],
+  [32, 33.7,  1.5,  1.5,  0.85,  27.7,  5000],
+  [34, 35.7,  1.5,  1.5,  0.85,  29.6,  5400],
+  [35, 36.5,  1.5,  1.5,  0.75,  30.4,  5200],
+  [36, 38.0, 1.75,  1.5,  1.00,  31.5,  6200],
+  [38, 40.0, 1.75,  1.5,  1.00,  33.4,  6700],
+  [40, 42.0, 1.75, 1.75,  1.00,  35.3,  8000],
+  [42, 44.5, 1.75, 1.75,  1.25,  37.2,  9300],
+  [45, 47.0, 1.75, 1.75,  1.00,  39.8,  8900],
+  [48, 50.5, 1.75, 1.75,  1.25,  42.7, 10200],
+  [50, 52.0,  2.0,  2.0,  1.00,  44.4, 12000],
+  [52, 54.2,  2.0,  2.0,  1.10,  46.3, 13200],
+  [55, 57.0,  2.0,  2.0,  1.00,  49.2, 13700],
+  [58, 60.0,  2.0,  2.0,  1.00,  52.0, 14700],
+  [60, 62.0,  2.0,  2.0,  1.00,  54.0, 15700],
+  [62, 65.0,  2.0,  2.0,  1.50,  55.9, 19500],
+  [65, 67.5,  2.5,  2.5,  1.25,  57.5, 20000],
+  [68, 71.0,  2.5,  2.5,  1.50,  60.3, 22500],
+  [70, 72.5,  2.5,  2.5,  1.25,  62.5, 23000],
+  [72, 75.0,  2.5,  2.5,  1.50,  64.0, 25500],
+  [75, 77.5,  2.5,  2.5,  1.25,  67.0, 26000],
+  [80, 82.5,  3.0,  3.0,  1.25,  71.0, 32000],
+  [85, 87.5,  3.0,  3.0,  1.25,  76.0, 35000],
+  [90, 92.5,  3.0,  3.0,  1.25,  81.0, 39000],
+  [95, 97.5,  3.0,  3.0,  1.25,  86.0, 43000],
+  [100,103.0, 4.0,  4.0,  1.50,  89.0, 62000],
+];
+
+/* ─── STATE ─── */
+let currentRingType = 'A';
+let currentForShaft = true;
+let currentKh = 1.0; // type factor (1.0 standard, 1.6 heavy)
+let currentRow = null;
+
+/* ─── MOUNT SELECTOR ─── */
+function selectMount(mount) {
+  currentForShaft = mount === 'shaft';
+
+  // Primary toggle appearance
+  const bs = document.getElementById('btn-shaft');
+  const bb = document.getElementById('btn-bore');
+  bs.className = 'mount-btn' + (currentForShaft ? ' active-shaft' : '');
+  bb.className = 'mount-btn' + (!currentForShaft ? ' active-bore' : '');
+
+  // Show/hide variant rows and reset to first variant
+  document.getElementById('variants-shaft').style.display = currentForShaft ? 'grid' : 'none';
+  document.getElementById('variants-bore').style.display  = !currentForShaft ? 'grid' : 'none';
+  document.getElementById('variants-bore').style.display  = !currentForShaft ? 'grid' : 'none';
+
+  // Auto-select first variant of the shown row
+  const firstVar = document.querySelector(currentForShaft ? '#variants-shaft .var-btn' : '#variants-bore .var-btn');
+  if (firstVar) selectVariant(firstVar);
+  else updateDiamLabel();
+}
+
+function selectVariant(btn) {
+  const container = btn.parentElement;
+  container.querySelectorAll('.var-btn').forEach(b => b.className = 'var-btn');
+  btn.classList.add(currentForShaft ? 'active-shaft' : 'active-bore');
+  currentRingType = btn.dataset.type;
+  currentKh = parseFloat(btn.dataset.kh) || 1.0;
+  updateDiamLabel();
+  calculate();
+}
+
+function updateDiamLabel() {
+  const lbl = document.getElementById('diam-label');
+  lbl.textContent = currentForShaft ? 'Diametro Albero' : 'Diametro Foro';
+  lbl.dataset.tip = currentForShaft
+    ? 'Diametro nominale dell\'albero\nIntervallo: 10–100 mm (DIN 471)'
+    : 'Diametro nominale del foro\nIntervallo: 10–100 mm (DIN 472)';
+}
+
+/* ─── STEPPER ─── */
+function adjustValue(id, delta) {
+  const el = document.getElementById(id);
+  const v = parseFloat(el.value) || 0;
+  el.value = Math.max(parseFloat(el.min) || 0, v + delta);
+  calculate();
+}
+
+/* ─── MAIN CALC ─── */
+function calculate() {
+  const d = parseFloat(document.getElementById('diam').value);
+  const Fa_app = parseFloat(document.getElementById('force').value) || 0;
+  const ks = parseFloat(document.getElementById('mat-seat').value);
+  const kr = parseFloat(document.getElementById('mat-ring').value);
+  const kh = currentKh;
+
+  const table = currentForShaft ? DIN471 : DIN472;
+  const row = table.find(r => r[0] === d);
+
+  const warnBox = document.getElementById('warn-box');
+
+  if (!row) {
+    warnBox.style.display = 'block';
+    document.getElementById('verify-section').style.display = 'none';
+    clearResults();
+    renderTable(table, null);
+    return;
+  }
+
+  warnBox.style.display = 'none';
+  currentRow = row;
+
+  const [nom, d1, b, m, t, d3, Fa_cat] = row;
+  const Fa_adm = Fa_cat * ks * kr * kh;
+
+  // Fill dimension results
+  document.getElementById('res-d1').textContent = d1.toFixed(1);
+  document.getElementById('res-b').textContent  = b.toFixed(2);
+  document.getElementById('res-t').textContent  = t.toFixed(2);
+  document.getElementById('res-d3').textContent = d3.toFixed(1);
+  document.getElementById('res-m').textContent  = m.toFixed(1);
+  document.getElementById('res-fa-cat').textContent = Fa_cat.toLocaleString('it-IT');
+
+  // Labels
+  document.getElementById('lbl-d1').textContent = currentForShaft ? 'Ø Gola d₁' : 'Ø Gola D₁';
+  document.getElementById('lbl-d3').textContent = currentForShaft ? 'Ø Lib. d₃ (ext)' : 'Ø Lib. d₃ (int)';
+
+  // Tolerances
+  const tolD = currentForShaft ? `h11 → ${d1.toFixed(1)} +0/${(-toleranceH11(d1)).toFixed(3)}` : `H11 → ${d1.toFixed(1)} +${toleranceH11(d1).toFixed(3)}/0`;
+  const tolB = `H13 → ${b.toFixed(2)} +${toleranceH13(b).toFixed(3)}/0`;
+  document.getElementById('res-tol-d').textContent = tolD;
+  document.getElementById('res-tol-b').textContent = tolB;
+  document.getElementById('lbl-tol-d').textContent = currentForShaft ? 'Tolleranza Ø Gola (h11)' : 'Tolleranza Ø Gola (H11)';
+  document.getElementById('tbl-norm-label').textContent = currentForShaft ? '— DIN 471 (alberi)' : '— DIN 472 (fori)';
+
+  // Verification
+  const sf = Fa_app > 0 ? Fa_adm / Fa_app : Infinity;
+  const pct = Fa_app > 0 ? (Fa_app / Fa_adm * 100) : 0;
+
+  document.getElementById('vfy-fa-base').textContent = Fa_cat.toLocaleString('it-IT');
+  document.getElementById('vfy-ks').textContent = `× ${ks.toFixed(2)}`;
+  document.getElementById('vfy-kr').textContent = `× ${kr.toFixed(2)}`;
+  document.getElementById('vfy-kh').textContent = `${currentRingType}  ×  ${kh.toFixed(2)}`;
+  document.getElementById('vfy-fa-adm').textContent = Math.round(Fa_adm).toLocaleString('it-IT');
+  document.getElementById('vfy-fa-app').textContent = Fa_app.toLocaleString('it-IT');
+  document.getElementById('vfy-sf').textContent = isFinite(sf) ? sf.toFixed(2) : '∞';
+  document.getElementById('vfy-pct').textContent = pct.toFixed(1);
+
+  const statusEl = document.getElementById('vfy-status');
+  if (sf >= 1.5) { statusEl.textContent = 'OK'; statusEl.className = 'verify-status ok'; }
+  else if (sf >= 1.0) { statusEl.textContent = 'WARN'; statusEl.className = 'verify-status warn'; }
+  else { statusEl.textContent = 'INSUFF.'; statusEl.className = 'verify-status err'; }
+
+  document.getElementById('verify-section').style.display = 'block';
+
+  // Schematic
+  drawSchematic(d, d1, b, t, d3, m);
+
+  // Table
+  renderTable(table, d);
+}
+
+/* ─── TOLERANCES ─── */
+// Returns IT11 value for given nominal (approx)
+function toleranceH11(dim) {
+  if (dim <= 3) return 0.060;
+  if (dim <= 6) return 0.075;
+  if (dim <= 10) return 0.090;
+  if (dim <= 18) return 0.110;
+  if (dim <= 30) return 0.130;
+  if (dim <= 50) return 0.160;
+  if (dim <= 80) return 0.190;
+  if (dim <= 120) return 0.220;
+  return 0.250;
+}
+function toleranceH13(dim) {
+  // IT13 ≈ IT11 × 2.5 (approx)
+  return toleranceH11(dim) * 2.5;
+}
+
+/* ─── SCHEMATIC SVG ─── */
+function drawSchematic(d, d1, b, t, d3, m) {
+  const svg = document.getElementById('schematic-svg');
+  const W = 440, H = 160;
+  const cx = W / 2;
+  const cy = H / 2;
+
+  if (currentForShaft) {
+    drawShaftSchematic(svg, W, H, cx, cy, d, d1, b, t, d3, m);
+  } else {
+    drawBoreSchematic(svg, W, H, cx, cy, d, d1, b, t, d3, m);
+  }
+}
+
+function drawShaftSchematic(svg, W, H, cx, cy, d, d1, b, t, d3, m) {
+  // Scale: shaft radius = ~50px max
+  const scale = Math.min(50 / (d / 2), 4);
+  const r = (d / 2) * scale;
+  const r1 = (d1 / 2) * scale;
+  const bpx = b * scale;
+  const tpx = t * scale;
+  const mpx = m * scale;
+
+  const gx = cx; // groove centre x
+  const top = cy - r;
+  const bot = cy + r;
+  const gtop = cy - r1; // groove base radius
+
+  // Colors
+  const cShaft = '#2a3a4a';
+  const cGroove = '#141519';
+  const cRing = '#4fc3f7';
+  const cDim = '#7a7d8a';
+  const cAcc = '#4fc3f7';
+  const textProps = `font-family="DM Mono,monospace" font-size="10" fill="${cDim}"`;
+  const labelProps = `font-family="DM Mono,monospace" font-size="9" fill="${cAcc}"`;
+
+  let s = `<rect width="${W}" height="${H}" fill="#0e0f11" rx="4"/>`;
+
+  // Shaft body (longitudinal cross-section, left and right of groove)
+  const leftW = 100, rightW = 100;
+  const leftX = gx - bpx/2 - leftW;
+  const rightX = gx + bpx/2;
+
+  // Left shaft block
+  s += `<rect x="${leftX}" y="${top}" width="${leftW}" height="${2*r}" fill="${cShaft}" stroke="#4fc3f7" stroke-width="0.8"/>`;
+  // Right shaft block
+  s += `<rect x="${rightX}" y="${top}" width="${rightW}" height="${2*r}" fill="${cShaft}" stroke="#4fc3f7" stroke-width="0.8"/>`;
+
+  // Groove (cutout inside shaft)
+  s += `<rect x="${gx-bpx/2}" y="${gtop}" width="${bpx}" height="${tpx}" fill="${cGroove}" stroke="#4fc3f7" stroke-width="0.8"/>`;
+  // Bottom groove block (part below groove)
+  s += `<rect x="${gx-bpx/2}" y="${cy+r1}" width="${bpx}" height="${tpx}" fill="${cGroove}" stroke="#4fc3f7" stroke-width="0.8"/>`;
+
+  // Ring (top and bottom arcs in groove)
+  const ry = gtop + mpx/2;
+  const ryb = cy + r1 + mpx/2;
+  s += `<rect x="${gx-bpx/2+1}" y="${gtop+1}" width="${bpx-2}" height="${mpx-2}" fill="${cRing}" rx="1" opacity="0.85"/>`;
+  s += `<rect x="${gx-bpx/2+1}" y="${cy+r1+1}" width="${bpx-2}" height="${mpx-2}" fill="${cRing}" rx="1" opacity="0.85"/>`;
+
+  // Dimension lines
+  const arrowY = top - 18;
+  const lineCol = '#4a4d5a';
+
+  // d: full shaft diameter arrow (left side)
+  const dLineX = leftX + 20;
+  s += dimLine(dLineX, top, dLineX, bot, lineCol);
+  s += `<text x="${dLineX - 4}" y="${cy + 4}" ${textProps} text-anchor="end" transform="rotate(-90,${dLineX-4},${cy+4})">d = ${d} mm</text>`;
+
+  // d1: groove diameter arrow
+  const d1LineX = leftX + 6;
+  s += dimLine(d1LineX, gtop, d1LineX, gtop + tpx, lineCol);
+  s += `<text x="${d1LineX - 4}" y="${gtop + tpx/2 + 4}" ${textProps} text-anchor="end" transform="rotate(-90,${d1LineX-4},${gtop+tpx/2+4})">d₁=${d1}</text>`;
+
+  // b: groove width
+  s += dimLineH(gx - bpx/2, gx + bpx/2, top - 12, lineCol);
+  s += `<text x="${gx}" y="${top - 16}" ${textProps} text-anchor="middle">b = ${b} mm</text>`;
+
+  // t: groove depth
+  const tLineX = gx + bpx/2 + 14;
+  s += dimLine(tLineX, top, tLineX, gtop, lineCol);
+  s += `<text x="${tLineX + 3}" y="${top - (tpx*scale/2 - 4)}" ${textProps}>t=${t}</text>`;
+
+  // Labels
+  s += `<text x="${cx + 80}" y="${H - 8}" ${labelProps} text-anchor="middle">Albero Ø ${d} · Gola Ø ${d1} · b ${b} · t ${t}</text>`;
+
+  // Ring label
+  s += `<text x="${gx + bpx/2 + 6}" y="${gtop + mpx/2 + 4}" font-family="DM Mono,monospace" font-size="8" fill="${cRing}">m=${m}</text>`;
+
+  svg.innerHTML = s;
+}
+
+function drawBoreSchematic(svg, W, H, cx, cy, d, d1, b, t, d3, m) {
+  const scale = Math.min(50 / (d / 2), 4);
+  const r = (d / 2) * scale;
+  const r1 = (d1 / 2) * scale;
+  const bpx = b * scale;
+  const tpx = t * scale;
+  const mpx = m * scale;
+
+  const gx = cx;
+  const top = cy - r;
+  const bot = cy + r;
+
+  const cSeat = '#2a3a4a';
+  const cBore = '#141519';
+  const cRing = '#b39ddb';
+  const cDim = '#7a7d8a';
+  const cAcc = '#b39ddb';
+  const textProps = `font-family="DM Mono,monospace" font-size="10" fill="${cDim}"`;
+
+  // Housing thickness
+  const wallT = 40;
+
+  let s = `<rect width="${W}" height="${H}" fill="#0e0f11" rx="4"/>`;
+
+  // Housing left wall
+  s += `<rect x="${gx - bpx/2 - wallT}" y="${top - wallT}" width="${wallT}" height="${2*r + 2*wallT}" fill="${cSeat}" stroke="#b39ddb" stroke-width="0.8"/>`;
+  // Housing right wall
+  s += `<rect x="${gx + bpx/2}" y="${top - wallT}" width="${wallT}" height="${2*r + 2*wallT}" fill="${cSeat}" stroke="#b39ddb" stroke-width="0.8"/>`;
+
+  // Bore inside (empty)
+  s += `<rect x="${gx - bpx/2}" y="${top}" width="${bpx}" height="${2*r}" fill="${cBore}"/>`;
+
+  // Groove cut into bore wall (groove is outside bore diameter = D, into wall)
+  // Top groove
+  s += `<rect x="${gx - bpx/2}" y="${top - tpx}" width="${bpx}" height="${tpx}" fill="${cBore}" stroke="#b39ddb" stroke-width="0.8"/>`;
+  // Bottom groove
+  s += `<rect x="${gx - bpx/2}" y="${bot}" width="${bpx}" height="${tpx}" fill="${cBore}" stroke="#b39ddb" stroke-width="0.8"/>`;
+
+  // Ring (in groove, top and bottom)
+  s += `<rect x="${gx - bpx/2 + 1}" y="${top - tpx + 1}" width="${bpx - 2}" height="${mpx - 2}" fill="${cRing}" rx="1" opacity="0.85"/>`;
+  s += `<rect x="${gx - bpx/2 + 1}" y="${bot + tpx - mpx + 1}" width="${bpx - 2}" height="${mpx - 2}" fill="${cRing}" rx="1" opacity="0.85"/>`;
+
+  // Dimension lines
+  // D: bore diameter
+  const dLineX = gx - bpx/2 - wallT - 12;
+  s += dimLine(dLineX, top, dLineX, bot, '#4a4d5a');
+  s += `<text x="${dLineX - 4}" y="${cy + 4}" ${textProps} text-anchor="end" transform="rotate(-90,${dLineX-4},${cy+4})">D = ${d} mm</text>`;
+
+  // D1: groove diameter
+  const d1LineX = dLineX + 12;
+  s += dimLine(d1LineX, top - tpx, d1LineX, top, '#4a4d5a');
+  s += `<text x="${d1LineX - 3}" y="${top - tpx/2 + 3}" ${textProps} text-anchor="end" transform="rotate(-90,${d1LineX-3},${top-tpx/2+3})">t=${t}</text>`;
+
+  // b: groove width
+  s += dimLineH(gx - bpx/2, gx + bpx/2, top - tpx - 12, '#4a4d5a');
+  s += `<text x="${gx}" y="${top - tpx - 16}" ${textProps} text-anchor="middle">b = ${b} mm</text>`;
+
+  s += `<text x="${cx}" y="${H - 8}" font-family="DM Mono,monospace" font-size="9" fill="${cAcc}" text-anchor="middle">Foro Ø ${d} · Gola Ø ${d1} · b ${b} · t ${t}</text>`;
+  s += `<text x="${gx + bpx/2 + 6}" y="${top - tpx + mpx/2 + 3}" font-family="DM Mono,monospace" font-size="8" fill="${cRing}">m=${m}</text>`;
+
+  svg.innerHTML = s;
+}
+
+function dimLine(x, y1, y2, col) {
+  const ah = 5;
+  return `<line x1="${x}" y1="${y1}" x2="${x}" y2="${y2}" stroke="${col}" stroke-width="1"/>
+  <polygon points="${x},${y1} ${x-3},${y1+ah} ${x+3},${y1+ah}" fill="${col}"/>
+  <polygon points="${x},${y2} ${x-3},${y2-ah} ${x+3},${y2-ah}" fill="${col}"/>`;
+}
+function dimLineH(x1, x2, y, col) {
+  const ah = 4;
+  return `<line x1="${x1}" y1="${y}" x2="${x2}" y2="${y}" stroke="${col}" stroke-width="1"/>
+  <line x1="${x1}" y1="${y-6}" x2="${x1}" y2="${y+6}" stroke="${col}" stroke-width="1"/>
+  <line x1="${x2}" y1="${y-6}" x2="${x2}" y2="${y+6}" stroke="${col}" stroke-width="1"/>`;
+}
+
+/* ─── TABLE ─── */
+function renderTable(table, activeDiam) {
+  const thead = document.getElementById('tbl-head');
+  const tbody = document.getElementById('tbl-body');
+
+  const isShaft = currentForShaft;
+  const d0 = isShaft ? 'd (mm)' : 'D (mm)';
+  const d1lbl = isShaft ? 'd₁ (mm)' : 'D₁ (mm)';
+
+  thead.innerHTML = `<tr>
+    <th>${d0}</th><th>${d1lbl}</th><th>b (mm)</th><th>m (mm)</th><th>t (mm)</th><th>d₃ (mm)</th><th>Fa (N)</th>
+  </tr>`;
+
+  tbody.innerHTML = '';
+  table.forEach(r => {
+    const tr = document.createElement('tr');
+    if (r[0] === activeDiam) tr.classList.add('active-row');
+    tr.innerHTML = `<td>${r[0]}</td><td>${r[1].toFixed(1)}</td><td>${r[2].toFixed(2)}</td><td>${r[3].toFixed(1)}</td><td>${r[4].toFixed(2)}</td><td>${r[5].toFixed(1)}</td><td>${r[6].toLocaleString('it-IT')}</td>`;
+    tbody.appendChild(tr);
+  });
+
+  // Scroll to active row
+  if (activeDiam) {
+    const activeRow = tbody.querySelector('.active-row');
+    if (activeRow) setTimeout(() => activeRow.scrollIntoView({block:'nearest'}), 50);
+  }
+}
+
+function clearResults() {
+  ['res-d1','res-b','res-t','res-d3','res-m','res-fa-cat','res-tol-d','res-tol-b'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.textContent = '—';
+  });
+  const svg = document.getElementById('schematic-svg');
+  svg.innerHTML = `<text x="220" y="80" text-anchor="middle" fill="#4a4d5a" font-family="DM Mono,monospace" font-size="12">Diametro non in tabella</text>`;
+}
+
+/* ─── INIT ─── */
+window.onload = () => {
+  // Set initial state: shaft selected, variant A active
+  currentForShaft = true;
+  currentRingType = 'A';
+  currentKh = 1.0;
+  updateDiamLabel();
+  renderTable(DIN471, null);
+  calculate();
+};
+</script>
+</body>
+</html>
