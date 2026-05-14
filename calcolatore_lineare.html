@@ -425,18 +425,37 @@ function numFmt(key,v){
 function setVal(key,raw){
   const c=FLD[key];
   const v=Math.max(c.min,Math.min(c.max,parseFloat(raw)||0));
-  ST[key]=v;
-  // update number input value
+
+  // Accoppiamento tacc ↔ tdec: la variazione di uno compensa l'altro; tcv resta invariato
+  if(key==='tacc'){
+    const delta=v-ST.tacc;
+    ST.tacc=v;
+    const newDec=Math.max(FLD.tdec.min, ST.tdec-delta);
+    ST.tdec=newDec;
+    const inpDec=document.getElementById(FLD.tdec.rid);
+    if(inpDec) inpDec.value=numFmt('tdec',newDec);
+  } else if(key==='tdec'){
+    const delta=v-ST.tdec;
+    ST.tdec=v;
+    const newAcc=Math.max(FLD.tacc.min, ST.tacc-delta);
+    ST.tacc=newAcc;
+    const inpAcc=document.getElementById(FLD.tacc.rid);
+    if(inpAcc) inpAcc.value=numFmt('tacc',newAcc);
+  } else {
+    ST[key]=v;
+  }
+
   const inp=document.getElementById(c.rid);
-  if(inp&&document.activeElement!==inp)inp.value=numFmt(key,v);
-  // update dynamic label (only exists for vmax inside mode-inputs)
+  if(inp) inp.value=numFmt(key,ST[key]);
   const lbl=document.getElementById(c.lid);
   if(lbl)lbl.textContent=fmtVal(key,v);
   if(key==='angolo')drawDiag();
   recalc();
 }
 function slid(key,v){
-  ST[key]=parseFloat(v)||0;
+  // oninput: aggiorna solo il valore corrente senza coupling (valore potenzialmente parziale)
+  const val=parseFloat(v);
+  if(!isNaN(val)) ST[key]=val;
   if(key==='angolo')drawDiag();
   recalc();
 }
@@ -455,7 +474,7 @@ function applyToST(obj){
       const v=Math.max(FLD[k].min,+obj[k].toFixed(6));
       ST[k]=v;
       const inp=document.getElementById(FLD[k].rid);
-      if(inp)inp.value=numFmt(k,v);
+      if(inp&&document.activeElement!==inp)inp.value=numFmt(k,v);
       const lbl=document.getElementById(FLD[k].lid);
       if(lbl)lbl.textContent=fmtVal(k,v);
     }

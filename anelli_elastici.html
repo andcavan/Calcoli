@@ -308,7 +308,7 @@ body{display:flex;flex-direction:column;align-items:center;min-height:100vh;padd
     </div>
     <div class="srow">
       <button class="arr" onclick="adjustValue('diam',-1)">▼</button>
-      <input type="number" id="diam" class="numinput" value="30" min="10" max="100" step="1" onchange="calculate()">
+      <input type="number" id="diam" class="numinput" value="30" min="10" max="100" step="1" onchange="calculate()" oninput="calculate()">
       <button class="arr" onclick="adjustValue('diam',1)">▲</button>
     </div>
   </div>
@@ -343,14 +343,12 @@ body{display:flex;flex-direction:column;align-items:center;min-height:100vh;padd
     </div>
     <div class="srow">
       <button class="arr" onclick="adjustValue('force',-100)">▼</button>
-      <input type="number" id="force" class="numinput" value="2000" min="0" step="100" onchange="calculate()">
+      <input type="number" id="force" class="numinput" value="2000" min="0" step="100" onchange="calculate()" oninput="calculate()">
       <button class="arr" onclick="adjustValue('force',100)">▲</button>
     </div>
   </div>
 
   <div class="warn-box" id="warn-box">⚠ Diametro non presente nelle tabelle DIN 471/472. Seleziona un diametro standard.</div>
-
-  <button class="calc-btn" onclick="calculate()">CALCOLA</button>
 
   <div class="info-box" style="font-size:9px;line-height:1.7">
     <strong>Norme di riferimento</strong><br>
@@ -902,10 +900,19 @@ function renderTable(table, activeDiam) {
     tbody.appendChild(tr);
   });
 
-  // Scroll to active row
+  // Scroll active row inside the table container only (not the page)
   if (activeDiam) {
     const activeRow = tbody.querySelector('.active-row');
-    if (activeRow) setTimeout(() => activeRow.scrollIntoView({block:'nearest'}), 50);
+    if (activeRow) {
+      const container = activeRow.closest('.table-container');
+      if (container) {
+        const rowTop = activeRow.offsetTop - container.offsetTop;
+        const rowBot = rowTop + activeRow.offsetHeight;
+        if (rowTop < container.scrollTop || rowBot > container.scrollTop + container.clientHeight) {
+          container.scrollTop = rowTop - container.clientHeight / 2;
+        }
+      }
+    }
   }
 }
 

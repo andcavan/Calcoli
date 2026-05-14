@@ -115,7 +115,7 @@ body{display:flex;flex-direction:column;align-items:center;min-height:100vh;padd
       </div>
       <div class="srow">
         <button class="arr" onclick="adjustValue('diameter',-1)">▼</button>
-        <input type="number" id="diameter" class="numinput" value="20" min="6" max="110" step="0.1" onchange="calculate()">
+        <input type="number" id="diameter" class="numinput" value="20" min="6" max="110" step="1" onchange="calculate()" oninput="calculate()">
         <button class="arr" onclick="adjustValue('diameter',1)">▲</button>
       </div>
     </div>
@@ -193,7 +193,7 @@ body{display:flex;flex-direction:column;align-items:center;min-height:100vh;padd
       </div>
       <div class="srow">
         <button class="arr" onclick="adjustValue('rpm',-100)">▼</button>
-        <input type="number" id="rpm" class="numinput" value="1500" min="1" step="10" onchange="calculate()">
+        <input type="number" id="rpm" class="numinput" value="1500" min="1" step="10" onchange="calculate()" oninput="calculate()">
         <button class="arr" onclick="adjustValue('rpm',100)">▲</button>
       </div>
     </div>
@@ -210,7 +210,7 @@ body{display:flex;flex-direction:column;align-items:center;min-height:100vh;padd
       </div>
       <div class="srow">
         <button class="arr" onclick="adjustValue('torque',-10)">▼</button>
-        <input type="number" id="torque" class="numinput" value="100" min="0.1" step="1" onchange="calculate()">
+        <input type="number" id="torque" class="numinput" value="100" min="0.1" step="1" onchange="calculate()" oninput="calculate()">
         <button class="arr" onclick="adjustValue('torque',1)">▲</button>
       </div>
     </div>
@@ -222,12 +222,11 @@ body{display:flex;flex-direction:column;align-items:center;min-height:100vh;padd
       </div>
       <div class="srow">
         <button class="arr" onclick="adjustValue('power',-1)">▼</button>
-        <input type="number" id="power" class="numinput" value="10" min="0.1" step="0.1" onchange="calculate()">
+        <input type="number" id="power" class="numinput" value="10" min="0.1" step="0.1" onchange="calculate()" oninput="calculate()">
         <button class="arr" onclick="adjustValue('power',0.1)">▲</button>
       </div>
     </div>
 
-    <button style="background:rgba(79,195,247,.15);border:1px solid rgba(79,195,247,.3);color:var(--acc);padding:8px;border-radius:6px;cursor:pointer;font-family:var(--cond);font-weight:600;margin-top:8px" onclick="calculate()">CALCOLA</button>
   </div>
 
   <!-- PANNELLO RISULTATI -->
@@ -266,10 +265,8 @@ body{display:flex;flex-direction:column;align-items:center;min-height:100vh;padd
         <thead>
           <tr style="background:rgba(79,195,247,.15)">
             <th>d (mm)</th>
-            <th>b (mm)</th>
-            <th>h (mm)</th>
-            <th>l (mm)</th>
-            <th>s (mm)</th>
+            <th>b×h (mm)</th>
+            <th>l min (mm)</th>
             <th>t1 (mm)</th>
             <th>t2 (mm)</th>
           </tr>
@@ -337,7 +334,7 @@ body{display:flex;flex-direction:column;align-items:center;min-height:100vh;padd
           </div>
         </div>
         <div class="verify-item">
-          <span class="verify-label">Tensione a taglio</span>
+          <span class="verify-label" data-tip="τ = 2T / (b · l · d)">Tensione a taglio</span>
           <div>
             <span class="verify-value" id="verify-shear">-</span>
             <span class="verify-unit">MPa</span>
@@ -345,7 +342,7 @@ body{display:flex;flex-direction:column;align-items:center;min-height:100vh;padd
           </div>
         </div>
         <div class="verify-item">
-          <span class="verify-label">Tensione di contatto (albero)</span>
+          <span class="verify-label" data-tip="σ_c = 2T / (t₁ · l · d)">Pressione laterale albero</span>
           <div>
             <span class="verify-value" id="verify-contact-shaft">-</span>
             <span class="verify-unit">MPa</span>
@@ -353,11 +350,25 @@ body{display:flex;flex-direction:column;align-items:center;min-height:100vh;padd
           </div>
         </div>
         <div class="verify-item">
-          <span class="verify-label">Tensione di contatto (mozzo)</span>
+          <span class="verify-label" data-tip="σ_c = 2T / (t₂ · l · d)">Pressione laterale mozzo</span>
           <div>
             <span class="verify-value" id="verify-contact-hub">-</span>
             <span class="verify-unit">MPa</span>
             <span class="verify-status" id="status-contact-hub">-</span>
+          </div>
+        </div>
+        <div class="verify-item" style="border-top:1px solid rgba(79,195,247,.2);margin-top:4px">
+          <span class="verify-label" data-tip="Lunghezza minima calcolata dalla condizione più severa tra taglio, contatto albero e contatto mozzo">Lunghezza min. necessaria</span>
+          <div>
+            <span class="verify-value" id="verify-lmin" style="color:var(--amber)">-</span>
+            <span class="verify-unit">mm</span>
+          </div>
+        </div>
+        <div class="verify-item">
+          <span class="verify-label" data-tip="Prima lunghezza standard DIN 6885 A ≥ lunghezza min. necessaria">Lunghezza std. consigliata</span>
+          <div>
+            <span class="verify-value" id="verify-lrecommended" style="color:var(--up)">-</span>
+            <span class="verify-unit">mm</span>
           </div>
         </div>
       </div>
@@ -368,19 +379,23 @@ body{display:flex;flex-direction:column;align-items:center;min-height:100vh;padd
 
 <script>
 // Tabella dimensioni secondo DIN 6885 A (ISO 773 A, UNI 6604 A)
+// Ranges: d_min inclusivo, d_max inclusivo; find() restituisce il primo match (ordine crescente)
 const KEYWAY_STANDARDS = [
-  { d_min: 6,   d_max: 8,   b: 2, h: 2, l: 6,  s: 1.2, t1: 1.2, t2: 0.8 },
-  { d_min: 10,  d_max: 12,  b: 3, h: 3, l: 8,  s: 1.8, t1: 1.8, t2: 1.2 },
-  { d_min: 14,  d_max: 17,  b: 4, h: 4, l: 10, s: 2.5, t1: 2.5, t2: 1.8 },
-  { d_min: 19,  d_max: 23,  b: 5, h: 5, l: 12, s: 3.1, t1: 3.1, t2: 2.4 },
-  { d_min: 25,  d_max: 28,  b: 6, h: 6, l: 14, s: 3.7, t1: 3.7, t2: 2.3 },
-  { d_min: 30,  d_max: 38,  b: 7, h: 7, l: 16, s: 4.3, t1: 4.3, t2: 2.8 },
-  { d_min: 40,  d_max: 44,  b: 8, h: 8, l: 18, s: 4.9, t1: 4.9, t2: 3.3 },
-  { d_min: 45,  d_max: 50,  b: 9, h: 9, l: 20, s: 5.5, t1: 5.5, t2: 3.8 },
-  { d_min: 52,  d_max: 65,  b: 10, h: 10, l: 22, s: 6.1, t1: 6.1, t2: 4.4 },
-  { d_min: 68,  d_max: 75,  b: 11, h: 11, l: 25, s: 6.7, t1: 6.7, t2: 4.9 },
-  { d_min: 78,  d_max: 85,  b: 12, h: 12, l: 28, s: 7.3, t1: 7.3, t2: 5.4 },
-  { d_min: 90,  d_max: 110, b: 14, h: 14, l: 32, s: 8.5, t1: 8.5, t2: 6.4 }
+  { d_min: 6,  d_max: 8,   b: 2,  h: 2,  l: 6,  s: 1.2, t1: 1.2, t2: 1.0 },
+  { d_min: 8,  d_max: 10,  b: 3,  h: 3,  l: 6,  s: 1.8, t1: 1.8, t2: 1.4 },
+  { d_min: 10, d_max: 12,  b: 4,  h: 4,  l: 8,  s: 2.5, t1: 2.5, t2: 1.8 },
+  { d_min: 12, d_max: 17,  b: 5,  h: 5,  l: 10, s: 3.0, t1: 3.0, t2: 2.3 },
+  { d_min: 17, d_max: 22,  b: 6,  h: 6,  l: 14, s: 3.5, t1: 3.5, t2: 2.8 },
+  { d_min: 22, d_max: 30,  b: 8,  h: 7,  l: 18, s: 4.0, t1: 4.0, t2: 3.3 },
+  { d_min: 30, d_max: 38,  b: 10, h: 8,  l: 22, s: 5.0, t1: 5.0, t2: 3.3 },
+  { d_min: 38, d_max: 44,  b: 12, h: 8,  l: 28, s: 5.0, t1: 5.0, t2: 3.3 },
+  { d_min: 44, d_max: 50,  b: 14, h: 9,  l: 36, s: 5.5, t1: 5.5, t2: 3.8 },
+  { d_min: 50, d_max: 58,  b: 16, h: 10, l: 45, s: 6.0, t1: 6.0, t2: 4.3 },
+  { d_min: 58, d_max: 65,  b: 18, h: 11, l: 50, s: 7.0, t1: 7.0, t2: 4.4 },
+  { d_min: 65, d_max: 75,  b: 20, h: 12, l: 56, s: 7.5, t1: 7.5, t2: 4.9 },
+  { d_min: 75, d_max: 85,  b: 22, h: 14, l: 63, s: 9.0, t1: 9.0, t2: 5.4 },
+  { d_min: 85, d_max: 95,  b: 25, h: 14, l: 70, s: 9.0, t1: 9.0, t2: 5.4 },
+  { d_min: 95, d_max: 110, b: 28, h: 16, l: 80, s: 10.0, t1: 10.0, t2: 6.4 }
 ];
 
 // Tensioni ammissibili per materiali (MPa)
@@ -413,11 +428,30 @@ function togglePowerCoupling() {
   calculate();
 }
 
+function computeMinLength(diameter, torque) {
+  if (!currentKeyway || torque <= 0) return { lMin: 0, lRecommended: currentKeyway ? currentKeyway.l : 0 };
+  const T_Nmm = torque * 1000;
+  const propsShaft = MATERIAL_PROPS[document.getElementById('material-shaft').value];
+  const propsHub   = MATERIAL_PROPS[document.getElementById('material-hub').value];
+  const { b, t1, t2 } = currentKeyway;
+  const d = diameter;
+
+  const lMin_shear = (2 * T_Nmm) / (b  * d * propsShaft.tau_adm);
+  const lMin_shaft = (2 * T_Nmm) / (t1 * d * propsShaft.sigma_adm);
+  const lMin_hub   = (2 * T_Nmm) / (t2 * d * propsHub.sigma_adm);
+  const lMin = Math.max(lMin_shear, lMin_shaft, lMin_hub);
+
+  const stdLengths = STANDARD_LENGTHS[b] || [currentKeyway.l];
+  const lRecommended = stdLengths.find(l => l >= lMin) || stdLengths[stdLengths.length - 1];
+
+  return { lMin, lRecommended };
+}
+
 function calculate() {
   const diameter = parseFloat(document.getElementById('diameter').value);
   const rpm = parseFloat(document.getElementById('rpm').value);
   const usePower = document.getElementById('use-power').checked;
-  
+
   let torque = 0;
   if (usePower) {
     const power = parseFloat(document.getElementById('power').value) * 1000; // kW to W
@@ -428,17 +462,20 @@ function calculate() {
 
   // Get keyway dimensions
   currentKeyway = getKeywayForDiameter(diameter);
-  
+
   if (!currentKeyway) {
     alert('Diametro non rientra negli intervalli standard (6-110 mm)');
     return;
   }
 
-  // Update length options
-  updateLengthOptions();
+  // Calcola lunghezza minima necessaria prima di aggiornare il dropdown
+  const { lMin, lRecommended } = computeMinLength(diameter, torque);
 
-  // Get selected length - use manual if active, otherwise auto
-  let length = getLengthValue();
+  // Update length options, pre-selezionando la lunghezza raccomandata
+  updateLengthOptions(lRecommended);
+
+  // Get selected length - use manual if active, otherwise recommended
+  let length = getLengthValue(lRecommended);
 
   // Display keyway dimensions
   document.getElementById('result-width').textContent = currentKeyway.b.toFixed(1);
@@ -452,62 +489,73 @@ function calculate() {
   displayTolerances(currentKeyway.b, currentKeyway.t1, currentKeyway.t2);
 
   // Perform verification
-  verifyKeyway(diameter, length, torque);
+  verifyKeyway(diameter, length, torque, lMin, lRecommended);
 
   // Display standard table
   displayStandardTable();
 }
 
-function updateLengthOptions() {
+// Lunghezze standard DIN 6885 A per ogni larghezza b (mm)
+const STANDARD_LENGTHS = {
+  2:  [6, 8, 10, 12, 14, 16, 18, 20],
+  3:  [6, 8, 10, 12, 14, 16, 18, 20, 22, 25, 28, 32, 36],
+  4:  [8, 10, 12, 14, 16, 18, 20, 22, 25, 28, 32, 36, 40, 45],
+  5:  [10, 12, 14, 16, 18, 20, 22, 25, 28, 32, 36, 40, 45, 50, 56],
+  6:  [14, 16, 18, 20, 22, 25, 28, 32, 36, 40, 45, 50, 56, 63, 70],
+  8:  [18, 20, 22, 25, 28, 32, 36, 40, 45, 50, 56, 63, 70, 80, 90],
+  10: [22, 25, 28, 32, 36, 40, 45, 50, 56, 63, 70, 80, 90, 100, 110],
+  12: [28, 32, 36, 40, 45, 50, 56, 63, 70, 80, 90, 100, 110, 125, 140],
+  14: [36, 40, 45, 50, 56, 63, 70, 80, 90, 100, 110, 125, 140, 160],
+  16: [45, 50, 56, 63, 70, 80, 90, 100, 110, 125, 140, 160, 180],
+  18: [50, 56, 63, 70, 80, 90, 100, 110, 125, 140, 160, 180, 200],
+  20: [56, 63, 70, 80, 90, 100, 110, 125, 140, 160, 180, 200, 220],
+  22: [63, 70, 80, 90, 100, 110, 125, 140, 160, 180, 200, 220, 250],
+  25: [70, 80, 90, 100, 110, 125, 140, 160, 180, 200, 220, 250, 280],
+  28: [80, 90, 100, 110, 125, 140, 160, 180, 200, 220, 250, 280, 320]
+};
+
+function updateLengthOptions(lRecommended) {
   if (!currentKeyway) return;
   const select = document.getElementById('length');
-  const standardLength = currentKeyway.l;
-  
-  // Standard lengths
-  const lengths = [standardLength, standardLength * 1.25, standardLength * 1.5, standardLength * 1.75, standardLength * 2];
-  
-  select.innerHTML = '<option value="">- Auto selezionata -</option>';
+  const lengths = STANDARD_LENGTHS[currentKeyway.b] || [currentKeyway.l];
+  const minLength = currentKeyway.l;
+
+  select.innerHTML = '';
   lengths.forEach(l => {
     const opt = document.createElement('option');
     opt.value = l;
-    opt.textContent = l.toFixed(0) + ' mm' + (l === standardLength ? ' (standard)' : '');
+    let label = l + ' mm';
+    if (l === minLength) label += ' (min. std.)';
+    if (l === lRecommended) label += ' ← consigliata';
+    opt.textContent = label;
+    if (l === lRecommended) opt.selected = true;
     select.appendChild(opt);
   });
 }
 
-function verifyKeyway(diameter, length, torque) {
-  const materialShaft = document.getElementById('material-shaft').value;
-  const materialHub = document.getElementById('material-hub').value;
-  
-  const propsShaft = MATERIAL_PROPS[materialShaft];
-  const propsHub = MATERIAL_PROPS[materialHub];
+function verifyKeyway(diameter, length, torque, lMin, lRecommended) {
+  const propsShaft = MATERIAL_PROPS[document.getElementById('material-shaft').value];
+  const propsHub   = MATERIAL_PROPS[document.getElementById('material-hub').value];
 
-  // Calcoli delle tensioni
-  // Tensione a taglio: τ = T / (0.5 * b * l * d) [in MPa considerando T in N·mm, d in mm]
-  const T_Nmm = torque * 1000; // Convert to N·mm
-  const shearArea = 0.5 * currentKeyway.b * length;
-  const shearStress = T_Nmm / (shearArea * diameter); // Simplified formula
+  const T_Nmm = torque * 1000; // N·m → N·mm
+  const { b, t1, t2 } = currentKeyway;
+  const d = diameter;
 
-  // Tensione di contatto (pressione superficiale)
-  // σ_c = T / (0.5 * h * l * d) [Formula semplificata]
-  const contactArea = 0.5 * currentKeyway.h * length;
-  const contactStressShaft = T_Nmm / (contactArea * currentKeyway.t1 * 1000) / diameter; // Normalized
-  const contactStressHub = T_Nmm / (contactArea * currentKeyway.t2 * 1000) / diameter; // Normalized
+  // F = 2T/d ; τ = F/(b·l) ; σ_c = F/(t·l)
+  const shearStress        = (2 * T_Nmm) / (b  * length * d);
+  const contactStressShaft = (2 * T_Nmm) / (t1 * length * d);
+  const contactStressHub   = (2 * T_Nmm) / (t2 * length * d);
 
-  // Display results
-  document.getElementById('verify-torque').textContent = torque.toFixed(2);
-  document.getElementById('verify-shear').textContent = shearStress.toFixed(1);
-  document.getElementById('verify-contact-shaft').textContent = (shearStress * 0.8).toFixed(1);
-  document.getElementById('verify-contact-hub').textContent = (shearStress * 0.6).toFixed(1);
+  document.getElementById('verify-torque').textContent        = torque.toFixed(2);
+  document.getElementById('verify-shear').textContent         = shearStress.toFixed(1);
+  document.getElementById('verify-contact-shaft').textContent = contactStressShaft.toFixed(1);
+  document.getElementById('verify-contact-hub').textContent   = contactStressHub.toFixed(1);
+  document.getElementById('verify-lmin').textContent          = lMin.toFixed(1);
+  document.getElementById('verify-lrecommended').textContent  = lRecommended;
 
-  // Check limits
-  const shearOk = shearStress <= propsShaft.tau_adm;
-  const contactShaftOk = (shearStress * 0.8) <= propsShaft.sigma_adm;
-  const contactHubOk = (shearStress * 0.6) <= propsHub.sigma_adm;
-
-  updateStatus('status-shear', shearOk);
-  updateStatus('status-contact-shaft', contactShaftOk);
-  updateStatus('status-contact-hub', contactHubOk);
+  updateStatus('status-shear',         shearStress        <= propsShaft.tau_adm);
+  updateStatus('status-contact-shaft', contactStressShaft <= propsShaft.sigma_adm);
+  updateStatus('status-contact-hub',   contactStressHub   <= propsHub.sigma_adm);
 
   document.getElementById('verify-section').style.display = 'block';
 }
@@ -534,12 +582,10 @@ function displayStandardTable() {
     
     row.innerHTML = `
       <td>${k.d_min}-${k.d_max}</td>
-      <td>${k.b}</td>
-      <td>${k.h}</td>
+      <td>${k.b}×${k.h}</td>
       <td>${k.l}</td>
-      <td>${k.s.toFixed(2)}</td>
-      <td>${k.t1.toFixed(2)}</td>
-      <td>${k.t2.toFixed(2)}</td>
+      <td>${k.t1.toFixed(1)}</td>
+      <td>${k.t2.toFixed(1)}</td>
     `;
     tbody.appendChild(row);
   });
@@ -585,30 +631,42 @@ function useManualLength() {
   }
 }
 
-function getLengthValue() {
+function getLengthValue(lRecommended) {
   if (useManualLengthFlag) {
     return parseFloat(document.getElementById('manual-length').value) || currentKeyway.l;
   } else {
     const selected = parseFloat(document.getElementById('length').value);
-    return selected || currentKeyway.l;
+    return selected || lRecommended || currentKeyway.l;
   }
 }
 
 // TOLERANCE REFERENCE DATA (DIN 6885 A - ISO 773 A)
 // Tolleranze per larghezza (b) secondo tipo di accoppiamento
 // Per albero (shaft) e mozzo (hub) - diversificate secondo norma
+// Tolleranze ISO 286-1 per sede linguetta (trattata come foro)
+// Albero: H9 (libero), N9 (normale), P9 (stretto) — ES/EI relativi al nominale b
+// Mozzo:  Js9 (centrato), D10 (gioco)
 const TOLERANCES = {
-  2: { H9: { shaft: 'H9: +0/-0.030' }, N9: { shaft: 'N9: +0.010/+0.040' }, P9: { shaft: 'P9: +0.030/+0.060' }, D10: { hub: 'D10: +0.056/+0.086' }, Js9: { hub: 'Js9: +0.015/-0.015' } },
-  3: { H9: { shaft: 'H9: +0/-0.036' }, N9: { shaft: 'N9: +0.013/+0.049' }, P9: { shaft: 'P9: +0.036/+0.072' }, D10: { hub: 'D10: +0.064/+0.098' }, Js9: { hub: 'Js9: +0.018/-0.018' } },
-  4: { H9: { shaft: 'H9: +0/-0.043' }, N9: { shaft: 'N9: +0.016/+0.059' }, P9: { shaft: 'P9: +0.043/+0.086' }, D10: { hub: 'D10: +0.073/+0.111' }, Js9: { hub: 'Js9: +0.0215/-0.0215' } },
-  5: { H9: { shaft: 'H9: +0/-0.052' }, N9: { shaft: 'N9: +0.019/+0.071' }, P9: { shaft: 'P9: +0.052/+0.104' }, D10: { hub: 'D10: +0.084/+0.130' }, Js9: { hub: 'Js9: +0.025/-0.025' } },
-  6: { H9: { shaft: 'H9: +0/-0.062' }, N9: { shaft: 'N9: +0.023/+0.085' }, P9: { shaft: 'P9: +0.062/+0.124' }, D10: { hub: 'D10: +0.096/+0.148' }, Js9: { hub: 'Js9: +0.030/-0.030' } },
-  7: { H9: { shaft: 'H9: +0/-0.074' }, N9: { shaft: 'N9: +0.027/+0.101' }, P9: { shaft: 'P9: +0.074/+0.148' }, D10: { hub: 'D10: +0.110/+0.168' }, Js9: { hub: 'Js9: +0.035/-0.035' } },
-  8: { H9: { shaft: 'H9: +0/-0.087' }, N9: { shaft: 'N9: +0.032/+0.119' }, P9: { shaft: 'P9: +0.087/+0.174' }, D10: { hub: 'D10: +0.125/+0.188' }, Js9: { hub: 'Js9: +0.0435/-0.0435' } },
-  10: { H9: { shaft: 'H9: +0/-0.110' }, N9: { shaft: 'N9: +0.040/+0.150' }, P9: { shaft: 'P9: +0.110/+0.220' }, D10: { hub: 'D10: +0.143/+0.215' }, Js9: { hub: 'Js9: +0.054/-0.054' } },
-  11: { H9: { shaft: 'H9: +0/-0.125' }, N9: { shaft: 'N9: +0.046/+0.171' }, P9: { shaft: 'P9: +0.125/+0.250' }, D10: { hub: 'D10: +0.161/+0.241' }, Js9: { hub: 'Js9: +0.0635/-0.0635' } },
-  12: { H9: { shaft: 'H9: +0/-0.142' }, N9: { shaft: 'N9: +0.052/+0.194' }, P9: { shaft: 'P9: +0.142/+0.284' }, D10: { hub: 'D10: +0.183/+0.275' }, Js9: { hub: 'Js9: +0.073/-0.073' } },
-  14: { H9: { shaft: 'H9: +0/-0.170' }, N9: { shaft: 'N9: +0.063/+0.233' }, P9: { shaft: 'P9: +0.170/+0.340' }, D10: { hub: 'D10: +0.220/+0.330' }, Js9: { hub: 'Js9: +0.087/-0.087' } }
+  // b=2 e b=3: IT9=0.025mm (intervallo 1-3mm)
+  2:  { H9:{shaft:'H9: +0.025/0'}, N9:{shaft:'N9: 0/-0.025'}, P9:{shaft:'P9: -0.006/-0.031'}, D10:{hub:'D10: +0.060/+0.020'}, Js9:{hub:'Js9: ±0.012'} },
+  3:  { H9:{shaft:'H9: +0.025/0'}, N9:{shaft:'N9: 0/-0.025'}, P9:{shaft:'P9: -0.006/-0.031'}, D10:{hub:'D10: +0.060/+0.020'}, Js9:{hub:'Js9: ±0.012'} },
+  // b=4,5,6: IT9=0.030mm (intervallo 3-6mm)
+  4:  { H9:{shaft:'H9: +0.030/0'}, N9:{shaft:'N9: 0/-0.030'}, P9:{shaft:'P9: -0.012/-0.042'}, D10:{hub:'D10: +0.078/+0.030'}, Js9:{hub:'Js9: ±0.015'} },
+  5:  { H9:{shaft:'H9: +0.030/0'}, N9:{shaft:'N9: 0/-0.030'}, P9:{shaft:'P9: -0.012/-0.042'}, D10:{hub:'D10: +0.078/+0.030'}, Js9:{hub:'Js9: ±0.015'} },
+  6:  { H9:{shaft:'H9: +0.030/0'}, N9:{shaft:'N9: 0/-0.030'}, P9:{shaft:'P9: -0.012/-0.042'}, D10:{hub:'D10: +0.078/+0.030'}, Js9:{hub:'Js9: ±0.015'} },
+  // b=8,10: IT9=0.036mm (intervallo 6-10mm)
+  8:  { H9:{shaft:'H9: +0.036/0'}, N9:{shaft:'N9: 0/-0.036'}, P9:{shaft:'P9: -0.015/-0.051'}, D10:{hub:'D10: +0.098/+0.040'}, Js9:{hub:'Js9: ±0.018'} },
+  10: { H9:{shaft:'H9: +0.036/0'}, N9:{shaft:'N9: 0/-0.036'}, P9:{shaft:'P9: -0.015/-0.051'}, D10:{hub:'D10: +0.098/+0.040'}, Js9:{hub:'Js9: ±0.018'} },
+  // b=12,14,16,18: IT9=0.043mm (intervallo 10-18mm)
+  12: { H9:{shaft:'H9: +0.043/0'}, N9:{shaft:'N9: 0/-0.043'}, P9:{shaft:'P9: -0.018/-0.061'}, D10:{hub:'D10: +0.120/+0.050'}, Js9:{hub:'Js9: ±0.021'} },
+  14: { H9:{shaft:'H9: +0.043/0'}, N9:{shaft:'N9: 0/-0.043'}, P9:{shaft:'P9: -0.018/-0.061'}, D10:{hub:'D10: +0.120/+0.050'}, Js9:{hub:'Js9: ±0.021'} },
+  16: { H9:{shaft:'H9: +0.043/0'}, N9:{shaft:'N9: 0/-0.043'}, P9:{shaft:'P9: -0.018/-0.061'}, D10:{hub:'D10: +0.120/+0.050'}, Js9:{hub:'Js9: ±0.021'} },
+  18: { H9:{shaft:'H9: +0.043/0'}, N9:{shaft:'N9: 0/-0.043'}, P9:{shaft:'P9: -0.018/-0.061'}, D10:{hub:'D10: +0.120/+0.050'}, Js9:{hub:'Js9: ±0.021'} },
+  // b=20,22,25,28: IT9=0.052mm (intervallo 18-30mm)
+  20: { H9:{shaft:'H9: +0.052/0'}, N9:{shaft:'N9: 0/-0.052'}, P9:{shaft:'P9: -0.022/-0.074'}, D10:{hub:'D10: +0.149/+0.065'}, Js9:{hub:'Js9: ±0.026'} },
+  22: { H9:{shaft:'H9: +0.052/0'}, N9:{shaft:'N9: 0/-0.052'}, P9:{shaft:'P9: -0.022/-0.074'}, D10:{hub:'D10: +0.149/+0.065'}, Js9:{hub:'Js9: ±0.026'} },
+  25: { H9:{shaft:'H9: +0.052/0'}, N9:{shaft:'N9: 0/-0.052'}, P9:{shaft:'P9: -0.022/-0.074'}, D10:{hub:'D10: +0.149/+0.065'}, Js9:{hub:'Js9: ±0.026'} },
+  28: { H9:{shaft:'H9: +0.052/0'}, N9:{shaft:'N9: 0/-0.052'}, P9:{shaft:'P9: -0.022/-0.074'}, D10:{hub:'D10: +0.149/+0.065'}, Js9:{hub:'Js9: ±0.026'} }
 };
 
 function displayTolerances(b, t1, t2) {
