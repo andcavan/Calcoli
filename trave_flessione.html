@@ -1,0 +1,944 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Trave a Flessione</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@300;400;500&family=Barlow+Condensed:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#0e0f11;--bg2:#1c1d23;--bg3:#1a1e28;
+  --surface:#1e2330;--surface2:#252c3d;
+  --border:#2e3550;--border2:#3d4663;
+  --accent:#4fc3f7;--accent2:#7bb8ff;
+  --gold:#f0b429;--gold2:#ffd166;
+  --green:#3ecf8e;--red:#f66d6d;--orange:#ff8c42;--violet:#b39ddb;
+  --text:#e2e8f4;--text2:#8a94aa;--text3:#5a6278;
+  --mono:'DM Mono',monospace;--head:'Barlow Condensed',sans-serif;
+  --r:8px;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--bg);color:var(--text);font-family:var(--mono);font-size:13px;min-height:100vh}
+
+header{background:var(--bg2);border-bottom:1px solid var(--border);padding:0 28px;display:flex;align-items:center;gap:18px;height:68px;position:sticky;top:0;z-index:200}
+.logo{width:42px;height:42px;display:flex;align-items:center;justify-content:center;font-size:26px}
+header h1{font-family:var(--head);font-size:19px;font-weight:800;letter-spacing:-.5px}
+header h1 span{color:var(--accent)}
+.header-sub{font-size:10px;color:var(--text3);letter-spacing:.5px;text-transform:uppercase;margin-top:2px}
+.back-btn{font-family:var(--head);font-size:10px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--text2);text-decoration:none;border:1px solid var(--border2);border-radius:4px;padding:4px 10px;transition:all .15s;white-space:nowrap;flex-shrink:0;margin-left:auto}
+.back-btn:hover{color:var(--accent);border-color:var(--accent)}
+
+.layout{display:grid;grid-template-columns:380px 1fr;min-height:calc(100vh - 68px)}
+.sidebar{background:var(--bg2);border-right:1px solid var(--border);overflow-y:auto;max-height:calc(100vh - 68px);position:sticky;top:68px;padding:16px}
+.main-content{padding:22px 26px;overflow-y:auto;background:var(--bg)}
+
+.section-block{margin-bottom:18px}
+.stitle{font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.5px;margin-bottom:10px;padding-bottom:5px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:6px}
+.field{margin-bottom:9px}
+.field label{display:block;font-size:10px;color:var(--text2);margin-bottom:4px;letter-spacing:.3px;text-transform:uppercase}
+.field input,.field select{width:100%;background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:7px 10px;font-family:var(--mono);font-size:12px;color:var(--text);outline:none;transition:border-color .15s}
+.field input:focus,.field select:focus{border-color:var(--accent)}
+.field select option{background:var(--bg2)}
+.frow{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.frow3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px}
+
+.dim-panel{display:none}
+.dim-panel.active{display:block}
+
+/* Loads */
+.load-row{display:flex;align-items:flex-end;gap:6px;margin-bottom:8px;background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:8px}
+.load-row .field{flex:1;margin-bottom:0}
+.load-row .field label{font-size:9px}
+.load-row .field input{padding:5px 7px;font-size:11px}
+.rm-btn{flex-shrink:0;width:26px;height:26px;background:none;border:1px solid var(--border2);border-radius:5px;color:var(--text3);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:14px;transition:all .12s;align-self:flex-end}
+.rm-btn:hover{border-color:var(--red);color:var(--red)}
+.add-btn{width:100%;padding:7px;background:none;border:1px dashed var(--border2);border-radius:var(--r);color:var(--text3);font-family:var(--mono);font-size:11px;cursor:pointer;transition:all .15s;margin-bottom:10px}
+.add-btn:hover{border-color:var(--accent);color:var(--accent)}
+
+.clear-btn{width:100%;padding:7px;background:none;border:1px solid var(--border);border-radius:var(--r);color:var(--text3);font-family:var(--mono);font-size:11px;cursor:pointer;transition:all .15s;margin-top:4px}
+.clear-btn:hover{color:var(--text);border-color:var(--border2)}
+
+/* Results */
+.empty-state{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:300px;color:var(--text3);text-align:center;gap:12px}
+.empty-icon{font-size:48px;opacity:.3}
+.empty-text{font-size:12px;line-height:1.6}
+
+#results-area{display:none}
+
+.results-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:18px}
+.results-header h2{font-family:var(--head);font-size:16px;font-weight:700}
+
+.res-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:10px;margin-bottom:20px}
+.rc{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:12px}
+.rc.accent{border-color:rgba(79,195,247,.35);background:rgba(79,195,247,.06)}
+.rc.green{border-color:rgba(62,207,142,.35);background:rgba(62,207,142,.06)}
+.rc.red{border-color:rgba(246,109,109,.35);background:rgba(246,109,109,.06)}
+.rc.gold{border-color:rgba(240,180,41,.35);background:rgba(240,180,41,.06)}
+.rc.orange{border-color:rgba(255,140,66,.35);background:rgba(255,140,66,.06)}
+.rc-label{font-size:9px;color:var(--text3);text-transform:uppercase;letter-spacing:.4px;margin-bottom:5px}
+.rc-value{font-size:17px;font-weight:700;color:var(--text)}
+.rc-value.accent{color:var(--accent2)}
+.rc-value.green{color:var(--green)}
+.rc-value.red{color:var(--red)}
+.rc-value.gold{color:var(--gold2)}
+.rc-value.orange{color:var(--orange)}
+.rc-unit{font-size:10px;color:var(--text3);margin-left:3px;font-weight:400}
+.rc-note{font-size:9px;color:var(--text3);margin-top:3px}
+
+.res-section{margin-bottom:22px}
+.res-section-title{font-size:11px;color:var(--text2);text-transform:uppercase;letter-spacing:.5px;margin-bottom:12px;padding-bottom:6px;border-bottom:1px solid var(--border)}
+
+.diagram-box{background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);padding:14px;margin-bottom:16px}
+.diagram-title{font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.4px;margin-bottom:10px}
+canvas{display:block;width:100%;height:auto}
+
+.status-bar{display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap}
+.chip{display:flex;align-items:center;gap:5px;padding:4px 10px;border-radius:20px;font-size:10px;letter-spacing:.3px;text-transform:uppercase;font-weight:600}
+.chip.ok{background:rgba(62,207,142,.12);border:1px solid rgba(62,207,142,.3);color:var(--green)}
+.chip.warn{background:rgba(255,140,66,.12);border:1px solid rgba(255,140,66,.3);color:var(--orange)}
+.chip.fail{background:rgba(246,109,109,.12);border:1px solid rgba(246,109,109,.35);color:var(--red)}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">🔩</div>
+  <div>
+    <h1>Trave a <span>Flessione</span></h1>
+    <div class="header-sub">Momento · Taglio · Freccia · Tensione</div>
+  </div>
+  <a class="back-btn" href="index.html">← Ritorna</a>
+</header>
+
+<div class="layout">
+
+<!-- ══════════════════════ SIDEBAR ══════════════════════ -->
+<aside class="sidebar">
+
+  <!-- SEZIONE -->
+  <div class="section-block">
+    <div class="stitle">Sezione</div>
+    <div class="field">
+      <label>Tipo sezione</label>
+      <select id="sec-type" onchange="onSectionChange()">
+        <option value="tondo">Tondo (pieno)</option>
+        <option value="rettangolare">Rettangolare</option>
+        <option value="quadrata">Quadrata</option>
+        <option value="tubo_tondo">Tubo tondo</option>
+        <option value="tubo_rett">Tubolare rettangolare</option>
+        <option value="tubo_quad">Tubolare quadrato</option>
+        <option value="esagonale">Esagonale (AF)</option>
+        <option value="L">Profilo L (angolare)</option>
+        <option value="T">Profilo T</option>
+        <option value="H">Profilo H / I</option>
+        <option value="U">Profilo U (C)</option>
+      </select>
+    </div>
+
+    <div class="dim-panel active" id="dim-tondo">
+      <div class="field"><label>Diametro d <span style="color:var(--text3)">mm</span></label>
+        <input type="number" id="d-d" placeholder="es. 50" min="0" step="1"></div>
+    </div>
+    <div class="dim-panel" id="dim-rettangolare">
+      <div class="frow">
+        <div class="field"><label>Larghezza b <span style="color:var(--text3)">mm</span></label>
+          <input type="number" id="d-b" placeholder="es. 60" min="0" step="1"></div>
+        <div class="field"><label>Altezza h <span style="color:var(--text3)">mm</span></label>
+          <input type="number" id="d-h" placeholder="es. 100" min="0" step="1"></div>
+      </div>
+    </div>
+    <div class="dim-panel" id="dim-quadrata">
+      <div class="field"><label>Lato a <span style="color:var(--text3)">mm</span></label>
+        <input type="number" id="d-a" placeholder="es. 80" min="0" step="1"></div>
+    </div>
+    <div class="dim-panel" id="dim-tubo_tondo">
+      <div class="frow">
+        <div class="field"><label>Ø esterno D <span style="color:var(--text3)">mm</span></label>
+          <input type="number" id="d-D" placeholder="es. 60" min="0" step="1"></div>
+        <div class="field"><label>Spessore t <span style="color:var(--text3)">mm</span></label>
+          <input type="number" id="d-t_td" placeholder="es. 4" min="0" step="0.5"></div>
+      </div>
+    </div>
+    <div class="dim-panel" id="dim-tubo_rett">
+      <div class="frow">
+        <div class="field"><label>B esterno <span style="color:var(--text3)">mm</span></label>
+          <input type="number" id="d-Br" placeholder="es. 80" min="0" step="1"></div>
+        <div class="field"><label>H esterno <span style="color:var(--text3)">mm</span></label>
+          <input type="number" id="d-Hr" placeholder="es. 120" min="0" step="1"></div>
+      </div>
+      <div class="field"><label>Spessore t <span style="color:var(--text3)">mm</span></label>
+        <input type="number" id="d-t_tr" placeholder="es. 5" min="0" step="0.5"></div>
+    </div>
+    <div class="dim-panel" id="dim-tubo_quad">
+      <div class="frow">
+        <div class="field"><label>Lato est. A <span style="color:var(--text3)">mm</span></label>
+          <input type="number" id="d-Aq" placeholder="es. 100" min="0" step="1"></div>
+        <div class="field"><label>Spessore t <span style="color:var(--text3)">mm</span></label>
+          <input type="number" id="d-t_tq" placeholder="es. 5" min="0" step="0.5"></div>
+      </div>
+    </div>
+    <div class="dim-panel" id="dim-esagonale">
+      <div class="field"><label>Travers. piatte AF <span style="color:var(--text3)">mm</span></label>
+        <input type="number" id="d-s" placeholder="es. 41" min="0" step="1"></div>
+    </div>
+    <div class="dim-panel" id="dim-L">
+      <div class="frow">
+        <div class="field"><label>Ala b1 <span style="color:var(--text3)">mm</span></label>
+          <input type="number" id="d-Lb1" placeholder="es. 80" min="0" step="1"></div>
+        <div class="field"><label>Ala b2 <span style="color:var(--text3)">mm</span></label>
+          <input type="number" id="d-Lb2" placeholder="es. 80" min="0" step="1"></div>
+      </div>
+      <div class="field"><label>Spessore t <span style="color:var(--text3)">mm</span></label>
+        <input type="number" id="d-Lt" placeholder="es. 8" min="0" step="1"></div>
+    </div>
+    <div class="dim-panel" id="dim-T">
+      <div class="frow">
+        <div class="field"><label>Ala bf <span style="color:var(--text3)">mm</span></label>
+          <input type="number" id="d-Tbf" placeholder="es. 120" min="0" step="1"></div>
+        <div class="field"><label>Sp. flangia tf <span style="color:var(--text3)">mm</span></label>
+          <input type="number" id="d-Ttf" placeholder="es. 12" min="0" step="1"></div>
+      </div>
+      <div class="frow">
+        <div class="field"><label>Anima hw <span style="color:var(--text3)">mm</span></label>
+          <input type="number" id="d-Thw" placeholder="es. 100" min="0" step="1"></div>
+        <div class="field"><label>Sp. anima tw <span style="color:var(--text3)">mm</span></label>
+          <input type="number" id="d-Ttw" placeholder="es. 8" min="0" step="1"></div>
+      </div>
+    </div>
+    <div class="dim-panel" id="dim-H">
+      <div class="frow">
+        <div class="field"><label>Ala bf <span style="color:var(--text3)">mm</span></label>
+          <input type="number" id="d-Hbf" placeholder="es. 200" min="0" step="1"></div>
+        <div class="field"><label>Altezza H <span style="color:var(--text3)">mm</span></label>
+          <input type="number" id="d-HH" placeholder="es. 200" min="0" step="1"></div>
+      </div>
+      <div class="frow">
+        <div class="field"><label>Sp. flangia tf <span style="color:var(--text3)">mm</span></label>
+          <input type="number" id="d-Htf" placeholder="es. 15" min="0" step="1"></div>
+        <div class="field"><label>Sp. anima tw <span style="color:var(--text3)">mm</span></label>
+          <input type="number" id="d-Htw" placeholder="es. 9" min="0" step="1"></div>
+      </div>
+    </div>
+    <div class="dim-panel" id="dim-U">
+      <div class="frow">
+        <div class="field"><label>Largh. b <span style="color:var(--text3)">mm</span></label>
+          <input type="number" id="d-Ub" placeholder="es. 80" min="0" step="1"></div>
+        <div class="field"><label>Altezza H <span style="color:var(--text3)">mm</span></label>
+          <input type="number" id="d-UH" placeholder="es. 180" min="0" step="1"></div>
+      </div>
+      <div class="frow">
+        <div class="field"><label>Sp. flangia tf <span style="color:var(--text3)">mm</span></label>
+          <input type="number" id="d-Utf" placeholder="es. 11" min="0" step="1"></div>
+        <div class="field"><label>Sp. anima tw <span style="color:var(--text3)">mm</span></label>
+          <input type="number" id="d-Utw" placeholder="es. 7" min="0" step="1"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MATERIALE -->
+  <div class="section-block">
+    <div class="stitle">Materiale</div>
+    <div class="field">
+      <label>Materiale</label>
+      <select id="mat-sel" onchange="onMatChange()">
+        <option value="S235">Acciaio S235 — fy 235 MPa</option>
+        <option value="S275">Acciaio S275 — fy 275 MPa</option>
+        <option value="S355" selected>Acciaio S355 — fy 355 MPa</option>
+        <option value="S690">Acciaio S690 — fy 690 MPa</option>
+        <option value="Al6061">Alluminio 6061-T6 — fy 276 MPa</option>
+        <option value="Al6082">Alluminio 6082-T6 — fy 255 MPa</option>
+        <option value="custom">Personalizzato</option>
+      </select>
+    </div>
+    <div class="frow">
+      <div class="field"><label>E <span style="color:var(--text3)">MPa</span></label>
+        <input type="number" id="mat-E" value="210000" step="1000"></div>
+      <div class="field"><label>fy <span style="color:var(--text3)">MPa</span></label>
+        <input type="number" id="mat-fy" value="355" step="1"></div>
+    </div>
+  </div>
+
+  <!-- GEOMETRIA TRAVE -->
+  <div class="section-block">
+    <div class="stitle">Geometria e Vincoli</div>
+    <div class="field"><label>Lunghezza L <span style="color:var(--text3)">mm</span></label>
+      <input type="number" id="beam-L" placeholder="es. 3000" min="1" step="10"></div>
+    <div class="field">
+      <label>Tipo vincolo</label>
+      <select id="bc-type">
+        <option value="ss">Appoggio — Appoggio (trave appoggiata)</option>
+        <option value="cant">Incastro — Libero (mensola)</option>
+        <option value="fp">Incastro — Appoggio (trave iperstatica)</option>
+        <option value="ff">Incastro — Incastro (trave iperstatica)</option>
+      </select>
+    </div>
+  </div>
+
+  <!-- CARICHI PUNTUALI -->
+  <div class="section-block">
+    <div class="stitle">Carichi Puntuali</div>
+    <div id="pt-loads-list"></div>
+    <button class="add-btn" onclick="addPointLoad()">+ Aggiungi carico puntuale</button>
+  </div>
+
+  <!-- CARICHI DISTRIBUITI -->
+  <div class="section-block">
+    <div class="stitle">Carichi Distribuiti</div>
+    <div id="dist-loads-list"></div>
+    <button class="add-btn" onclick="addDistLoad()">+ Aggiungi carico distribuito</button>
+  </div>
+
+  <button class="clear-btn" onclick="clearAll()">Azzera tutto</button>
+</aside>
+
+<!-- ══════════════════════ MAIN ══════════════════════ -->
+<main class="main-content">
+  <div id="empty-state" class="empty-state">
+    <div class="empty-icon">📐</div>
+    <div class="empty-text">Inserisci la geometria della sezione, il materiale,<br>la lunghezza, i vincoli e almeno un carico.</div>
+  </div>
+
+  <div id="results-area">
+    <div class="results-header">
+      <h2>Risultati</h2>
+    </div>
+
+    <div id="status-bar" class="status-bar"></div>
+
+    <!-- Sezione geometrica -->
+    <div class="res-section">
+      <div class="res-section-title">Proprietà sezione</div>
+      <div class="res-grid" id="sec-props"></div>
+    </div>
+
+    <!-- Reazioni -->
+    <div class="res-section">
+      <div class="res-section-title">Reazioni vincolari</div>
+      <div class="res-grid" id="reactions"></div>
+    </div>
+
+    <!-- Max valori -->
+    <div class="res-section">
+      <div class="res-section-title">Valori massimi</div>
+      <div class="res-grid" id="max-vals"></div>
+    </div>
+
+    <!-- Diagramma trave -->
+    <div class="diagram-box">
+      <div class="diagram-title">Schema trave e carichi</div>
+      <canvas id="c-beam" width="800" height="130"></canvas>
+    </div>
+
+    <!-- SFD -->
+    <div class="diagram-box">
+      <div class="diagram-title">Diagramma taglio V(x) — [N]</div>
+      <canvas id="c-sfd" width="800" height="160"></canvas>
+    </div>
+
+    <!-- BMD -->
+    <div class="diagram-box">
+      <div class="diagram-title">Diagramma momento flettente M(x) — [N·mm]</div>
+      <canvas id="c-bmd" width="800" height="160"></canvas>
+    </div>
+
+    <!-- Deflection -->
+    <div class="diagram-box">
+      <div class="diagram-title">Curva elastica δ(x) — [mm]</div>
+      <canvas id="c-def" width="800" height="130"></canvas>
+    </div>
+  </div>
+</main>
+</div>
+
+<script>
+// ═══════════════════════════════════════════════════════
+//  DATA
+// ═══════════════════════════════════════════════════════
+const MATS = {
+  S235:  {E:210000, fy:235},
+  S275:  {E:210000, fy:275},
+  S355:  {E:210000, fy:355},
+  S690:  {E:210000, fy:690},
+  Al6061:{E:70000,  fy:276},
+  Al6082:{E:70000,  fy:255},
+  custom:{E:210000, fy:355}
+};
+
+let ptLoadId = 0, distLoadId = 0;
+
+// ═══════════════════════════════════════════════════════
+//  UI HELPERS
+// ═══════════════════════════════════════════════════════
+function onSectionChange(){
+  const t = document.getElementById('sec-type').value;
+  document.querySelectorAll('.dim-panel').forEach(p => p.classList.remove('active'));
+  const p = document.getElementById('dim-'+t);
+  if(p) p.classList.add('active');
+  autoCalc();
+}
+
+function onMatChange(){
+  const v = document.getElementById('mat-sel').value;
+  if(MATS[v]){
+    document.getElementById('mat-E').value = MATS[v].E;
+    document.getElementById('mat-fy').value = MATS[v].fy;
+  }
+  autoCalc();
+}
+
+function addPointLoad(){
+  const id = ptLoadId++;
+  const div = document.createElement('div');
+  div.className = 'load-row';
+  div.id = 'pl-'+id;
+  div.innerHTML = `
+    <div class="field"><label>Posiz. x [mm]</label>
+      <input type="number" id="pl-x-${id}" placeholder="x" min="0" step="1" oninput="autoCalc()"></div>
+    <div class="field"><label>Forza F [N]</label>
+      <input type="number" id="pl-f-${id}" placeholder="F" step="1" oninput="autoCalc()"></div>
+    <button class="rm-btn" onclick="removeLoad('pl-${id}')">×</button>`;
+  document.getElementById('pt-loads-list').appendChild(div);
+}
+
+function addDistLoad(){
+  const id = distLoadId++;
+  const div = document.createElement('div');
+  div.className = 'load-row';
+  div.id = 'dl-'+id;
+  div.innerHTML = `
+    <div class="field"><label>Da x₁ [mm]</label>
+      <input type="number" id="dl-x1-${id}" placeholder="x₁" min="0" step="1" oninput="autoCalc()"></div>
+    <div class="field"><label>A x₂ [mm]</label>
+      <input type="number" id="dl-x2-${id}" placeholder="x₂" min="0" step="1" oninput="autoCalc()"></div>
+    <div class="field"><label>q [N/mm]</label>
+      <input type="number" id="dl-q-${id}" placeholder="q" step="0.01" oninput="autoCalc()"></div>
+    <button class="rm-btn" onclick="removeLoad('dl-${id}')">×</button>`;
+  document.getElementById('dist-loads-list').appendChild(div);
+}
+
+function removeLoad(id){
+  const el = document.getElementById(id);
+  if(el) el.remove();
+  autoCalc();
+}
+
+function clearAll(){
+  ['d-d','d-b','d-h','d-a','d-D','d-t_td','d-Br','d-Hr','d-t_tr','d-Aq','d-t_tq','d-s',
+   'd-Lb1','d-Lb2','d-Lt','d-Tbf','d-Ttf','d-Thw','d-Ttw',
+   'd-Hbf','d-HH','d-Htf','d-Htw','d-Ub','d-UH','d-Utf','d-Utw',
+   'beam-L'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
+  document.getElementById('pt-loads-list').innerHTML='';
+  document.getElementById('dist-loads-list').innerHTML='';
+  ptLoadId=0; distLoadId=0;
+  hideResults();
+}
+
+// ═══════════════════════════════════════════════════════
+//  SECTION PROPERTIES
+// ═══════════════════════════════════════════════════════
+function v(id){return parseFloat(document.getElementById(id)?.value)||0;}
+
+function getSectionProps(){
+  const type = document.getElementById('sec-type').value;
+  let A=0, I=0, W=0, yc=0, desc='', valid=true;
+
+  switch(type){
+    case 'tondo':{
+      const d=v('d-d'); if(d<=0){valid=false;break;}
+      A=Math.PI*d*d/4; I=Math.PI*d*d*d*d/64; W=Math.PI*d*d*d/32;
+      desc=`⌀${d} mm`; break;}
+    case 'rettangolare':{
+      const b=v('d-b'),h=v('d-h'); if(b<=0||h<=0){valid=false;break;}
+      A=b*h; I=b*h*h*h/12; W=b*h*h/6;
+      desc=`${b}×${h} mm`; break;}
+    case 'quadrata':{
+      const a=v('d-a'); if(a<=0){valid=false;break;}
+      A=a*a; I=a*a*a*a/12; W=a*a*a/6;
+      desc=`□${a} mm`; break;}
+    case 'tubo_tondo':{
+      const D=v('d-D'),t=v('d-t_td'),d=D-2*t;
+      if(D<=0||t<=0||d<=0){valid=false;break;}
+      A=Math.PI*(D*D-d*d)/4; I=Math.PI*(D*D*D*D-d*d*d*d)/64; W=I/(D/2);
+      desc=`⌀${D}×${t} mm`; break;}
+    case 'tubo_rett':{
+      const B=v('d-Br'),H=v('d-Hr'),t=v('d-t_tr'),b=B-2*t,h=H-2*t;
+      if(B<=0||H<=0||t<=0||b<=0||h<=0){valid=false;break;}
+      A=B*H-b*h; I=(B*H*H*H-b*h*h*h)/12; W=I/(H/2);
+      desc=`${B}×${H}×${t} mm`; break;}
+    case 'tubo_quad':{
+      const S=v('d-Aq'),t=v('d-t_tq'),s=S-2*t;
+      if(S<=0||t<=0||s<=0){valid=false;break;}
+      A=S*S-s*s; I=(S*S*S*S-s*s*s*s)/12; W=I/(S/2);
+      desc=`□${S}×${t} mm`; break;}
+    case 'esagonale':{
+      const s=v('d-s'); if(s<=0){valid=false;break;}
+      const a=s/Math.sqrt(3);
+      A=3*Math.sqrt(3)/2*a*a;
+      I=5*Math.sqrt(3)/16*a*a*a*a;
+      W=I/(s/2);
+      desc=`AF${s} mm`; break;}
+    case 'L':{
+      const b1=v('d-Lb1'),b2=v('d-Lb2'),t=v('d-Lt');
+      if(b1<=t||b2<=t||t<=0){valid=false;break;}
+      const A1=b1*t, A2=t*(b2-t);
+      A=A1+A2;
+      const y1=t/2, y2=t+(b2-t)/2;
+      yc=(A1*y1+A2*y2)/A;
+      I=b1*t*t*t/12+A1*(yc-y1)*(yc-y1)+t*(b2-t)*(b2-t)*(b2-t)/12+A2*(yc-y2)*(yc-y2);
+      W=I/Math.max(b2-yc,yc);
+      desc=`L${b1}×${b2}×${t} mm`; break;}
+    case 'T':{
+      const bf=v('d-Tbf'),tf=v('d-Ttf'),hw=v('d-Thw'),tw=v('d-Ttw');
+      if(bf<=0||tf<=0||hw<=0||tw<=0){valid=false;break;}
+      const Af=bf*tf, Aw=tw*hw;
+      A=Af+Aw;
+      const yf=hw+tf/2, yw=hw/2;
+      yc=(Af*yf+Aw*yw)/A;
+      I=bf*tf*tf*tf/12+Af*(yf-yc)*(yf-yc)+tw*hw*hw*hw/12+Aw*(yw-yc)*(yw-yc);
+      W=I/Math.max(hw+tf-yc,yc);
+      desc=`T${bf}×${hw}+${tf}/${tw} mm`; break;}
+    case 'H':{
+      const bf=v('d-Hbf'),H=v('d-HH'),tf=v('d-Htf'),tw=v('d-Htw');
+      if(bf<=0||H<=0||tf<=0||tw<=0){valid=false;break;}
+      const hw=H-2*tf;
+      if(hw<=0){valid=false;break;}
+      const Af=bf*tf, Aw=tw*hw;
+      A=2*Af+Aw; yc=H/2;
+      I=2*(bf*tf*tf*tf/12+Af*(H/2-tf/2)*(H/2-tf/2))+tw*hw*hw*hw/12;
+      W=I/(H/2);
+      desc=`H${bf}×${H}×${tf}/${tw} mm`; break;}
+    case 'U':{
+      const b=v('d-Ub'),H=v('d-UH'),tf=v('d-Utf'),tw=v('d-Utw');
+      if(b<=tw||H<=0||tf<=0||tw<=0){valid=false;break;}
+      const hw=H-2*tf, bf=b-tw;
+      if(hw<=0||bf<=0){valid=false;break;}
+      const Aweb=tw*H, Afl=bf*tf;
+      A=Aweb+2*Afl; yc=H/2;
+      I=tw*H*H*H/12+2*(bf*tf*tf*tf/12+Afl*(H/2-tf/2)*(H/2-tf/2));
+      W=I/(H/2);
+      desc=`U${b}×${H}×${tf}/${tw} mm`; break;}
+  }
+  return {A, I, W, yc, desc, valid};
+}
+
+// ═══════════════════════════════════════════════════════
+//  READ LOADS FROM DOM
+// ═══════════════════════════════════════════════════════
+function getLoads(){
+  const loads=[];
+  document.querySelectorAll('[id^="pl-x-"]').forEach(el=>{
+    const id=el.id.replace('pl-x-','');
+    const x=parseFloat(el.value);
+    const F=parseFloat(document.getElementById('pl-f-'+id)?.value);
+    if(!isNaN(x)&&!isNaN(F)&&F!==0) loads.push({type:'point',x,F});
+  });
+  document.querySelectorAll('[id^="dl-x1-"]').forEach(el=>{
+    const id=el.id.replace('dl-x1-','');
+    const x1=parseFloat(el.value);
+    const x2=parseFloat(document.getElementById('dl-x2-'+id)?.value);
+    const q=parseFloat(document.getElementById('dl-q-'+id)?.value);
+    if(!isNaN(x1)&&!isNaN(x2)&&!isNaN(q)&&q!==0&&x2>x1) loads.push({type:'udl',x1,x2,q});
+  });
+  return loads;
+}
+
+// ═══════════════════════════════════════════════════════
+//  FEM BEAM SOLVER  (Euler-Bernoulli, N_EL elements)
+// ═══════════════════════════════════════════════════════
+const N_EL = 80;
+
+function solveBeam(L, EI, loads, bcType){
+  const n=N_EL, nn=n+1, le=L/n, ndof=2*nn;
+  // flat K[i*ndof+j]
+  const K=new Float64Array(ndof*ndof);
+  const f=new Float64Array(ndof);
+
+  function Kset(r,c,v){K[r*ndof+c]+=v;}
+
+  // Assemble stiffness
+  for(let e=0;e<n;e++){
+    const i=2*e;
+    const k=EI/(le*le*le);
+    const le2=le*le;
+    const ke=[
+      12*k, 6*le*k, -12*k, 6*le*k,
+      6*le*k, 4*le2*k, -6*le*k, 2*le2*k,
+      -12*k, -6*le*k, 12*k, -6*le*k,
+      6*le*k, 2*le2*k, -6*le*k, 4*le2*k
+    ];
+    const dofs=[i,i+1,i+2,i+3];
+    for(let a=0;a<4;a++)for(let b=0;b<4;b++) Kset(dofs[a],dofs[b],ke[a*4+b]);
+  }
+
+  // Assemble loads
+  function addElemLoad(e, xi, P){
+    const xi2=xi*xi, xi3=xi2*xi;
+    const N1=1-3*xi2+2*xi3, N2=le*xi*(1-xi)*(1-xi),
+          N3=3*xi2-2*xi3, N4=le*xi2*(xi-1);
+    const dofs=[2*e,2*e+1,2*(e+1),2*(e+1)+1];
+    const Ni=[N1,N2,N3,N4];
+    for(let a=0;a<4;a++) f[dofs[a]]+=P*Ni[a];
+  }
+
+  for(const ld of loads){
+    if(ld.type==='point'){
+      const xc=Math.min(Math.max(ld.x,0),L);
+      const e=Math.min(Math.floor(xc/le),n-1);
+      const xi=(xc-e*le)/le;
+      addElemLoad(e,xi,ld.F);
+    } else {
+      const x1c=Math.min(Math.max(ld.x1,0),L);
+      const x2c=Math.min(Math.max(ld.x2,0),L);
+      // 5-point Gauss over loaded length, element by element
+      const gp=[-0.90618,-.53847,0,.53847,.90618];
+      const gw=[.23693,.47863,.56889,.47863,.23693];
+      for(let e=0;e<n;e++){
+        const xa=e*le, xb=(e+1)*le;
+        const xla=Math.max(xa,x1c), xlb=Math.min(xb,x2c);
+        if(xla>=xlb) continue;
+        const mid=(xla+xlb)/2, half=(xlb-xla)/2;
+        for(let g=0;g<5;g++){
+          const xg=mid+gp[g]*half;
+          const xi=(xg-xa)/le;
+          addElemLoad(e,xi,ld.q*gw[g]*half);
+        }
+      }
+    }
+  }
+
+  // Boundary conditions (penalty method)
+  const pen=1e16;
+  const fixed=[];
+  if(bcType==='ss')  fixed.push(0,2*n);
+  else if(bcType==='cant') fixed.push(0,1);
+  else if(bcType==='fp')   fixed.push(0,1,2*n);
+  else if(bcType==='ff')   fixed.push(0,1,2*n,2*n+1);
+
+  for(const d of fixed){ K[d*ndof+d]+=pen; }
+
+  // Gaussian elimination with partial pivoting
+  const Ab=new Float64Array(ndof*(ndof+1));
+  for(let i=0;i<ndof;i++){
+    for(let j=0;j<ndof;j++) Ab[i*(ndof+1)+j]=K[i*ndof+j];
+    Ab[i*(ndof+1)+ndof]=f[i];
+  }
+
+  for(let i=0;i<ndof;i++){
+    let maxv=Math.abs(Ab[i*(ndof+1)+i]), maxr=i;
+    for(let k=i+1;k<ndof;k++){
+      const av=Math.abs(Ab[k*(ndof+1)+i]);
+      if(av>maxv){maxv=av;maxr=k;}
+    }
+    if(maxr!==i){
+      for(let j=0;j<=ndof;j++){
+        const tmp=Ab[i*(ndof+1)+j];
+        Ab[i*(ndof+1)+j]=Ab[maxr*(ndof+1)+j];
+        Ab[maxr*(ndof+1)+j]=tmp;
+      }
+    }
+    const piv=Ab[i*(ndof+1)+i];
+    if(Math.abs(piv)<1e-30) continue;
+    for(let k=i+1;k<ndof;k++){
+      const fac=Ab[k*(ndof+1)+i]/piv;
+      for(let j=i;j<=ndof;j++) Ab[k*(ndof+1)+j]-=fac*Ab[i*(ndof+1)+j];
+    }
+  }
+
+  const u=new Float64Array(ndof);
+  for(let i=ndof-1;i>=0;i--){
+    let s=Ab[i*(ndof+1)+ndof];
+    for(let j=i+1;j<ndof;j++) s-=Ab[i*(ndof+1)+j]*u[j];
+    const piv=Ab[i*(ndof+1)+i];
+    u[i]=Math.abs(piv)<1e-30?0:s/piv;
+  }
+  return u;
+}
+
+// ── Post-processing: V and M arrays from FEM solution ──
+function computeVM(u, L, EI){
+  const n=N_EL, le=L/n;
+  const NP=n+1;
+  const xs=new Float64Array(NP), Vs=new Float64Array(NP), Ms=new Float64Array(NP);
+
+  for(let nd=0;nd<NP;nd++){
+    xs[nd]=nd*le;
+    const v1=u[2*Math.max(nd-1,0)], t1=u[2*Math.max(nd-1,0)+1],
+          v2=u[2*Math.min(nd,n-1)+2], t2=u[2*Math.min(nd,n-1)+3];
+    // Use element to the right (or left for last node)
+    const e=Math.min(nd,n-1);
+    const ev=[u[2*e],u[2*e+1],u[2*e+2],u[2*e+3]];
+    // V constant per element: -EI * y'''
+    Vs[nd]=-EI/le/le/le*(12*ev[0]+6*le*ev[1]-12*ev[2]+6*le*ev[3]);
+    // M at local x=0 for element e (node e)
+    Ms[nd]=EI/le/le*(-6*ev[0]-4*le*ev[1]+6*ev[2]-2*le*ev[3]);
+  }
+  // M at last node from left element
+  const e=n-1;
+  const ev=[u[2*e],u[2*e+1],u[2*e+2],u[2*e+3]];
+  Ms[n]=EI/le/le*(6*ev[0]+2*le*ev[1]-6*ev[2]+4*le*ev[3]);
+
+  return {xs, Vs, Ms};
+}
+
+// Deflection: directly from u (nodal v)
+function getDeflections(u){
+  const n=N_EL, nn=n+1;
+  const ds=new Float64Array(nn);
+  for(let i=0;i<nn;i++) ds[i]=u[2*i];
+  return ds;
+}
+
+// ═══════════════════════════════════════════════════════
+//  REACTIONS from equilibrium
+// ═══════════════════════════════════════════════════════
+function computeReactions(Vs, Ms, bcType){
+  const n=N_EL;
+  const RA=Vs[0];    // shear at x=0+
+  const RB=-Vs[n];   // shear at x=L- (reaction opposes shear)
+  const MA= (bcType==='cant'||bcType==='fp'||bcType==='ff') ? -Ms[0] : 0;
+  const MB= (bcType==='ff') ? Ms[n] : 0;
+  return {RA, RB, MA, MB};
+}
+
+// ═══════════════════════════════════════════════════════
+//  FORMAT HELPERS
+// ═══════════════════════════════════════════════════════
+function fmt(v,d=2){return isNaN(v)||!isFinite(v)?'—':v.toFixed(d);}
+function fmtN(v){
+  const a=Math.abs(v);
+  if(a>=1e6) return (v/1e6).toFixed(3)+' MN';
+  if(a>=1e3) return (v/1e3).toFixed(2)+' kN';
+  return v.toFixed(1)+' N';
+}
+function fmtM(v){
+  const a=Math.abs(v);
+  if(a>=1e9) return (v/1e9).toFixed(3)+' kN·m';
+  if(a>=1e6) return (v/1e6).toFixed(3)+' N·m';
+  return v.toFixed(0)+' N·mm';
+}
+function rcCard(label,val,unit,cls='',note=''){
+  return `<div class="rc ${cls}"><div class="rc-label">${label}</div>
+    <div class="rc-value ${cls}">${val}<span class="rc-unit">${unit}</span></div>
+    ${note?`<div class="rc-note">${note}</div>`:''}</div>`;
+}
+
+// ═══════════════════════════════════════════════════════
+//  CANVAS DRAWING
+// ═══════════════════════════════════════════════════════
+const C={accent:'#4fc3f7',green:'#3ecf8e',red:'#f66d6d',orange:'#ff8c42',
+         gold:'#f0b429',text:'#e2e8f4',dim:'#5a6278',muted:'#8a94aa',
+         bg:'#1c1d23',border:'#2e3550',violet:'#b39ddb'};
+
+function drawBeam(canvas, L, loads, bcType){
+  const ctx=canvas.getContext('2d');
+  const W=canvas.width, H=canvas.height;
+  ctx.clearRect(0,0,W,H);
+  const mx=40, my=50, bw=W-2*mx, by=H/2;
+
+  // beam line
+  ctx.strokeStyle=C.muted; ctx.lineWidth=6;
+  ctx.beginPath(); ctx.moveTo(mx,by); ctx.lineTo(mx+bw,by); ctx.stroke();
+
+  // supports
+  function drawPin(x,y,flip=false){
+    ctx.strokeStyle=C.accent; ctx.fillStyle=C.accent; ctx.lineWidth=1.5;
+    const s=12, dir=flip?-1:1;
+    ctx.beginPath(); ctx.moveTo(x,y); ctx.lineTo(x-s,y+dir*s); ctx.lineTo(x+s,y+dir*s); ctx.closePath();
+    ctx.stroke(); ctx.fillStyle='rgba(79,195,247,0.15)'; ctx.fill();
+    ctx.beginPath(); ctx.moveTo(x-s,y+dir*s+dir*3); ctx.lineTo(x+s,y+dir*s+dir*3);
+    ctx.strokeStyle=C.accent; ctx.stroke();
+  }
+  function drawFixed(x,top){
+    ctx.strokeStyle=C.accent; ctx.lineWidth=2;
+    ctx.beginPath(); ctx.moveTo(x,by-20); ctx.lineTo(x,by+20); ctx.stroke();
+    const dx=top?-8:8;
+    for(let y=by-20;y<=by+20;y+=8){
+      ctx.beginPath(); ctx.moveTo(x,y); ctx.lineTo(x+dx,y+8); ctx.stroke();
+    }
+  }
+  function drawFree(x){
+    ctx.strokeStyle=C.dim; ctx.lineWidth=1.5; ctx.setLineDash([4,4]);
+    ctx.beginPath(); ctx.moveTo(x,by-20); ctx.lineTo(x,by+20); ctx.stroke();
+    ctx.setLineDash([]);
+  }
+
+  if(bcType==='ss'){ drawPin(mx,by); drawPin(mx+bw,by); }
+  else if(bcType==='cant'){ drawFixed(mx,false); drawFree(mx+bw); }
+  else if(bcType==='fp'){ drawFixed(mx,false); drawPin(mx+bw,by); }
+  else if(bcType==='ff'){ drawFixed(mx,false); drawFixed(mx+bw,true); }
+
+  // loads
+  const scale=bw/L;
+  for(const ld of loads){
+    if(ld.type==='point'){
+      const px=mx+ld.x*scale;
+      const color=ld.F>0?C.red:C.green;
+      const dir=ld.F>0?1:-1;
+      ctx.strokeStyle=color; ctx.fillStyle=color; ctx.lineWidth=2;
+      const yt=by-dir*35, yb=by;
+      ctx.beginPath(); ctx.moveTo(px,yt); ctx.lineTo(px,yb); ctx.stroke();
+      // arrowhead
+      ctx.beginPath(); ctx.moveTo(px,yb); ctx.lineTo(px-5,yb-dir*10); ctx.lineTo(px+5,yb-dir*10); ctx.closePath(); ctx.fill();
+      // label
+      ctx.fillStyle=color; ctx.font='10px DM Mono'; ctx.textAlign='center';
+      ctx.fillText(fmtN(Math.abs(ld.F)),px,yt-5);
+    } else {
+      const x1p=mx+ld.x1*scale, x2p=mx+ld.x2*scale;
+      const color=ld.q>0?'rgba(246,109,109,0.7)':'rgba(62,207,142,0.7)';
+      const dir=ld.q>0?1:-1;
+      ctx.fillStyle=color;
+      ctx.fillRect(x1p,by-dir*25,x2p-x1p,dir*25);
+      ctx.strokeStyle=ld.q>0?C.red:C.green; ctx.lineWidth=1.5;
+      ctx.strokeRect(x1p,by-dir*25,x2p-x1p,dir*25);
+      ctx.fillStyle=ld.q>0?C.red:C.green; ctx.font='10px DM Mono'; ctx.textAlign='center';
+      ctx.fillText(Math.abs(ld.q).toFixed(2)+' N/mm',(x1p+x2p)/2,by-dir*28);
+    }
+  }
+
+  // axis label
+  ctx.fillStyle=C.dim; ctx.font='10px DM Mono'; ctx.textAlign='center';
+  ctx.fillText('x',mx-10,by+4); ctx.fillText('0',mx,by+18); ctx.fillText('L',mx+bw,by+18);
+}
+
+function drawDiagram(canvas, xs, ys, color, label, zero='baseline'){
+  const ctx=canvas.getContext('2d');
+  const W=canvas.width, H=canvas.height;
+  ctx.clearRect(0,0,W,H);
+  const mx=40,my=15,bw=W-2*mx,bh=H-2*my;
+
+  const n=xs.length;
+  const xmax=xs[n-1];
+  const ymin=Math.min(...ys), ymax=Math.max(...ys);
+  const yrange=Math.max(Math.abs(ymin),Math.abs(ymax),1e-12)*1.15;
+
+  const toX=x=>mx+x/xmax*bw;
+  const toY=y=>(H/2)-y/yrange*(bh/2);
+
+  // zero line
+  ctx.strokeStyle=C.border; ctx.lineWidth=1; ctx.setLineDash([3,3]);
+  ctx.beginPath(); ctx.moveTo(mx,H/2); ctx.lineTo(mx+bw,H/2); ctx.stroke();
+  ctx.setLineDash([]);
+
+  // beam baseline
+  ctx.strokeStyle=C.dim; ctx.lineWidth=2;
+  ctx.beginPath(); ctx.moveTo(mx,H/2); ctx.lineTo(mx+bw,H/2); ctx.stroke();
+
+  // fill area
+  ctx.beginPath(); ctx.moveTo(toX(xs[0]),H/2);
+  for(let i=0;i<n;i++) ctx.lineTo(toX(xs[i]),toY(ys[i]));
+  ctx.lineTo(toX(xs[n-1]),H/2); ctx.closePath();
+  ctx.fillStyle=color.replace(')',',0.2)').replace('rgb','rgba');
+  ctx.fill();
+
+  // line
+  ctx.strokeStyle=color; ctx.lineWidth=2;
+  ctx.beginPath(); ctx.moveTo(toX(xs[0]),toY(ys[0]));
+  for(let i=1;i<n;i++) ctx.lineTo(toX(xs[i]),toY(ys[i]));
+  ctx.stroke();
+
+  // max/min labels
+  let imax=0,imin=0;
+  for(let i=1;i<n;i++){if(ys[i]>ys[imax])imax=i;if(ys[i]<ys[imin])imin=i;}
+  ctx.font='10px DM Mono'; ctx.fillStyle=color; ctx.textAlign='center';
+  if(Math.abs(ys[imax])>1e-12) ctx.fillText(fmt(ys[imax],0),toX(xs[imax]),toY(ys[imax])-6);
+  if(Math.abs(ys[imin])>1e-12) ctx.fillText(fmt(ys[imin],0),toX(xs[imin]),toY(ys[imin])+14);
+
+  // x-axis ticks
+  ctx.fillStyle=C.dim; ctx.font='9px DM Mono'; ctx.textAlign='center';
+  for(let t=0;t<=4;t++){
+    const xv=xmax*t/4;
+    ctx.fillText((xv).toFixed(0),toX(xv),H-3);
+  }
+  ctx.fillStyle=C.muted; ctx.font='9px DM Mono'; ctx.textAlign='left';
+  ctx.fillText('[mm]',mx,H-3);
+}
+
+function drawDeflection(canvas, xs, ds){
+  drawDiagram(canvas, xs, ds, C.violet, 'δ');
+}
+
+// ═══════════════════════════════════════════════════════
+//  MAIN CALCULATE
+// ═══════════════════════════════════════════════════════
+function showResults(){ document.getElementById('empty-state').style.display='none'; document.getElementById('results-area').style.display='block'; }
+function hideResults(){ document.getElementById('empty-state').style.display='flex'; document.getElementById('results-area').style.display='none'; }
+
+function autoCalc(){
+  const sec=getSectionProps();
+  const L=v('beam-L');
+  const E=v('mat-E');
+  const fy=v('mat-fy');
+  const bcType=document.getElementById('bc-type').value;
+  const loads=getLoads();
+
+  if(!sec.valid||L<=0||E<=0||fy<=0||loads.length===0){
+    hideResults(); return;
+  }
+  showResults();
+
+  const {A,I,W,desc} = sec;
+  const EI=E*I;
+
+  // Solve FEM
+  const u=solveBeam(L,EI,loads,bcType);
+  const {xs,Vs,Ms}=computeVM(u,L,EI);
+  const ds=getDeflections(u);
+  const {RA,RB,MA,MB}=computeReactions(Vs,Ms,bcType);
+
+  // Max values
+  const Vmax=Math.max(...Vs.map(Math.abs));
+  const Mmax=Math.max(...Ms.map(Math.abs));
+  const dmax=Math.max(...ds.map(Math.abs));
+  const sigma_max=Mmax/W;
+  const CS=fy/sigma_max;
+
+  // Section props
+  document.getElementById('sec-props').innerHTML=
+    rcCard('Area A',fmt(A,1),'mm²','accent')+
+    rcCard('Inerzia I',A>0?(I>=1e6?fmt(I/1e4,1)+' cm⁴':fmt(I,0)+' mm⁴'):'—','','accent')+
+    rcCard('Modulo W',W>=1e3?fmt(W/1e3,2)+' cm³':fmt(W,1)+' mm³','','accent',desc);
+
+  // Reactions
+  const bcLabel={'ss':'Appoggio–Appoggio','cant':'Mensola','fp':'Incastro–Appoggio','ff':'Incastro–Incastro'};
+  let rxHtml=rcCard('Reazione A',fmtN(RA),'','green')+rcCard('Reazione B',fmtN(RB),'','green');
+  if(bcType==='cant'||bcType==='fp'||bcType==='ff')
+    rxHtml+=rcCard('Momento A',fmtM(MA),'','gold');
+  if(bcType==='ff')
+    rxHtml+=rcCard('Momento B',fmtM(MB),'','gold');
+  document.getElementById('reactions').innerHTML=rxHtml;
+
+  // Status
+  const sfCls=CS>=2?'ok':CS>=1.2?'warn':'fail';
+  const sfLbl=CS>=2?'OK':'CS BASSO';
+  document.getElementById('status-bar').innerHTML=
+    `<div class="chip ok">Calcolo completato</div>
+     <div class="chip ${sfCls}">${sfLbl} — CS ${fmt(CS,2)}</div>
+     <div class="chip">${bcLabel[bcType]}</div>`;
+
+  // Max values
+  const L_300=L/300, L_500=L/500;
+  const deflOk=dmax<=L_300;
+  document.getElementById('max-vals').innerHTML=
+    rcCard('M<sub>max</sub>',fmtM(Mmax),'','gold')+
+    rcCard('V<sub>max</sub>',fmtN(Vmax),'')+
+    rcCard('σ<sub>max</sub>',fmt(sigma_max,1),'MPa',sigma_max>fy?'red':'green',`fy = ${fy} MPa`)+
+    rcCard('Freccia max δ',fmt(dmax,2),'mm',deflOk?'green':'warn',`L/300 = ${fmt(L_300,1)} mm`)+
+    rcCard('Coeff. sicurezza',fmt(CS,2),'',CS>=2?'green':CS>=1.2?'orange':'red','σ_max/fy');
+
+  // Draw
+  drawBeam(document.getElementById('c-beam'), L, loads, bcType);
+  drawDiagram(document.getElementById('c-sfd'), xs, Vs, C.orange, 'V');
+  drawDiagram(document.getElementById('c-bmd'), xs, Ms, C.gold, 'M');
+  drawDeflection(document.getElementById('c-def'), xs, ds);
+}
+
+// ═══════════════════════════════════════════════════════
+//  INIT
+// ═══════════════════════════════════════════════════════
+document.addEventListener('DOMContentLoaded',()=>{
+  document.querySelectorAll('.sidebar input').forEach(el=>el.addEventListener('input',autoCalc));
+  document.querySelectorAll('.sidebar select').forEach(el=>el.addEventListener('change',autoCalc));
+});
+</script>
+</body>
+</html>
