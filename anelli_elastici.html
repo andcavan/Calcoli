@@ -319,12 +319,11 @@ body{display:flex;flex-direction:column;align-items:center;min-height:100vh;padd
   <div class="warn-box" id="warn-box">⚠ Diametro non presente nelle tabelle DIN 471/472. Seleziona un diametro standard.</div>
 
   <div class="info-box" style="font-size:9px;line-height:1.7">
-    <strong>Norme di riferimento</strong><br>
-    Alberi: <strong>DIN 471</strong> · UNI 7437 · BS 3673-1<br>
-    Fori: &nbsp;&nbsp;<strong>DIN 472</strong> · UNI 7438 · BS 3673-2<br>
-    NA/NAS/NJ rinforzati: stessa gola, anello più spesso (Fa × 1.6)<br>
-    Inox: anello in 1.4122 o 1.4310 — Fa ridotta ≈ 25%<br>
-    Forza Fa da catalogo (sede C45 ≥ 150 HB, T = 20 °C)
+    <strong>Tipi disponibili — Seeger Catalog</strong><br>
+    Alberi: <strong>A</strong> DIN 471 · <strong>AV</strong> sez. ridotta · <strong>AS</strong> rinforzata · <strong>AK</strong> DIN 983<br>
+    Fori: &nbsp;&nbsp;<strong>J</strong> DIN 472 · <strong>JV</strong> sez. ridotta · <strong>JS</strong> rinforzata · <strong>JK</strong> DIN 984<br>
+    Inox 1.4122/1.4310: Fa ridotta ≈ 25%<br>
+    Fa da catalogo (sede C45 ≥ 150 HB, T = 20 °C)
   </div>
 </div>
 
@@ -436,11 +435,8 @@ body{display:flex;flex-direction:column;align-items:center;min-height:100vh;padd
 </div>
 
 <script>
-// Fallback: NA/NAS usano geometria A, NJ usa geometria J
-const TYPE_FALLBACK = { NA: 'A', NAS: 'A', NJ: 'J' };
 function getTable(type) {
-  const key = ANELLI_DB[type] ? type : (TYPE_FALLBACK[type] || (currentForShaft ? 'A' : 'J'));
-  return ANELLI_DB[key];
+  return ANELLI_DB[type] || ANELLI_DB[currentForShaft ? 'A' : 'J'];
 }
 
 /* ─── STATE ─── */
@@ -757,15 +753,16 @@ function renderTable(table, activeDiam) {
   const d0 = isShaft ? 'd (mm)' : 'D (mm)';
   const d1lbl = isShaft ? 'd₁ (mm)' : 'D₁ (mm)';
 
+  // Colonne DB: [d1, d2, m, s, t, g, d3, Fa]
   thead.innerHTML = `<tr>
-    <th>${d0}</th><th>${d1lbl}</th><th>b (mm)</th><th>m (mm)</th><th>t (mm)</th><th>d₃ (mm)</th><th>Fa (N)</th>
+    <th>${d0}</th><th>d₂ (mm)</th><th>m (mm)</th><th>s (mm)</th><th>t (mm)</th><th>g (mm)</th><th>d₃ (mm)</th><th>Fa (N)</th>
   </tr>`;
 
   tbody.innerHTML = '';
   table.forEach(r => {
     const tr = document.createElement('tr');
     if (r[0] === activeDiam) tr.classList.add('active-row');
-    tr.innerHTML = `<td>${r[0]}</td><td>${r[1].toFixed(1)}</td><td>${r[2].toFixed(2)}</td><td>${r[3].toFixed(1)}</td><td>${r[4].toFixed(2)}</td><td>${r[5].toFixed(1)}</td><td>${r[6].toLocaleString('it-IT')}</td>`;
+    tr.innerHTML = `<td>${r[0]}</td><td>${r[1].toFixed(1)}</td><td>${r[2].toFixed(2)}</td><td>${r[3].toFixed(2)}</td><td>${r[4].toFixed(2)}</td><td>${r[5].toFixed(1)}</td><td>${r[6].toFixed(1)}</td><td>${r[7].toLocaleString('it-IT')}</td>`;
     tbody.appendChild(tr);
   });
 
