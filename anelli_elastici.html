@@ -192,8 +192,8 @@ body{display:flex;flex-direction:column;align-items:center;min-height:100vh;padd
 
   <!-- VARIANT SUB-SELECTOR -->
   <div>
-    <!-- Shaft types: 2 rows × 3 -->
-    <div id="variants-shaft" style="display:grid;grid-template-columns:repeat(3,1fr);gap:5px">
+    <!-- Shaft types: A, AS, AV, AK — tutti presenti in ANELLI_DB -->
+    <div id="variants-shaft" style="display:grid;grid-template-columns:repeat(4,1fr);gap:5px">
       <button class="var-btn active-shaft" data-type="A"   data-kh="1.0" onclick="selectVariant(this)">
         <svg viewBox="0 0 40 30" fill="none">
           <path d="M20 3 A15 15 0 1 0 6 24" stroke="currentColor" stroke-width="3.8" stroke-linecap="round"/>
@@ -201,44 +201,23 @@ body{display:flex;flex-direction:column;align-items:center;min-height:100vh;padd
           <circle cx="6"  cy="24" r="2.2" fill="currentColor"/>
         </svg>
         <div class="vname">A</div>
-        <div class="vsub">standard</div>
-      </button>
-      <button class="var-btn" data-type="AS" data-kh="1.0" onclick="selectVariant(this)">
-        <svg viewBox="0 0 40 30" fill="none">
-          <path d="M20 3 A15 15 0 1 0 6 24" stroke="currentColor" stroke-width="3.8" stroke-linecap="round"/>
-          <circle cx="20" cy="3" r="2.2" fill="currentColor"/>
-          <circle cx="6"  cy="24" r="2.2" fill="currentColor"/>
-          <!-- chamfer mark -->
-          <line x1="15" y1="3" x2="20" y2="7" stroke="currentColor" stroke-width="1.2" opacity=".6"/>
-        </svg>
-        <div class="vname">AS</div>
-        <div class="vsub">con smusso</div>
+        <div class="vsub">DIN 471 std</div>
       </button>
       <button class="var-btn" data-type="AV" data-kh="1.0" onclick="selectVariant(this)">
         <svg viewBox="0 0 40 30" fill="none">
           <path d="M20 3 A15 15 0 1 0 6 24" stroke="currentColor" stroke-width="3.8" stroke-linecap="round"/>
         </svg>
         <div class="vname">AV</div>
-        <div class="vsub">senza fori</div>
+        <div class="vsub">sez. ridotta</div>
       </button>
-      <button class="var-btn" data-type="NA"  data-kh="1.6" onclick="selectVariant(this)">
+      <button class="var-btn" data-type="AS" data-kh="1.0" onclick="selectVariant(this)">
         <svg viewBox="0 0 40 30" fill="none">
           <path d="M20 3 A15 15 0 1 0 6 24" stroke="currentColor" stroke-width="5.5" stroke-linecap="round"/>
           <circle cx="20" cy="3" r="2.2" fill="currentColor"/>
           <circle cx="6"  cy="24" r="2.2" fill="currentColor"/>
         </svg>
-        <div class="vname">NA</div>
-        <div class="vsub">rinforzato</div>
-      </button>
-      <button class="var-btn" data-type="NAS" data-kh="1.6" onclick="selectVariant(this)">
-        <svg viewBox="0 0 40 30" fill="none">
-          <path d="M20 3 A15 15 0 1 0 6 24" stroke="currentColor" stroke-width="5.5" stroke-linecap="round"/>
-          <circle cx="20" cy="3" r="2.2" fill="currentColor"/>
-          <circle cx="6"  cy="24" r="2.2" fill="currentColor"/>
-          <line x1="15" y1="3" x2="20" y2="7" stroke="currentColor" stroke-width="1.2" opacity=".6"/>
-        </svg>
-        <div class="vname">NAS</div>
-        <div class="vsub">rinf. + smusso</div>
+        <div class="vname">AS</div>
+        <div class="vsub">rinforzata</div>
       </button>
       <button class="var-btn" data-type="AK"  data-kh="1.0" onclick="selectVariant(this)">
         <svg viewBox="0 0 40 30" fill="none">
@@ -247,12 +226,12 @@ body{display:flex;flex-direction:column;align-items:center;min-height:100vh;padd
           <rect x="2"  y="22" width="6" height="3.5" rx="1" fill="currentColor"/>
         </svg>
         <div class="vname">AK</div>
-        <div class="vsub">con linguette</div>
+        <div class="vsub">DIN 983</div>
       </button>
     </div>
 
-    <!-- Bore types: 2 rows × 3 (last cell empty) -->
-    <div id="variants-bore" style="display:none;grid-template-columns:repeat(3,1fr);gap:5px">
+    <!-- Bore types: J, JV, JS, JK — tutti presenti in ANELLI_DB -->
+    <div id="variants-bore" style="display:none;grid-template-columns:repeat(4,1fr);gap:5px">
       <button class="var-btn active-bore" data-type="J"   data-kh="1.0" onclick="selectVariant(this)">
         <svg viewBox="0 0 40 30" fill="none">
           <path d="M5 8 A15 15 0 1 1 35 8" stroke="currentColor" stroke-width="3.8" stroke-linecap="round"/>
@@ -260,33 +239,23 @@ body{display:flex;flex-direction:column;align-items:center;min-height:100vh;padd
           <circle cx="35" cy="8" r="2.2" fill="currentColor"/>
         </svg>
         <div class="vname">J</div>
-        <div class="vsub">standard</div>
-      </button>
-      <button class="var-btn" data-type="JS"  data-kh="1.0" onclick="selectVariant(this)">
-        <svg viewBox="0 0 40 30" fill="none">
-          <path d="M5 8 A15 15 0 1 1 35 8" stroke="currentColor" stroke-width="3.8" stroke-linecap="round"/>
-          <circle cx="5"  cy="8" r="2.2" fill="currentColor"/>
-          <circle cx="35" cy="8" r="2.2" fill="currentColor"/>
-          <line x1="20" y1="6" x2="25" y2="10" stroke="currentColor" stroke-width="1.2" opacity=".6"/>
-        </svg>
-        <div class="vname">JS</div>
-        <div class="vsub">con smusso</div>
+        <div class="vsub">DIN 472 std</div>
       </button>
       <button class="var-btn" data-type="JV"  data-kh="1.0" onclick="selectVariant(this)">
         <svg viewBox="0 0 40 30" fill="none">
           <path d="M5 8 A15 15 0 1 1 35 8" stroke="currentColor" stroke-width="3.8" stroke-linecap="round"/>
         </svg>
         <div class="vname">JV</div>
-        <div class="vsub">senza fori</div>
+        <div class="vsub">sez. ridotta</div>
       </button>
-      <button class="var-btn" data-type="NJ"  data-kh="1.6" onclick="selectVariant(this)">
+      <button class="var-btn" data-type="JS"  data-kh="1.0" onclick="selectVariant(this)">
         <svg viewBox="0 0 40 30" fill="none">
           <path d="M5 8 A15 15 0 1 1 35 8" stroke="currentColor" stroke-width="5.5" stroke-linecap="round"/>
           <circle cx="5"  cy="8" r="2.2" fill="currentColor"/>
           <circle cx="35" cy="8" r="2.2" fill="currentColor"/>
         </svg>
-        <div class="vname">NJ</div>
-        <div class="vsub">rinforzato</div>
+        <div class="vname">JS</div>
+        <div class="vsub">rinforzata</div>
       </button>
       <button class="var-btn" data-type="JK"  data-kh="1.0" onclick="selectVariant(this)">
         <svg viewBox="0 0 40 30" fill="none">
@@ -295,10 +264,8 @@ body{display:flex;flex-direction:column;align-items:center;min-height:100vh;padd
           <rect x="32" y="5" width="6" height="3.5" rx="1" fill="currentColor"/>
         </svg>
         <div class="vname">JK</div>
-        <div class="vsub">con linguette</div>
+        <div class="vsub">DIN 984</div>
       </button>
-      <!-- empty cell to keep grid alignment -->
-      <div></div>
     </div>
   </div>
 
