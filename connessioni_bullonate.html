@@ -1,0 +1,1312 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Connessioni Bullonate - VDI 2230 / EN 1993-1-8</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@300;400;500&family=Barlow+Condensed:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<script src="bulloni_db.js"></script>
+<style>
+:root{
+  --bg:#0e0f11;--bg1:#141519;--bg2:#1c1d23;--bg3:#23252d;
+  --border:rgba(255,255,255,.07);--border2:rgba(255,255,255,.13);
+  --text:#e8e9ec;--muted:#7a7d8a;--dim:#4a4d5a;
+  --acc:#4fc3f7;--acc2:#0288d1;
+  --up:#66bb6a;--dn:#ef5350;--amber:#ffa726;--violet:#b39ddb;
+  --mono:'DM Mono',monospace;--cond:'Barlow Condensed',sans-serif;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{background:var(--bg);color:var(--text);font-family:var(--mono);font-size:13px;min-height:100vh}
+body{display:flex;flex-direction:column;align-items:center;min-height:100vh;padding:20px}
+
+.header{border-bottom:1px solid var(--border);padding:11px 20px;display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:20px;width:100%;max-width:1180px}
+.header h1{font-family:var(--cond);font-size:20px;font-weight:700;letter-spacing:.04em;text-transform:uppercase}
+.sub{font-size:10px;color:var(--muted);letter-spacing:.1em;text-transform:uppercase;flex:1}
+.dot{width:7px;height:7px;border-radius:50%;background:var(--acc);display:inline-block;margin-right:6px;animation:pulse 2s ease-in-out infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
+.norm-badge{font-family:var(--cond);font-size:10px;font-weight:600;letter-spacing:.08em;color:var(--acc);background:rgba(79,195,247,.08);border:1px solid rgba(79,195,247,.22);border-radius:4px;padding:3px 9px;white-space:nowrap}
+
+.container{max-width:1180px;width:100%;display:grid;grid-template-columns:340px 1fr;gap:20px}
+@media(max-width:900px){.container{grid-template-columns:1fr}}
+
+.panel{background:var(--bg2);border:1px solid var(--border2);border-radius:8px;padding:15px;display:flex;flex-direction:column;gap:12px}
+.rpanel{display:flex;flex-direction:column;gap:14px}
+
+.stitle{font-family:var(--cond);font-size:10px;font-weight:600;letter-spacing:.17em;color:var(--muted);text-transform:uppercase;margin-bottom:4px;display:flex;align-items:center;gap:6px}
+.stitle::after{content:'';flex:1;height:1px;background:var(--border)}
+
+.field{margin-bottom:6px}
+.field:last-child{margin-bottom:0}
+.fhdr{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:4px}
+.flabel{color:var(--muted);font-size:11px;letter-spacing:.03em}
+.funit{font-size:10px;color:var(--dim)}
+.frow2{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+
+.srow{display:flex;align-items:center;gap:4px}
+.arr{flex-shrink:0;width:25px;height:25px;display:flex;align-items:center;justify-content:center;background:var(--bg2);border:1px solid var(--border2);border-radius:5px;cursor:pointer;color:var(--muted);font-size:10px;transition:all .12s;user-select:none}
+.arr:hover{border-color:var(--acc);color:var(--acc);background:rgba(79,195,247,.08)}
+.arr:active{transform:scale(.88)}
+
+.numinput{flex:1;width:100%;height:25px;background:var(--bg3);border:1px solid var(--border2);border-radius:5px;color:var(--acc);font-family:var(--mono);font-size:12px;font-weight:500;text-align:center;outline:none;padding:0 4px;transition:border-color .12s}
+.numinput:focus{border-color:var(--acc);background:var(--bg2)}
+.numinput:hover{border-color:rgba(79,195,247,.4)}
+.numinput::-webkit-outer-spin-button,.numinput::-webkit-inner-spin-button{-webkit-appearance:none;margin:0}
+.numinput[type=number]{-moz-appearance:textfield}
+
+.select-field{width:100%;height:25px;background:var(--bg3);border:1px solid var(--border2);border-radius:5px;color:var(--acc);font-family:var(--mono);font-size:12px;font-weight:500;padding:0 4px;outline:none;transition:border-color .12s;cursor:pointer}
+.select-field:focus{border-color:var(--acc);background:var(--bg2)}
+.select-field:hover{border-color:rgba(79,195,247,.4)}
+.select-field option{background:var(--bg2);color:var(--acc)}
+
+/* Toggle modalità */
+.mode-toggle{display:grid;grid-template-columns:1fr 1fr;gap:0;border:1px solid var(--border2);border-radius:7px;overflow:hidden}
+.mode-btn{background:var(--bg3);border:none;padding:11px 8px;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:5px;transition:all .18s;color:var(--muted);font-family:var(--mono)}
+.mode-btn + .mode-btn{border-left:1px solid var(--border2)}
+.mode-btn:hover{background:var(--bg2)}
+.mode-btn.active-vdi{background:rgba(102,187,106,.12);color:var(--up)}
+.mode-btn.active-ec3{background:rgba(179,157,219,.15);color:var(--violet)}
+.mode-btn svg{width:54px;height:40px}
+.mode-btn .mlabel{font-family:var(--cond);font-size:14px;font-weight:700;letter-spacing:.06em;text-transform:uppercase}
+.mode-btn .mnorm{font-size:9px;opacity:.7;letter-spacing:.04em}
+
+/* Toggle secondario (2 o 3 opzioni testuali) */
+.seg{display:grid;gap:0;border:1px solid var(--border2);border-radius:6px;overflow:hidden}
+.seg-2{grid-template-columns:1fr 1fr}
+.seg-btn{background:var(--bg3);border:none;padding:6px 4px;cursor:pointer;color:var(--muted);font-family:var(--cond);font-size:12px;font-weight:600;letter-spacing:.04em;transition:all .15s}
+.seg-btn + .seg-btn{border-left:1px solid var(--border2)}
+.seg-btn:hover{background:var(--bg2)}
+.seg-btn.on{background:rgba(79,195,247,.12);color:var(--acc)}
+
+/* Risultati */
+.results-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.results-grid-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px}
+.result-box{background:var(--bg1);border:1px solid var(--border);border-radius:6px;padding:10px}
+.result-label{font-size:9px;color:var(--muted);letter-spacing:.07em;text-transform:uppercase;margin-bottom:4px;font-family:var(--cond)}
+.result-value{font-size:16px;font-weight:500;color:var(--acc);font-family:var(--mono)}
+.result-unit{font-size:10px;color:var(--dim);margin-left:3px}
+
+.schematic-wrap{background:var(--bg1);border:1px solid var(--border);border-radius:6px;padding:10px;display:flex;justify-content:center}
+.schematic-wrap svg{width:100%;max-width:460px;height:auto}
+
+.result-section{background:rgba(79,195,247,.05);border:1px solid rgba(79,195,247,.2);border-radius:8px;padding:12px}
+.result-section-title{font-family:var(--cond);font-size:10px;font-weight:700;letter-spacing:.14em;color:var(--acc);text-transform:uppercase;margin-bottom:8px;display:flex;align-items:center;gap:8px}
+.result-section-title::after{content:'';flex:1;height:1px;background:rgba(79,195,247,.15)}
+.verification-grid{display:grid;grid-template-columns:1fr;gap:5px}
+.verify-item{display:flex;justify-content:space-between;align-items:center;padding:5px 8px;background:var(--bg1);border:1px solid var(--border);border-radius:4px;font-size:11px;gap:8px}
+.verify-label{color:var(--muted);flex:1}
+.verify-value{color:var(--text);font-weight:500;font-family:var(--mono);white-space:nowrap}
+.verify-unit{font-size:9px;color:var(--dim);margin-left:4px}
+.verify-status{padding:2px 6px;border-radius:3px;font-size:9px;font-weight:600;margin-left:6px;white-space:nowrap}
+.verify-status.ok{background:rgba(102,187,106,.2);color:var(--up);border:1px solid var(--up)}
+.verify-status.warn{background:rgba(255,167,38,.2);color:var(--amber);border:1px solid var(--amber)}
+.verify-status.err{background:rgba(239,83,80,.2);color:var(--dn);border:1px solid var(--dn)}
+
+/* Barra di utilizzo */
+.util{width:70px;height:5px;background:var(--bg3);border-radius:3px;overflow:hidden;flex-shrink:0}
+.util span{display:block;height:100%;border-radius:3px}
+.util span.ok{background:var(--up)}
+.util span.warn{background:var(--amber)}
+.util span.err{background:var(--dn)}
+
+.table-container{overflow-x:auto;max-height:230px;overflow-y:auto;position:relative}
+.dim-table{width:100%;border-collapse:collapse;font-size:10px}
+.dim-table th{background:rgba(79,195,247,.1);color:var(--acc2);padding:5px 4px;text-align:center;border:1px solid var(--border2);font-weight:600;letter-spacing:.05em;position:sticky;top:0}
+.dim-table td{padding:4px;border:1px solid var(--border2);text-align:center;color:var(--text)}
+.dim-table tr.active-row{background:rgba(79,195,247,.12)}
+.dim-table tr:hover{background:rgba(79,195,247,.05)}
+
+.back-btn{font-family:var(--cond);font-size:10px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);text-decoration:none;border:1px solid var(--border2);border-radius:4px;padding:4px 10px;transition:all .15s;white-space:nowrap}
+.back-btn:hover{color:var(--acc);border-color:var(--acc)}
+
+.calc-btn{background:rgba(79,195,247,.15);border:1px solid rgba(79,195,247,.3);color:var(--acc);padding:8px;border-radius:6px;cursor:pointer;font-family:var(--cond);font-weight:700;letter-spacing:.08em;font-size:12px;width:100%;margin-top:4px;transition:all .15s}
+.calc-btn:hover{background:rgba(79,195,247,.25)}
+
+[data-tip]{position:relative;cursor:help}
+[data-tip]:hover::after{content:attr(data-tip);position:absolute;bottom:calc(100% + 7px);left:0;background:#1e2130;border:1px solid rgba(79,195,247,.25);color:#c8cad4;font-size:10px;padding:7px 11px;border-radius:6px;white-space:pre-wrap;max-width:280px;min-width:170px;z-index:999;line-height:1.6;pointer-events:none;font-family:var(--mono);text-align:left;box-shadow:0 4px 20px rgba(0,0,0,.5)}
+
+::-webkit-scrollbar{width:5px;height:5px}
+::-webkit-scrollbar-track{background:var(--bg)}
+::-webkit-scrollbar-thumb{background:var(--bg3);border-radius:3px}
+
+.warn-box{background:rgba(255,167,38,.07);border:1px solid rgba(255,167,38,.25);border-radius:5px;padding:8px 10px;font-size:10px;color:var(--amber);line-height:1.6}
+.info-box{background:rgba(79,195,247,.06);border:1px solid rgba(79,195,247,.18);border-radius:5px;padding:8px 10px;font-size:10px;color:var(--acc);line-height:1.6}
+.note{font-size:10px;color:var(--dim);line-height:1.6}
+.hidden{display:none !important}
+
+.norms{font-size:10px;color:var(--muted);line-height:1.8}
+.norms b{color:var(--acc);font-weight:500}
+
+footer{margin-top:34px;font-size:10px;color:var(--dim);letter-spacing:.04em;text-align:center;line-height:1.8}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <a href="index.html" class="back-btn">← Ritorna</a>
+  <h1><span class="dot"></span>Connessioni Bullonate</h1>
+  <div class="sub">Precarico · Serraggio · Trazione · Taglio · Fatica</div>
+  <span class="norm-badge">ISO 898-1 · VDI 2230 · EN 1993-1-8</span>
+</div>
+
+<div class="container">
+
+<!-- ═══ PANNELLO INPUT ═══ -->
+<div class="panel">
+
+  <div class="stitle">Ambito di calcolo</div>
+  <div class="mode-toggle">
+    <button class="mode-btn" id="btn-vdi" onclick="setMode('VDI')">
+      <svg viewBox="0 0 60 44" fill="none" stroke="currentColor" stroke-width="1.6">
+        <rect x="14" y="16" width="32" height="7" rx="1"/>
+        <rect x="14" y="23" width="32" height="7" rx="1"/>
+        <rect x="24" y="7" width="12" height="9" rx="1" fill="currentColor" fill-opacity=".25"/>
+        <line x1="27" y1="30" x2="27" y2="38"/><line x1="33" y1="30" x2="33" y2="38"/>
+        <rect x="24" y="30" width="12" height="6" rx="1" fill="currentColor" fill-opacity=".25"/>
+        <path d="M30 2 L30 7" stroke-dasharray="2 2"/>
+      </svg>
+      <span class="mlabel">Macchine</span>
+      <span class="mnorm">VDI 2230</span>
+    </button>
+    <button class="mode-btn" id="btn-ec3" onclick="setMode('EC3')">
+      <svg viewBox="0 0 60 44" fill="none" stroke="currentColor" stroke-width="1.6">
+        <rect x="6" y="14" width="34" height="8" rx="1"/>
+        <rect x="20" y="22" width="34" height="8" rx="1"/>
+        <circle cx="30" cy="18" r="3" fill="currentColor" fill-opacity=".3"/>
+        <circle cx="30" cy="26" r="3" fill="currentColor" fill-opacity=".3"/>
+        <path d="M6 18 L2 18 M54 26 L58 26"/>
+        <path d="M30 15 L30 29" stroke-dasharray="2 2"/>
+      </svg>
+      <span class="mlabel">Strutture</span>
+      <span class="mnorm">EN 1993-1-8</span>
+    </button>
+  </div>
+
+  <div class="stitle">Bullone</div>
+
+  <div class="field">
+    <div class="fhdr"><span class="flabel" data-tip="Serie di filettatura metrica ISO 261\nPasso grosso: impiego generale\nPasso fine: maggiore area resistente e minore autosvitamento, ma più sensibile al danneggiamento">Serie filettatura</span></div>
+    <div class="seg seg-2">
+      <button class="seg-btn on" id="seg-grosso" onclick="setSerie('grosso')">Passo grosso</button>
+      <button class="seg-btn" id="seg-fine" onclick="setSerie('fine')">Passo fine</button>
+    </div>
+  </div>
+
+  <div class="frow2">
+    <div class="field">
+      <div class="fhdr"><span class="flabel" data-tip="Filettatura metrica ISO 724\nDefinisce d, passo p, diametro medio d₂ e nocciolo d₃">Filettatura</span></div>
+      <select id="thread" class="select-field" onchange="calculate()"></select>
+    </div>
+    <div class="field">
+      <div class="fhdr"><span class="flabel" data-tip="Classe di resistenza ISO 898-1\nEs. 8.8 → Rm = 800 MPa, Rp0,2 = 0,8·Rm = 640 MPa\nPer d > 16 mm la 8.8 vale 830/660 MPa">Classe</span></div>
+      <select id="cls" class="select-field" onchange="calculate()"></select>
+    </div>
+  </div>
+
+  <div class="field">
+    <div class="fhdr">
+      <span class="flabel" data-tip="Numero di bulloni che compongono il giunto\nI carichi inseriti sotto sono TOTALI e vengono ripartiti equamente su n bulloni">Numero bulloni  n</span>
+      <span class="funit">—</span>
+    </div>
+    <div class="srow">
+      <button class="arr" onclick="adjust('nb',-1)">▼</button>
+      <input type="number" id="nb" class="numinput" value="4" min="1" max="64" step="1" oninput="calculate()">
+      <button class="arr" onclick="adjust('nb',1)">▲</button>
+    </div>
+  </div>
+
+  <div class="stitle">Carichi esterni (totali sul giunto)</div>
+
+  <div class="field">
+    <div class="fhdr">
+      <span class="flabel" data-tip="Carico assiale esterno massimo, parallelo all'asse dei bulloni\nTende a separare le flange e a scaricare il precarico">Carico assiale  F_A,max</span>
+      <span class="funit">N</span>
+    </div>
+    <div class="srow">
+      <button class="arr" onclick="adjust('FA',-500)">▼</button>
+      <input type="number" id="FA" class="numinput" value="15000" min="0" step="500" oninput="calculate()">
+      <button class="arr" onclick="adjust('FA',500)">▲</button>
+    </div>
+  </div>
+
+  <div class="field vdi-only">
+    <div class="fhdr">
+      <span class="flabel" data-tip="Carico assiale minimo del ciclo (per la verifica a fatica)\nSe il carico è statico lascia 0 → ampiezza nulla\nCarico pulsante 0→F_A,max: lascia 0">Carico assiale  F_A,min</span>
+      <span class="funit">N</span>
+    </div>
+    <div class="srow">
+      <button class="arr" onclick="adjust('FAmin',-500)">▼</button>
+      <input type="number" id="FAmin" class="numinput" value="0" min="0" step="500" oninput="calculate()">
+      <button class="arr" onclick="adjust('FAmin',500)">▲</button>
+    </div>
+  </div>
+
+  <div class="field">
+    <div class="fhdr">
+      <span class="flabel" data-tip="Carico di taglio esterno, perpendicolare all'asse dei bulloni\nIn un giunto ad attrito viene trasmesso dalla forza di serraggio, non dal gambo">Carico di taglio  F_Q</span>
+      <span class="funit">N</span>
+    </div>
+    <div class="srow">
+      <button class="arr" onclick="adjust('FQ',-500)">▼</button>
+      <input type="number" id="FQ" class="numinput" value="5000" min="0" step="500" oninput="calculate()">
+      <button class="arr" onclick="adjust('FQ',500)">▲</button>
+    </div>
+  </div>
+
+  <!-- ─── INPUT SPECIFICI VDI 2230 ─── -->
+  <div id="grp-vdi">
+    <div class="stitle">Geometria del giunto</div>
+
+    <div class="field">
+      <div class="fhdr"><span class="flabel" data-tip="DSV — vite passante con dado: due coni di pressione, w = 1\nESV — filetto ricavato nel pezzo: un solo cono, w = 2\nCambia la cedevolezza delle flange δP e l'assestamento">Tipo di collegamento</span></div>
+      <div class="seg seg-2">
+        <button class="seg-btn on" id="seg-DSV" onclick="setTipo('DSV')">Passante + dado</button>
+        <button class="seg-btn" id="seg-ESV" onclick="setTipo('ESV')">Filetto nel pezzo</button>
+      </div>
+    </div>
+
+    <div class="frow2">
+      <div class="field">
+        <div class="fhdr">
+          <span class="flabel" data-tip="Lunghezza di serraggio: spessore totale dei pezzi serrati\nDetermina δS, δP e quindi il fattore di carico Φ\nTipico: lK ≈ 2…5·d">l_K</span>
+          <span class="funit">mm</span>
+        </div>
+        <div class="srow">
+          <button class="arr" onclick="adjust('lK',-1)">▼</button>
+          <input type="number" id="lK" class="numinput" value="40" min="1" step="1" oninput="calculate()">
+          <button class="arr" onclick="adjust('lK',1)">▲</button>
+        </div>
+      </div>
+      <div class="field">
+        <div class="fhdr">
+          <span class="flabel" data-tip="Lunghezza del gambo liscio (non filettato) compresa nella zona serrata\n0 = vite interamente filettata\nUn gambo liscio più lungo irrigidisce la vite">Gambo liscio  l₁</span>
+          <span class="funit">mm</span>
+        </div>
+        <div class="srow">
+          <button class="arr" onclick="adjust('l1',-1)">▼</button>
+          <input type="number" id="l1" class="numinput" value="0" min="0" step="1" oninput="calculate()">
+          <button class="arr" onclick="adjust('l1',1)">▲</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="frow2">
+      <div class="field">
+        <div class="fhdr">
+          <span class="flabel" data-tip="Diametro esterno della superficie di contatto tra le flange\nSe D_A ≥ D_A,Gr il cono di pressione si sviluppa liberamente\nTipico: D_A ≈ 2…3·d">D_A</span>
+          <span class="funit">mm</span>
+        </div>
+        <div class="srow">
+          <button class="arr" onclick="adjust('DA',-2)">▼</button>
+          <input type="number" id="DA" class="numinput" value="45" min="1" step="1" oninput="calculate()">
+          <button class="arr" onclick="adjust('DA',2)">▲</button>
+        </div>
+      </div>
+      <div class="field">
+        <div class="fhdr">
+          <span class="flabel" data-tip="Fattore di introduzione del carico n (VDI 2230 §5.2.2)\nIndica quanto in profondità il carico esterno entra nel giunto\n0,3 = carico introdotto vicino alla mezzeria\n0,5 = caso medio\n0,7…1,0 = carico introdotto sotto testa (sfavorevole)">Introduzione carico  n</span>
+          <span class="funit">—</span>
+        </div>
+        <select id="nload" class="select-field" onchange="calculate()">
+          <option value="0.3">0,3 — profonda</option>
+          <option value="0.5" selected>0,5 — media</option>
+          <option value="0.7">0,7 — superficiale</option>
+          <option value="1.0">1,0 — sotto testa</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="field">
+      <div class="fhdr"><span class="flabel" data-tip="Materiale delle flange serrate\nFornisce E_P (cedevolezza δP) e p_G (pressione limite sotto testa)">Materiale flange</span></div>
+      <select id="matP" class="select-field" onchange="calculate()"></select>
+    </div>
+
+    <div class="field">
+      <div class="fhdr"><span class="flabel" data-tip="Materiale della madrevite (dado o pezzo filettato)\nFornisce τ_B per la lunghezza minima di avvitamento\nCon dado normalizzato di classe adeguata la verifica è automaticamente soddisfatta">Materiale madrevite</span></div>
+      <select id="matM" class="select-field" onchange="calculate()"></select>
+    </div>
+
+    <div class="stitle">Serraggio e attriti</div>
+
+    <div class="field">
+      <div class="fhdr"><span class="flabel" data-tip="Coppia d'attrito (VDI 2230 tab. A5)\nDetermina μ_G (filetto) e μ_K (sottotesta)\nÈ il parametro più influente sul precarico ottenuto a parità di coppia">Accoppiamento / lubrificazione</span></div>
+      <select id="attrito" class="select-field" onchange="calculate()"></select>
+    </div>
+
+    <div class="field">
+      <div class="fhdr"><span class="flabel" data-tip="Fattore di serraggio α_A (VDI 2230 tab. A8)\nRapporto tra precarico massimo e minimo ottenibili con quel metodo\nα_A = F_M,max / F_M,min\nPiù è alto, più il precarico è incerto e più bisogna sovradimensionare">Metodo di serraggio</span></div>
+      <select id="metodo" class="select-field" onchange="calculate()"></select>
+    </div>
+
+    <div class="frow2">
+      <div class="field">
+        <div class="fhdr">
+          <span class="flabel" data-tip="Sfruttamento della resistenza a snervamento ν\nν = 0,90 → standard VDI 2230 (90% di Rp0,2 in stato di sforzo composto)\nν = 1,00 → serraggio ad angolo, oltre lo snervamento">Sfruttamento  ν</span>
+          <span class="funit">—</span>
+        </div>
+        <select id="nu" class="select-field" onchange="calculate()">
+          <option value="0.9" selected>0,90 — standard</option>
+          <option value="0.7">0,70 — conservativo</option>
+          <option value="1.0">1,00 — oltre snervamento</option>
+        </select>
+      </div>
+      <div class="field">
+        <div class="fhdr">
+          <span class="flabel" data-tip="Coefficiente d'attrito tra le flange μ_T\nAcciaio/acciaio asciutto: 0,10…0,20\nSuperfici sabbiate: 0,30…0,50\nÈ ciò che trasmette il taglio in un giunto ad attrito">Attrito giunto  μ_T</span>
+          <span class="funit">—</span>
+        </div>
+        <div class="srow">
+          <button class="arr" onclick="adjust('muT',-0.01)">▼</button>
+          <input type="number" id="muT" class="numinput" value="0.15" min="0.05" max="0.6" step="0.01" oninput="calculate()">
+          <button class="arr" onclick="adjust('muT',0.01)">▲</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="frow2">
+      <div class="field">
+        <div class="fhdr">
+          <span class="flabel" data-tip="Numero di superfici che trasmettono il taglio per attrito\n1 = giunto a semplice sovrapposizione\n2 = giunto a doppio coprigiunto">Superfici attrito  q_F</span>
+          <span class="funit">—</span>
+        </div>
+        <div class="srow">
+          <button class="arr" onclick="adjust('qF',-1)">▼</button>
+          <input type="number" id="qF" class="numinput" value="1" min="1" max="4" step="1" oninput="calculate()">
+          <button class="arr" onclick="adjust('qF',1)">▲</button>
+        </div>
+      </div>
+      <div class="field">
+        <div class="fhdr">
+          <span class="flabel" data-tip="Numero di interfacce interne tra i pezzi serrati (esclusi testa e dado)\n1 = due pezzi a contatto\nOgni interfaccia aggiunge assestamento e quindi perdita di precarico F_Z">Interfacce interne</span>
+          <span class="funit">—</span>
+        </div>
+        <div class="srow">
+          <button class="arr" onclick="adjust('nInt',-1)">▼</button>
+          <input type="number" id="nInt" class="numinput" value="1" min="0" max="6" step="1" oninput="calculate()">
+          <button class="arr" onclick="adjust('nInt',1)">▲</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="field">
+      <div class="fhdr"><span class="flabel" data-tip="Rugosità delle superfici di contatto (VDI 2230 tab. 5.4/1)\nDetermina l'assestamento f_Z [µm] e quindi la perdita di precarico F_Z = f_Z/(δS+δP)">Finitura superfici</span></div>
+      <select id="assest" class="select-field" onchange="calculate()"></select>
+    </div>
+  </div>
+
+  <!-- ─── INPUT SPECIFICI EN 1993-1-8 ─── -->
+  <div id="grp-ec3" class="hidden">
+    <div class="stitle">Categoria del giunto</div>
+
+    <div class="field">
+      <div class="fhdr"><span class="flabel" data-tip="EN 1993-1-8 §3.4\nA — a taglio, non precaricato (verifica taglio + rifollamento)\nB — ad attrito allo SLE (niente scorrimento in esercizio)\nC — ad attrito allo SLU (niente scorrimento a rottura)\nD — a trazione, non precaricato\nE — a trazione, precaricato">Categoria</span></div>
+      <select id="cat" class="select-field" onchange="calculate()">
+        <option value="A" selected>A — Taglio, non precaricato</option>
+        <option value="B">B — Attrito, SLE</option>
+        <option value="C">C — Attrito, SLU</option>
+        <option value="D">D — Trazione, non precaricato</option>
+        <option value="E">E — Trazione, precaricato</option>
+      </select>
+    </div>
+
+    <div class="stitle">Lamiere collegate</div>
+
+    <div class="frow2">
+      <div class="field">
+        <div class="fhdr">
+          <span class="flabel" data-tip="Spessore della lamiera più sottile che trasmette il rifollamento\nEntra direttamente in F_b,Rd = k₁·α_b·f_u·d·t/γ_M2">Spessore  t</span>
+          <span class="funit">mm</span>
+        </div>
+        <div class="srow">
+          <button class="arr" onclick="adjust('t1',-1)">▼</button>
+          <input type="number" id="t1" class="numinput" value="10" min="1" step="1" oninput="calculate()">
+          <button class="arr" onclick="adjust('t1',1)">▲</button>
+        </div>
+      </div>
+      <div class="field">
+        <div class="fhdr"><span class="flabel" data-tip="Acciaio delle lamiere (EN 10025)\nFornisce f_u, resistenza a rottura, usata nel rifollamento e nel punzonamento">Acciaio lamiere</span></div>
+        <select id="lam" class="select-field" onchange="calculate()"></select>
+      </div>
+    </div>
+
+    <div class="stitle">Disposizione dei fori</div>
+
+    <div class="frow2">
+      <div class="field">
+        <div class="fhdr">
+          <span class="flabel" data-tip="Distanza dal bordo nella direzione del carico\nMinimo di norma: e₁ ≥ 1,2·d₀\nEntra in α_d = e₁/(3·d₀)">e₁</span>
+          <span class="funit">mm</span>
+        </div>
+        <div class="srow">
+          <button class="arr" onclick="adjust('e1',-2)">▼</button>
+          <input type="number" id="e1" class="numinput" value="30" min="1" step="1" oninput="calculate()">
+          <button class="arr" onclick="adjust('e1',2)">▲</button>
+        </div>
+      </div>
+      <div class="field">
+        <div class="fhdr">
+          <span class="flabel" data-tip="Distanza dal bordo perpendicolare al carico\nMinimo di norma: e₂ ≥ 1,2·d₀\nEntra in k₁ = min(2,8·e₂/d₀ − 1,7 ; 2,5)">e₂</span>
+          <span class="funit">mm</span>
+        </div>
+        <div class="srow">
+          <button class="arr" onclick="adjust('e2',-2)">▼</button>
+          <input type="number" id="e2" class="numinput" value="30" min="1" step="1" oninput="calculate()">
+          <button class="arr" onclick="adjust('e2',2)">▲</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="frow2">
+      <div class="field">
+        <div class="fhdr">
+          <span class="flabel" data-tip="Passo tra i fori nella direzione del carico\nMinimo di norma: p₁ ≥ 2,2·d₀\nPer i bulloni interni α_d = p₁/(3·d₀) − 1/4">p₁</span>
+          <span class="funit">mm</span>
+        </div>
+        <div class="srow">
+          <button class="arr" onclick="adjust('p1',-5)">▼</button>
+          <input type="number" id="p1" class="numinput" value="60" min="1" step="1" oninput="calculate()">
+          <button class="arr" onclick="adjust('p1',5)">▲</button>
+        </div>
+      </div>
+      <div class="field">
+        <div class="fhdr">
+          <span class="flabel" data-tip="Passo tra le file di fori, perpendicolare al carico\nMinimo di norma: p₂ ≥ 2,4·d₀">p₂</span>
+          <span class="funit">mm</span>
+        </div>
+        <div class="srow">
+          <button class="arr" onclick="adjust('p2',-5)">▼</button>
+          <input type="number" id="p2" class="numinput" value="60" min="1" step="1" oninput="calculate()">
+          <button class="arr" onclick="adjust('p2',5)">▲</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="stitle">Piani di taglio e attrito</div>
+
+    <div class="frow2">
+      <div class="field">
+        <div class="fhdr">
+          <span class="flabel" data-tip="Numero di piani di taglio attraversati dal gambo\n1 = semplice sovrapposizione\n2 = doppio coprigiunto (raddoppia F_v,Rd)">Piani taglio  m</span>
+          <span class="funit">—</span>
+        </div>
+        <div class="srow">
+          <button class="arr" onclick="adjust('mpiani',-1)">▼</button>
+          <input type="number" id="mpiani" class="numinput" value="1" min="1" max="4" step="1" oninput="calculate()">
+          <button class="arr" onclick="adjust('mpiani',1)">▲</button>
+        </div>
+      </div>
+      <div class="field">
+        <div class="fhdr">
+          <span class="flabel" data-tip="Numero di superfici d'attrito nei giunti precaricati (cat. B/C)\nF_s,Rd = k_s·n·μ·F_p,C/γ_M3">Superfici attrito  n_s</span>
+          <span class="funit">—</span>
+        </div>
+        <div class="srow">
+          <button class="arr" onclick="adjust('ns',-1)">▼</button>
+          <input type="number" id="ns" class="numinput" value="1" min="1" max="4" step="1" oninput="calculate()">
+          <button class="arr" onclick="adjust('ns',1)">▲</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="field">
+      <div class="fhdr"><span class="flabel" data-tip="Se il piano di taglio interseca la parte filettata si usa A_s e α_v ridotto (0,5 per la 10.9)\nSe interseca il gambo liscio si usa A = π/4·d² e α_v = 0,6">Piano di taglio</span></div>
+      <div class="seg seg-2">
+        <button class="seg-btn on" id="seg-filT" onclick="setFiletto(true)">Nel filetto</button>
+        <button class="seg-btn" id="seg-filF" onclick="setFiletto(false)">Nel gambo</button>
+      </div>
+    </div>
+
+    <div class="field">
+      <div class="fhdr"><span class="flabel" data-tip="Classe della superficie di contatto (EN 1090-2 tab. 18)\nDetermina il coefficiente d'attrito μ nei giunti precaricati">Superficie di contatto</span></div>
+      <select id="sup" class="select-field" onchange="calculate()"></select>
+    </div>
+  </div>
+
+  <button class="calc-btn" onclick="autoSize()">⚙ Dimensiona automaticamente</button>
+
+</div>
+
+<!-- ═══ PANNELLO RISULTATI ═══ -->
+<div class="rpanel">
+
+  <div class="panel">
+    <div class="stitle">Caratteristiche del bullone</div>
+    <div class="results-grid-3" id="res-bolt"></div>
+    <div class="schematic-wrap"><svg id="schema" viewBox="0 0 460 220"></svg></div>
+  </div>
+
+  <div class="panel" id="pan-calc">
+    <div class="stitle" id="calc-title">Precarico e serraggio</div>
+    <div class="results-grid-3" id="res-calc"></div>
+    <div id="res-calc2" class="results-grid-3" style="margin-top:8px"></div>
+  </div>
+
+  <div class="result-section">
+    <div class="result-section-title" id="ver-title">Verifiche</div>
+    <div class="verification-grid" id="res-ver"></div>
+    <div class="warn-box hidden" id="warnbox" style="margin-top:10px"></div>
+  </div>
+
+  <div class="panel">
+    <div class="stitle" id="tbl-title">Tabella di riferimento</div>
+    <div class="table-container">
+      <table class="dim-table">
+        <thead id="tbl-head"></thead>
+        <tbody id="tbl-body"></tbody>
+      </table>
+    </div>
+    <div class="note" id="tbl-note"></div>
+  </div>
+
+  <div class="panel">
+    <div class="stitle">Normative di riferimento</div>
+    <div class="norms">
+      <b>ISO 261 / ISO 724</b> — filettature metriche ISO: passo, diametro medio d₂, nocciolo d₃, area resistente A<sub>s</sub>.<br>
+      <b>ISO 898-1</b> — classi di resistenza delle viti: R<sub>m</sub> e R<sub>p0,2</sub>. Per la classe 8.8 la norma distingue d ≤ 16 mm (800/640 MPa) e d &gt; 16 mm (830/660 MPa).<br>
+      <b>ISO 4014 / 4017 / 4032 / 273</b> — viti a testa esagonale, dadi, diametri dei fori (serie media).<br>
+      <b>VDI 2230 Blatt 1</b> — calcolo sistematico dei giunti bullonati: cedevolezze δ<sub>S</sub> e δ<sub>P</sub>, fattore di carico Φ, precarico ammissibile F<sub>M,zul</sub>, coppia di serraggio M<sub>A</sub>, assestamento F<sub>Z</sub>, verifica a fatica.<br>
+      <b>EN 1993-1-8</b> — progettazione dei collegamenti in acciaio: F<sub>v,Rd</sub>, F<sub>b,Rd</sub>, F<sub>t,Rd</sub>, B<sub>p,Rd</sub>, F<sub>s,Rd</sub>, categorie A÷E.<br>
+      <b>EN 1090-2</b> — classi di superficie e coefficienti d'attrito μ per i giunti precaricati.
+    </div>
+    <div class="info-box">
+      Il calcolo assume <b>carico concentrico</b> (asse del bullone allineato alla risultante) e ripartizione uniforme del carico sugli n bulloni. Per giunti eccentrici, flangiati o soggetti a momento flettente è necessaria l'analisi estesa della VDI 2230 (§5.3, caso eccentrico).
+    </div>
+  </div>
+
+</div>
+</div>
+
+<footer>
+  Andrea Cavani · Moduli calcolo HTML<br>
+  Strumento di pre-dimensionamento: i risultati vanno confermati con i dati del fornitore e la verifica del progettista.
+</footer>
+
+<script>
+// ═══════════════════════════════════
+//  STATO
+// ═══════════════════════════════════
+let mode = 'VDI';           // 'VDI' | 'EC3'
+let serie = 'grosso';       // 'grosso' | 'fine'
+let tipo = 'DSV';           // 'DSV' (passante+dado) | 'ESV' (filetto nel pezzo)
+let filettoNelPiano = true; // EC3: piano di taglio nel filetto
+
+const ES = 205000;          // modulo elastico della vite [MPa] — acciaio
+
+// ═══════════════════════════════════
+//  HELPER
+// ═══════════════════════════════════
+const fp = (v, n = 2) => isFinite(v) ? v.toFixed(n) : '—';
+const kN = v => isFinite(v) ? (v / 1000).toFixed(1) : '—';
+const it = (v, n = 0) => isFinite(v) ? v.toLocaleString('it-IT', {minimumFractionDigits:n, maximumFractionDigits:n}) : '—';
+const $ = id => document.getElementById(id);
+
+// Stato della verifica in base al coefficiente di sicurezza
+function sfClass(sf) {
+  if (!isFinite(sf)) return 'err';
+  if (sf >= 1.2) return 'ok';
+  if (sf >= 1.0) return 'warn';
+  return 'err';
+}
+function sfLabel(cl) {
+  return cl === 'ok' ? 'OK' : (cl === 'warn' ? 'LIMITE' : 'INSUFF.');
+}
+
+function box(label, value, unit) {
+  return `<div class="result-box">
+    <div class="result-label">${label}</div>
+    <div class="result-value">${value}<span class="result-unit">${unit || ''}</span></div>
+  </div>`;
+}
+
+// Riga di verifica: util = rapporto sollecitazione/resistenza (≤1 = OK)
+function vrow(label, value, unit, sf, tip) {
+  const cl = sfClass(sf);
+  const pct = Math.min(100, isFinite(sf) && sf > 0 ? 100 / sf : 100);
+  return `<div class="verify-item">
+    <span class="verify-label"${tip ? ` data-tip="${tip}"` : ''}>${label}</span>
+    <span class="util"><span class="${cl}" style="width:${pct}%"></span></span>
+    <span class="verify-value">${value}<span class="verify-unit">${unit || ''}</span></span>
+    <span class="verify-status ${cl}">${sfLabel(cl)}</span>
+  </div>`;
+}
+
+function adjust(id, step) {
+  const el = $(id);
+  const dec = (String(step).split('.')[1] || '').length;
+  let v = (parseFloat(el.value) || 0) + step;
+  if (el.min !== '' && v < parseFloat(el.min)) v = parseFloat(el.min);
+  if (el.max !== '' && v > parseFloat(el.max)) v = parseFloat(el.max);
+  el.value = dec ? v.toFixed(dec) : v;
+  calculate();
+}
+
+// ═══════════════════════════════════
+//  SELETTORI DI MODALITÀ
+// ═══════════════════════════════════
+function setMode(m) {
+  mode = m;
+  $('btn-vdi').className = 'mode-btn' + (m === 'VDI' ? ' active-vdi' : '');
+  $('btn-ec3').className = 'mode-btn' + (m === 'EC3' ? ' active-ec3' : '');
+  $('grp-vdi').classList.toggle('hidden', m !== 'VDI');
+  $('grp-ec3').classList.toggle('hidden', m !== 'EC3');
+  document.querySelectorAll('.vdi-only').forEach(e => e.classList.toggle('hidden', m !== 'VDI'));
+  fillClassi();
+  calculate();
+}
+
+function setSerie(s) {
+  serie = s;
+  $('seg-grosso').classList.toggle('on', s === 'grosso');
+  $('seg-fine').classList.toggle('on', s === 'fine');
+  fillThreads();
+  calculate();
+}
+
+function setTipo(t) {
+  tipo = t;
+  $('seg-DSV').classList.toggle('on', t === 'DSV');
+  $('seg-ESV').classList.toggle('on', t === 'ESV');
+  calculate();
+}
+
+function setFiletto(f) {
+  filettoNelPiano = f;
+  $('seg-filT').classList.toggle('on', f);
+  $('seg-filF').classList.toggle('on', !f);
+  calculate();
+}
+
+// ═══════════════════════════════════
+//  POPOLAMENTO SELECT
+// ═══════════════════════════════════
+function fillThreads() {
+  const prev = $('thread').value;
+  $('thread').innerHTML = FILETTI[serie]
+    .map((t, i) => `<option value="${i}">${t.label}</option>`).join('');
+  const idx = FILETTI[serie].findIndex(t => t.label === prev);
+  $('thread').value = idx >= 0 ? idx : (serie === 'grosso' ? 6 : 4);  // default M12
+}
+
+function fillClassi() {
+  const prev = $('cls').value;
+  // In ambito strutturale EN 1993-1-8 ammette solo 8.8 e 10.9 (e 12.9 con cautela)
+  const keys = Object.keys(CLASSI).filter(k => mode === 'VDI' || CLASSI[k].ec3);
+  $('cls').innerHTML = keys.map(k => `<option value="${k}">${k}</option>`).join('');
+  $('cls').value = keys.includes(prev) ? prev : (mode === 'EC3' ? '8.8' : '8.8');
+}
+
+function fillStatic() {
+  $('matP').innerHTML = MATERIALI.map(m => `<option value="${m.id}">${m.desc}</option>`).join('');
+  $('matP').value = 'S355';
+  $('matM').innerHTML = MATERIALI.map(m => `<option value="${m.id}">${m.desc}</option>`).join('');
+  $('matM').value = 'S355';
+  $('attrito').innerHTML = ATTRITI.map(a => `<option value="${a.id}">${a.desc} — μ ${fp(a.muG, 2)}</option>`).join('');
+  $('attrito').value = 'C';
+  $('metodo').innerHTML = SERRAGGIO.map(s => `<option value="${s.id}">${s.desc} — α_A ${fp(s.alfa, 1)}</option>`).join('');
+  $('metodo').value = 'dinam';
+  $('assest').innerHTML = ASSESTAMENTO.map(a => `<option value="${a.id}">${a.desc}</option>`).join('');
+  $('assest').value = 'media';
+  $('lam').innerHTML = EC3.lamiere.map(l => `<option value="${l.id}">${l.id} — f_u ${l.fu}</option>`).join('');
+  $('lam').value = 'S355';
+  $('sup').innerHTML = EC3.superfici.map(s => `<option value="${s.id}">${s.desc} — μ ${fp(s.mu, 2)}</option>`).join('');
+  $('sup').value = 'B';
+}
+
+// ═══════════════════════════════════
+//  RACCOLTA INPUT
+// ═══════════════════════════════════
+function getInputs() {
+  const th = FILETTI[serie][parseInt($('thread').value) || 0];
+  const cls = $('cls').value;
+  const {Rm, Rp} = classeProps(cls, th.d);
+  const nb = Math.max(1, parseInt($('nb').value) || 1);
+  return {
+    th, cls, Rm, Rp, nb,
+    FA:    Math.max(0, parseFloat($('FA').value) || 0),
+    FAmin: Math.max(0, parseFloat($('FAmin').value) || 0),
+    FQ:    Math.max(0, parseFloat($('FQ').value) || 0),
+    // VDI
+    lK:   Math.max(1, parseFloat($('lK').value) || 1),
+    l1:   Math.max(0, parseFloat($('l1').value) || 0),
+    DA:   Math.max(1, parseFloat($('DA').value) || 1),
+    nload: parseFloat($('nload').value),
+    matP: MATERIALI.find(m => m.id === $('matP').value),
+    matM: MATERIALI.find(m => m.id === $('matM').value),
+    att:  ATTRITI.find(a => a.id === $('attrito').value),
+    alfaA: SERRAGGIO.find(s => s.id === $('metodo').value).alfa,
+    nu:   parseFloat($('nu').value),
+    muT:  Math.max(0.01, parseFloat($('muT').value) || 0.15),
+    qF:   Math.max(1, parseInt($('qF').value) || 1),
+    nInt: Math.max(0, parseInt($('nInt').value) || 0),
+    ass:  ASSESTAMENTO.find(a => a.id === $('assest').value),
+    // EC3
+    cat:  $('cat').value,
+    t1:   Math.max(1, parseFloat($('t1').value) || 1),
+    lam:  EC3.lamiere.find(l => l.id === $('lam').value),
+    e1:   Math.max(1, parseFloat($('e1').value) || 1),
+    e2:   Math.max(1, parseFloat($('e2').value) || 1),
+    p1:   Math.max(1, parseFloat($('p1').value) || 1),
+    p2:   Math.max(1, parseFloat($('p2').value) || 1),
+    m:    Math.max(1, parseInt($('mpiani').value) || 1),
+    ns:   Math.max(1, parseInt($('ns').value) || 1),
+    sup:  EC3.superfici.find(s => s.id === $('sup').value),
+  };
+}
+
+// ═══════════════════════════════════
+//  NUCLEO VDI 2230
+//  Restituisce tutte le grandezze del giunto per UN bullone.
+// ═══════════════════════════════════
+function coreVDI(inp) {
+  const {th, Rm, Rp, nb, nu, att, alfaA, matP, matM} = inp;
+  const {d, p, d2, d3, ds, As, A3, AN, D1, dw, dh} = th;
+
+  const FAb    = inp.FA / nb;        // carico assiale per bullone
+  const FAminb = inp.FAmin / nb;
+  const FQb    = inp.FQ / nb;        // taglio per bullone
+
+  // ── Precarico ammissibile — VDI 2230 eq. (R2/1)
+  // FM,zul = ν·Rp0,2·A0 / √(1 + 3·[3/2·(d2/d0)·(P/(π·d2) + 1.155·μG)]²)   con d0 = d3
+  const d0 = d3, A0 = A3;
+  const k  = 1.5 * (d2 / d0) * (p / (Math.PI * d2) + 1.155 * att.muG);
+  const FMzul = nu * Rp * A0 / Math.sqrt(1 + 3 * k * k);
+
+  // ── Coppia di serraggio — VDI 2230 eq. (R3/1)
+  // MA = FM·[0.16·P + 0.58·μG·d2 + μK·DKm/2]     DKm = (dw + dh)/2
+  const DKm = (dw + dh) / 2;
+  const MA  = FMzul * (0.16 * p + 0.58 * att.muG * d2 + att.muK * DKm / 2) / 1000; // N·m
+
+  // ── Cedevolezza della vite δS — VDI 2230 §5.1.1
+  const lGew = Math.max(0, inp.lK - inp.l1);         // tratto filettato entro la zona serrata
+  const dSK  = 0.5 * d / (ES * AN);                  // testa
+  const d1c  = inp.l1 / (ES * AN);                   // gambo liscio
+  const dGew = lGew / (ES * A3);                     // filetto libero
+  const dG   = 0.5 * d / (ES * A3);                  // filetto ingaggiato
+  const dM   = 0.4 * d / ((tipo === 'DSV' ? ES : matM.E) * AN);  // dado / madrevite
+  const dS   = dSK + d1c + dGew + dG + dM;
+
+  // ── Cedevolezza delle flange δP — cono di pressione VDI 2230 §5.1.2
+  // w = 1 per giunto passante (2 coni), w = 2 per filetto ricavato (1 cono)
+  const w  = (tipo === 'DSV') ? 1 : 2;
+  const bL = inp.lK / dw;
+  const y  = Math.max(1.0, inp.DA / dw);
+  let tanf = (tipo === 'DSV')
+    ? 0.362 + 0.032 * Math.log(bL / 2) + 0.153 * Math.log(y)     // DSV
+    : 0.348 + 0.013 * Math.log(bL)     + 0.193 * Math.log(y);    // ESV
+  tanf = Math.min(1.0, Math.max(0.20, tanf));
+
+  const EP    = matP.E;
+  const DAGr  = dw + w * inp.lK * tanf;              // diametro limite del cono
+  const DAeff = Math.max(inp.DA, dh + 0.5);          // guardia numerica
+  let dP;
+  if (DAeff <= dw) {
+    // Solo manicotto cilindrico
+    dP = inp.lK / (EP * Math.PI / 4 * (DAeff * DAeff - dh * dh));
+  } else if (DAeff < DAGr) {
+    // Cono troncato dal bordo + manicotto
+    const cone = 2 / (w * EP * Math.PI * dh * tanf) *
+      Math.log(((dw + dh) * (DAeff - dh)) / ((dw - dh) * (DAeff + dh)));
+    const hSleeve = inp.lK - (DAeff - dw) / (w * tanf);
+    const sleeve  = 4 * Math.max(0, hSleeve) / (EP * Math.PI * (DAeff * DAeff - dh * dh));
+    dP = cone + sleeve;
+  } else {
+    // Cono completo
+    dP = 2 / (w * EP * Math.PI * dh * tanf) *
+      Math.log(((dw + dh) * (dw + w * inp.lK * tanf - dh)) /
+               ((dw - dh) * (dw + w * inp.lK * tanf + dh)));
+  }
+
+  // ── Fattore di carico
+  const PhiK  = dP / (dS + dP);        // Φ_K, carico introdotto sotto testa
+  const Phien = inp.nload * PhiK;      // Φ_en, con fattore di introduzione n
+  const FSA   = Phien * FAb;           // quota che carica la vite
+  const FPA   = (1 - Phien) * FAb;     // quota che scarica il giunto
+
+  // ── Perdita di precarico per assestamento — VDI 2230 §5.4.2
+  const nTesta = (tipo === 'DSV') ? 2 : 1;
+  const fZ = (inp.ass.filetto + inp.ass.testa * nTesta + inp.ass.interf * inp.nInt) / 1000; // mm
+  const FZ = fZ / (dS + dP);
+
+  // ── Forze di serraggio
+  const FKQ   = FQb / (inp.muT * inp.qF);        // clamp necessario contro lo scorrimento
+  const FKerf = FKQ;                             // (nessuna tenuta richiesta)
+  const FMmin = FKerf + FPA + FZ;                // precarico minimo necessario
+  const FMmax = alfaA * FMmin;                   // ...da garantire con il metodo scelto
+  const FMminReale = FMzul / alfaA;              // precarico minimo effettivo serrando a FM,zul
+  const FKR   = FMminReale - FPA - FZ;           // clamp residuo in esercizio
+  const FSmax = FMzul + FSA;                     // massima forza nella vite
+
+  // ── Sollecitazione composta in esercizio — VDI 2230 §5.5.1
+  // Riferita alla stessa sezione A0 = A3 usata per ricavare FM,zul, così che i due
+  // calcoli siano coerenti. La torsione nasce al montaggio e non cresce col carico
+  // esterno; in esercizio si assume rilassata al 50% (kτ = 0,5).
+  const sigZ = FSmax / A0;
+  const tau  = k * (FMzul / A0);
+  const sred = Math.sqrt(sigZ * sigZ + 3 * Math.pow(0.5 * tau, 2));
+
+  // ── Pressione sotto testa
+  const Ap   = Math.PI / 4 * (dw * dw - dh * dh);
+  const pmax = FSmax / Ap;
+
+  // ── Lunghezza minima di avvitamento — VDI 2230 §5.5.5
+  // Il filetto della madrevite si trancia sul diametro esterno della vite:
+  //   ASGM per mm di avvitamento = π·d·[1/2 + 0.57735·(d − d2)/P]
+  // ridotta di C_FILETTO (dilatazione della madrevite + carico non uniforme sui filetti).
+  // Condizione: τB,M · ASGM · m ≥ Rm,S · As  → la vite si rompe prima che il filetto si spani.
+  const asgm = Math.PI * d * (0.5 + 0.57735 * (d - d2) / p) * C_FILETTO;
+  const meff = As * Rm / (matM.tauB * asgm);
+
+  // ── Taglio del gambo (giunto di forma, se l'attrito non basta)
+  const tauQ = FQb / As;
+
+  // ── Fatica — VDI 2230 §5.5.2
+  const sab = (Phien * (FAb - FAminb)) / (2 * As);
+  const sAS = sigmaAS(d);
+
+  // ── Coefficienti di sicurezza (≥ 1 = verificato)
+  const sf = {
+    precarico:  FMzul / FMmax,                          // il metodo di serraggio garantisce FMmin?
+    snerv:      Rp / sred,
+    apertura:   FKR > 0 ? FKR / Math.max(1, FKerf) : 0,
+    scorr:      (inp.muT * inp.qF * Math.max(0, FKR)) / Math.max(1e-9, FQb),
+    taglio:     (0.6 * Rm) / Math.max(1e-9, tauQ),
+    pressione:  matP.pG / pmax,
+    fatica:     sAS / Math.max(1e-9, sab),
+  };
+
+  return {
+    d, p, d2, d3, As, A3, dw, dh, D1, Rm, Rp, FAb, FAminb, FQb,
+    FMzul, MA, DKm, dS, dP, tanf, DAGr, PhiK, Phien, FSA, FPA,
+    fZ, FZ, FKQ, FKerf, FMmin, FMmax, FMminReale, FKR, FSmax,
+    sigZ, tau, sred, Ap, pmax, meff, tauQ, sab, sAS, sf,
+    F02: As * Rp,
+  };
+}
+
+// ═══════════════════════════════════
+//  NUCLEO EN 1993-1-8
+// ═══════════════════════════════════
+function coreEC3(inp) {
+  const {th, cls, nb, cat, lam, m, ns, sup} = inp;
+  const {d, As, AN, dw, dh, sw} = th;
+  // EN 1993-1-8 tab. 3.1: f_ub è il valore NOMINALE della classe (800 MPa per la 8.8),
+  // senza il raffinamento ISO 898-1 per d > 16 mm (830 MPa) usato invece in modalità VDI.
+  const fub = CLASSI[cls].Rm, fu = lam.fu;
+  const d0 = dh;                       // diametro del foro
+
+  const FvEd = inp.FQ / nb;            // taglio per bullone
+  const FtEd = inp.FA / nb;            // trazione per bullone
+
+  // ── Taglio — tab. 3.4:  Fv,Rd = αv·fub·A/γM2  (× m piani di taglio)
+  const A  = filettoNelPiano ? As : AN;
+  const av = EC3.alfaV(cls, filettoNelPiano);
+  const FvRd = m * av * fub * A / EC3.gM2;
+
+  // ── Rifollamento — tab. 3.4:  Fb,Rd = k1·αb·fu·d·t/γM2
+  const ad  = inp.e1 / (3 * d0);
+  const ab  = Math.min(ad, fub / fu, 1.0);
+  const k1  = Math.min(2.8 * inp.e2 / d0 - 1.7, 2.5);
+  const FbRd = k1 * ab * fu * d * inp.t1 / EC3.gM2;
+
+  // ── Trazione — tab. 3.4:  Ft,Rd = k2·fub·As/γM2
+  const FtRd = EC3.k2_hex * fub * As / EC3.gM2;
+
+  // ── Punzonamento — tab. 3.4:  Bp,Rd = 0.6·π·dm·tp·fu/γM2
+  const dm   = 1.05 * sw;              // media tra apertura chiave e diagonale della testa
+  const BpRd = 0.6 * Math.PI * dm * inp.t1 * fu / EC3.gM2;
+
+  // ── Precarico e scorrimento — §3.6.1
+  const FpC  = 0.7 * fub * As;
+  const gM3  = (cat === 'B') ? EC3.gM3ser : EC3.gM3;
+  const ks   = 1.0;                    // fori normali
+  const trazRid = (cat === 'B') ? 0.8 * FtEd : 0.8 * FtEd;   // riduzione per trazione concomitante
+  const FsRd = ks * ns * sup.mu * Math.max(0, FpC - trazRid) / gM3;
+
+  // ── Utilizzi (≤ 1 = verificato) → li converto in coefficienti di sicurezza
+  const attrito = (cat === 'B' || cat === 'C');
+  const traz    = (cat === 'D' || cat === 'E');
+
+  const sf = {
+    taglio:   FvRd / Math.max(1e-9, FvEd),
+    rifoll:   FbRd / Math.max(1e-9, FvEd),
+    trazione: FtRd / Math.max(1e-9, FtEd),
+    punz:     BpRd / Math.max(1e-9, FtEd),
+    scorr:    FsRd / Math.max(1e-9, FvEd),
+    // Interazione taglio + trazione — tab. 3.4:  Fv,Ed/Fv,Rd + Ft,Ed/(1.4·Ft,Rd) ≤ 1
+    inter:    1 / Math.max(1e-9, FvEd / FvRd + FtEd / (1.4 * FtRd)),
+  };
+
+  // ── Controllo geometrico — tab. 3.3
+  const geo = [];
+  if (inp.e1 < 1.2 * d0) geo.push(`e₁ = ${fp(inp.e1,0)} mm &lt; 1,2·d₀ = ${fp(1.2*d0,1)} mm`);
+  if (inp.e2 < 1.2 * d0) geo.push(`e₂ = ${fp(inp.e2,0)} mm &lt; 1,2·d₀ = ${fp(1.2*d0,1)} mm`);
+  if (inp.p1 < 2.2 * d0) geo.push(`p₁ = ${fp(inp.p1,0)} mm &lt; 2,2·d₀ = ${fp(2.2*d0,1)} mm`);
+  if (inp.p2 < 2.4 * d0) geo.push(`p₂ = ${fp(inp.p2,0)} mm &lt; 2,4·d₀ = ${fp(2.4*d0,1)} mm`);
+
+  return {d, d0, As, AN, A, av, k1, ab, ad, dm, fub, fu,
+          FvEd, FtEd, FvRd, FbRd, FtRd, BpRd, FpC, FsRd, gM3,
+          attrito, traz, sf, geo};
+}
+
+// ═══════════════════════════════════
+//  RENDER
+// ═══════════════════════════════════
+function calculate() {
+  const inp = getInputs();
+  const th = inp.th;
+
+  // Caratteristiche del bullone (comuni)
+  $('res-bolt').innerHTML =
+    box('Filettatura', th.label, '') +
+    box('Passo P', fp(th.p, 2), 'mm') +
+    box('Nocciolo d₃', fp(th.d3, 2), 'mm') +
+    box('Area resistente A<sub>s</sub>', fp(th.As, 1), 'mm²') +
+    box('Area nocciolo A₃', fp(th.A3, 1), 'mm²') +
+    box('Foro d₀', fp(th.dh, 1), 'mm') +
+    box('R<sub>m</sub>', it(inp.Rm), 'MPa') +
+    box('R<sub>p0,2</sub>', it(inp.Rp), 'MPa') +
+    box('F<sub>0,2</sub> = A<sub>s</sub>·R<sub>p0,2</sub>', kN(th.As * inp.Rp), 'kN');
+
+  if (mode === 'VDI') renderVDI(inp);
+  else                renderEC3(inp);
+
+  renderTable(inp);
+  drawSchema(inp);
+}
+
+function renderVDI(inp) {
+  const r = coreVDI(inp);
+  $('calc-title').textContent = 'Precarico, serraggio e rigidezze — VDI 2230';
+  $('ver-title').textContent  = 'Verifiche del giunto — VDI 2230';
+
+  $('res-calc').innerHTML =
+    box('Precarico F<sub>M,zul</sub>', kN(r.FMzul), 'kN') +
+    box('Coppia serraggio M<sub>A</sub>', fp(r.MA, 1), 'N·m') +
+    box('Precarico min. F<sub>M,min</sub>', kN(r.FMminReale), 'kN') +
+    box('Cedevolezza vite δ<sub>S</sub>', (r.dS * 1e6).toFixed(3), 'µm/kN') +
+    box('Cedevolezza flange δ<sub>P</sub>', (r.dP * 1e6).toFixed(3), 'µm/kN') +
+    box('Fattore di carico Φ<sub>en</sub>', fp(r.Phien, 3), '');
+
+  $('res-calc2').innerHTML =
+    box('Carico sulla vite F<sub>SA</sub>', kN(r.FSA), 'kN') +
+    box('Scarico giunto F<sub>PA</sub>', kN(r.FPA), 'kN') +
+    box('Perdita assest. F<sub>Z</sub>', kN(r.FZ), 'kN') +
+    box('Clamp richiesto F<sub>Kerf</sub>', kN(r.FKerf), 'kN') +
+    box('Clamp residuo F<sub>KR</sub>', kN(r.FKR), 'kN') +
+    box('Forza max vite F<sub>S,max</sub>', kN(r.FSmax), 'kN');
+
+  // Con un dado normalizzato di classe adeguata l'avvitamento è garantito per costruzione
+  const sfAvv = (tipo === 'ESV') ? (inp.lK / r.meff) : 99;
+
+  const rows = [
+    vrow('Snervamento σ<sub>red</sub> ≤ R<sub>p0,2</sub>', fp(r.sred, 0) + ' / ' + it(r.Rp), 'MPa', r.sf.snerv,
+      'Sollecitazione composta a montaggio (VDI 2230 §5.5.1)\nσred = √(σz² + 3·(kτ·τ)²)  con kτ = 0,5\nDeve restare sotto Rp0,2'),
+    vrow('Metodo di serraggio  F<sub>M,max</sub> ≤ F<sub>M,zul</sub>', kN(r.FMmax) + ' / ' + kN(r.FMzul), 'kN', r.sf.precarico,
+      'Il precarico massimo richiesto (α_A · F_M,min) deve stare sotto quello ammissibile\nSe non passa: metodo di serraggio più preciso, bullone più grande o classe superiore'),
+    vrow('Apertura del giunto  F<sub>KR</sub> &gt; 0', kN(r.FKR), 'kN', r.sf.apertura,
+      'Forza di serraggio residua in esercizio\nF_KR = F_M,zul/α_A − (1−Φ)·F_A − F_Z\nSe ≤ 0 il giunto si apre: perdita di tenuta e fatica del bullone'),
+    vrow('Scorrimento  F<sub>Q</sub> ≤ μ<sub>T</sub>·q<sub>F</sub>·F<sub>KR</sub>',
+      kN(r.FQb) + ' / ' + kN(inp.muT * inp.qF * Math.max(0, r.FKR)), 'kN', r.sf.scorr,
+      'Il taglio è trasmesso per attrito dalla forza di serraggio residua\nSe non passa: aumentare il precarico, μ_T, il numero di bulloni, oppure inserire spine di centraggio'),
+    vrow('Taglio del gambo  τ ≤ 0,6·R<sub>m</sub>', fp(r.tauQ, 0) + ' / ' + it(0.6 * r.Rm), 'MPa', r.sf.taglio,
+      'Verifica di riserva: vale solo se il giunto scorre e il gambo va a contatto col foro\nNon è la condizione di progetto di un giunto ad attrito'),
+    vrow('Pressione sotto testa  p ≤ p<sub>G</sub>', fp(r.pmax, 0) + ' / ' + it(inp.matP.pG), 'MPa', r.sf.pressione,
+      'p = F_S,max / A_p   con A_p = π/4·(dw² − d₀²)\nSe non passa: usare una rondella o un materiale con p_G più alto'),
+    vrow('Avvitamento  l<sub>K</sub> ≥ m<sub>eff</sub>',
+      (tipo === 'ESV' ? fp(inp.lK, 0) : 'dado ISO') + ' / ' + fp(r.meff, 1), 'mm', sfAvv,
+      'Lunghezza di avvitamento minima perché il filetto della madrevite non si spani prima della rottura della vite\nCon dado normalizzato di classe adeguata la verifica è garantita per costruzione'),
+    vrow('Fatica  σ<sub>ab</sub> ≤ σ<sub>AS</sub>', fp(r.sab, 1) + ' / ' + fp(r.sAS, 1), 'MPa', r.sf.fatica,
+      'Ampiezza della tensione alternata sulla vite (VDI 2230 §5.5.2)\nσ_ab = Φ_en·(F_A,max − F_A,min)/(2·A_s)\nσ_AS = 0,85·(150/d + 45) — filetto rullato prima del trattamento'),
+  ];
+  $('res-ver').innerHTML = rows.join('');
+
+  // Avvisi
+  const w = [];
+  if (r.FKR <= 0) w.push('<b>Il giunto si apre:</b> il precarico residuo è nullo. Il carico esterno viene assorbito interamente dalla vite e la fatica diventa critica.');
+  if (r.sf.precarico < 1) w.push(`<b>Precarico insufficiente:</b> servirebbero ${kN(r.FMmax)} kN ma il bullone ne ammette ${kN(r.FMzul)} kN. Aumenta il diametro, la classe, oppure adotta un metodo di serraggio più preciso (α_A più basso).`);
+  if (inp.DA < r.DAGr && inp.DA > r.dw) w.push(`Il cono di pressione è troncato dal bordo (D_A = ${fp(inp.DA,0)} mm &lt; D_A,Gr = ${fp(r.DAGr,1)} mm): le flange risultano più cedevoli e Φ aumenta.`);
+  if (inp.l1 > inp.lK) w.push('Il gambo liscio l₁ è più lungo della lunghezza di serraggio l_K: il tratto filettato entro il giunto è nullo.');
+  if (r.sab > 0 && r.sf.fatica < 1.2) w.push('Verifica a fatica critica: aumenta il precarico, riduci Φ (vite più cedevole / flange più rigide) o introduci il carico più in profondità.');
+  showWarn(w);
+}
+
+function renderEC3(inp) {
+  const r = coreEC3(inp);
+  $('calc-title').textContent = 'Resistenze di progetto — EN 1993-1-8';
+  $('ver-title').textContent  = 'Verifiche del giunto — EN 1993-1-8 (categoria ' + inp.cat + ')';
+
+  $('res-calc').innerHTML =
+    box('Taglio F<sub>v,Rd</sub>', kN(r.FvRd), 'kN') +
+    box('Rifollamento F<sub>b,Rd</sub>', kN(r.FbRd), 'kN') +
+    box('Trazione F<sub>t,Rd</sub>', kN(r.FtRd), 'kN') +
+    box('Punzonamento B<sub>p,Rd</sub>', kN(r.BpRd), 'kN') +
+    box('Precarico F<sub>p,C</sub>', kN(r.FpC), 'kN') +
+    box('Scorrimento F<sub>s,Rd</sub>', kN(r.FsRd), 'kN');
+
+  $('res-calc2').innerHTML =
+    box('α<sub>v</sub>', fp(r.av, 2), '') +
+    box('α<sub>b</sub>', fp(r.ab, 3), '') +
+    box('k₁', fp(r.k1, 2), '') +
+    box('F<sub>v,Ed</sub> per bullone', kN(r.FvEd), 'kN') +
+    box('F<sub>t,Ed</sub> per bullone', kN(r.FtEd), 'kN') +
+    box('γ<sub>M2</sub> / γ<sub>M3</sub>', fp(EC3.gM2, 2) + ' / ' + fp(r.gM3, 2), '');
+
+  const rows = [];
+  if (r.attrito) {
+    rows.push(vrow('Scorrimento  F<sub>v,Ed</sub> ≤ F<sub>s,Rd</sub>', kN(r.FvEd) + ' / ' + kN(r.FsRd), 'kN', r.sf.scorr,
+      'Giunto ad attrito (§3.9)\nF_s,Rd = k_s·n·μ·(F_p,C − 0,8·F_t,Ed)/γ_M3\nLa trazione concomitante riduce la forza di contatto'));
+  }
+  rows.push(vrow('Taglio  F<sub>v,Ed</sub> ≤ F<sub>v,Rd</sub>', kN(r.FvEd) + ' / ' + kN(r.FvRd), 'kN', r.sf.taglio,
+    'Resistenza a taglio del gambo (tab. 3.4)\nF_v,Rd = α_v·f_ub·A/γ_M2 × piani di taglio\nA = A_s se il piano cade nel filetto, altrimenti π/4·d²'));
+  rows.push(vrow('Rifollamento  F<sub>v,Ed</sub> ≤ F<sub>b,Rd</sub>', kN(r.FvEd) + ' / ' + kN(r.FbRd), 'kN', r.sf.rifoll,
+    'Resistenza a rifollamento della lamiera (tab. 3.4)\nF_b,Rd = k₁·α_b·f_u·d·t/γ_M2\nDipende dalle distanze e₁, e₂ e dallo spessore t'));
+  if (inp.FA > 0) {
+    rows.push(vrow('Trazione  F<sub>t,Ed</sub> ≤ F<sub>t,Rd</sub>', kN(r.FtEd) + ' / ' + kN(r.FtRd), 'kN', r.sf.trazione,
+      'Resistenza a trazione del bullone (tab. 3.4)\nF_t,Rd = k₂·f_ub·A_s/γ_M2   con k₂ = 0,9 (testa esagonale)'));
+    rows.push(vrow('Punzonamento  F<sub>t,Ed</sub> ≤ B<sub>p,Rd</sub>', kN(r.FtEd) + ' / ' + kN(r.BpRd), 'kN', r.sf.punz,
+      'Punzonamento della lamiera sotto la testa/dado (tab. 3.4)\nB_p,Rd = 0,6·π·d_m·t_p·f_u/γ_M2'));
+  }
+  if (inp.FA > 0 && inp.FQ > 0) {
+    const util = r.FvEd / r.FvRd + r.FtEd / (1.4 * r.FtRd);
+    rows.push(vrow('Interazione taglio + trazione', fp(util, 3) + ' ≤ 1,000', '', r.sf.inter,
+      'Tab. 3.4:  F_v,Ed/F_v,Rd + F_t,Ed/(1,4·F_t,Rd) ≤ 1,0'));
+  }
+  $('res-ver').innerHTML = rows.join('');
+
+  const w = [];
+  if (r.geo.length) w.push('<b>Distanze fuori norma (tab. 3.3):</b><br>' + r.geo.join('<br>'));
+  if (r.attrito && inp.cls !== '8.8' && inp.cls !== '10.9')
+    w.push('I giunti precaricati (cat. B/C/E) ammettono solo bulloni di classe 8.8 e 10.9 (§3.6.1).');
+  if (!r.attrito && inp.cat === 'A' && inp.FA > 0)
+    w.push('La categoria A è pensata per il solo taglio: con una trazione significativa valuta le categorie D/E.');
+  showWarn(w);
+}
+
+function showWarn(list) {
+  const el = $('warnbox');
+  if (!list.length) { el.classList.add('hidden'); el.innerHTML = ''; return; }
+  el.classList.remove('hidden');
+  el.innerHTML = list.map(t => '⚠ ' + t).join('<br><br>');
+}
+
+// ═══════════════════════════════════
+//  TABELLA DI RIFERIMENTO
+// ═══════════════════════════════════
+function renderTable(inp) {
+  const rows = FILETTI[serie];
+  const cur  = inp.th.label;
+
+  if (mode === 'VDI') {
+    $('tbl-title').textContent = 'Precarico e coppia di serraggio — classe ' + inp.cls;
+    $('tbl-note').innerHTML = `Valori calcolati con μ<sub>G</sub> = μ<sub>K</sub> = ${fp(inp.att.muG, 2)} e ν = ${fp(inp.nu, 2)} (VDI 2230). ` +
+      `Aumentare l'attrito riduce il precarico ottenibile a parità di coppia.`;
+    $('tbl-head').innerHTML = `<tr><th>Filett.</th><th>A<sub>s</sub><br>mm²</th><th>A₃<br>mm²</th>
+      <th>F<sub>0,2</sub><br>kN</th><th>F<sub>M,zul</sub><br>kN</th><th>M<sub>A</sub><br>N·m</th></tr>`;
+    $('tbl-body').innerHTML = rows.map(t => {
+      const r = coreVDI(Object.assign({}, inp, {th: t, Rp: classeProps(inp.cls, t.d).Rp, Rm: classeProps(inp.cls, t.d).Rm}));
+      return `<tr class="${t.label === cur ? 'active-row' : ''}">
+        <td>${t.label}</td><td>${fp(t.As, 1)}</td><td>${fp(t.A3, 1)}</td>
+        <td>${kN(t.As * classeProps(inp.cls, t.d).Rp)}</td><td>${kN(r.FMzul)}</td><td>${fp(r.MA, 1)}</td></tr>`;
+    }).join('');
+  } else {
+    $('tbl-title').textContent = 'Resistenze di progetto — classe ' + inp.cls;
+    $('tbl-note').innerHTML = `Valori per bullone, con lamiera ${inp.lam.id} (f<sub>u</sub> = ${inp.lam.fu} MPa), t = ${fp(inp.t1,0)} mm, ` +
+      `${inp.m} piano/i di taglio, piano ${filettoNelPiano ? 'nel filetto' : 'nel gambo'}, γ<sub>M2</sub> = 1,25.`;
+    $('tbl-head').innerHTML = `<tr><th>Filett.</th><th>A<sub>s</sub><br>mm²</th><th>d₀<br>mm</th>
+      <th>F<sub>v,Rd</sub><br>kN</th><th>F<sub>b,Rd</sub><br>kN</th><th>F<sub>t,Rd</sub><br>kN</th><th>F<sub>s,Rd</sub><br>kN</th></tr>`;
+    $('tbl-body').innerHTML = rows.map(t => {
+      const r = coreEC3(Object.assign({}, inp, {th: t, Rm: classeProps(inp.cls, t.d).Rm}));
+      return `<tr class="${t.label === cur ? 'active-row' : ''}">
+        <td>${t.label}</td><td>${fp(t.As, 1)}</td><td>${fp(t.dh, 1)}</td>
+        <td>${kN(r.FvRd)}</td><td>${kN(r.FbRd)}</td><td>${kN(r.FtRd)}</td><td>${kN(r.FsRd)}</td></tr>`;
+    }).join('');
+  }
+
+  // Porta la riga attiva in vista scorrendo SOLO il contenitore della tabella:
+  // scrollIntoView() farebbe scorrere anche la pagina a ogni ricalcolo.
+  const active = $('tbl-body').querySelector('.active-row');
+  const cont = $('tbl-body').closest('.table-container');
+  if (active && cont) {
+    const target = active.offsetTop - (cont.clientHeight - active.offsetHeight) / 2;
+    cont.scrollTop = Math.max(0, target);
+  }
+}
+
+// ═══════════════════════════════════
+//  DIMENSIONAMENTO AUTOMATICO
+//  Scorre diametri (passo grosso) e, se serve, sale di classe.
+// ═══════════════════════════════════
+function autoSize() {
+  const base = getInputs();
+  const classi = (mode === 'EC3')
+    ? ['8.8', '10.9', '12.9']
+    : ['8.8', '10.9', '12.9'];
+  const rows = FILETTI[serie];
+
+  for (const cls of classi) {
+    for (let i = 0; i < rows.length; i++) {
+      const t = rows[i];
+      const props = classeProps(cls, t.d);
+      const inp = Object.assign({}, base, {th: t, cls, Rm: props.Rm, Rp: props.Rp});
+      if (ok(inp)) {
+        $('thread').value = i;
+        $('cls').value = cls;
+        calculate();
+        return;
+      }
+    }
+  }
+  // Nessuna combinazione sufficiente: porta al massimo e lascia parlare le verifiche
+  $('thread').value = rows.length - 1;
+  $('cls').value = '12.9';
+  calculate();
+  showWarn(['<b>Nessun bullone della serie soddisfa tutte le verifiche.</b> Aumenta il numero di bulloni, riduci i carichi o rivedi la geometria del giunto.']);
+}
+
+// Tutte le verifiche attive della modalità corrente hanno margine ≥ 1.2
+function ok(inp) {
+  const S = 1.2;
+  if (mode === 'VDI') {
+    const r = coreVDI(inp);
+    if (r.FKR <= 0) return false;
+    if (r.sf.precarico < 1)  return false;
+    if (r.sf.snerv     < 1)  return false;
+    if (r.sf.scorr     < S && inp.FQ > 0) return false;
+    if (r.sf.pressione < 1)  return false;
+    if (r.sab > 0 && r.sf.fatica < S) return false;
+    if (tipo === 'ESV' && inp.lK / r.meff < 1) return false;
+    return true;
+  } else {
+    const r = coreEC3(inp);
+    if (inp.FQ > 0) {
+      if (r.attrito && r.sf.scorr < S) return false;
+      if (r.sf.taglio < S) return false;
+      if (r.sf.rifoll < S) return false;
+    }
+    if (inp.FA > 0) {
+      if (r.sf.trazione < S) return false;
+      if (r.sf.punz     < S) return false;
+    }
+    if (inp.FA > 0 && inp.FQ > 0 && r.sf.inter < 1) return false;
+    return true;
+  }
+}
+
+// ═══════════════════════════════════
+//  SCHEMA SVG
+// ═══════════════════════════════════
+// Due marker: "ar" punta nel verso della linea, "arb" nel verso opposto.
+// Sulle linee di quota servono entrambi, così le punte guardano verso l'esterno.
+function dimH(x1, x2, y, label) {
+  return `<line x1="${x1}" y1="${y}" x2="${x2}" y2="${y}" stroke="#4fc3f7" stroke-width="0.7" marker-start="url(#arb)" marker-end="url(#ar)"/>
+    <text x="${(x1 + x2) / 2}" y="${y - 4}" fill="#4fc3f7" font-size="9" text-anchor="middle" font-family="DM Mono">${label}</text>`;
+}
+function dimV(x, y1, y2, label) {
+  return `<line x1="${x}" y1="${y1}" x2="${x}" y2="${y2}" stroke="#4fc3f7" stroke-width="0.7" marker-start="url(#arb)" marker-end="url(#ar)"/>
+    <text x="${x + 5}" y="${(y1 + y2) / 2 + 3}" fill="#4fc3f7" font-size="9" font-family="DM Mono">${label}</text>`;
+}
+
+function drawSchema(inp) {
+  const defs = `<defs>
+    <marker id="ar" markerWidth="6" markerHeight="6" refX="3" refY="3" orient="auto">
+      <path d="M0,1 L6,3 L0,5 Z" fill="#4fc3f7"/></marker>
+    <marker id="arb" markerWidth="6" markerHeight="6" refX="3" refY="3" orient="auto">
+      <path d="M6,1 L0,3 L6,5 Z" fill="#4fc3f7"/></marker>
+    <marker id="arF" markerWidth="7" markerHeight="7" refX="3.5" refY="3.5" orient="auto">
+      <path d="M0,1 L7,3.5 L0,6 Z" fill="#ef5350"/></marker>
+    <marker id="arFb" markerWidth="7" markerHeight="7" refX="3.5" refY="3.5" orient="auto">
+      <path d="M7,1 L0,3.5 L7,6 Z" fill="#ef5350"/></marker>
+  </defs>`;
+
+  if (mode === 'VDI') {
+    const r = coreVDI(inp);
+    // Scala: la lunghezza serrata occupa 90 px
+    const cx = 190, yTop = 55, hK = 90;
+    const sc = hK / inp.lK;                       // px per mm
+    const rh = Math.min(70, inp.th.dw * sc / 2 + 6);  // semi-larghezza testa
+    const rb = Math.max(3, inp.th.d * sc / 2);        // semi-larghezza gambo
+    const rDA = Math.min(130, inp.DA * sc / 2);
+    const hHead = 0.65 * inp.th.d * sc;
+    const hNut  = 0.8 * inp.th.d * sc;
+    const yBot  = yTop + hK;
+    const rCone = Math.min(rDA, rh + (inp.lK / 2) * sc * r.tanf);
+
+    let s = defs;
+    // Flange
+    s += `<rect x="${cx - rDA}" y="${yTop}" width="${2 * rDA}" height="${hK / 2}" fill="#23252d" stroke="#4a4d5a" stroke-width="1"/>`;
+    s += `<rect x="${cx - rDA}" y="${yTop + hK / 2}" width="${2 * rDA}" height="${hK / 2}" fill="#1c1d23" stroke="#4a4d5a" stroke-width="1"/>`;
+    // Cono di pressione
+    s += `<path d="M${cx - rh},${yTop} L${cx - rCone},${yTop + hK / 2} L${cx - rCone},${yTop + hK / 2} L${cx - rh},${yBot}
+                  L${cx + rh},${yBot} L${cx + rCone},${yTop + hK / 2} L${cx + rh},${yTop} Z"
+          fill="rgba(79,195,247,.07)" stroke="rgba(79,195,247,.35)" stroke-width="0.8" stroke-dasharray="3 2"/>`;
+    // Foro
+    s += `<rect x="${cx - inp.th.dh * sc / 2}" y="${yTop}" width="${inp.th.dh * sc}" height="${hK}" fill="#0e0f11"/>`;
+    // Gambo
+    s += `<rect x="${cx - rb}" y="${yTop - hHead}" width="${2 * rb}" height="${hK + hHead + (tipo === 'DSV' ? hNut + 6 : 0)}" fill="#2f3340" stroke="#7a7d8a" stroke-width="0.8"/>`;
+    // Testa
+    s += `<rect x="${cx - rh}" y="${yTop - hHead}" width="${2 * rh}" height="${hHead}" fill="#3a3f4e" stroke="#b0b4c0" stroke-width="1" rx="1"/>`;
+    // Dado o filetto nel pezzo
+    if (tipo === 'DSV') {
+      s += `<rect x="${cx - rh}" y="${yBot}" width="${2 * rh}" height="${hNut}" fill="#3a3f4e" stroke="#b0b4c0" stroke-width="1" rx="1"/>`;
+    } else {
+      for (let y = yTop + hK / 2; y < yBot; y += 4) {
+        s += `<line x1="${cx - rb - 2}" y1="${y}" x2="${cx - rb + 2}" y2="${y + 2}" stroke="#b39ddb" stroke-width="0.7"/>
+              <line x1="${cx + rb - 2}" y1="${y}" x2="${cx + rb + 2}" y2="${y + 2}" stroke="#b39ddb" stroke-width="0.7"/>`;
+      }
+    }
+    // Asse
+    s += `<line x1="${cx}" y1="10" x2="${cx}" y2="210" stroke="#4a4d5a" stroke-width="0.5" stroke-dasharray="6 3 2 3"/>`;
+    // Carico assiale
+    s += `<line x1="${cx - rDA + 14}" y1="${yTop - 30}" x2="${cx - rDA + 14}" y2="${yTop - 6}" stroke="#ef5350" stroke-width="1.4" marker-start="url(#arFb)"/>
+          <text x="${cx - rDA + 20}" y="${yTop - 20}" fill="#ef5350" font-size="9" font-family="DM Mono">F_A</text>`;
+    // Quote
+    s += dimV(cx + rDA + 12, yTop, yBot, 'l_K = ' + fp(inp.lK, 0));
+    s += dimH(cx - rDA, cx + rDA, yBot + hNut + 26, 'D_A = ' + fp(inp.DA, 0));
+    s += `<text x="12" y="20" fill="#7a7d8a" font-size="10" font-family="DM Mono">${tipo === 'DSV' ? 'Vite passante + dado (DSV)' : 'Filetto ricavato nel pezzo (ESV)'} · Φ_en = ${fp(r.Phien, 3)}</text>`;
+    $('schema').innerHTML = s;
+
+  } else {
+    const r = coreEC3(inp);
+    // Vista in pianta: lamiera con due bulloni in fila.
+    // La scala è limitata anche in altezza, così le quote e₁/p₁ non finiscono sul titolo.
+    const sc = Math.min(3.2, 300 / (inp.e1 * 2 + inp.p1), 90 / (inp.e2 * 2));
+    const x0 = 60, yMid = 125;
+    const xB1 = x0 + inp.e1 * sc;
+    const xB2 = xB1 + inp.p1 * sc;
+    const wPl = inp.e1 * 2 * sc + inp.p1 * sc;
+    const hPl = inp.e2 * 2 * sc;
+    const rB  = Math.max(4, inp.th.d * sc / 2);
+
+    let s = defs;
+    s += `<rect x="${x0}" y="${yMid - hPl / 2}" width="${wPl}" height="${hPl}" fill="#23252d" stroke="#7a7d8a" stroke-width="1"/>`;
+    s += `<rect x="${x0 + wPl - 40}" y="${yMid - hPl / 2}" width="40" height="${hPl}" fill="#1c1d23" stroke="none"/>`;
+    [xB1, xB2].forEach(x => {
+      s += `<circle cx="${x}" cy="${yMid}" r="${rB}" fill="#3a3f4e" stroke="#b39ddb" stroke-width="1.2"/>
+            <line x1="${x - rB - 3}" y1="${yMid}" x2="${x + rB + 3}" y2="${yMid}" stroke="#4a4d5a" stroke-width="0.5" stroke-dasharray="4 2"/>
+            <line x1="${x}" y1="${yMid - rB - 3}" x2="${x}" y2="${yMid + rB + 3}" stroke="#4a4d5a" stroke-width="0.5" stroke-dasharray="4 2"/>`;
+    });
+    // Carico di taglio
+    s += `<line x1="${x0 + wPl + 8}" y1="${yMid}" x2="${x0 + wPl + 44}" y2="${yMid}" stroke="#ef5350" stroke-width="1.6" marker-end="url(#arF)"/>
+          <text x="${x0 + wPl + 14}" y="${yMid - 6}" fill="#ef5350" font-size="9" font-family="DM Mono">F_Q</text>`;
+    // Quote
+    s += dimH(x0, xB1, yMid - hPl / 2 - 8, 'e₁ ' + fp(inp.e1, 0));
+    s += dimH(xB1, xB2, yMid - hPl / 2 - 24, 'p₁ ' + fp(inp.p1, 0));
+    s += dimV(x0 - 14, yMid - hPl / 2, yMid, 'e₂ ' + fp(inp.e2, 0));
+    s += `<text x="12" y="16" fill="#7a7d8a" font-size="10" font-family="DM Mono">Categoria ${inp.cat} · d₀ = ${fp(r.d0, 1)} mm · t = ${fp(inp.t1, 0)} mm</text>`;
+    s += `<text x="12" y="212" fill="#4a4d5a" font-size="9" font-family="DM Mono">Vista in pianta — disposizione dei fori (schematica)</text>`;
+    $('schema').innerHTML = s;
+  }
+}
+
+// ═══════════════════════════════════
+//  INIT
+// ═══════════════════════════════════
+window.onload = () => {
+  fillStatic();
+  fillThreads();
+  setMode('VDI');
+};
+</script>
+
+</body>
+</html>
