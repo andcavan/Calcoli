@@ -1,0 +1,600 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Cinghie Dentate - ISO 5296 / ISO 13050 / DIN 7721</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@300;400;500&family=Barlow+Condensed:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<script src="cinghie_db.js"></script>
+<style>
+:root{
+  --bg:#0e0f11;--bg1:#141519;--bg2:#1c1d23;--bg3:#23252d;
+  --border:rgba(255,255,255,.07);--border2:rgba(255,255,255,.13);
+  --text:#e8e9ec;--muted:#7a7d8a;--dim:#4a4d5a;
+  --acc:#4fc3f7;--acc2:#0288d1;
+  --up:#66bb6a;--dn:#ef5350;--amber:#ffa726;--violet:#b39ddb;
+  --mono:'DM Mono',monospace;--cond:'Barlow Condensed',sans-serif;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{background:var(--bg);color:var(--text);font-family:var(--mono);font-size:13px;min-height:100vh}
+body{display:flex;flex-direction:column;align-items:center;min-height:100vh;padding:20px}
+
+.header{border-bottom:1px solid var(--border);padding:11px 20px;display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:20px;width:100%;max-width:1180px}
+.header h1{font-family:var(--cond);font-size:20px;font-weight:700;letter-spacing:.04em;text-transform:uppercase}
+.sub{font-size:10px;color:var(--muted);letter-spacing:.1em;text-transform:uppercase;flex:1}
+.dot{width:7px;height:7px;border-radius:50%;background:var(--acc);display:inline-block;margin-right:6px;animation:pulse 2s ease-in-out infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
+.norm-badge{font-family:var(--cond);font-size:10px;font-weight:600;letter-spacing:.08em;color:var(--acc);background:rgba(79,195,247,.08);border:1px solid rgba(79,195,247,.22);border-radius:4px;padding:3px 9px;white-space:nowrap}
+
+.container{max-width:1180px;width:100%;display:grid;grid-template-columns:340px 1fr;gap:20px}
+@media(max-width:900px){.container{grid-template-columns:1fr}}
+
+.panel{background:var(--bg2);border:1px solid var(--border2);border-radius:8px;padding:15px;display:flex;flex-direction:column;gap:12px}
+.rpanel{display:flex;flex-direction:column;gap:14px}
+
+.stitle{font-family:var(--cond);font-size:10px;font-weight:600;letter-spacing:.17em;color:var(--muted);text-transform:uppercase;margin-bottom:4px;display:flex;align-items:center;gap:6px}
+.stitle::after{content:'';flex:1;height:1px;background:var(--border)}
+
+.field{margin-bottom:6px}
+.field:last-child{margin-bottom:0}
+.fhdr{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:4px}
+.flabel{color:var(--muted);font-size:11px;letter-spacing:.03em}
+.funit{font-size:10px;color:var(--dim)}
+.frow2{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+
+.srow{display:flex;align-items:center;gap:4px}
+.arr{flex-shrink:0;width:25px;height:25px;display:flex;align-items:center;justify-content:center;background:var(--bg2);border:1px solid var(--border2);border-radius:5px;cursor:pointer;color:var(--muted);font-size:10px;transition:all .12s;user-select:none}
+.arr:hover{border-color:var(--acc);color:var(--acc);background:rgba(79,195,247,.08)}
+.arr:active{transform:scale(.88)}
+
+.numinput{flex:1;width:100%;height:25px;background:var(--bg3);border:1px solid var(--border2);border-radius:5px;color:var(--acc);font-family:var(--mono);font-size:12px;font-weight:500;text-align:center;outline:none;padding:0 4px;transition:border-color .12s}
+.numinput:focus{border-color:var(--acc);background:var(--bg2)}
+.numinput:hover{border-color:rgba(79,195,247,.4)}
+.numinput::-webkit-outer-spin-button,.numinput::-webkit-inner-spin-button{-webkit-appearance:none;margin:0}
+.numinput[type=number]{-moz-appearance:textfield}
+
+.select-field{width:100%;height:25px;background:var(--bg3);border:1px solid var(--border2);border-radius:5px;color:var(--acc);font-family:var(--mono);font-size:12px;font-weight:500;padding:0 4px;outline:none;transition:border-color .12s;cursor:pointer}
+.select-field:focus{border-color:var(--acc);background:var(--bg2)}
+.select-field:hover{border-color:rgba(79,195,247,.4)}
+.select-field option{background:var(--bg2);color:var(--acc)}
+
+/* Toggle secondario (2..4 opzioni testuali) */
+.seg{display:grid;gap:0;border:1px solid var(--border2);border-radius:6px;overflow:hidden}
+.seg-2{grid-template-columns:1fr 1fr}
+.seg-4{grid-template-columns:1fr 1fr 1fr 1fr}
+.seg-btn{background:var(--bg3);border:none;padding:6px 4px;cursor:pointer;color:var(--muted);font-family:var(--cond);font-size:12px;font-weight:600;letter-spacing:.04em;transition:all .15s}
+.seg-btn + .seg-btn{border-left:1px solid var(--border2)}
+.seg-btn:hover{background:var(--bg2)}
+.seg-btn.on{background:rgba(79,195,247,.12);color:var(--acc)}
+
+/* Risultati */
+.results-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.results-grid-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px}
+.result-box{background:var(--bg1);border:1px solid var(--border);border-radius:6px;padding:10px}
+.result-label{font-size:9px;color:var(--muted);letter-spacing:.07em;text-transform:uppercase;margin-bottom:4px;font-family:var(--cond)}
+.result-value{font-size:16px;font-weight:500;color:var(--acc);font-family:var(--mono)}
+.result-unit{font-size:10px;color:var(--dim);margin-left:3px}
+
+.schematic-wrap{background:var(--bg1);border:1px solid var(--border);border-radius:6px;padding:10px;display:flex;justify-content:center}
+.schematic-wrap svg{width:100%;max-width:520px;height:auto}
+
+.result-section{background:rgba(79,195,247,.05);border:1px solid rgba(79,195,247,.2);border-radius:8px;padding:12px}
+.result-section-title{font-family:var(--cond);font-size:10px;font-weight:700;letter-spacing:.14em;color:var(--acc);text-transform:uppercase;margin-bottom:8px;display:flex;align-items:center;gap:8px}
+.result-section-title::after{content:'';flex:1;height:1px;background:rgba(79,195,247,.15)}
+.verification-grid{display:grid;grid-template-columns:1fr;gap:5px}
+.verify-item{display:flex;justify-content:space-between;align-items:center;padding:5px 8px;background:var(--bg1);border:1px solid var(--border);border-radius:4px;font-size:11px;gap:8px}
+.verify-label{color:var(--muted);flex:1}
+.verify-value{color:var(--text);font-weight:500;font-family:var(--mono);white-space:nowrap}
+.verify-unit{font-size:9px;color:var(--dim);margin-left:4px}
+.verify-status{padding:2px 6px;border-radius:3px;font-size:9px;font-weight:600;margin-left:6px;white-space:nowrap}
+.verify-status.ok{background:rgba(102,187,106,.2);color:var(--up);border:1px solid var(--up)}
+.verify-status.warn{background:rgba(255,167,38,.2);color:var(--amber);border:1px solid var(--amber)}
+.verify-status.err{background:rgba(239,83,80,.2);color:var(--dn);border:1px solid var(--dn)}
+
+/* Barra di utilizzo */
+.util{width:70px;height:5px;background:var(--bg3);border-radius:3px;overflow:hidden;flex-shrink:0}
+.util span{display:block;height:100%;border-radius:3px}
+.util span.ok{background:var(--up)}
+.util span.warn{background:var(--amber)}
+.util span.err{background:var(--dn)}
+
+.table-container{overflow-x:auto;max-height:230px;overflow-y:auto;position:relative}
+.dim-table{width:100%;border-collapse:collapse;font-size:10px}
+.dim-table th{background:rgba(79,195,247,.1);color:var(--acc2);padding:5px 4px;text-align:center;border:1px solid var(--border2);font-weight:600;letter-spacing:.05em;position:sticky;top:0}
+.dim-table td{padding:4px;border:1px solid var(--border2);text-align:center;color:var(--text)}
+.dim-table tr.active-row{background:rgba(79,195,247,.12)}
+.dim-table tr:hover{background:rgba(79,195,247,.05)}
+
+.back-btn{font-family:var(--cond);font-size:10px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);text-decoration:none;border:1px solid var(--border2);border-radius:4px;padding:4px 10px;transition:all .15s;white-space:nowrap}
+.back-btn:hover{color:var(--acc);border-color:var(--acc)}
+
+[data-tip]{position:relative;cursor:help}
+[data-tip]:hover::after{content:attr(data-tip);position:absolute;bottom:calc(100% + 7px);left:0;background:#1e2130;border:1px solid rgba(79,195,247,.25);color:#c8cad4;font-size:10px;padding:7px 11px;border-radius:6px;white-space:pre-wrap;max-width:280px;min-width:170px;z-index:999;line-height:1.6;pointer-events:none;font-family:var(--mono);text-align:left;box-shadow:0 4px 20px rgba(0,0,0,.5)}
+
+::-webkit-scrollbar{width:5px;height:5px}
+::-webkit-scrollbar-track{background:var(--bg)}
+::-webkit-scrollbar-thumb{background:var(--bg3);border-radius:3px}
+
+.warn-box{background:rgba(255,167,38,.07);border:1px solid rgba(255,167,38,.25);border-radius:5px;padding:8px 10px;font-size:10px;color:var(--amber);line-height:1.6}
+.info-box{background:rgba(79,195,247,.06);border:1px solid rgba(79,195,247,.18);border-radius:5px;padding:8px 10px;font-size:10px;color:var(--acc);line-height:1.6}
+.note{font-size:10px;color:var(--dim);line-height:1.6}
+.hidden{display:none !important}
+
+.norms{font-size:10px;color:var(--muted);line-height:1.8}
+.norms b{color:var(--acc);font-weight:500}
+
+footer{margin-top:34px;font-size:10px;color:var(--dim);letter-spacing:.04em;text-align:center;line-height:1.8}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <a href="index.html" class="back-btn">← Ritorna</a>
+  <h1><span class="dot"></span>Cinghie Dentate</h1>
+  <div class="sub">Sincrone · Profilo · Interasse · Larghezza</div>
+  <span class="norm-badge">ISO 5296 · ISO 13050 · DIN 7721</span>
+</div>
+
+<div class="container">
+
+<!-- ═══ PANNELLO INPUT ═══ -->
+<div class="panel">
+
+  <div class="stitle">Sistema profilo</div>
+  <div class="seg seg-4" id="sysToggle"></div>
+
+  <div class="frow2">
+    <div class="field">
+      <div class="fhdr"><span class="flabel" data-tip="Profilo e passo p della dentatura.\nHTD: curvilineo alta coppia\nT/AT: trapezoidale metrico\nMXL…XH: trapezoidale imperiale">Profilo</span></div>
+      <select id="prof" class="select-field" onchange="onProfChange()"></select>
+    </div>
+    <div class="field">
+      <div class="fhdr"><span class="flabel">Passo p</span><span class="funit">mm</span></div>
+      <input id="passo" class="numinput" readonly>
+    </div>
+  </div>
+
+  <div class="stitle">Potenza e velocità</div>
+
+  <div class="field">
+    <div class="fhdr"><span class="flabel" data-tip="Dato di ingresso del dimensionamento.\nPotenza: P [kW] nota.\nCoppia: coppia motrice M₁ [Nm] nota → P = M₁·n₁/9550.">Grandezza in ingresso</span></div>
+    <div class="seg seg-2">
+      <button class="seg-btn on" id="in-P" onclick="setInMode('P')">Potenza</button>
+      <button class="seg-btn" id="in-M" onclick="setInMode('M')">Coppia</button>
+    </div>
+  </div>
+
+  <div class="field" id="fieldP">
+    <div class="fhdr"><span class="flabel">Potenza da trasmettere P</span><span class="funit">kW</span></div>
+    <div class="srow">
+      <div class="arr" onclick="adjust('P',-0.25)">−</div>
+      <input id="P" class="numinput" type="number" value="5.5" min="0.01" step="0.25" oninput="calculate()">
+      <div class="arr" onclick="adjust('P',0.25)">+</div>
+    </div>
+  </div>
+
+  <div class="field hidden" id="fieldM">
+    <div class="fhdr"><span class="flabel">Coppia motrice M₁</span><span class="funit">Nm</span></div>
+    <div class="srow">
+      <div class="arr" onclick="adjust('Min',-1)">−</div>
+      <input id="Min" class="numinput" type="number" value="36" min="0.1" step="1" oninput="calculate()">
+      <div class="arr" onclick="adjust('Min',1)">+</div>
+    </div>
+  </div>
+
+  <div class="field">
+    <div class="fhdr"><span class="flabel">Giri puleggia motrice n₁</span><span class="funit">rpm</span></div>
+    <div class="srow">
+      <div class="arr" onclick="adjust('n1',-50)">−</div>
+      <input id="n1" class="numinput" type="number" value="1450" min="1" step="50" oninput="calculate()">
+      <div class="arr" onclick="adjust('n1',50)">+</div>
+    </div>
+  </div>
+
+  <div class="frow2">
+    <div class="field">
+      <div class="fhdr"><span class="flabel" data-tip="N° denti puleggia motrice (piccola).\nDeve essere ≥ z_min del profilo.">Denti z₁</span></div>
+      <div class="srow">
+        <div class="arr" onclick="adjust('z1',-1)">−</div>
+        <input id="z1" class="numinput" type="number" value="24" min="6" step="1" oninput="calculate()">
+        <div class="arr" onclick="adjust('z1',1)">+</div>
+      </div>
+    </div>
+    <div class="field">
+      <div class="fhdr"><span class="flabel">Denti z₂</span></div>
+      <div class="srow">
+        <div class="arr" onclick="adjust('z2',-1)">−</div>
+        <input id="z2" class="numinput" type="number" value="48" min="6" step="1" oninput="calculate()">
+        <div class="arr" onclick="adjust('z2',1)">+</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="field">
+    <div class="fhdr"><span class="flabel">Interasse desiderato C</span><span class="funit">mm</span></div>
+    <div class="srow">
+      <div class="arr" onclick="adjust('C',-5)">−</div>
+      <input id="C" class="numinput" type="number" value="400" min="1" step="5" oninput="calculate()">
+      <div class="arr" onclick="adjust('C',5)">+</div>
+    </div>
+  </div>
+
+  <div class="stitle">Fattore di servizio</div>
+
+  <div class="field">
+    <div class="fhdr"><span class="flabel" data-tip="Tipo di macchina motrice: determina il livello di irregolarità della coppia in ingresso.">Macchina motrice</span></div>
+    <select id="mot" class="select-field" onchange="calculate()"></select>
+  </div>
+  <div class="field">
+    <div class="fhdr"><span class="flabel" data-tip="Tipo di macchina comandata: determina l'entità degli urti resistenti.">Macchina comandata</span></div>
+    <select id="car" class="select-field" onchange="calculate()"></select>
+  </div>
+  <div class="field">
+    <div class="fhdr"><span class="flabel">Ore di funzionamento</span></div>
+    <select id="ore" class="select-field" onchange="calculate()"></select>
+  </div>
+
+  <div class="stitle">Larghezza cinghia</div>
+  <div class="field">
+    <div class="fhdr"><span class="flabel" data-tip="AUTO: seleziona la minima larghezza standard che soddisfa la potenza di progetto.\nManuale: impone una larghezza standard.">Larghezza b</span><span class="funit">mm</span></div>
+    <select id="larg" class="select-field" onchange="calculate()"></select>
+  </div>
+
+  <div class="note" style="margin-top:4px">Riferimenti: ISO 5296 · ISO 5294/5295 · ISO 13050 · DIN 7721. I rating di potenza sono valori di catalogo indicativi.</div>
+
+</div>
+
+<!-- ═══ PANNELLO RISULTATI ═══ -->
+<div class="rpanel">
+
+  <div id="hint"></div>
+
+  <div class="result-section">
+    <div class="result-section-title">Geometria trasmissione</div>
+    <div class="results-grid-3" id="geoGrid"></div>
+  </div>
+
+  <div class="schematic-wrap"><div id="schema"></div></div>
+
+  <div class="result-section">
+    <div class="result-section-title">Cinghia selezionata</div>
+    <div class="results-grid-3" id="beltGrid"></div>
+  </div>
+
+  <div class="result-section">
+    <div class="result-section-title">Verifiche</div>
+    <div class="verification-grid" id="verGrid"></div>
+  </div>
+
+  <div class="result-section">
+    <div class="result-section-title">Lunghezze primitive standard — <span id="lpTitle"></span></div>
+    <div class="table-container">
+      <table class="dim-table" id="lpTable"></table>
+    </div>
+  </div>
+
+</div>
+</div>
+
+<footer>
+  Andrea Cavani · Moduli calcolo HTML<br>
+  Pre-dimensionamento secondo ISO 5296 / ISO 13050 / DIN 7721. Verificare sempre con il catalogo del costruttore.
+</footer>
+
+<script>
+// ═══════════════════════════════════
+//  STATO
+// ═══════════════════════════════════
+let sistema = 'HTD';
+let inMode  = 'P';        // 'P' = potenza [kW] | 'M' = coppia motrice [Nm]
+
+function setInMode(m){
+  inMode = m;
+  $('in-P').classList.toggle('on', m==='P');
+  $('in-M').classList.toggle('on', m==='M');
+  $('fieldP').classList.toggle('hidden', m!=='P');
+  $('fieldM').classList.toggle('hidden', m!=='M');
+  calculate();
+}
+
+// ═══════════════════════════════════
+//  HELPER
+// ═══════════════════════════════════
+const $ = id => document.getElementById(id);
+const fp = (v,n=1) => isFinite(v) ? v.toFixed(n) : '—';
+const PI = Math.PI;
+
+function box(label,value,unit){
+  return `<div class="result-box">
+    <div class="result-label">${label}</div>
+    <div class="result-value">${value}<span class="result-unit">${unit||''}</span></div>
+  </div>`;
+}
+function sfClass(sf){ if(!isFinite(sf)) return 'err'; if(sf>=1.1) return 'ok'; if(sf>=1.0) return 'warn'; return 'err'; }
+function sfLabel(cl){ return cl==='ok'?'OK':(cl==='warn'?'LIMITE':'INSUFF.'); }
+function vrow(label,value,unit,sf,tip){
+  const cl=sfClass(sf);
+  const pct=Math.min(100, isFinite(sf)&&sf>0 ? 100/sf : 100);
+  return `<div class="verify-item">
+    <span class="verify-label"${tip?` data-tip="${tip}"`:''}>${label}</span>
+    <span class="util"><span class="${cl}" style="width:${pct}%"></span></span>
+    <span class="verify-value">${value}<span class="verify-unit">${unit||''}</span></span>
+    <span class="verify-status ${cl}">${sfLabel(cl)}</span>
+  </div>`;
+}
+function adjust(id,step){
+  const el=$(id);
+  const dec=(String(step).split('.')[1]||'').length;
+  let v=(parseFloat(el.value)||0)+step;
+  if(el.min!==''&&v<parseFloat(el.min)) v=parseFloat(el.min);
+  el.value=dec?v.toFixed(dec):v;
+  calculate();
+}
+// larghezza in mm per un profilo (gestisce IMP {code,b})
+function largMM(w){ return typeof w==='object'?w.b:w; }
+function largLabel(w){ return typeof w==='object'?`${w.code} (${w.b} mm)`:`${w} mm`; }
+
+// ═══════════════════════════════════
+//  POPOLAMENTO
+// ═══════════════════════════════════
+function fillStatic(){
+  $('sysToggle').innerHTML = Object.keys(SISTEMI).map(k =>
+    `<button class="seg-btn${k===sistema?' on':''}" id="sys-${k}" onclick="setSistema('${k}')">${SISTEMI[k].label}</button>`).join('');
+  $('mot').innerHTML = Object.keys(MOTORE).map(k=>`<option value="${k}">${MOTORE[k].desc}</option>`).join('');
+  $('car').innerHTML = Object.keys(CARICO).map(k=>`<option value="${k}">${CARICO[k].desc}</option>`).join('');
+  $('car').value='medio';
+  $('ore').innerHTML = Object.keys(ORE).map(k=>`<option value="${k}">${ORE[k].desc}</option>`).join('');
+  fillProfili();
+}
+function fillProfili(){
+  const list = SISTEMI[sistema].profili;
+  const prev = $('prof').value;
+  $('prof').innerHTML = list.map(p=>`<option value="${p}">${PROFILI[p].nome}</option>`).join('');
+  $('prof').value = list.includes(prev)?prev:list[Math.min(1,list.length-1)];
+  onProfChange();
+}
+function fillLarghezze(){
+  const pr = PROFILI[$('prof').value];
+  const prev = $('larg').value;
+  let opts = '<option value="auto">AUTO (minima idonea)</option>';
+  opts += pr.larg.map((w,i)=>`<option value="${i}">${largLabel(w)}</option>`).join('');
+  $('larg').innerHTML = opts;
+  $('larg').value = 'auto';
+}
+function setSistema(k){
+  sistema=k;
+  Object.keys(SISTEMI).forEach(s=>$('sys-'+s).classList.toggle('on',s===k));
+  fillProfili();
+}
+function onProfChange(){
+  const pr = PROFILI[$('prof').value];
+  $('passo').value = pr.p;
+  fillLarghezze();
+  calculate();
+}
+
+// ═══════════════════════════════════
+//  CALCOLO
+// ═══════════════════════════════════
+function coreCalc(){
+  const pr = PROFILI[$('prof').value];
+  const p  = pr.p;
+  const n1 = parseFloat($('n1').value)||0;
+  // Potenza: da input diretto oppure ricavata dalla coppia motrice M₁
+  const P  = inMode==='M'
+    ? (parseFloat($('Min').value)||0)*n1/9550
+    : (parseFloat($('P').value)||0);
+  const z1 = Math.max(1, parseInt($('z1').value)||1);
+  const z2 = Math.max(1, parseInt($('z2').value)||1);
+  const Cin= parseFloat($('C').value)||0;
+
+  // Fattore di servizio
+  const Ks = MOTORE[$('mot').value].k + CARICO[$('car').value].k + ORE[$('ore').value].k;
+  const Pd = P*Ks;
+
+  // Rapporto e cinematica
+  const iReal = z2/z1;
+  const n2 = n1/iReal;
+  const dp1 = z1*p/PI;
+  const dp2 = z2*p/PI;
+  const v   = PI*dp1*n1/60000;               // m/s
+  const M1  = n1>0 ? 9550*P/n1 : NaN;        // Nm
+  const M2  = n2>0 ? 9550*P/n2 : NaN;        // Nm
+  const Fu  = v>0 ? 1000*P/v : NaN;          // N (forza periferica)
+  const Falb= Fu*1.3;                        // carico statico stimato sugli alberi
+
+  // Lunghezza primitiva teorica e scelta standard
+  const Lth = 2*Cin + (PI/2)*(dp1+dp2) + Math.pow(dp2-dp1,2)/(4*Cin);
+  let Lp = pr.Lp[0], best=Infinity;
+  pr.Lp.forEach(L=>{ const d=Math.abs(L-Lth); if(d<best){best=d;Lp=L;} });
+  const Zb = Lp/p;
+
+  // Interasse effettivo con la lunghezza standard
+  const K = 4*Lp - 2*PI*(dp1+dp2);
+  const disc = K*K - 32*Math.pow(dp2-dp1,2);
+  const Ceff = disc>=0 ? (K + Math.sqrt(disc))/16 : NaN;
+
+  // Arco di avvolgimento e denti in presa (puleggia piccola)
+  const beta = isFinite(Ceff) ? 180 - 2*Math.asin(Math.min(1,(dp2-dp1)/(2*Ceff)))*180/PI : NaN;
+  const zm = isFinite(beta) ? Math.floor(z1*beta/360) : NaN;
+  const Kz = zm>=6 ? 1 : Math.max(0,(zm-1)*0.2);   // fattore denti in presa
+
+  // Larghezza richiesta: Pd ≤ Fu_spec·b·Kz·v/1000
+  const bReq = (pr.Fu_spec*Kz*v)>0 ? Pd*1000/(pr.Fu_spec*Kz*v) : Infinity;
+
+  // Larghezza selezionata
+  let bSel, bSelW;
+  if($('larg').value==='auto'){
+    bSelW = pr.larg.find(w=>largMM(w)>=bReq) || pr.larg[pr.larg.length-1];
+  }else{
+    bSelW = pr.larg[parseInt($('larg').value)] || pr.larg[0];
+  }
+  bSel = largMM(bSelW);
+
+  // Potenza e coppia ammissibili con larghezza selezionata
+  const FuAdm = pr.Fu_spec*bSel*Kz;          // N (tiro utile ammissibile)
+  const Padm  = FuAdm*v/1000;                 // kW
+  const Madm  = FuAdm*(dp1/2)/1000;           // Nm — coppia trasmissibile all'albero motore
+  const Mreq  = n1>0 ? 9550*Pd/n1 : NaN;      // Nm — coppia di progetto (con K_s)
+
+  return {pr,p,P,n1,n2,z1,z2,Cin,Ks,Pd,iReal,dp1,dp2,v,M1,M2,Fu,Falb,
+          Lth,Lp,Zb,Ceff,beta,zm,Kz,bReq,bSel,bSelW,FuAdm,Padm,Madm,Mreq};
+}
+
+function calculate(){
+  const r = coreCalc();
+
+  // Suggerimento profilo
+  $('hint').innerHTML = suggerimento(r);
+
+  // Geometria
+  $('geoGrid').innerHTML =
+    box('Rapporto i','1 : '+fp(r.iReal,2),'') +
+    box('Giri n₂',fp(r.n2,0),'rpm') +
+    box('Fatt. servizio K_s',fp(r.Ks,2),'') +
+    box('Ø primitivo d₁',fp(r.dp1,1),'mm') +
+    box('Ø primitivo d₂',fp(r.dp2,1),'mm') +
+    box('Velocità cinghia v',fp(r.v,2),'m/s') +
+    box('Potenza P',fp(r.P,2),'kW') +
+    box('Pot. progetto P_d',fp(r.Pd,2),'kW') +
+    box('Coppia motrice M₁',fp(r.M1,1),'Nm') +
+    box('Coppia uscita M₂',fp(r.M2,1),'Nm') +
+    box('Forza perif. F_u',fp(r.Fu,0),'N');
+
+  // Cinghia
+  $('beltGrid').innerHTML =
+    box('Profilo',r.pr.nome,'') +
+    box('Lung. primitiva L_p',fp(r.Lp,1),'mm') +
+    box('Denti cinghia z_b',fp(r.Zb,0),'') +
+    box('Interasse eff. C',fp(r.Ceff,1),'mm') +
+    box('Avvolgimento β₁',fp(r.beta,1),'°') +
+    box('Denti in presa z_m',isFinite(r.zm)?r.zm:'—','') +
+    box('Larghezza rich.',fp(r.bReq,1),'mm') +
+    box('Larghezza scelta',fp(r.bSel,1),'mm') +
+    box('Coppia trasm. M_adm',fp(r.Madm,1),'Nm') +
+    box('Carico albero F_a',fp(r.Falb,0),'N');
+
+  // Verifiche
+  $('verGrid').innerHTML =
+    vrow('Potenza: P_adm ≥ P_d', fp(r.Padm,2), 'kW', r.Padm/r.Pd,
+         'Potenza ammissibile della cinghia selezionata.\nP_adm = F_u,spec · b · K_z · v') +
+    vrow('Coppia: M_adm ≥ M_progetto', fp(r.Madm,1), 'Nm', r.Madm/r.Mreq,
+         'Coppia trasmissibile all\'albero motore dalla cinghia selezionata.\nM_adm = F_u,spec · b · K_z · d₁/2\nConfronto con la coppia di progetto M = 9550·P_d/n₁.') +
+    vrow('Larghezza: b_std ≥ b_rich', fp(r.bSel,1), 'mm', r.bSel/r.bReq,
+         'La larghezza standard deve coprire quella richiesta dalla potenza di progetto.') +
+    vrow('Denti in presa z_m ≥ 6', isFinite(r.zm)?r.zm:'—', '', r.zm/6,
+         'Almeno 6 denti in presa sulla puleggia piccola per sfruttare la capacità nominale.\nSotto i 6 denti si applica il fattore K_z riduttivo.') +
+    vrow('Velocità v ≤ v_max', fp(r.v,2), 'm/s', r.pr.vmax/r.v,
+         'Velocità massima consigliata per il profilo: '+r.pr.vmax+' m/s.') +
+    vrow('Denti z₁ ≥ z_min', r.z1, '', r.z1/r.pr.zmin,
+         'N° minimo denti puleggia per il profilo '+r.pr.nome+': '+r.pr.zmin+'.');
+
+  // Tabella lunghezze standard
+  renderLpTable(r);
+
+  // Schema
+  drawSchema(r);
+}
+
+function suggerimento(r){
+  // Trova, nella stessa famiglia, il primo profilo la cui capacità (larghezza max) copre P_d
+  const list = SISTEMI[sistema].profili;
+  let cons=null;
+  for(const key of list){
+    const pr=PROFILI[key];
+    const dp=r.z1*pr.p/PI;
+    const vv=PI*dp*r.n1/60000;
+    const bmax=largMM(pr.larg[pr.larg.length-1]);
+    const Pmax=pr.Fu_spec*bmax*vv/1000;
+    if(Pmax>=r.Pd){cons=pr.nome;break;}
+  }
+  if(!cons){
+    return `<div class="warn-box">Con il profilo più grande della famiglia ${SISTEMI[sistema].label} la potenza di progetto (${fp(r.Pd,2)} kW) è al limite: valutare un passo maggiore o una famiglia superiore.</div>`;
+  }
+  if(cons!==r.pr.nome){
+    return `<div class="info-box">Profilo consigliato per P_d = ${fp(r.Pd,2)} kW a ${fp(r.n1,0)} rpm: <b>${cons}</b> (famiglia ${SISTEMI[sistema].label}).</div>`;
+  }
+  return `<div class="info-box">Profilo <b>${r.pr.nome}</b> idoneo per P_d = ${fp(r.Pd,2)} kW a ${fp(r.n1,0)} rpm.</div>`;
+}
+
+function renderLpTable(r){
+  $('lpTitle').textContent = r.pr.nome+' (passo '+r.p+' mm)';
+  let html='<thead><tr><th>L_p [mm]</th><th>z_b denti</th><th>C con d attuali [mm]</th></tr></thead><tbody>';
+  r.pr.Lp.forEach(L=>{
+    const K=4*L-2*PI*(r.dp1+r.dp2);
+    const disc=K*K-32*Math.pow(r.dp2-r.dp1,2);
+    const C=disc>=0?(K+Math.sqrt(disc))/16:NaN;
+    const act = Math.abs(L-r.Lp)<1e-6 ? ' class="active-row"' : '';
+    html+=`<tr${act}><td>${fp(L,1)}</td><td>${fp(L/r.p,0)}</td><td>${isFinite(C)?fp(C,1):'—'}</td></tr>`;
+  });
+  html+='</tbody>';
+  $('lpTable').innerHTML=html;
+}
+
+// ═══════════════════════════════════
+//  SCHEMA SVG
+// ═══════════════════════════════════
+function drawSchema(r){
+  const W=520,H=260,pad=54;
+  const yc=H/2;
+  // scala: interasse + raggi entro larghezza utile
+  const Ceff=isFinite(r.Ceff)?r.Ceff:r.Cin;
+  const R1=r.dp1/2, R2=r.dp2/2;
+  const span=Ceff + R1 + R2;
+  const s=(W-2*pad)/span;
+  const r1=R1*s, r2=R2*s;
+  const x1=pad+r1, x2=x1+Ceff*s;
+
+  // tangenti esterne
+  const th=Math.asin(Math.min(1,(r2-r1)/(Ceff*s||1)));
+  const ux1=x1 - r1*Math.sin(th), uy1=yc - r1*Math.cos(th);
+  const ux2=x2 - r2*Math.sin(th), uy2=yc - r2*Math.cos(th);
+  const lx1=x1 + r1*Math.sin(th), ly1=yc + r1*Math.cos(th);
+  const lx2=x2 + r2*Math.sin(th), ly2=yc + r2*Math.cos(th);
+
+  const g='#4fc3f7', mut='#7a7d8a', dim='#4a4d5a';
+  let s2='';
+  // cinghia (path chiuso: arco piccola → tangente sup → arco grande → tangente inf)
+  s2+=`<path d="M ${ux1.toFixed(1)} ${uy1.toFixed(1)}
+      L ${ux2.toFixed(1)} ${uy2.toFixed(1)}
+      A ${r2.toFixed(1)} ${r2.toFixed(1)} 0 1 1 ${lx2.toFixed(1)} ${ly2.toFixed(1)}
+      L ${lx1.toFixed(1)} ${ly1.toFixed(1)}
+      A ${r1.toFixed(1)} ${r1.toFixed(1)} 0 1 1 ${ux1.toFixed(1)} ${uy1.toFixed(1)} Z"
+      fill="none" stroke="${g}" stroke-width="3" stroke-opacity=".55"/>`;
+  // puleggie
+  s2+=`<circle cx="${x1.toFixed(1)}" cy="${yc}" r="${r1.toFixed(1)}" fill="#1c1d23" stroke="${g}" stroke-width="1.4"/>`;
+  s2+=`<circle cx="${x2.toFixed(1)}" cy="${yc}" r="${r2.toFixed(1)}" fill="#1c1d23" stroke="${g}" stroke-width="1.4"/>`;
+  s2+=`<circle cx="${x1.toFixed(1)}" cy="${yc}" r="${(r1*0.28).toFixed(1)}" fill="none" stroke="${mut}" stroke-width="1"/>`;
+  s2+=`<circle cx="${x2.toFixed(1)}" cy="${yc}" r="${(r2*0.28).toFixed(1)}" fill="none" stroke="${mut}" stroke-width="1"/>`;
+  // assi
+  s2+=`<circle cx="${x1.toFixed(1)}" cy="${yc}" r="2" fill="${g}"/>`;
+  s2+=`<circle cx="${x2.toFixed(1)}" cy="${yc}" r="2" fill="${g}"/>`;
+  // quota interasse
+  const yd=yc+r2+26;
+  s2+=`<line x1="${x1}" y1="${yc}" x2="${x1}" y2="${yd+6}" stroke="${dim}" stroke-width=".8"/>`;
+  s2+=`<line x1="${x2}" y1="${yc}" x2="${x2}" y2="${yd+6}" stroke="${dim}" stroke-width=".8"/>`;
+  s2+=`<line x1="${x1}" y1="${yd}" x2="${x2}" y2="${yd}" stroke="${mut}" stroke-width=".8" marker-start="url(#a)" marker-end="url(#a)"/>`;
+  s2+=`<text x="${(x1+x2)/2}" y="${yd-5}" fill="${mut}" font-size="11" font-family="monospace" text-anchor="middle">C = ${fp(Ceff,0)} mm</text>`;
+  // etichette diametri / denti
+  s2+=`<text x="${x1}" y="${yc-r1-8}" fill="${g}" font-size="10" font-family="monospace" text-anchor="middle">z₁=${r.z1} · Ø${fp(r.dp1,0)}</text>`;
+  s2+=`<text x="${x2}" y="${yc-r2-8}" fill="${g}" font-size="10" font-family="monospace" text-anchor="middle">z₂=${r.z2} · Ø${fp(r.dp2,0)}</text>`;
+  s2+=`<text x="${x1}" y="${yc+4}" fill="${mut}" font-size="9" font-family="monospace" text-anchor="middle">β=${fp(r.beta,0)}°</text>`;
+
+  $('schema').innerHTML =
+    `<svg viewBox="0 0 ${W} ${H}" xmlns="http://www.w3.org/2000/svg">
+      <defs><marker id="a" markerWidth="8" markerHeight="8" refX="4" refY="4" orient="auto">
+        <path d="M1 4 L7 1.5 L7 6.5 Z" fill="${mut}"/></marker></defs>
+      ${s2}
+    </svg>`;
+}
+
+// ═══════════════════════════════════
+//  INIT
+// ═══════════════════════════════════
+fillStatic();
+calculate();
+</script>
+
+</body>
+</html>
