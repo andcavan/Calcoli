@@ -1,0 +1,1673 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Convertitore &amp; Formulario</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@300;400;500&family=Barlow+Condensed:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#0e0f11;--bg1:#141519;--bg2:#1c1d23;--bg3:#23252d;
+  --border:rgba(255,255,255,.07);--border2:rgba(255,255,255,.13);
+  --text:#e8e9ec;--muted:#7a7d8a;--dim:#4a4d5a;
+  --acc:#4fc3f7;--acc2:#0288d1;
+  --up:#66bb6a;--dn:#ef5350;--amber:#ffa726;--violet:#b39ddb;
+  --mono:'DM Mono',monospace;--cond:'Barlow Condensed',sans-serif;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{background:var(--bg);color:var(--text);font-family:var(--mono);font-size:13px}
+body{min-height:100vh}
+
+.header{border-bottom:1px solid var(--border);padding:11px 20px;display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.header h1{font-family:var(--cond);font-size:20px;font-weight:700;letter-spacing:.04em;text-transform:uppercase}
+.sub{font-size:10px;color:var(--muted);letter-spacing:.1em;text-transform:uppercase;flex:1}
+.dot{width:7px;height:7px;border-radius:50%;background:var(--acc);display:inline-block;margin-right:6px;animation:pulse 2s ease-in-out infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
+.back-btn{font-family:var(--cond);font-size:10px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);text-decoration:none;border:1px solid var(--border2);border-radius:4px;padding:4px 10px;transition:all .15s;white-space:nowrap;flex-shrink:0}
+.back-btn:hover{color:var(--acc);border-color:var(--acc)}
+
+.tabbar{display:flex;gap:6px;padding:10px 13px;border-bottom:1px solid var(--border);flex-wrap:wrap}
+.tabbtn{font-family:var(--cond);font-size:12px;font-weight:600;letter-spacing:.05em;text-transform:uppercase;padding:8px 16px;border:1px solid var(--border2);border-radius:7px;background:var(--bg2);color:var(--muted);cursor:pointer;transition:all .14s;display:flex;align-items:center;gap:7px}
+.tabbtn:hover{color:var(--text);background:var(--bg3)}
+.tabbtn.on{border-color:var(--acc);background:rgba(79,195,247,.12);color:var(--acc)}
+
+.tabpanel{display:none;padding:13px}
+.tabpanel.show{display:block}
+
+.chiprow{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px}
+.chip{font-family:var(--cond);font-size:11px;font-weight:600;letter-spacing:.03em;padding:6px 12px;border:1px solid var(--border2);border-radius:6px;background:var(--bg2);color:var(--muted);cursor:pointer;transition:all .13s;white-space:nowrap}
+.chip:hover{color:var(--text);background:var(--bg3)}
+.chip.on{border-color:var(--acc);background:rgba(79,195,247,.12);color:var(--acc)}
+
+.panel{background:var(--bg2);border:1px solid var(--border2);border-radius:8px;padding:14px 16px;margin-bottom:12px}
+.stitle{font-family:var(--cond);font-size:10px;font-weight:600;letter-spacing:.17em;color:var(--muted);text-transform:uppercase;margin-bottom:10px;display:flex;align-items:center;gap:6px}
+.stitle::after{content:'';flex:1;height:1px;background:var(--border)}
+
+/* CONVERTER */
+.conv-input-row{display:flex;gap:8px;align-items:stretch;margin-bottom:4px;flex-wrap:wrap}
+.numinput{flex:1;min-width:140px;height:38px;background:var(--bg3);border:1px solid var(--border2);border-radius:6px;color:var(--acc);font-family:var(--mono);font-size:16px;font-weight:500;text-align:center;outline:none;padding:0 8px;transition:border-color .12s}
+.numinput:focus{border-color:var(--acc);background:var(--bg2)}
+.numinput::-webkit-outer-spin-button,.numinput::-webkit-inner-spin-button{-webkit-appearance:none;margin:0}
+.numinput[type=number]{-moz-appearance:textfield}
+.unitsel{height:38px;background:var(--bg3);border:1px solid var(--border2);border-radius:6px;color:var(--text);font-family:var(--mono);font-size:12px;padding:0 8px;min-width:160px;cursor:pointer}
+.results-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:8px;margin-top:10px}
+.rchip{background:var(--bg1);border:1px solid var(--border);border-radius:7px;padding:9px 11px;cursor:pointer;transition:all .13s}
+.rchip:hover{border-color:var(--acc2);background:var(--bg3)}
+.rchip.self{border-color:var(--acc);background:rgba(79,195,247,.08)}
+.rc-l{font-size:9.5px;color:var(--dim);text-transform:uppercase;letter-spacing:.05em;font-family:var(--cond);margin-bottom:3px}
+.rc-v{font-size:14px;font-weight:500;color:var(--text);word-break:break-all}
+.rchip.self .rc-v{color:var(--acc)}
+
+/* FORMULARIO */
+.searchbox{width:100%;height:38px;background:var(--bg3);border:1px solid var(--border2);border-radius:6px;color:var(--text);font-family:var(--mono);font-size:13px;padding:0 12px;outline:none;margin-bottom:12px}
+.searchbox:focus{border-color:var(--acc)}
+.fgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:10px}
+.fcard{background:var(--bg1);border:1px solid var(--border);border-radius:8px;padding:12px 14px}
+.fcat{font-size:9px;color:var(--acc2);text-transform:uppercase;letter-spacing:.12em;font-family:var(--cond);font-weight:700;margin-bottom:4px}
+.fname{font-size:12.5px;color:var(--text);font-weight:500;margin-bottom:6px}
+.fformula{font-size:15px;color:var(--acc);background:rgba(79,195,247,.06);border:1px solid rgba(79,195,247,.15);border-radius:5px;padding:8px 10px;margin-bottom:6px;line-height:1.5;word-break:break-word}
+.fvars{font-size:10.5px;color:var(--muted);line-height:1.6;margin-bottom:6px}
+.fnote{font-size:10.5px;color:var(--dim);line-height:1.6;border-top:1px solid var(--border);padding-top:6px}
+.fempty{color:var(--dim);font-size:12px;padding:20px;text-align:center}
+.catdesc{font-size:11px;color:var(--dim);line-height:1.5;margin-bottom:10px}
+
+/* FIELDS generic */
+.fields-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px;margin-bottom:6px}
+.field{display:flex;flex-direction:column;gap:4px}
+.flabel{color:var(--muted);font-size:11px;letter-spacing:.03em}
+.finput{height:34px;background:var(--bg3);border:1px solid var(--border2);border-radius:5px;color:var(--acc);font-family:var(--mono);font-size:13px;font-weight:500;text-align:center;outline:none;padding:0 6px}
+.finput:focus{border-color:var(--acc);background:var(--bg2)}
+
+.results-grid2{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:8px}
+.mc{background:var(--bg1);border:1px solid var(--border);border-radius:6px;padding:9px 11px}
+.mc.hi{border-color:rgba(79,195,247,.35);background:rgba(79,195,247,.05)}
+.ml{font-size:9.5px;color:var(--muted);letter-spacing:.05em;text-transform:uppercase;margin-bottom:3px;font-family:var(--cond)}
+.mv{font-size:15px;font-weight:500;color:var(--text);line-height:1.2}
+.mc.hi .mv{color:var(--acc)}
+.mu{font-size:9px;color:var(--dim);margin-top:2px}
+
+.warnbox{background:rgba(239,83,80,.08);border:1px solid rgba(239,83,80,.25);border-radius:6px;padding:9px 12px;font-size:11.5px;color:#ef9a9a;line-height:1.5;margin-bottom:10px}
+.infobox{background:rgba(255,167,38,.08);border:1px solid rgba(255,167,38,.22);border-radius:6px;padding:9px 12px;font-size:11.5px;color:var(--amber);line-height:1.5;margin-bottom:10px}
+
+.svgwrap{display:flex;justify-content:center;margin-bottom:10px}
+.sol-title{font-family:var(--cond);font-size:11px;font-weight:700;color:var(--acc);letter-spacing:.08em;text-transform:uppercase;margin:10px 0 6px}
+
+.trig-cols{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+@media (max-width:760px){.trig-cols{grid-template-columns:1fr}}
+.udesc{font-size:10px;color:var(--dim);text-align:center;margin-top:4px}
+.legend-row{display:flex;gap:12px;flex-wrap:wrap;justify-content:center;margin:2px 0 10px;font-size:10px;color:var(--muted)}
+.legend-row span{display:inline-flex;align-items:center;gap:4px}
+.legend-row i{width:10px;height:2.5px;border-radius:2px;display:inline-block}
+
+::-webkit-scrollbar{width:5px}::-webkit-scrollbar-track{background:var(--bg)}::-webkit-scrollbar-thumb{background:var(--bg3);border-radius:3px}
+
+/* COPY / HISTORY */
+.mc,.rchip{position:relative;cursor:pointer}
+.mc:hover{border-color:rgba(79,195,247,.3)}
+.mc.copied,.rchip.copied{border-color:var(--up)!important;background:rgba(102,187,106,.12)!important}
+.mc::after{content:'📋';position:absolute;top:4px;right:6px;font-size:9px;opacity:0;transition:opacity .12s}
+.mc:hover::after{opacity:.45}
+.mc.copied::after{content:'✓';opacity:1;color:var(--up);font-size:12px}
+.copyhint{position:absolute;top:2px;right:3px;font-size:10px;color:var(--dim);opacity:0;transition:opacity .12s;background:none;border:none;cursor:pointer;padding:3px;line-height:1}
+.mc:hover .copyhint,.rchip:hover .copyhint{opacity:.7}
+.mc.copied .copyhint,.rchip.copied .copyhint{opacity:1;color:var(--up)}
+.actionrow{display:flex;gap:8px;margin-bottom:10px;flex-wrap:wrap}
+.actionbtn{font-family:var(--cond);font-size:10.5px;font-weight:600;letter-spacing:.04em;text-transform:uppercase;padding:6px 12px;border:1px solid var(--border2);border-radius:6px;background:var(--bg2);color:var(--muted);cursor:pointer;transition:all .13s}
+.actionbtn:hover{color:var(--acc);border-color:var(--acc)}
+
+/* CROSS-LINK CHIPS */
+.linkrow{display:flex;gap:6px;flex-wrap:wrap;margin-top:10px;padding-top:10px;border-top:1px solid var(--border)}
+.linkchip{font-family:var(--cond);font-size:10px;font-weight:600;letter-spacing:.03em;padding:4px 10px;border:1px solid rgba(179,157,219,.3);border-radius:5px;background:rgba(179,157,219,.07);color:var(--violet);text-decoration:none;transition:all .13s;white-space:nowrap}
+.linkchip:hover{background:rgba(179,157,219,.16);border-color:var(--violet)}
+
+/* GLOBAL SEARCH */
+.gsearch-wrap{position:relative;padding:10px 13px 0;max-width:520px}
+.gsearch{width:100%;height:36px;background:var(--bg2);border:1px solid var(--border2);border-radius:7px;color:var(--text);font-family:var(--mono);font-size:12.5px;padding:0 12px;outline:none}
+.gsearch:focus{border-color:var(--acc)}
+.gsearch-results{position:absolute;left:13px;right:13px;top:48px;background:var(--bg2);border:1px solid var(--border2);border-radius:8px;max-height:340px;overflow-y:auto;z-index:50;box-shadow:0 10px 30px rgba(0,0,0,.5);display:none}
+.gsearch-results.show{display:block}
+.gsr-item{padding:8px 12px;cursor:pointer;border-bottom:1px solid var(--border);transition:background .1s}
+.gsr-item:last-child{border-bottom:none}
+.gsr-item:hover{background:var(--bg3)}
+.gsr-tag{font-size:8.5px;color:var(--acc2);text-transform:uppercase;letter-spacing:.1em;font-family:var(--cond);font-weight:700}
+.gsr-name{font-size:12px;color:var(--text);margin-top:2px}
+
+/* HISTORY */
+.hist-list{display:flex;flex-direction:column;gap:4px}
+.hist-row{display:flex;justify-content:space-between;align-items:center;background:var(--bg1);border:1px solid var(--border);border-radius:5px;padding:5px 9px;font-size:11px;cursor:pointer;transition:all .12s}
+.hist-row:hover{border-color:var(--acc2)}
+.hist-row .hl{color:var(--muted)}
+.hist-row .hv{color:var(--acc);font-weight:500}
+.hist-empty{color:var(--dim);font-size:11px;padding:8px 0}
+
+/* SEZIONI COMPOSTE */
+.sec-table{display:flex;flex-direction:column;gap:6px;margin-bottom:10px}
+.sec-row{display:grid;grid-template-columns:1fr 1fr 1fr 1fr auto;gap:6px;align-items:center}
+.sec-row .finput{height:32px}
+.sec-del{width:28px;height:28px;border:1px solid rgba(239,83,80,.3);background:rgba(239,83,80,.08);color:#ef9a9a;border-radius:5px;cursor:pointer;font-size:13px}
+.sec-del:hover{background:rgba(239,83,80,.18)}
+.sec-hdr{display:grid;grid-template-columns:1fr 1fr 1fr 1fr auto;gap:6px;font-size:9px;color:var(--dim);text-transform:uppercase;letter-spacing:.05em;font-family:var(--cond)}
+
+/* TOOLS SUBTABS */
+.toolbox{display:none}
+.toolbox.show{display:block}
+
+/* LEGENDA SIMBOLI */
+#legend-search,#legend-grid{display:none}
+#legend-panel.open #legend-search,#legend-panel.open #legend-grid{display:block}
+#legend-panel.open #legend-grid{display:grid}
+.legend-grid{grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:8px}
+.lg-card{background:var(--bg1);border:1px solid var(--border);border-radius:6px;padding:8px 10px;display:flex;gap:10px;align-items:flex-start}
+.lg-sym{font-size:17px;color:var(--acc);font-weight:500;min-width:26px;text-align:center;flex-shrink:0;line-height:1.3}
+.lg-body{flex:1;min-width:0}
+.lg-name{font-size:11.5px;color:var(--text);line-height:1.4}
+.lg-unit{font-size:10px;color:var(--dim);margin-top:2px}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <a href="index.html" class="back-btn">← Ritorna</a>
+  <h1><span class="dot"></span>Convertitore &amp; Formulario</h1>
+  <div class="sub">unità di misura · formulario tecnico · triangoli · geometria · costanti · strumenti di calcolo</div>
+</div>
+
+<div class="gsearch-wrap">
+  <input type="text" class="gsearch" id="gsearch" placeholder="🔎 Cerca in tutto il modulo: formule, unità, costanti…" autocomplete="off"
+    oninput="renderGlobalSearch()" onfocus="renderGlobalSearch()" onblur="setTimeout(()=>document.getElementById('gsearch-results').classList.remove('show'),150)">
+  <div class="gsearch-results" id="gsearch-results"></div>
+</div>
+
+<div class="tabbar">
+  <button class="tabbtn on" id="tab-conv" onclick="showTab('conv')">🔁 Convertitore Unità</button>
+  <button class="tabbtn" id="tab-form" onclick="showTab('form')">📖 Formulario</button>
+  <button class="tabbtn" id="tab-trig" onclick="showTab('trig')">∠ Trigonometria</button>
+  <button class="tabbtn" id="tab-tri" onclick="showTab('tri')">📐 Risolutore Triangoli</button>
+  <button class="tabbtn" id="tab-geo" onclick="showTab('geo')">🧊 Geometria</button>
+  <button class="tabbtn" id="tab-const" onclick="showTab('const')">🔬 Costanti</button>
+  <button class="tabbtn" id="tab-tools" onclick="showTab('tools')">🛠 Strumenti</button>
+</div>
+
+<!-- ===================== TAB CONVERTITORE ===================== -->
+<div class="tabpanel show" id="panel-conv">
+  <div class="chiprow" id="conv-cats"></div>
+  <div class="panel">
+    <div class="stitle" id="conv-catlbl">Categoria</div>
+    <div class="catdesc" id="conv-catdesc"></div>
+    <div class="conv-input-row">
+      <input type="number" class="numinput" id="conv-val" value="1" oninput="convRecalc()">
+      <select class="unitsel" id="conv-unit" onchange="convRecalc()"></select>
+    </div>
+    <div class="results-grid" id="conv-results"></div>
+    <div class="linkrow" id="conv-links"></div>
+  </div>
+  <div class="panel">
+    <div class="stitle">Cronologia conversioni <span style="text-transform:none;font-weight:400;color:var(--dim);margin-left:6px;cursor:pointer" onclick="clearHistory()">(svuota)</span></div>
+    <div class="hist-list" id="conv-history"></div>
+  </div>
+</div>
+
+<!-- ===================== TAB FORMULARIO ===================== -->
+<div class="tabpanel" id="panel-form">
+  <input type="text" class="searchbox" id="form-search" placeholder="Cerca formula, grandezza o parola chiave…" oninput="renderFormulas()">
+  <div class="chiprow" id="form-cats"></div>
+  <div class="linkrow" id="form-links" style="margin-top:-4px"></div>
+
+  <div class="panel" id="legend-panel">
+    <div class="stitle" style="cursor:pointer" onclick="toggleLegend()">
+      🔤 Legenda dei simboli <span id="legend-toggle-ic" style="margin-left:auto;color:var(--acc);font-size:11px">▸ mostra</span>
+    </div>
+    <div class="catdesc">Significato e unità di misura tipiche dei simboli usati nelle formule. Molti simboli sono riutilizzati in contesti diversi (es. "R" può essere costante dei gas, resistenza elettrica o raggio): fare sempre riferimento alla legenda della singola formula.</div>
+    <input type="text" class="searchbox" id="legend-search" placeholder="Cerca un simbolo o un nome (es. sigma, tensione, ω)…" oninput="renderLegend()" style="margin-bottom:10px">
+    <div class="legend-grid" id="legend-grid"></div>
+  </div>
+
+  <div class="fgrid" id="form-results"></div>
+</div>
+
+<!-- ===================== TAB TRIGONOMETRIA ===================== -->
+<div class="tabpanel" id="panel-trig">
+  <div class="trig-cols">
+    <div class="panel">
+      <div class="stitle">Da angolo a rapporti trigonometrici</div>
+      <div class="catdesc">Inserisci un angolo per ottenere seno, coseno, tangente, cotangente, secante e cosecante. Le funzioni non definite (asintoti, es. tan(90°), cot(0°)) sono segnalate come "non definito".</div>
+      <div class="fields-grid">
+        <div class="field">
+          <div class="flabel">Angolo</div>
+          <input type="number" class="finput" id="tg-val" value="30" oninput="renderTrigCalc()">
+        </div>
+        <div class="field">
+          <div class="flabel">Unità</div>
+          <select class="finput" id="tg-unit" onchange="renderTrigCalc()">
+            <option value="deg">Gradi (°)</option>
+            <option value="rad">Radianti (rad)</option>
+            <option value="grad">Grado centesimale (gon)</option>
+          </select>
+        </div>
+      </div>
+      <div class="svgwrap" id="tg-circle"></div>
+      <div class="legend-row" id="tg-legend"></div>
+      <div class="results-grid2" id="tg-out"></div>
+    </div>
+    <div class="panel">
+      <div class="stitle">Da rapporto ad angolo (funzioni inverse)</div>
+      <div class="catdesc">Inserisci il valore del rapporto trigonometrico per ottenere l'angolo corrispondente tramite la funzione inversa selezionata. Per arcoseno/arcocoseno il valore deve essere compreso tra −1 e 1.</div>
+      <div class="fields-grid">
+        <div class="field">
+          <div class="flabel">Funzione</div>
+          <select class="finput" id="tg-inv-fn" onchange="renderTrigInv()">
+            <option value="asin">arcoseno (asin)</option>
+            <option value="acos">arcocoseno (acos)</option>
+            <option value="atan">arcotangente (atan)</option>
+            <option value="acot">arcocotangente (acot)</option>
+            <option value="asec">arcosecante (asec)</option>
+            <option value="acsc">arcocosecante (acsc)</option>
+          </select>
+        </div>
+        <div class="field">
+          <div class="flabel">Valore rapporto</div>
+          <input type="number" class="finput" id="tg-inv-val" value="0.5" step="0.01" oninput="renderTrigInv()">
+        </div>
+      </div>
+      <div class="results-grid2" id="tg-inv-out"></div>
+    </div>
+  </div>
+  <div class="panel" style="margin-top:12px">
+    <div class="stitle">Note sulle funzioni trigonometriche</div>
+    <div class="catdesc">
+      In un triangolo rettangolo, per un angolo acuto α: <b>sin(α)</b> = cateto opposto/ipotenusa, <b>cos(α)</b> = cateto adiacente/ipotenusa, <b>tan(α)</b> = opposto/adiacente = sin/cos.
+      Le funzioni reciproche sono: <b>cot(α)</b> = 1/tan(α) (adiacente/opposto), <b>sec(α)</b> = 1/cos(α), <b>csc(α)</b> = 1/sin(α).
+      Il dominio delle funzioni inverse è limitato: asin e acos accettano solo valori in [−1,1] e restituiscono angoli in [−90°,90°] e [0°,180°] rispettivamente; atan è definita per qualsiasi valore reale e restituisce angoli in (−90°,90°).
+      Tutte le funzioni sono periodiche (periodo 360°/2π per sin,cos,sec,csc; 180°/π per tan,cot): i risultati mostrati sono il valore principale.
+    </div>
+  </div>
+</div>
+
+<!-- ===================== TAB TRIANGOLI ===================== -->
+<div class="tabpanel" id="panel-tri">
+  <div class="chiprow" id="tri-modes"></div>
+  <div class="panel">
+    <div class="stitle" id="tri-mode-lbl">Dati noti</div>
+    <div class="catdesc" id="tri-mode-note"></div>
+    <div class="fields-grid" id="tri-inputs"></div>
+  </div>
+  <div class="actionrow"><button class="actionbtn" onclick="copyTriSummary(this)">📋 Copia riepilogo</button></div>
+  <div id="tri-output"></div>
+</div>
+
+<!-- ===================== TAB GEOMETRIA ===================== -->
+<div class="tabpanel" id="panel-geo">
+  <div class="chiprow" id="geo-groups"></div>
+  <div class="chiprow" id="geo-shapes"></div>
+  <div class="panel">
+    <div class="stitle" id="geo-shape-lbl">Dati</div>
+    <div class="catdesc" id="geo-shape-desc"></div>
+    <div class="fields-grid" id="geo-inputs"></div>
+  </div>
+  <div class="stitle">Risultati</div>
+  <div class="actionrow"><button class="actionbtn" onclick="copyGeoSummary(this)">📋 Copia riepilogo</button></div>
+  <div class="results-grid2" id="geo-results"></div>
+</div>
+
+<!-- ===================== TAB COSTANTI ===================== -->
+<div class="tabpanel" id="panel-const">
+  <div class="chiprow" id="const-cats"></div>
+  <div class="panel">
+    <div class="stitle" id="const-catlbl">Categoria</div>
+    <div class="catdesc" id="const-catdesc"></div>
+    <div class="results-grid2" id="const-results"></div>
+  </div>
+</div>
+
+<!-- ===================== TAB STRUMENTI ===================== -->
+<div class="tabpanel" id="panel-tools">
+  <div class="chiprow" id="tools-menu"></div>
+
+  <div class="toolbox show" id="toolbox-stat">
+    <div class="panel">
+      <div class="stitle">Statistica di processo — capacità Cp / Cpk</div>
+      <div class="catdesc">Inserisci la serie di misure (separate da spazio, virgola o a capo) e i limiti di specifica USL/LSL. Vengono calcolati automaticamente media, deviazione standard campionaria e gli indici di capacità del processo.</div>
+      <div class="fields-grid">
+        <div class="field" style="grid-column:1/-1">
+          <div class="flabel">Serie di misure</div>
+          <textarea class="finput" id="st-data" rows="3" style="height:auto;padding:8px;text-align:left;resize:vertical" oninput="renderStatCalc()">10.02, 9.98, 10.05, 9.95, 10.01, 10.03, 9.97, 10.00, 10.04, 9.96</textarea>
+        </div>
+        <div class="field"><div class="flabel">Limite superiore USL</div><input type="number" class="finput" id="st-usl" value="10.10" oninput="renderStatCalc()"></div>
+        <div class="field"><div class="flabel">Limite inferiore LSL</div><input type="number" class="finput" id="st-lsl" value="9.90" oninput="renderStatCalc()"></div>
+      </div>
+      <div id="st-warn"></div>
+      <div class="results-grid2" id="st-out"></div>
+      <div class="catdesc" style="margin-top:10px">
+        <b>Cp</b> = (USL−LSL)/(6σ): capacità potenziale, ignora il centraggio del processo. <b>Cpk</b> = min(Cpu,Cpl): capacità reale, tiene conto dello scostamento della media dal centro. Regola pratica: Cpk ≥ 1.33 processo adeguato, Cpk ≥ 1.67 processo ad alta capacità (automotive/aerospaziale).
+      </div>
+    </div>
+  </div>
+
+  <div class="toolbox" id="toolbox-sec">
+    <div class="panel">
+      <div class="stitle">Sezioni composte — baricentro e momenti d'inerzia</div>
+      <div class="catdesc">Costruisci una sezione trasversale complessa (a L, a T, a C, cava, ecc.) come somma di rettangoli. Per ogni rettangolo indica base b, altezza h e le coordinate (xc, yc) del suo centro rispetto a un'origine arbitraria comune. Il calcolatore applica il teorema del trasporto (Huygens-Steiner) per ottenere baricentro e momenti d'inerzia dell'intera sezione.</div>
+      <div class="sec-hdr"><span>Base b</span><span>Altezza h</span><span>Centro xc</span><span>Centro yc</span><span></span></div>
+      <div class="sec-table" id="sec-table"></div>
+      <div class="actionrow">
+        <button class="actionbtn" onclick="secAddRow()">+ Aggiungi rettangolo</button>
+        <button class="actionbtn" onclick="copySecSummary(this)">📋 Copia riepilogo</button>
+      </div>
+      <div class="results-grid2" id="sec-out"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ============================================================ TABS */
+const TAB_KEYS=['conv','form','trig','tri','geo','const','tools'];
+function showTab(t){
+  TAB_KEYS.forEach(k=>{
+    document.getElementById('panel-'+k).classList.toggle('show',k===t);
+    document.getElementById('tab-'+k).classList.toggle('on',k===t);
+  });
+  try{ localStorage.setItem('fc_lastTab', t); }catch(e){}
+}
+
+/* ============================================================ COPIA NEGLI APPUNTI */
+function copyToClipboard(text, el){
+  const done=()=>{
+    if(el){ el.classList.add('copied'); setTimeout(()=>el.classList.remove('copied'),700); }
+  };
+  if(navigator.clipboard && navigator.clipboard.writeText){
+    navigator.clipboard.writeText(text).then(done).catch(done);
+  } else {
+    const ta=document.createElement('textarea'); ta.value=text; ta.style.position='fixed'; ta.style.opacity='0';
+    document.body.appendChild(ta); ta.select();
+    try{ document.execCommand('copy'); }catch(e){}
+    document.body.removeChild(ta); done();
+  }
+}
+document.addEventListener('click', e=>{
+  const mc = e.target.closest('.mc');
+  if(mc){
+    const v = mc.querySelector('.mv');
+    if(v) copyToClipboard(v.textContent.trim(), mc);
+  }
+});
+function copyToClipboardBtn(text, btn){
+  copyToClipboard(text, null);
+  if(!btn) return;
+  const orig = btn.textContent;
+  btn.textContent = '✓ Copiato negli appunti';
+  btn.style.color = 'var(--up)'; btn.style.borderColor = 'var(--up)';
+  setTimeout(()=>{ btn.textContent = orig; btn.style.color=''; btn.style.borderColor=''; }, 1400);
+}
+
+/* ============================================================ CRONOLOGIA */
+function loadHistory(){ try{ return JSON.parse(localStorage.getItem('fc_history')||'[]'); }catch(e){ return []; } }
+function pushHistory(label, value){
+  let h = loadHistory();
+  h.unshift({label, value, ts:Date.now()});
+  h = h.slice(0,10);
+  try{ localStorage.setItem('fc_history', JSON.stringify(h)); }catch(e){}
+  renderHistory();
+}
+function clearHistory(){ try{ localStorage.removeItem('fc_history'); }catch(e){} renderHistory(); }
+function renderHistory(){
+  const el = document.getElementById('conv-history'); if(!el) return;
+  const h = loadHistory();
+  el.innerHTML = h.length ? h.map(it=>`<div class="hist-row"><span class="hl">${it.label}</span><span class="hv">${it.value}</span></div>`).join('')
+    : '<div class="hist-empty">Nessuna conversione recente. Le conversioni effettuate compariranno qui.</div>';
+}
+
+/* ============================================================ CONVERTITORE UNITA' */
+const CONV_CATS = {
+  lunghezza:{label:'Lunghezza',icon:'📏',base:'m',desc:'Grandezza fondamentale del Sistema Internazionale, unità base: metro (m). Usata per dimensioni lineari, quote di disegno, distanze.',units:{
+    km:{l:'Chilometro',f:1000}, m:{l:'Metro',f:1}, dm:{l:'Decimetro',f:.1}, cm:{l:'Centimetro',f:.01}, mm:{l:'Millimetro',f:.001},
+    um:{l:'Micrometro (micron)',f:1e-6}, nm:{l:'Nanometro',f:1e-9}, ang:{l:'Ångström',f:1e-10},
+    in:{l:'Pollice (in)',f:.0254}, ft:{l:'Piede (ft)',f:.3048}, yd:{l:'Iarda (yd)',f:.9144}, mi:{l:'Miglio (mi)',f:1609.344},
+    nmi:{l:'Miglio nautico',f:1852}, mil:{l:'Mil (thou)',f:.0000254}
+  }},
+  massa:{label:'Massa',icon:'⚖️',base:'kg',desc:'Quantità di materia di un corpo, unità base SI: chilogrammo (kg). Da non confondere con il peso (forza-peso = massa × g).',units:{
+    t:{l:'Tonnellata',f:1000}, q:{l:'Quintale',f:100}, kg:{l:'Chilogrammo',f:1}, g:{l:'Grammo',f:.001}, mg:{l:'Milligrammo',f:1e-6},
+    lb:{l:'Libbra (lb)',f:.45359237}, oz:{l:'Oncia (oz)',f:.028349523125}, slug:{l:'Slug',f:14.59390294},
+    ton_us:{l:'Ton. corta (US)',f:907.18474}, ton_uk:{l:'Ton. lunga (UK)',f:1016.0469088}
+  }},
+  forza:{label:'Forza',icon:'➡️',base:'N',desc:'Azione capace di modificare lo stato di moto di un corpo (F=m·a). Unità SI: Newton (N) = 1 kg·m/s².',units:{
+    N:{l:'Newton',f:1}, kN:{l:'Kilonewton',f:1000}, MN:{l:'Meganewton',f:1e6}, kgf:{l:'Chilogrammo-forza',f:9.80665},
+    lbf:{l:'Libbra-forza',f:4.4482216153}, kip:{l:'Kip (1000 lbf)',f:4448.2216153}, dyn:{l:'Dyne',f:1e-5}, pdl:{l:'Poundal',f:.138254954376}
+  }},
+  pressione:{label:'Pressione',icon:'🌡️',base:'Pa',desc:'Forza distribuita su una superficie (p=F/A). Unità SI: Pascal (Pa) = 1 N/m². In meccanica si usa spesso MPa = N/mm².',units:{
+    Pa:{l:'Pascal',f:1}, kPa:{l:'Kilopascal',f:1000}, MPa:{l:'Megapascal',f:1e6}, bar:{l:'Bar',f:1e5}, mbar:{l:'Millibar',f:100},
+    atm:{l:'Atmosfera',f:101325}, mmHg:{l:'mmHg (Torr)',f:133.322387415}, inHg:{l:'Pollici di mercurio (inHg)',f:3386.389},
+    psi:{l:'PSI (lbf/in²)',f:6894.757293168}, ksi:{l:'KSI (1000 psi)',f:6894757.293168},
+    kgf_cm2:{l:'kgf/cm²',f:98066.5}, N_mm2:{l:'N/mm² (=MPa)',f:1e6}
+  }},
+  energia:{label:'Energia / Lavoro',icon:'⚡',base:'J',desc:'Capacità di compiere lavoro (L=F·s). Unità SI: Joule (J) = 1 N·m = 1 W·s.',units:{
+    J:{l:'Joule',f:1}, kJ:{l:'Kilojoule',f:1000}, MJ:{l:'Megajoule',f:1e6}, erg:{l:'Erg',f:1e-7}, cal:{l:'Caloria',f:4.1868},
+    kcal:{l:'Kilocaloria',f:4186.8}, Wh:{l:'Wattora',f:3600}, kWh:{l:'Kilowattora',f:3.6e6}, therm:{l:'Therm',f:105505585.257},
+    BTU:{l:'BTU',f:1055.05585262}, ftlb:{l:'Piede-libbra',f:1.35581795}, eV:{l:'Elettronvolt',f:1.602176634e-19}
+  }},
+  potenza:{label:'Potenza',icon:'🔋',base:'W',desc:'Energia erogata/assorbita nell\'unità di tempo (P=L/t). Unità SI: Watt (W) = 1 J/s.',units:{
+    W:{l:'Watt',f:1}, kW:{l:'Kilowatt',f:1000}, MW:{l:'Megawatt',f:1e6}, CV:{l:'Cavallo vapore (CV)',f:735.49875},
+    hp:{l:'Horsepower (hp)',f:745.699872}, kcal_h:{l:'kcal/h',f:1.163}, BTU_h:{l:'BTU/h',f:.29307107}, ftlb_s:{l:'ft·lb/s',f:1.3558179483}
+  }},
+  coppia:{label:'Coppia / Momento',icon:'🔧',base:'Nm',desc:'Momento di una forza rispetto a un punto/asse (M=F·d). Fondamentale per coppie di serraggio e coppie motrici. Unità SI: N·m.',units:{
+    Nm:{l:'Newton·metro',f:1}, kNm:{l:'Kilonewton·metro',f:1000}, Ncm:{l:'Newton·cm',f:.01},
+    kgfm:{l:'kgf·m',f:9.80665}, kgfcm:{l:'kgf·cm',f:.0980665}, lbft:{l:'Libbra-piede (lbf·ft)',f:1.3558179483}, lbin:{l:'Libbra-pollice (lbf·in)',f:.1129848333}
+  }},
+  vel_lin:{label:'Velocità lineare',icon:'🚗',base:'m/s',desc:'Spazio percorso nell\'unità di tempo (v=ds/dt). Unità SI: m/s.',units:{
+    'm/s':{l:'Metri/secondo',f:1}, 'km/h':{l:'Km/ora',f:1/3.6}, mph:{l:'Miglia/ora (mph)',f:.44704},
+    'ft/s':{l:'Piedi/secondo',f:.3048}, 'ft/min':{l:'Piedi/minuto',f:.00508}, kn:{l:'Nodo (kn)',f:.5144444444}, 'mm/s':{l:'Millimetri/secondo',f:.001}
+  }},
+  vel_ang:{label:'Velocità angolare',icon:'🔄',base:'rad/s',desc:'Angolo percorso nell\'unità di tempo (ω=dθ/dt). Unità SI: rad/s. Molto usata in trasmissioni: RPM (giri/min).',units:{
+    'rad/s':{l:'Radianti/secondo',f:1}, 'rad/min':{l:'Radianti/minuto',f:1/60}, 'deg/s':{l:'Gradi/secondo',f:Math.PI/180}, rpm:{l:'Giri/minuto (RPM)',f:2*Math.PI/60},
+    'rev/s':{l:'Giri/secondo',f:2*Math.PI}, 'rev/h':{l:'Giri/ora',f:2*Math.PI/3600}
+  }},
+  portata:{label:'Portata volumetrica',icon:'💧',base:'m3/s',desc:'Volume di fluido che attraversa una sezione nell\'unità di tempo (Q=A·v). Unità SI: m³/s.',units:{
+    'm3/s':{l:'m³/secondo',f:1}, 'm3/h':{l:'m³/ora',f:1/3600}, 'l/s':{l:'Litri/secondo',f:.001},
+    'l/min':{l:'Litri/minuto',f:.001/60}, 'l/h':{l:'Litri/ora',f:.001/3600}, 'gpm_us':{l:'Gallon/min (US)',f:.0000630901964}
+  }},
+  portata_massica:{label:'Portata massica',icon:'⚗️',base:'kg/s',desc:'Massa di fluido che attraversa una sezione nell\'unità di tempo (ṁ=ρ·Q). Unità SI: kg/s.',units:{
+    'kg/s':{l:'kg/secondo',f:1}, 'kg/h':{l:'kg/ora',f:1/3600}, 'g/s':{l:'g/secondo',f:.001},
+    't/h':{l:'Tonnellate/ora',f:1000/3600}, 'lb/h':{l:'Libbre/ora',f:.000125998}, 'lb/s':{l:'Libbre/secondo',f:.45359237}
+  }},
+  angolo:{label:'Angolo',icon:'📐',base:'rad',desc:'Grandezza per rotazioni e orientamenti. Unità SI (derivata): radiante (rad), pari all\'angolo che sottende un arco di lunghezza pari al raggio.',units:{
+    rad:{l:'Radiante',f:1}, deg:{l:'Grado sessagesimale',f:Math.PI/180}, grad:{l:'Grado centesimale (gon)',f:Math.PI/200},
+    arcmin:{l:'Primo (arcmin)',f:Math.PI/10800}, arcsec:{l:'Secondo (arcsec)',f:Math.PI/648000}, rev:{l:'Giro completo',f:2*Math.PI}
+  }},
+  area:{label:'Area',icon:'⬛',base:'m2',desc:'Estensione di una superficie. Unità SI: metro quadrato (m²).',units:{
+    m2:{l:'Metro quadrato',f:1}, cm2:{l:'Centimetro quadrato',f:1e-4}, mm2:{l:'Millimetro quadrato',f:1e-6},
+    km2:{l:'Chilometro quadrato',f:1e6}, ha:{l:'Ettaro',f:1e4}, in2:{l:'Pollice quadrato',f:.00064516},
+    ft2:{l:'Piede quadrato',f:.09290304}, yd2:{l:'Iarda quadrata',f:.83612736}, acre:{l:'Acro',f:4046.8564224}
+  }},
+  volume:{label:'Volume',icon:'🧊',base:'m3',desc:'Estensione di uno spazio tridimensionale. Unità SI: metro cubo (m³).',units:{
+    m3:{l:'Metro cubo',f:1}, l:{l:'Litro',f:.001}, ml:{l:'Millilitro',f:1e-6}, cm3:{l:'Centimetro cubo',f:1e-6},
+    mm3:{l:'Millimetro cubo',f:1e-9}, in3:{l:'Pollice cubo',f:.0000163871}, ft3:{l:'Piede cubo',f:.028316846592},
+    gal_us:{l:'Gallone (US)',f:.003785411784}, gal_uk:{l:'Gallone (UK)',f:.00454609}, bbl:{l:'Barile (petrolio)',f:.158987294928}
+  }},
+  densita:{label:'Densità',icon:'⬤',base:'kg/m3',desc:'Massa per unità di volume (ρ=m/V). Unità SI: kg/m³.',units:{
+    'kg/m3':{l:'kg/m³',f:1}, 't/m3':{l:'t/m³',f:1000}, 'g/cm3':{l:'g/cm³',f:1000}, 'kg/l':{l:'kg/litro',f:1000},
+    'lb/ft3':{l:'lb/ft³',f:16.01846337}, 'lb/in3':{l:'lb/in³',f:27679.9047}
+  }},
+  tempo:{label:'Tempo',icon:'⏱️',base:'s',desc:'Grandezza fondamentale SI, unità base: secondo (s).',units:{
+    s:{l:'Secondo',f:1}, ms:{l:'Millisecondo',f:.001}, min:{l:'Minuto',f:60}, h:{l:'Ora',f:3600},
+    day:{l:'Giorno',f:86400}, week:{l:'Settimana',f:604800}, month:{l:'Mese (30 gg)',f:2592000}, year:{l:'Anno',f:31557600}
+  }},
+  frequenza:{label:'Frequenza',icon:'📶',base:'Hz',desc:'Numero di cicli/eventi ripetuti nell\'unità di tempo (f=1/T). Unità SI: Hertz (Hz) = 1/s.',units:{
+    Hz:{l:'Hertz',f:1}, kHz:{l:'Kilohertz',f:1000}, MHz:{l:'Megahertz',f:1e6}, GHz:{l:'Gigahertz',f:1e9},
+    rpm:{l:'Giri/minuto (RPM)',f:1/60}, 'giri/s':{l:'Giri/secondo',f:1}
+  }},
+  viscosita_din:{label:'Viscosità dinamica',icon:'🍯',base:'Pa·s',desc:'Resistenza di un fluido allo scorrimento (τ=μ·γ̇). Unità SI: Pascal·secondo (Pa·s).',units:{
+    'Pa·s':{l:'Pascal·secondo',f:1}, 'mPa·s':{l:'mPa·secondo',f:.001}, cP:{l:'Centipoise (cP)',f:.001}, P:{l:'Poise (P)',f:.1},
+    'lb/(ft·s)':{l:'lb/(ft·s)',f:1.488164}
+  }},
+  viscosita_cin:{label:'Viscosità cinematica',icon:'💧',base:'m2/s',desc:'Rapporto tra viscosità dinamica e densità (ν=μ/ρ). Unità SI: m²/s.',units:{
+    'm2/s':{l:'m²/s',f:1}, 'mm2/s':{l:'mm²/s',f:1e-6}, cSt:{l:'Centistokes (cSt)',f:1e-6}, St:{l:'Stokes (St)',f:1e-4},
+    'ft2/s':{l:'ft²/s',f:.09290304}
+  }},
+  tensione_elettrica:{label:'Tensione elettrica',icon:'🔌',base:'V',desc:'Differenza di potenziale elettrico (V=R·I). Unità SI: Volt (V).',units:{
+    V:{l:'Volt',f:1}, kV:{l:'Kilovolt',f:1000}, mV:{l:'Millivolt',f:.001}, uV:{l:'Microvolt',f:1e-6}
+  }},
+  corrente_elettrica:{label:'Corrente elettrica',icon:'⚡',base:'A',desc:'Flusso di carica elettrica nell\'unità di tempo. Unità SI: Ampere (A).',units:{
+    A:{l:'Ampere',f:1}, kA:{l:'Kiloampere',f:1000}, mA:{l:'Milliampere',f:.001}, uA:{l:'Microampere',f:1e-6}
+  }},
+  resistenza_elettrica:{label:'Resistenza elettrica',icon:'🔺',base:'ohm',desc:'Opposizione al passaggio di corrente (R=V/I). Unità SI: Ohm (Ω).',units:{
+    ohm:{l:'Ohm (Ω)',f:1}, kohm:{l:'Kiloohm (kΩ)',f:1000}, Mohm:{l:'Megaohm (MΩ)',f:1e6}, mohm:{l:'Milliohm (mΩ)',f:.001}
+  }},
+  capacita_elettrica:{label:'Capacità elettrica',icon:'🔵',base:'F',desc:'Attitudine ad accumulare carica elettrica (Q=C·V). Unità SI: Farad (F).',units:{
+    F:{l:'Farad',f:1}, mF:{l:'Millifarad',f:.001}, uF:{l:'Microfarad',f:1e-6}, nF:{l:'Nanofarad',f:1e-9}, pF:{l:'Picofarad',f:1e-12}
+  }},
+  conducibilita_termica:{label:'Conducibilità termica',icon:'🔥',base:'W/(m·K)',desc:'Capacità di un materiale di condurre calore (legge di Fourier). Unità SI: W/(m·K).',units:{
+    'W/(m·K)':{l:'W/(m·K)',f:1}, 'W/(cm·K)':{l:'W/(cm·K)',f:100}, 'kcal/(h·m·K)':{l:'kcal/(h·m·K)',f:1.163}, 'BTU/(h·ft·°F)':{l:'BTU/(h·ft·°F)',f:1.730735}
+  }},
+  calore_specifico:{label:'Calore specifico',icon:'🌡️',base:'J/(kg·K)',desc:'Energia necessaria per innalzare di 1 K la temperatura di 1 kg di sostanza (Q=m·c·ΔT). Unità SI: J/(kg·K).',units:{
+    'J/(kg·K)':{l:'J/(kg·K)',f:1}, 'kJ/(kg·K)':{l:'kJ/(kg·K)',f:1000}, 'kcal/(kg·°C)':{l:'kcal/(kg·°C)',f:4186.8}, 'BTU/(lb·°F)':{l:'BTU/(lb·°F)',f:4186.8}
+  }},
+};
+// Temperatura gestita separatamente (non lineare)
+const TEMP_UNITS = {
+  C:{l:'Celsius (°C)', toK:v=>v+273.15, fromK:v=>v-273.15},
+  K:{l:'Kelvin (K)',   toK:v=>v,        fromK:v=>v},
+  F:{l:'Fahrenheit (°F)', toK:v=>(v-32)*5/9+273.15, fromK:v=>(v-273.15)*9/5+32},
+  R:{l:'Rankine (°R)', toK:v=>v*5/9, fromK:v=>v*9/5},
+};
+const TEMP_DESC = 'Grandezza fondamentale SI (unità Kelvin). Attenzione: la conversione tra scale non è una semplice moltiplicazione (a differenza delle altre categorie) perché hanno origini (zero) diverse.';
+
+let CONV_CAT='lunghezza', CONV_UNIT='m';
+
+function mkConvCats(){
+  const html = Object.entries(CONV_CATS).map(([k,c])=>
+    `<button class="chip${k===CONV_CAT?' on':''}" onclick="setConvCat('${k}')">${c.icon} ${c.label}</button>`
+  ).join('') + `<button class="chip${CONV_CAT==='temperatura'?' on':''}" onclick="setConvCat('temperatura')">🌡️ Temperatura</button>`;
+  document.getElementById('conv-cats').innerHTML = html;
+}
+const CONV_LINKS = {
+  forza:[{l:'Connessioni Bullonate',h:'connessioni_bullonate.html'},{l:'Viti e Madreviti',h:'viti_madreviti.html'}],
+  pressione:[{l:'Cuscinetti',h:'calcolatore_cuscinetti.html'},{l:'Trave a Flessione',h:'trave_flessione.html'}],
+  coppia:[{l:'Connessioni Bullonate',h:'connessioni_bullonate.html'},{l:'Cinematica Angolare',h:'calcolatore_angolare.html'}],
+  vel_ang:[{l:'Cinematica Angolare',h:'calcolatore_angolare.html'},{l:'Cinghie Dentate',h:'cinghie_dentate.html'},{l:'Ruote Dentate',h:'ruote_dentate.html'}],
+  vel_lin:[{l:'Cinematica Lineare',h:'calcolatore_lineare.html'}],
+  lunghezza:[{l:'Accoppiamenti ISO',h:'accoppiamenti_iso.html'},{l:'Anelli Elastici',h:'anelli_elastici.html'}],
+  massa:[{l:'Molle',h:'molle.html'}],
+  angolo:[{l:'Cinematica Angolare',h:'calcolatore_angolare.html'},{l:'Risolutore Triangoli',h:'#',tab:'tri'}],
+};
+function renderConvLinks(k){
+  const links = CONV_LINKS[k];
+  const el = document.getElementById('conv-links');
+  if(!links){ el.innerHTML=''; return; }
+  el.innerHTML = `<span style="font-size:9px;color:var(--dim);align-self:center;margin-right:2px">Vedi anche:</span>` +
+    links.map(x=> x.tab
+      ? `<a class="linkchip" href="javascript:void(0)" onclick="showTab('${x.tab}')">${x.l} →</a>`
+      : `<a class="linkchip" href="${x.h}" target="_blank" rel="noopener">${x.l} ↗</a>`
+    ).join('');
+}
+function setConvCat(k){
+  CONV_CAT = k;
+  CONV_UNIT = k==='temperatura' ? 'C' : Object.keys(CONV_CATS[k].units)[0];
+  mkConvCats();
+  document.getElementById('conv-catlbl').textContent = k==='temperatura' ? 'Temperatura' : CONV_CATS[k].label;
+  document.getElementById('conv-catdesc').textContent = k==='temperatura' ? TEMP_DESC : CONV_CATS[k].desc;
+  const units = k==='temperatura' ? TEMP_UNITS : CONV_CATS[k].units;
+  document.getElementById('conv-unit').innerHTML = Object.entries(units).map(([uk,u])=>
+    `<option value="${uk}"${uk===CONV_UNIT?' selected':''}>${u.l}</option>`).join('');
+  renderConvLinks(k);
+  convRecalc();
+}
+function convRecalc(){
+  const val = parseFloat(document.getElementById('conv-val').value);
+  CONV_UNIT = document.getElementById('conv-unit').value;
+  const grid = document.getElementById('conv-results');
+  if(isNaN(val)){ grid.innerHTML = '<div class="fempty">Inserisci un valore numerico.</div>'; return; }
+  if(CONV_CAT==='temperatura'){
+    const kv = TEMP_UNITS[CONV_UNIT].toK(val);
+    grid.innerHTML = Object.entries(TEMP_UNITS).map(([uk,u])=>{
+      const rv = u.fromK(kv);
+      return `<div class="rchip${uk===CONV_UNIT?' self':''}" onclick="convSwap('${uk}',${rv})">
+        <button class="copyhint" data-uk="${uk}" onclick="event.stopPropagation();copyConvChipByUnit(this)" title="Copia valore">📋</button>
+        <div class="rc-l">${u.l}</div><div class="rc-v">${fmtN(rv)}</div></div>`;
+    }).join('');
+    try{ localStorage.setItem('fc_convCat','temperatura'); localStorage.setItem('fc_convUnit',CONV_UNIT); }catch(e){}
+    return;
+  }
+  const units = CONV_CATS[CONV_CAT].units;
+  const base = val * units[CONV_UNIT].f;
+  grid.innerHTML = Object.entries(units).map(([uk,u])=>{
+    const rv = base / u.f;
+    return `<div class="rchip${uk===CONV_UNIT?' self':''}" onclick="convSwap('${uk}',${rv})">
+      <button class="copyhint" data-uk="${uk}" onclick="event.stopPropagation();copyConvChipByUnit(this)" title="Copia valore">📋</button>
+      <div class="rc-l">${u.l}</div><div class="rc-v">${fmtN(rv)}</div></div>`;
+  }).join('');
+  try{ localStorage.setItem('fc_convCat',CONV_CAT); localStorage.setItem('fc_convUnit',CONV_UNIT); }catch(e){}
+}
+function copyConvChipByUnit(btn){
+  const uk = btn.dataset.uk;
+  const val = parseFloat(document.getElementById('conv-val').value);
+  let rv, uLabel, catLabel;
+  if(CONV_CAT==='temperatura'){
+    const kv = TEMP_UNITS[CONV_UNIT].toK(val);
+    rv = TEMP_UNITS[uk].fromK(kv); uLabel=TEMP_UNITS[uk].l; catLabel='Temperatura';
+  } else {
+    const units = CONV_CATS[CONV_CAT].units;
+    const base = val*units[CONV_UNIT].f;
+    rv = base/units[uk].f; uLabel=units[uk].l; catLabel=CONV_CATS[CONV_CAT].label;
+  }
+  const text = fmtN(rv);
+  copyToClipboard(text, btn.closest('.rchip'));
+  pushHistory(catLabel+' → '+uLabel, text);
+}
+function convSwap(uk, val){
+  document.getElementById('conv-unit').value = uk;
+  document.getElementById('conv-val').value = fmtN(val, true);
+  convRecalc();
+}
+function fmtN(v, raw){
+  if(!isFinite(v)) return '—';
+  const a = Math.abs(v);
+  let s;
+  if(a!==0 && (a<1e-4 || a>=1e9)) s = v.toExponential(4);
+  else s = v.toPrecision(8).replace(/\.?0+$/,'').replace(/\.?0+e/,'e');
+  return raw ? parseFloat(s) : s;
+}
+(function initConv(){
+  let savedCat='lunghezza', savedUnit=null;
+  try{
+    const c = localStorage.getItem('fc_convCat');
+    if(c && (CONV_CATS[c] || c==='temperatura')) savedCat=c;
+    savedUnit = localStorage.getItem('fc_convUnit');
+  }catch(e){}
+  mkConvCats(); setConvCat(savedCat);
+  if(savedUnit){
+    const sel=document.getElementById('conv-unit');
+    if([...sel.options].some(o=>o.value===savedUnit)){ sel.value=savedUnit; convRecalc(); }
+  }
+})();
+renderHistory();
+
+/* ============================================================ CALCOLATORE TRIGONOMETRICO */
+function toRadTrig(v,unit){ if(unit==='deg')return v*Math.PI/180; if(unit==='grad')return v*Math.PI/200; return v; }
+function fromRadTrig(v,unit){ if(unit==='deg')return v*180/Math.PI; if(unit==='grad')return v*200/Math.PI; return v; }
+function trigFmt(v){ if(v===null||!isFinite(v)) return 'non definito'; return fmtT(v,6); }
+function drawUnitCircleSVG(rad, sinV, cosV, tanV){
+  const W=280,H=280,cx=140,cy=140,R=88;
+  const cosD=Math.cos(rad), sinD=Math.sin(rad); // valori "grezzi" (non azzerati) per il disegno, evita segmenti degeneri
+  const px=cx+R*cosD, py=cy-R*sinD;
+  const p1={x:cx+R,y:cy}, p2={x:px,y:py};
+  const arc = angleArc(cx,cy,p1,p2,26);
+  let tanSeg='', tanLbl='';
+  if(Math.abs(cosD)>1e-4){
+    const maxT=2.6;
+    const tClamped=Math.max(-maxT,Math.min(maxT,sinD/cosD));
+    const tx2=cx+R, ty2=cy-R*tClamped;
+    tanSeg=`<line x1="${cx+R}" y1="${cy}" x2="${tx2.toFixed(1)}" y2="${ty2.toFixed(1)}" stroke="#66bb6a" stroke-width="2.2"/>`;
+    tanLbl=`<text x="${cx+R+6}" y="${((cy+ty2)/2).toFixed(1)}" font-family="DM Mono" font-size="9" fill="#66bb6a">tan</text>`;
+  }
+  return `<svg width="${W}" height="${H}" viewBox="0 0 ${W} ${H}">
+    <line x1="0" y1="${cy}" x2="${W}" y2="${cy}" stroke="rgba(255,255,255,.14)" stroke-width="1"/>
+    <line x1="${cx}" y1="0" x2="${cx}" y2="${H}" stroke="rgba(255,255,255,.14)" stroke-width="1"/>
+    <circle cx="${cx}" cy="${cy}" r="${R}" fill="none" stroke="rgba(79,195,247,.35)" stroke-width="1.4"/>
+    ${tanSeg}${tanLbl}
+    <line x1="${px.toFixed(1)}" y1="${cy}" x2="${px.toFixed(1)}" y2="${py.toFixed(1)}" stroke="#ffa726" stroke-width="2.2"/>
+    <line x1="${cx}" y1="${cy}" x2="${px.toFixed(1)}" y2="${cy}" stroke="#b39ddb" stroke-width="2.2"/>
+    <line x1="${cx}" y1="${cy}" x2="${px.toFixed(1)}" y2="${py.toFixed(1)}" stroke="#4fc3f7" stroke-width="1.6"/>
+    <path d="${arc.path}" fill="none" stroke="#e8e9ec" stroke-width="1.2"/>
+    <circle cx="${px.toFixed(1)}" cy="${py.toFixed(1)}" r="3.4" fill="#4fc3f7"/>
+    <circle cx="${cx}" cy="${cy}" r="2" fill="#e8e9ec"/>
+    <text x="${((px+cx)/2).toFixed(1)}" y="${cy+13}" font-family="DM Mono" font-size="9" fill="#b39ddb" text-anchor="middle">cos</text>
+    <text x="${px+6}" y="${((cy+py)/2).toFixed(1)}" font-family="DM Mono" font-size="9" fill="#ffa726">sin</text>
+    <text x="${W-6}" y="${cy-5}" font-family="DM Mono" font-size="8" fill="rgba(255,255,255,.3)" text-anchor="end">+x</text>
+    <text x="${cx+6}" y="10" font-family="DM Mono" font-size="8" fill="rgba(255,255,255,.3)">+y</text>
+    <text x="${arc.lx.toFixed(1)}" y="${arc.ly.toFixed(1)}" font-family="DM Mono" font-size="9.5" fill="#e8e9ec" text-anchor="middle" dominant-baseline="middle">α</text>
+  </svg>`;
+}
+function renderTrigCalc(){
+  const raw = parseFloat(document.getElementById('tg-val').value);
+  const unit = document.getElementById('tg-unit').value;
+  const out = document.getElementById('tg-out');
+  if(isNaN(raw)){ out.innerHTML = '<div class="fempty">Inserisci un angolo valido.</div>'; document.getElementById('tg-circle').innerHTML=''; document.getElementById('tg-legend').innerHTML=''; return; }
+  const rad = toRadTrig(raw, unit);
+  const EPS = 1e-9;
+  const s = Math.sin(rad), c = Math.cos(rad);
+  const sinV = Math.abs(s)<EPS?0:s, cosV = Math.abs(c)<EPS?0:c;
+  const tanV = Math.abs(cosV)<EPS ? null : sinV/cosV;
+  const cotV = Math.abs(sinV)<EPS ? null : cosV/sinV;
+  const secV = Math.abs(cosV)<EPS ? null : 1/cosV;
+  const cscV = Math.abs(sinV)<EPS ? null : 1/sinV;
+  const rows = [
+    ['sin(α)', trigFmt(sinV)], ['cos(α)', trigFmt(cosV)], ['tan(α)', trigFmt(tanV)],
+    ['cot(α)', trigFmt(cotV)], ['sec(α)', trigFmt(secV)], ['csc(α)', trigFmt(cscV)],
+  ];
+  out.innerHTML = rows.map(([l,v],i)=>`<div class="mc${i<3?' hi':''}"><div class="ml">${l}</div><div class="mv">${v}</div></div>`).join('')
+    + `<div class="mc"><div class="ml">Angolo in radianti</div><div class="mv">${fmtT(rad,6)}</div></div>`
+    + `<div class="mc"><div class="ml">Angolo in gradi</div><div class="mv">${fmtT(rad*180/Math.PI,4)}°</div></div>`;
+  document.getElementById('tg-circle').innerHTML = drawUnitCircleSVG(rad, sinV, cosV, tanV);
+  document.getElementById('tg-legend').innerHTML =
+    '<span><i style="background:#4fc3f7"></i>raggio (ipotenusa = 1)</span>'+
+    '<span><i style="background:#b39ddb"></i>cos α (proiezione su x)</span>'+
+    '<span><i style="background:#ffa726"></i>sin α (proiezione su y)</span>'+
+    '<span><i style="background:#66bb6a"></i>tan α (tangente al cerchio in x=1)</span>';
+}
+function renderTrigInv(){
+  const fn = document.getElementById('tg-inv-fn').value;
+  const v = parseFloat(document.getElementById('tg-inv-val').value);
+  const out = document.getElementById('tg-inv-out');
+  if(isNaN(v)){ out.innerHTML = '<div class="fempty">Inserisci un valore numerico.</div>'; return; }
+  let rad=null, note='';
+  if(fn==='asin'){ if(v<-1||v>1){note='Valore fuori dal dominio [-1,1].';} else rad=Math.asin(v); }
+  else if(fn==='acos'){ if(v<-1||v>1){note='Valore fuori dal dominio [-1,1].';} else rad=Math.acos(v); }
+  else if(fn==='atan'){ rad=Math.atan(v); }
+  else if(fn==='acot'){ rad = Math.PI/2 - Math.atan(v); }
+  else if(fn==='asec'){ if(Math.abs(v)<1){note='Valore fuori dal dominio (|valore|≥1).';} else rad=Math.acos(1/v); }
+  else if(fn==='acsc'){ if(Math.abs(v)<1){note='Valore fuori dal dominio (|valore|≥1).';} else rad=Math.asin(1/v); }
+  if(rad===null){ out.innerHTML = `<div class="warnbox">${note}</div>`; return; }
+  out.innerHTML = `
+    <div class="mc hi"><div class="ml">Angolo (gradi)</div><div class="mv">${fmtT(rad*180/Math.PI,5)}°</div></div>
+    <div class="mc"><div class="ml">Angolo (radianti)</div><div class="mv">${fmtT(rad,6)}</div></div>
+    <div class="mc"><div class="ml">Angolo (gon)</div><div class="mv">${fmtT(rad*200/Math.PI,5)}</div></div>`;
+}
+renderTrigCalc(); renderTrigInv();
+
+/* ============================================================ FORMULARIO */
+const FORMULE = {
+  cinematica:{label:'Cinematica',icon:'🏃',items:[
+    {n:'Moto rettilineo uniforme', f:'s = s₀ + v·t', v:'s: posizione [m], s₀: posizione iniziale [m], v: velocità costante [m/s], t: tempo [s]',
+      note:'Descrive un moto a velocità costante, senza accelerazione. È il modello base per nastri trasportatori, guide lineari a velocità impostata, ecc.'},
+    {n:'Moto uniformemente accelerato', f:'v = v₀ + a·t', v:'v: velocità finale [m/s], v₀: velocità iniziale [m/s], a: accelerazione costante [m/s²], t: tempo [s]',
+      note:'Valida solo se l\'accelerazione è costante nel tempo. Alla base del dimensionamento di rampe di avvio/arresto di assi motorizzati.'},
+    {n:'Spazio (moto acc.)', f:'s = s₀ + v₀·t + ½·a·t²', v:'stessi simboli della legge oraria della velocità',
+      note:'Integrale della velocità nel tempo; permette di calcolare lo spazio percorso durante una fase di accelerazione costante.'},
+    {n:'Equazione di Torricelli', f:'v² = v₀² + 2·a·Δs', v:'Δs: spazio percorso [m]',
+      note:'Utile quando il tempo impiegato non è noto o non interessa: lega direttamente velocità, accelerazione e spazio percorso.'},
+    {n:'Velocità angolare', f:'ω = dθ/dt = Δθ/Δt', v:'θ: angolo percorso [rad], ω: velocità angolare [rad/s], t: tempo [s]',
+      note:'Analogo rotazionale della velocità lineare. 1 rad/s ≈ 9.549 RPM.'},
+    {n:'Accelerazione angolare', f:'α = dω/dt', v:'α: accelerazione angolare [rad/s²]',
+      note:'Analogo rotazionale dell\'accelerazione lineare; determina il tempo necessario per raggiungere una data velocità di rotazione.'},
+    {n:'Velocità periferica', f:'v = ω · r', v:'v: velocità tangenziale [m/s], r: raggio di rotazione [m]',
+      note:'Collega il mondo rotazionale (ω) a quello lineare (v) in un punto a distanza r dall\'asse, es. velocità di un dente di ingranaggio o di un punto sulla periferia di una puleggia.'},
+    {n:'Accelerazione centripeta', f:'a_c = ω²·r = v²/r', v:'a_c: accelerazione centripeta [m/s²], diretta verso il centro di rotazione',
+      note:'Necessaria per mantenere un corpo in traiettoria circolare; genera la forza centripeta F=m·a_c che il vincolo deve fornire.'},
+    {n:'Relazione RPM ↔ ω', f:'ω = 2π·n / 60', v:'n: velocità di rotazione [giri/min, RPM]',
+      note:'Conversione standard tra giri/minuto (unità pratica) e rad/s (unità SI usata nelle formule fisiche).'},
+    {n:'Moto armonico semplice', f:'x(t) = A·sin(ω·t + φ)', v:'A: ampiezza [m], ω: pulsazione [rad/s], φ: fase iniziale [rad]',
+      note:'Modello di oscillazione sinusoidale ideale, es. massa su molla senza smorzamento o proiezione di un moto circolare uniforme.'},
+    {n:'Periodo e frequenza', f:'T = 1/f = 2π/ω', v:'T: periodo [s], f: frequenza [Hz]',
+      note:'Il periodo è il tempo per compiere un ciclo completo; la frequenza è il numero di cicli al secondo.'},
+    {n:'Gittata proiettile', f:'R = v₀²·sin(2θ)/g', v:'R: gittata orizzontale [m], θ: angolo di lancio, g: accelerazione di gravità [m/s²]',
+      note:'Valida solo per lancio e atterraggio alla stessa quota, in assenza di resistenza dell\'aria. La gittata massima si ha per θ=45°.'},
+  ]},
+  dinamica:{label:'Dinamica',icon:'⚙️',items:[
+    {n:'Secondo principio (Newton)', f:'F = m·a', v:'F: forza risultante [N], m: massa [kg], a: accelerazione [m/s²]',
+      note:'Legge fondamentale della dinamica: la forza netta applicata a un corpo è proporzionale alla sua accelerazione. Valida in un riferimento inerziale.'},
+    {n:'Quantità di moto', f:'p = m·v', v:'p: quantità di moto [kg·m/s]',
+      note:'Grandezza vettoriale conservata in assenza di forze esterne (es. urti in sistema isolato).'},
+    {n:'Impulso', f:'J = F·Δt = Δp', v:'J: impulso della forza [N·s]',
+      note:'Collega forza applicata e durata dell\'applicazione alla variazione di quantità di moto; utile per urti e impatti.'},
+    {n:'Lavoro di una forza', f:'L = F·s·cos(θ)', v:'θ: angolo tra la direzione della forza e lo spostamento s',
+      note:'Il lavoro è nullo se la forza è perpendicolare allo spostamento (es. forza centripeta) o se non c\'è spostamento.'},
+    {n:'Energia cinetica', f:'Ec = ½·m·v²', v:'Ec: energia cinetica [J]',
+      note:'Energia posseduta da un corpo in virtù del suo moto; sempre positiva, dipende dal quadrato della velocità.'},
+    {n:'Energia potenziale gravitazionale', f:'Ep = m·g·h', v:'h: quota rispetto al riferimento [m], g ≈ 9.81 m/s²',
+      note:'Energia immagazzinata per la posizione in un campo gravitazionale; dipende dalla scelta arbitraria del livello di riferimento (h=0).'},
+    {n:'Energia potenziale elastica', f:'Ee = ½·k·x²', v:'k: costante elastica [N/m], x: deformazione rispetto alla posizione di riposo [m]',
+      note:'Valida per molle ideali che seguono la legge di Hooke (F=k·x), entro il limite elastico del materiale.'},
+    {n:'Potenza meccanica', f:'P = L/t = F·v', v:'P: potenza [W]',
+      note:'La seconda forma (F·v) è valida per forza e velocità costanti e paralleli; utile per dimensionare motori.'},
+    {n:'Attrito radente', f:'Fa = μ·N', v:'μ: coefficiente di attrito (statico o dinamico, adimensionale), N: forza normale [N]',
+      note:'Modello di Coulomb: la forza di attrito è indipendente dall\'area di contatto apparente e proporzionale alla forza normale.'},
+    {n:'Legge di gravitazione universale', f:'F = G·m₁·m₂/r²', v:'G = 6.674×10⁻¹¹ N·m²/kg², r: distanza tra i baricentri [m]',
+      note:'Rilevante solo su scala astronomica; per applicazioni meccaniche terrestri si usa g=9.81 m/s² come approssimazione locale.'},
+    {n:'Momento di una forza (coppia)', f:'M = F·d', v:'d: braccio della forza, distanza perpendicolare dalla retta d\'azione al polo [m]',
+      note:'Misura la tendenza di una forza a produrre rotazione attorno a un punto o asse; grandezza vettoriale (asse ⊥ al piano F-d).'},
+    {n:'Momento angolare', f:'L = I·ω', v:'I: momento d\'inerzia [kg·m²]',
+      note:'Analogo rotazionale della quantità di moto; si conserva in assenza di momenti esterni (es. pattinatore che stringe le braccia).'},
+    {n:'Coppia e accelerazione angolare', f:'T = I·α', v:'T: coppia motrice/resistente [N·m]',
+      note:'Analogo rotazionale di F=ma. Fondamentale per dimensionare motori e attuatori rotativi in funzione dell\'inerzia da accelerare.'},
+    {n:'Energia cinetica rotazionale', f:'Ec = ½·I·ω²', v:'',
+      note:'Energia associata alla rotazione di un corpo rigido attorno a un asse; si somma all\'energia cinetica traslazionale nel caso di rotolamento.'},
+    {n:'Teorema di Huygens-Steiner', f:'I = I_cm + m·d²', v:'I_cm: momento d\'inerzia rispetto al baricentro, d: distanza tra i due assi paralleli [m]',
+      note:'Permette di calcolare il momento d\'inerzia rispetto a un asse qualsiasi, noto quello baricentrico, purché gli assi siano paralleli.'},
+    {n:'Mom. inerzia disco/cilindro pieno', f:'I = ½·m·r²', v:'asse di rotazione passante per il centro, perpendicolare (disco) o longitudinale (cilindro)',
+      note:'Caso particolare frequente in trasmissioni meccaniche (pulegge, volani, ingranaggi pieni).'},
+    {n:'Mom. inerzia sfera piena', f:'I = ⅖·m·r²', v:'asse passante per il centro',
+      note:''},
+    {n:'Mom. inerzia asta (asse centrale)', f:'I = (1/12)·m·L²', v:'asse perpendicolare all\'asta, passante per il centro, L: lunghezza asta',
+      note:''},
+    {n:'Forza centrifuga', f:'Fc = m·ω²·r', v:'',
+      note:'Forza apparente (fittizia) che si manifesta nel riferimento solidale con il corpo in rotazione; è la reazione alla forza centripeta reale.'},
+    {n:'Conservazione energia meccanica', f:'Ec₁ + Ep₁ = Ec₂ + Ep₂', v:'',
+      note:'Valida solo in assenza di forze dissipative (attriti, resistenza dell\'aria); utile per legare velocità e quota tra due istanti.'},
+  ]},
+  statica:{label:'Statica',icon:'🏗️',items:[
+    {n:'Equilibrio alla traslazione', f:'ΣF = 0', v:'somma vettoriale di tutte le forze applicate al corpo',
+      note:'Condizione necessaria (non sufficiente da sola) per l\'equilibrio statico di un corpo rigido; va scomposta lungo gli assi (ΣFx=0, ΣFy=0).'},
+    {n:'Equilibrio alla rotazione', f:'ΣM = 0', v:'somma di tutti i momenti rispetto a un polo qualsiasi',
+      note:'Va verificata insieme all\'equilibrio alla traslazione. Il polo di calcolo dei momenti è arbitrario, ma va scelto per semplificare i calcoli.'},
+    {n:'Momento di una forza', f:'M = F·b', v:'b: braccio (distanza perpendicolare dalla retta d\'azione della forza al polo) [m]',
+      note:'Il segno del momento dipende dal verso di rotazione (convenzionalmente antiorario positivo).'},
+    {n:'Baricentro di un sistema', f:'x_g = Σ(mᵢ·xᵢ)/Σmᵢ', v:'analoga formula per y_g, z_g',
+      note:'Punto di applicazione della risultante delle forze peso; per corpi omogenei coincide con il centroide geometrico.'},
+    {n:'Leva (equilibrio)', f:'F₁·b₁ = F₂·b₂', v:'b₁,b₂: bracci delle forze rispetto al fulcro',
+      note:'Caso particolare di equilibrio alla rotazione; alla base del vantaggio meccanico degli utensili a leva.'},
+    {n:'Piano inclinato (senza attrito)', f:'F = m·g·sin(α)', v:'F: componente del peso lungo il piano, α: angolo di inclinazione',
+      note:'La componente normale al piano vale N=m·g·cos(α); con attrito va aggiunta la forza Fa=μ·N che si oppone al moto.'},
+    {n:'Reazione vincolare (carrello)', f:'1 incognita (⊥ al piano di appoggio)', v:'',
+      note:'Vincolo semplice: impedisce lo spostamento in una sola direzione, lascia libera la rotazione e la traslazione lungo il piano di appoggio.'},
+    {n:'Reazione vincolare (cerniera)', f:'2 incognite (componenti H, V)', v:'',
+      note:'Vincolo doppio: impedisce ogni traslazione ma lascia libera la rotazione attorno al perno.'},
+    {n:'Reazione vincolare (incastro)', f:'3 incognite (H, V, M)', v:'',
+      note:'Vincolo triplo (vincolo di incastro/mensola): impedisce sia le traslazioni sia la rotazione, generando anche un momento reattivo.'},
+  ]},
+  resistenza:{label:'Resistenza dei materiali',icon:'🔩',items:[
+    {n:'Tensione normale', f:'σ = F/A', v:'σ: tensione [Pa o N/mm²], F: forza assiale [N], A: area sezione retta [m² o mm²]',
+      note:'Tensione uniforme da sforzo normale (trazione/compressione) su una sezione, valida per travi snelle lontane da intagli e concentrazioni di tensione.'},
+    {n:'Deformazione unitaria', f:'ε = ΔL/L₀', v:'ΔL: allungamento [m], L₀: lunghezza iniziale [m], ε adimensionale',
+      note:'Misura relativa della deformazione, indipendente dalla lunghezza del provino: consente di confrontare materiali diversi.'},
+    {n:'Legge di Hooke', f:'σ = E·ε', v:'E: modulo elastico (Young) [Pa], tipico per acciai E≈206000 MPa',
+      note:'Valida solo in campo elastico lineare, cioè per tensioni inferiori al limite di snervamento/proporzionalità del materiale.'},
+    {n:'Tensione tangenziale (taglio)', f:'τ = F/A', v:'τ: tensione tangenziale [Pa], taglio medio sulla sezione',
+      note:'Formula approssimata (taglio medio); la distribuzione reale non è uniforme sulla sezione (es. parabolica per sezione rettangolare).'},
+    {n:'Modulo di elasticità tangenziale', f:'τ = G·γ', v:'G: modulo di taglio [Pa], γ: scorrimento angolare [rad]',
+      note:'Analogo della legge di Hooke per sollecitazioni di taglio puro; per acciai G≈80000 MPa.'},
+    {n:'Tensione di flessione', f:'σ_f = M_f / W_x', v:'M_f: momento flettente [N·mm], W_x: modulo di resistenza a flessione [mm³]',
+      note:'Tensione massima (in fibra estrema) dovuta a un momento flettente; base della verifica a flessione di travi e alberi.'},
+    {n:'Modulo resistenza sez. rettangolare', f:'W = b·h²/6', v:'b: base, h: altezza (nella direzione di flessione)',
+      note:''},
+    {n:'Modulo resistenza sez. circolare', f:'W = π·d³/32', v:'d: diametro',
+      note:''},
+    {n:'Mom. inerzia sez. rettangolare', f:'I = b·h³/12', v:'asse baricentrico parallelo alla base b',
+      note:''},
+    {n:'Mom. inerzia sez. circolare', f:'I = π·d⁴/64', v:'',
+      note:''},
+    {n:'Mom. inerzia sez. circ. cava', f:'I = π·(D⁴−d⁴)/64', v:'D: diametro esterno, d: diametro interno',
+      note:''},
+    {n:'Tensione torsionale', f:'τ = T·r/J', v:'T: momento torcente [N·mm], r: raggio (o distanza dall\'asse) [mm], J: momento d\'inerzia polare [mm⁴]',
+      note:'Tensione massima in superficie (r=raggio esterno); la tensione è nulla sull\'asse e cresce linearmente con r.'},
+    {n:'J polare sez. circolare piena', f:'J = π·d⁴/32', v:'',
+      note:''},
+    {n:'Angolo di torsione', f:'θ = T·L/(G·J)', v:'L: lunghezza del tratto soggetto a torsione [mm]',
+      note:'Angolo di rotazione relativa tra le due estremità dell\'albero, in radianti.'},
+    {n:'Freccia trave appoggiata (carico centrato)', f:'δ = F·L³/(48·E·I)', v:'L: luce della trave, carico F applicato in mezzeria',
+      note:'Freccia massima (in mezzeria) per trave semplicemente appoggiata con carico concentrato al centro.'},
+    {n:'Freccia trave appoggiata (carico distribuito)', f:'δ = 5·w·L⁴/(384·E·I)', v:'w: carico distribuito per unità di lunghezza [N/mm]',
+      note:'Freccia massima (in mezzeria) per trave appoggiata con carico uniformemente distribuito.'},
+    {n:'Freccia mensola (carico in punta)', f:'δ = F·L³/(3·E·I)', v:'',
+      note:'Freccia massima all\'estremità libera di una trave a mensola (incastrata a un\'estremità) con carico concentrato in punta.'},
+    {n:'Carico critico di Eulero', f:'P_cr = π²·E·I/(L₀)²', v:'L₀: lunghezza libera d\'inflessione, dipende dai vincoli agli estremi',
+      note:'Carico di instabilità per aste snelle soggette a compressione; valido solo per snellezza λ elevata (instabilità elastica).'},
+    {n:'Snellezza', f:'λ = L₀/ρ', v:'ρ = √(I/A): raggio giratore d\'inerzia [mm]',
+      note:'Parametro adimensionale usato per classificare le aste compresse come "snelle" (instabilità elastica) o "tozze" (verifica a schiacciamento).'},
+    {n:'Coefficiente di sicurezza', f:'n = σ_amm / σ', v:'σ_amm: tensione ammissibile del materiale',
+      note:'Rapporto tra la resistenza del materiale (o tensione ammissibile) e la tensione di esercizio; deve essere >1, tipicamente 1.5-4 in meccanica.'},
+    {n:'Tensione ideale (Von Mises, 2D)', f:'σ_id = √(σ² + 3·τ²)', v:'',
+      note:'Criterio di resistenza per stati di tensione combinati (flessione + torsione); confrontato con la tensione ammissibile per la verifica.'},
+    {n:'Pressione di contatto (superfici piane)', f:'p = F/A', v:'',
+      note:'Pressione media di contatto tra due superfici piane, es. per verifica di rasamento in giunzioni bullonate o linguette.'},
+  ]},
+  trigonometria:{label:'Trigonometria',icon:'📐',items:[
+    {n:'Relazione fondamentale', f:'sin²(α) + cos²(α) = 1', v:'',
+      note:'Identità fondamentale che deriva dal teorema di Pitagora applicato alla circonferenza goniometrica di raggio unitario.'},
+    {n:'Tangente', f:'tan(α) = sin(α)/cos(α)', v:'non definita per α = 90°+k·180°',
+      note:'Rapporto tra seno e coseno; rappresenta il coefficiente angolare della retta corrispondente all\'angolo α.'},
+    {n:'Teorema dei seni', f:'a/sin(A) = b/sin(B) = c/sin(C) = 2R', v:'R: raggio circonferenza circoscritta al triangolo',
+      note:'Usato per risolvere triangoli nei casi ASA, AAS e SSA (quest\'ultimo può dare 0, 1 o 2 soluzioni — caso ambiguo).'},
+    {n:'Teorema del coseno (Carnot)', f:'c² = a² + b² − 2·a·b·cos(C)', v:'C: angolo compreso tra i lati a e b',
+      note:'Generalizzazione del teorema di Pitagora; usato per risolvere triangoli nei casi SAS e SSS.'},
+    {n:'Teorema delle tangenti', f:'(a−b)/(a+b) = tan[(A−B)/2] / tan[(A+B)/2]', v:'',
+      note:'Formula alternativa (formula di Nepero), meno usata nella pratica rispetto ai teoremi dei seni/coseno.'},
+    {n:'Area triangolo (trigonometrica)', f:'Area = ½·a·b·sin(C)', v:'',
+      note:'Utile quando sono noti due lati e l\'angolo compreso (caso SAS), senza bisogno di calcolare l\'altezza.'},
+    {n:'Formula di Erone', f:'Area = √[s(s−a)(s−b)(s−c)]', v:'s = (a+b+c)/2 semiperimetro',
+      note:'Calcola l\'area conoscendo solo i tre lati (caso SSS), senza bisogno di calcolare angoli o altezze.'},
+    {n:'Somma di archi (seno)', f:'sin(α±β) = sinα·cosβ ± cosα·sinβ', v:'',
+      note:''},
+    {n:'Somma di archi (coseno)', f:'cos(α±β) = cosα·cosβ ∓ sinα·sinβ', v:'',
+      note:''},
+    {n:'Duplicazione (seno)', f:'sin(2α) = 2·sinα·cosα', v:'',
+      note:''},
+    {n:'Duplicazione (coseno)', f:'cos(2α) = cos²α − sin²α', v:'equivalente a 2cos²α−1 = 1−2sin²α',
+      note:''},
+    {n:'Bisezione (seno)', f:'sin(α/2) = ±√[(1−cosα)/2]', v:'il segno dipende dal quadrante di α/2',
+      note:''},
+    {n:'Relazione triangolo rettangolo', f:'sin(A) = cateto opp. / ipotenusa', v:'cos(A) = cat. adiac./ipot., tan(A) = opp./adiac.',
+      note:'Definizioni base delle funzioni trigonometriche per angoli acuti in un triangolo rettangolo (SOH-CAH-TOA).'},
+    {n:'Teorema di Pitagora', f:'c² = a² + b²', v:'c: ipotenusa, a,b: cateti',
+      note:'Caso particolare del teorema del coseno per C=90° (cos 90°=0). Valido esclusivamente per triangoli rettangoli.'},
+  ]},
+  geometria:{label:'Geometria',icon:'🧮',items:[
+    {n:'Cerchio — area', f:'A = π·r²', v:'r: raggio', note:''},
+    {n:'Cerchio — circonferenza', f:'C = 2·π·r', v:'', note:'Perimetro del cerchio, detto anche circonferenza.'},
+    {n:'Settore circolare — area', f:'A = π·r²·θ/360°', v:'θ: angolo al centro in gradi', note:'Frazione dell\'area del cerchio corrispondente all\'angolo θ.'},
+    {n:'Rettangolo — area/perimetro', f:'A = b·h    P = 2(b+h)', v:'b: base, h: altezza', note:''},
+    {n:'Triangolo — area', f:'A = b·h/2', v:'h: altezza relativa alla base b', note:''},
+    {n:'Trapezio — area', f:'A = (B+b)·h/2', v:'B,b: basi maggiore/minore, h: altezza (distanza tra le basi)', note:''},
+    {n:'Rombo — area', f:'A = d₁·d₂/2', v:'d₁,d₂: diagonali', note:''},
+    {n:'Poligono regolare — area', f:'A = n·l²/(4·tan(π/n))', v:'n: numero lati, l: lunghezza lato', note:'Formula generale valida per qualsiasi poligono regolare (n≥3).'},
+    {n:'Ellisse — area', f:'A = π·a·b', v:'a,b: semiassi maggiore e minore', note:'Il perimetro dell\'ellisse non ha formula esatta elementare; si usano approssimazioni (es. formula di Ramanujan).'},
+    {n:'Sfera — volume/superficie', f:'V = 4/3·π·r³    S = 4·π·r²', v:'', note:''},
+    {n:'Cubo — volume/superficie', f:'V = l³    S = 6·l²', v:'l: lato', note:''},
+    {n:'Cilindro — volume/superficie', f:'V = π·r²·h    S = 2πr(r+h)', v:'', note:'S include le due basi circolari e la superficie laterale.'},
+    {n:'Cono — volume', f:'V = π·r²·h/3', v:'', note:''},
+    {n:'Cono — superficie laterale', f:'S_lat = π·r·l', v:'l = √(r²+h²) apotema (generatrice) del cono', note:''},
+    {n:'Piramide — volume', f:'V = A_base·h/3', v:'valida per qualsiasi forma di base', note:''},
+    {n:'Prisma — volume', f:'V = A_base·h', v:'', note:''},
+    {n:'Toro — volume/superficie', f:'V = 2π²·R·r²    S = 4π²·R·r', v:'R: raggio maggiore (dal centro del toro al centro del tubo), r: raggio minore (del tubo)', note:''},
+  ]},
+  energia_term:{label:'Energia, Potenza e Termodinamica',icon:'🔥',items:[
+    {n:'Legge dei gas perfetti', f:'p·V = n·R·T', v:'p: pressione [Pa], V: volume [m³], n: moli [mol], T: temperatura assoluta [K], R = 8.314 J/(mol·K)',
+      note:'Modello approssimato valido per gas a bassa densità/alta temperatura, lontano dalla condensazione.'},
+    {n:'Primo principio della termodinamica', f:'ΔU = Q − L', v:'ΔU: variazione energia interna, Q: calore scambiato, L: lavoro compiuto dal sistema',
+      note:'Espressione del principio di conservazione dell\'energia applicato a sistemi termodinamici.'},
+    {n:'Rendimento di un ciclo', f:'η = L_utile / Q_assorbito', v:'η adimensionale, sempre <1',
+      note:'Misura l\'efficienza di conversione del calore assorbito in lavoro utile in un ciclo termodinamico.'},
+    {n:'Rendimento di Carnot', f:'η_c = 1 − T_fredda/T_calda', v:'temperature assolute [K]',
+      note:'Rendimento massimo teorico ottenibile da una macchina termica operante tra due sorgenti a temperatura T_calda e T_fredda; limite ideale mai raggiunto nella realtà.'},
+    {n:'Dilatazione termica lineare', f:'ΔL = L₀·α·ΔT', v:'α: coeff. di dilatazione lineare [1/K], tipico acciaio α≈12×10⁻⁶ /K',
+      note:'Da considerare nel dimensionamento di accoppiamenti e giochi funzionanti a temperature variabili.'},
+    {n:'Calore sensibile', f:'Q = m·c·ΔT', v:'c: calore specifico [J/(kg·K)]',
+      note:'Calore necessario per variare la temperatura di una massa m senza cambiamento di stato.'},
+    {n:'Calore latente', f:'Q = m·λ', v:'λ: calore latente di transizione di fase [J/kg]',
+      note:'Calore scambiato durante un cambiamento di stato (fusione, vaporizzazione) a temperatura costante.'},
+    {n:'Conduzione termica (Fourier)', f:'Q̇ = k·A·ΔT / s', v:'k: conducibilità termica [W/(m·K)], A: area [m²], s: spessore [m]',
+      note:'Flusso di calore in regime stazionario attraverso una parete piana; ΔT è la differenza di temperatura tra le due facce.'},
+    {n:'Potenza meccanica rotazionale', f:'P = T·ω = T·2πn/60', v:'T: coppia [N·m], n: velocità di rotazione [giri/min]',
+      note:'Relazione chiave per il dimensionamento di motori: a parità di potenza, coppia e velocità sono inversamente proporzionali.'},
+    {n:'Rendimento meccanico', f:'η = P_utile / P_assorbita', v:'',
+      note:'Tiene conto delle perdite per attrito, calore, ecc. in una trasmissione meccanica; sempre <1.'},
+  ]},
+  elettrotecnica:{label:'Elettrotecnica',icon:'🔌',items:[
+    {n:'Legge di Ohm', f:'V = R·I', v:'V: tensione [V], R: resistenza [Ω], I: corrente [A]',
+      note:'Valida per conduttori ohmici (resistenza costante indipendente da tensione/corrente).'},
+    {n:'Potenza elettrica', f:'P = V·I = I²·R = V²/R', v:'P: potenza [W]',
+      note:'Tre forme equivalenti della stessa legge, utili a seconda delle grandezze note.'},
+    {n:'Energia elettrica', f:'E = P·t', v:'',
+      note:'Energia consumata/prodotta in un intervallo di tempo t a potenza costante; unità pratica: kWh.'},
+    {n:'Resistenze in serie', f:'R_eq = R₁+R₂+…+Rₙ', v:'',
+      note:'La corrente è la stessa in tutte le resistenze; la resistenza equivalente è sempre maggiore della più grande delle resistenze in serie.'},
+    {n:'Resistenze in parallelo', f:'1/R_eq = 1/R₁+1/R₂+…', v:'',
+      note:'La tensione è la stessa su tutte le resistenze; la resistenza equivalente è sempre minore della più piccola delle resistenze in parallelo.'},
+    {n:'Carica di un condensatore', f:'Q = C·V', v:'Q: carica [C], C: capacità [F]',
+      note:''},
+    {n:'Energia in un condensatore', f:'E = ½·C·V²', v:'',
+      note:''},
+    {n:'Potenza trifase (equilibrata)', f:'P = √3·V_L·I_L·cos(φ)', v:'V_L: tensione concatenata [V], I_L: corrente di linea [A], cos(φ): fattore di potenza',
+      note:'Formula per sistemi trifase equilibrati con carico simmetrico; comune per motori elettrici industriali.'},
+  ]},
+  idraulica:{label:'Idraulica e Fluidodinamica',icon:'💧',items:[
+    {n:'Portata volumetrica', f:'Q = A·v', v:'A: sezione di passaggio [m²], v: velocità media del fluido [m/s]',
+      note:''},
+    {n:'Equazione di continuità', f:'A₁·v₁ = A₂·v₂', v:'',
+      note:'Conseguenza della conservazione della massa per fluido incomprimibile: dove la sezione si riduce, la velocità aumenta.'},
+    {n:'Equazione di Bernoulli', f:'p + ½·ρ·v² + ρ·g·h = costante', v:'p: pressione statica, ρ: densità del fluido, h: quota',
+      note:'Valida lungo una linea di corrente per fluido ideale (non viscoso), incomprimibile, in moto stazionario, senza scambio di lavoro/calore.'},
+    {n:'Pressione idrostatica', f:'p = ρ·g·h', v:'h: profondità dal pelo libero',
+      note:'Pressione dovuta al solo peso del fluido sovrastante, indipendente dalla forma del recipiente.'},
+    {n:'Numero di Reynolds', f:'Re = ρ·v·D/μ', v:'D: diametro (o lunghezza caratteristica) [m], μ: viscosità dinamica [Pa·s]',
+      note:'Parametro adimensionale che discrimina il regime di moto: Re<2300 laminare, Re>4000 turbolento (per condotte circolari), zona di transizione tra i due valori.'},
+    {n:'Perdite di carico distribuite (Darcy)', f:'Δp = f·(L/D)·(ρ·v²/2)', v:'f: fattore di attrito (dipende da Re e rugosità), L: lunghezza condotta [m]',
+      note:'Stima le perdite di pressione lungo una tubazione dovute all\'attrito con le pareti.'},
+    {n:'Spinta di Archimede', f:'F_A = ρ_fluido·g·V_immerso', v:'',
+      note:'Forza verso l\'alto pari al peso del fluido spostato dal corpo immerso; determina il galleggiamento se F_A > peso del corpo.'},
+  ]},
+  vibrazioni:{label:'Vibrazioni e Meccanismi',icon:'🌀',items:[
+    {n:'Pulsazione naturale (sistema m-k)', f:'ω_n = √(k/m)', v:'k: rigidezza [N/m], m: massa [kg]',
+      note:'Frequenza propria di oscillazione di un sistema massa-molla non smorzato; da evitare in coincidenza con frequenze di eccitazione (risonanza).'},
+    {n:'Frequenza naturale', f:'f_n = ω_n/(2π)', v:'',
+      note:''},
+    {n:'Periodo del pendolo semplice', f:'T = 2π·√(L/g)', v:'L: lunghezza del pendolo [m]',
+      note:'Valido per piccole oscillazioni (ampiezza angolare < ~15°) e assenza di attrito.'},
+    {n:'Rapporto di trasmissione ingranaggi', f:'τ = ω_out/ω_in = z_in/z_out', v:'z: numero di denti della ruota dentata',
+      note:'Il rapporto di trasmissione è inversamente proporzionale al rapporto tra i numeri di denti; la coppia si trasforma in modo inverso rispetto alla velocità.'},
+    {n:'Rapporto di riduzione a cinghia', f:'τ = D_pulita/D_motrice = n_out/n_in', v:'D: diametro primitivo delle pulegge',
+      note:''},
+    {n:'Velocità periferica cinghia/ingranaggio', f:'v = π·D·n/60', v:'D: diametro [m], n: giri/min',
+      note:'Deve essere uguale su entrambi gli organi collegati (motore e condotto) affinché non vi sia slittamento.'},
+    {n:'Smorzamento critico', f:'c_cr = 2·√(k·m)', v:'',
+      note:'Valore soglia di smorzamento oltre il quale il sistema torna alla posizione di equilibrio senza oscillare (sistema sovrasmorzato).'},
+  ]},
+  statistica:{label:'Statistica e Tolleranze',icon:'📊',items:[
+    {n:'Media aritmetica', f:'x̄ = Σxᵢ / n', v:'n: numero di misure',
+      note:'Valore centrale di una serie di misure; stima del valore atteso del processo.'},
+    {n:'Deviazione standard campionaria', f:'s = √[Σ(xᵢ−x̄)² / (n−1)]', v:'',
+      note:'Misura la dispersione dei dati attorno alla media. Si usa n−1 (correzione di Bessel) quando i dati sono un campione e non l\'intera popolazione.'},
+    {n:'Capacità di processo Cp', f:'Cp = (USL−LSL) / (6·σ)', v:'USL/LSL: limiti di specifica superiore/inferiore',
+      note:'Confronta l\'ampiezza della tolleranza con la dispersione naturale del processo (±3σ); non tiene conto del centraggio. Cp≥1.33 è generalmente considerato adeguato.'},
+    {n:'Capacità di processo Cpk', f:'Cpk = min[(USL−x̄)/(3σ), (x̄−LSL)/(3σ)]', v:'',
+      note:'A differenza di Cp, tiene conto anche dello scostamento della media dal centro della tolleranza: è sempre ≤ Cp. Indice più realistico per la qualità effettiva del processo.'},
+    {n:'Tolleranza (campo di tolleranza)', f:'T = ES − EI', v:'ES: scostamento superiore, EI: scostamento inferiore rispetto alla quota nominale',
+      note:'Differenza tra dimensione massima e minima ammessa; base del sistema di tolleranze ISO (vedi anche modulo Accoppiamenti ISO).'},
+    {n:'Gioco/interferenza in un accoppiamento', f:'G = D_foro − D_albero', v:'G>0: gioco, G<0: interferenza',
+      note:'Determina il tipo di accoppiamento (mobile, incerto, forzato) tra due elementi meccanici.'},
+    {n:'Propagazione dell\'errore (somma in quadratura)', f:'σ_tot = √(σ₁² + σ₂² + … )', v:'',
+      note:'Valida per grandezze indipendenti che si sommano algebricamente; usata per stimare la tolleranza risultante di una catena di quote.'},
+    {n:'Livello Sigma (six sigma)', f:'DPMO ≈ f(σ_livello)', v:'DPMO: difetti per milione di opportunità',
+      note:'A parità di Cpk=1.33 corrisponde circa a un processo "4 sigma"; Cpk=1.67 corrisponde a circa "5 sigma". Six Sigma (Cpk=2.0) è lo standard di eccellenza.'},
+  ]},
+  fatica:{label:'Fatica dei materiali',icon:'📉',items:[
+    {n:'Tensione alternata e media', f:'σ_a = (σ_max−σ_min)/2    σ_m = (σ_max+σ_min)/2', v:'',
+      note:'Scompone un ciclo di sollecitazione variabile nella sua componente alternata (ampiezza) e media, base per tutti i criteri di verifica a fatica.'},
+    {n:'Rapporto di ciclo', f:'R = σ_min / σ_max', v:'',
+      note:'R=−1: ciclo alterno simmetrico, R=0: ciclo dallo zero, R=1: carico statico. Caratterizza il tipo di sollecitazione applicata.'},
+    {n:'Curva di Wöhler (S-N)', f:'σ_a^m · N = costante', v:'N: numero di cicli a rottura, m: esponente del materiale',
+      note:'Rappresenta graficamente la vita a fatica in funzione dell\'ampiezza di tensione; per gli acciai esiste tipicamente un limite di fatica asintotico oltre 10⁶-10⁷ cicli.'},
+    {n:'Criterio di Goodman (lineare)', f:'σ_a/σ_e + σ_m/σ_R = 1/n', v:'σ_e: limite di fatica, σ_R: resistenza a rottura, n: coeff. sicurezza',
+      note:'Criterio conservativo molto usato in progettazione meccanica per verificare la resistenza a fatica in presenza di tensione media non nulla.'},
+    {n:'Criterio di Soderberg', f:'σ_a/σ_e + σ_m/σ_sn = 1/n', v:'σ_sn: tensione di snervamento',
+      note:'Più conservativo di Goodman (usa σ_sn al posto di σ_R); evita anche lo snervamento statico oltre alla rottura per fatica.'},
+    {n:'Criterio di Gerber (parabolico)', f:'σ_a/σ_e + (σ_m/σ_R)² = 1/n', v:'',
+      note:'Meno conservativo di Goodman, interpola meglio i dati sperimentali per materiali duttili ma è usato con maggiore cautela in progettazione critica.'},
+    {n:'Fattore di concentrazione delle tensioni', f:'σ_max = Kt · σ_nom', v:'Kt: fattore teorico di concentrazione (da intagli, fori, raccordi)',
+      note:'Gli intagli geometrici (spallamenti, fori, cave per linguette) amplificano localmente la tensione nominale e riducono drasticamente la vita a fatica.'},
+    {n:'Coefficiente di sensibilità all\'intaglio', f:'Kf = 1 + q·(Kt−1)', v:'q: sensibilità all\'intaglio (0…1), Kf: fattore effettivo a fatica',
+      note:'Kf è il fattore di concentrazione delle tensioni "effettivo" da usare nella verifica a fatica, generalmente minore di Kt.'},
+  ]},
+};
+
+let FORM_CAT='__all__';
+function mkFormCats(){
+  const html = '<button class="chip'+(FORM_CAT==='__all__'?' on':'')+'" onclick="setFormCat(\'__all__\')">Tutte</button>' +
+    Object.entries(FORMULE).map(([k,c])=>`<button class="chip${k===FORM_CAT?' on':''}" onclick="setFormCat('${k}')">${c.icon} ${c.label}</button>`).join('');
+  document.getElementById('form-cats').innerHTML = html;
+}
+const FORM_LINKS = {
+  resistenza:[{l:'Trave a Flessione',h:'trave_flessione.html'},{l:'Connessioni Bullonate',h:'connessioni_bullonate.html'}],
+  dinamica:[{l:'Cinematica Angolare',h:'calcolatore_angolare.html'},{l:'Cuscinetti',h:'calcolatore_cuscinetti.html'}],
+  cinematica:[{l:'Cinematica Lineare',h:'calcolatore_lineare.html'},{l:'Cinematica Angolare',h:'calcolatore_angolare.html'}],
+  vibrazioni:[{l:'Cinghie Dentate',h:'cinghie_dentate.html'},{l:'Ruote Dentate',h:'ruote_dentate.html'},{l:'Molle',h:'molle.html'}],
+  statistica:[{l:'Accoppiamenti ISO',h:'accoppiamenti_iso.html'},{l:'Statistica di processo (Strumenti) →',h:'#',tab:'tools',tool:'stat'}],
+  fatica:[{l:'Sezioni composte (Strumenti) →',h:'#',tab:'tools',tool:'sec'},{l:'Trave a Flessione',h:'trave_flessione.html'}],
+  trigonometria:[{l:'Risolutore Triangoli →',h:'#',tab:'tri'},{l:'Calcolatore Trigonometrico →',h:'#',tab:'trig'}],
+  geometria:[{l:'Geometria →',h:'#',tab:'geo'}],
+};
+function renderFormLinks(k){
+  const el = document.getElementById('form-links');
+  const links = FORM_LINKS[k];
+  if(!links){ el.innerHTML=''; return; }
+  el.innerHTML = `<span style="font-size:9px;color:var(--dim);align-self:center;margin-right:2px">Vedi anche:</span>` +
+    links.map(x=> x.tab
+      ? `<a class="linkchip" href="javascript:void(0)" onclick="showTab('${x.tab}')${x.tool?`;setTool('${x.tool}')`:''}">${x.l}</a>`
+      : `<a class="linkchip" href="${x.h}" target="_blank" rel="noopener">${x.l} ↗</a>`
+    ).join('');
+}
+function setFormCat(k){ FORM_CAT=k; mkFormCats(); renderFormLinks(k); renderFormulas(); }
+function renderFormulas(){
+  const q = document.getElementById('form-search').value.trim().toLowerCase();
+  const cats = FORM_CAT==='__all__' ? Object.entries(FORMULE) : Object.entries(FORMULE).filter(([k])=>k===FORM_CAT);
+  let cards = [];
+  cats.forEach(([k,c])=>{
+    c.items.forEach(it=>{
+      const hay = (it.n+' '+it.f+' '+it.v+' '+(it.note||'')).toLowerCase();
+      if(q && !hay.includes(q)) return;
+      cards.push(`<div class="fcard"><div class="fcat">${c.icon} ${c.label}</div><div class="fname">${it.n}</div><div class="fformula">${it.f}</div>${it.v?`<div class="fvars">${it.v}</div>`:''}${it.note?`<div class="fnote">${it.note}</div>`:''}</div>`);
+    });
+  });
+  document.getElementById('form-results').innerHTML = cards.length ? cards.join('') : '<div class="fempty">Nessuna formula trovata.</div>';
+}
+mkFormCats(); renderFormulas();
+
+/* ============================================================ LEGENDA SIMBOLI */
+const LEGEND = [
+  {sym:'s, s₀',name:'Posizione, spazio percorso; posizione iniziale',unit:'m'},
+  {sym:'v, v₀',name:'Velocità (lineare); velocità iniziale',unit:'m/s'},
+  {sym:'a',name:'Accelerazione (lineare). In termodinamica: coefficiente di dilatazione lineare',unit:'m/s²  ·  1/K'},
+  {sym:'t',name:'Tempo',unit:'s'},
+  {sym:'θ (theta)',name:'Angolo, posizione angolare',unit:'rad o °'},
+  {sym:'ω (omega)',name:'Velocità angolare, pulsazione',unit:'rad/s'},
+  {sym:'α (alpha)',name:'Accelerazione angolare. Anche: angolo generico, coefficiente di dilatazione termica',unit:'rad/s²  ·  1/K'},
+  {sym:'r, R',name:'Raggio. R anche: costante universale dei gas, resistenza elettrica, raggio circoscritto',unit:'m  ·  J/(mol·K)  ·  Ω'},
+  {sym:'m',name:'Massa. In fatica: esponente della curva di Wöhler',unit:'kg'},
+  {sym:'F',name:'Forza',unit:'N'},
+  {sym:'p',name:'Quantità di moto. Anche: pressione, passo di una filettatura',unit:'kg·m/s  ·  Pa'},
+  {sym:'J',name:'Impulso di una forza. Anche: momento d\'inerzia polare di una sezione',unit:'N·s  ·  mm⁴'},
+  {sym:'L',name:'Lavoro. Anche: momento angolare, lunghezza, luce di una trave',unit:'J  ·  kg·m²/s  ·  m'},
+  {sym:'Ec, Ep, Ee',name:'Energia cinetica; potenziale (gravitazionale); potenziale elastica',unit:'J'},
+  {sym:'g',name:'Accelerazione di gravità standard',unit:'m/s² (≈9.81)'},
+  {sym:'k',name:'Costante elastica di una molla. Anche: conducibilità termica, fattore di sicurezza',unit:'N/m  ·  W/(m·K)'},
+  {sym:'μ (mu)',name:'Coefficiente di attrito. Anche: viscosità dinamica',unit:'— (adim.)  ·  Pa·s'},
+  {sym:'N',name:'Forza normale (reazione vincolare o di contatto)',unit:'N'},
+  {sym:'G',name:'Costante di gravitazione universale. Anche: modulo di elasticità tangenziale (taglio), portata massica',unit:'N·m²/kg²  ·  MPa  ·  kg/s'},
+  {sym:'M, T',name:'Momento di una forza / coppia (torcente o motrice)',unit:'N·m'},
+  {sym:'I',name:'Momento d\'inerzia di massa (dinamica) oppure di una sezione (resistenza dei materiali)',unit:'kg·m²  ·  mm⁴'},
+  {sym:'d',name:'Distanza, braccio di una forza. Anche: diametro',unit:'m o mm'},
+  {sym:'σ (sigma)',name:'Tensione normale (trazione/compressione/flessione). In statistica: deviazione standard',unit:'MPa (N/mm²)'},
+  {sym:'ε (epsilon)',name:'Deformazione unitaria (allungamento relativo)',unit:'— (adimensionale)'},
+  {sym:'E',name:'Modulo di elasticità normale (modulo di Young)',unit:'MPa'},
+  {sym:'τ (tau)',name:'Tensione tangenziale (taglio o torsione)',unit:'MPa (N/mm²)'},
+  {sym:'γ (gamma)',name:'Scorrimento angolare (deformazione a taglio)',unit:'rad'},
+  {sym:'W',name:'Modulo di resistenza a flessione di una sezione',unit:'mm³'},
+  {sym:'δ (delta)',name:'Freccia (inflessione) di una trave; allungamento',unit:'mm'},
+  {sym:'λ (lambda)',name:'Snellezza di un\'asta compressa. Anche: calore latente',unit:'— (adim.)  ·  J/kg'},
+  {sym:'n',name:'Coefficiente di sicurezza. Anche: numero di giri (RPM), numero di misure in una serie statistica',unit:'—  ·  giri/min'},
+  {sym:'ν (nu)',name:'Coefficiente di Poisson',unit:'— (adimensionale)'},
+  {sym:'A',name:'Area (di una sezione, di passaggio di un fluido, ecc.)',unit:'m² o mm²'},
+  {sym:'Q',name:'Quantità di calore scambiato. Anche: portata volumetrica, carica elettrica',unit:'J  ·  m³/s  ·  C'},
+  {sym:'ρ (rho)',name:'Densità (massa volumica)',unit:'kg/m³'},
+  {sym:'V',name:'Volume. In elettrotecnica: tensione elettrica',unit:'m³  ·  V'},
+  {sym:'η (eta)',name:'Rendimento (efficienza di conversione energetica)',unit:'— (adimensionale, <1)'},
+  {sym:'c',name:'Calore specifico. Anche: smorzamento di un sistema vibrante',unit:'J/(kg·K)  ·  N·s/m'},
+  {sym:'Re',name:'Numero di Reynolds (regime di moto di un fluido)',unit:'— (adimensionale)'},
+  {sym:'f',name:'Frequenza. Anche: fattore di attrito nelle perdite di carico',unit:'Hz  ·  — (adim.)'},
+  {sym:'Kt, Kf',name:'Fattore di concentrazione delle tensioni (teorico / effettivo a fatica)',unit:'— (adimensionale)'},
+  {sym:'Cp, Cpk',name:'Indici di capacità del processo (statistica di produzione)',unit:'— (adimensionale)'},
+  {sym:'x̄',name:'Media aritmetica di una serie di misure',unit:'stessa unità della misura'},
+  {sym:'USL, LSL',name:'Limite di specifica superiore / inferiore',unit:'stessa unità della misura'},
+];
+let LEGEND_OPEN=false;
+function toggleLegend(){
+  LEGEND_OPEN=!LEGEND_OPEN;
+  document.getElementById('legend-panel').classList.toggle('open',LEGEND_OPEN);
+  document.getElementById('legend-toggle-ic').innerHTML = LEGEND_OPEN?'▾ nascondi':'▸ mostra';
+  if(LEGEND_OPEN) renderLegend();
+}
+function renderLegend(){
+  const q = document.getElementById('legend-search').value.trim().toLowerCase();
+  const grid = document.getElementById('legend-grid');
+  const items = q ? LEGEND.filter(it=>(it.sym+' '+it.name+' '+it.unit).toLowerCase().includes(q)) : LEGEND;
+  grid.innerHTML = items.length ? items.map(it=>
+    `<div class="lg-card"><div class="lg-sym">${it.sym}</div><div class="lg-body"><div class="lg-name">${it.name}</div><div class="lg-unit">${it.unit}</div></div></div>`).join('')
+    : '<div class="fempty">Nessun simbolo trovato.</div>';
+}
+renderLegend();
+
+/* ============================================================ RISOLUTORE TRIANGOLI */
+const TRI_MODES = {
+  sss:{label:'SSS — 3 lati', fields:[{k:'a',l:'Lato a (B—C)'},{k:'b',l:'Lato b (C—A)'},{k:'c',l:'Lato c (A—B)'}],
+    note:'Noti i tre lati, gli angoli si calcolano con il teorema del coseno. Esiste una e una sola soluzione se è rispettata la disuguaglianza triangolare (ogni lato deve essere minore della somma degli altri due). Convenzione: il lato a è opposto al vertice A (cioè unisce B e C), b è opposto a B, c è opposto a C.'},
+  sas:{label:'SAS — 2 lati + angolo compreso', fields:[{k:'a',l:'Lato a (B—C)'},{k:'b',l:'Lato b (C—A)'},{k:'C',l:'Angolo C (°), vertice tra a,b'}],
+    note:'Il terzo lato si calcola con il teorema del coseno, poi gli altri angoli con il teorema dei seni. Soluzione unica e sempre esistente per 0°<C<180°. L\'angolo C è quello racchiuso tra i due lati noti a e b, cioè il vertice C comune ai lati CA (b) e BC (a).'},
+  asa:{label:'ASA — 2 angoli + lato compreso', fields:[{k:'A',l:'Angolo A (°), vertice A'},{k:'B',l:'Angolo B (°), vertice B'},{k:'c',l:'Lato c (A—B), tra i vertici A e B'}],
+    note:'Il terzo angolo si ricava da C=180°−A−B, poi i lati mancanti con il teorema dei seni. Soluzione unica se A+B<180°. Il lato c congiunge i due vertici A e B di cui sono noti gli angoli.'},
+  aas:{label:'AAS — 2 angoli + lato non compreso', fields:[{k:'A',l:'Angolo A (°), vertice A'},{k:'B',l:'Angolo B (°), vertice B'},{k:'a',l:'Lato a (B—C), opposto ad A'}],
+    note:'Analogo al caso ASA ma con un lato non compreso tra gli angoli noti; la soluzione, se esiste, è comunque unica. Il lato a è quello opposto al vertice A, cioè il segmento B—C.'},
+  ssa:{label:'SSA — 2 lati + angolo opposto (caso ambiguo)', fields:[{k:'a',l:'Lato a (B—C), opposto ad A'},{k:'b',l:'Lato b (C—A), opposto a B'},{k:'A',l:'Angolo A (°), vertice A opposto al lato a'}],
+    note:'Caso "ambiguo": a seconda dei valori inseriti possono esistere 0, 1 o 2 triangoli distinti che soddisfano i dati (l\'angolo B ricavato dal teorema dei seni può avere due soluzioni supplementari). Il calcolatore mostra entrambe le soluzioni quando presenti.'},
+  right:{label:'Triangolo rettangolo', fields:[],
+    note:'Caso particolare con un angolo di 90° noto: bastano solo 2 dati aggiuntivi (invece di 3) per risolvere completamente il triangolo, grazie al teorema di Pitagora e alle relazioni trigonometriche.'},
+};
+const RIGHT_KNOWN = {
+  ab:{label:'Due cateti (a, b)', fields:[{k:'a',l:'Cateto a'},{k:'b',l:'Cateto b'}]},
+  ac:{label:'Cateto + ipotenusa (a, c)', fields:[{k:'a',l:'Cateto a'},{k:'c',l:'Ipotenusa c'}]},
+  aA:{label:'Cateto + angolo (a, A)', fields:[{k:'a',l:'Cateto a'},{k:'A',l:'Angolo A (°) opposto ad a'}]},
+  cA:{label:'Ipotenusa + angolo (c, A)', fields:[{k:'c',l:'Ipotenusa c'},{k:'A',l:'Angolo A (°)'}]},
+};
+let TRI_MODE='sss', RIGHT_KNOWN_K='ab';
+
+function mkTriModes(){
+  document.getElementById('tri-modes').innerHTML = Object.entries(TRI_MODES).map(([k,m])=>
+    `<button class="chip${k===TRI_MODE?' on':''}" onclick="setTriMode('${k}')">${m.label}</button>`).join('');
+}
+function setTriMode(k){ TRI_MODE=k; mkTriModes(); renderTriInputs(); }
+function renderTriInputs(){
+  const lblEl = document.getElementById('tri-mode-lbl');
+  const wrap = document.getElementById('tri-inputs');
+  document.getElementById('tri-mode-note').textContent = TRI_MODES[TRI_MODE].note || '';
+  if(TRI_MODE==='right'){
+    lblEl.textContent = 'Triangolo rettangolo — dati noti';
+    let html = '<div class="field" style="grid-column:1/-1"><div class="flabel">Combinazione nota</div><select class="finput" style="text-align:left" id="right-known" onchange="setRightKnown(this.value)">'
+      + Object.entries(RIGHT_KNOWN).map(([k,r])=>`<option value="${k}"${k===RIGHT_KNOWN_K?' selected':''}>${r.label}</option>`).join('') + '</select></div>';
+    html += RIGHT_KNOWN[RIGHT_KNOWN_K].fields.map(f=>`<div class="field"><div class="flabel">${f.l}</div><input type="number" class="finput" id="tf-${f.k}" value="${f.k==='A'?45:1}" oninput="solveTriAndRender()"></div>`).join('');
+    wrap.innerHTML = html;
+  } else {
+    lblEl.textContent = TRI_MODES[TRI_MODE].label;
+    wrap.innerHTML = TRI_MODES[TRI_MODE].fields.map(f=>`<div class="field"><div class="flabel">${f.l}</div><input type="number" class="finput" id="tf-${f.k}" value="${/^[A-Z]$/.test(f.k)?60:1}" oninput="solveTriAndRender()"></div>`).join('');
+  }
+  solveTriAndRender();
+}
+function setRightKnown(k){ RIGHT_KNOWN_K=k; renderTriInputs(); }
+function triVal(k){ const el=document.getElementById('tf-'+k); return el?parseFloat(el.value):NaN; }
+
+function solveGeneralTriangle(mode, vals){
+  const rad = Math.PI/180;
+  let a,b,c,A,B,C;
+  if(mode==='sss'){
+    a=vals.a;b=vals.b;c=vals.c;
+    if(!(a>0&&b>0&&c>0)) return {error:'Tutti i lati devono essere positivi.'};
+    if(a+b<=c || a+c<=b || b+c<=a) return {error:'Disuguaglianza triangolare non soddisfatta: nessun triangolo possibile.'};
+    A = Math.acos((b*b+c*c-a*a)/(2*b*c))/rad;
+    B = Math.acos((a*a+c*c-b*b)/(2*a*c))/rad;
+    C = 180-A-B;
+  } else if(mode==='sas'){
+    a=vals.a;b=vals.b;C=vals.C;
+    if(!(a>0&&b>0)) return {error:'I lati devono essere positivi.'};
+    if(!(C>0&&C<180)) return {error:'L\'angolo deve essere compreso tra 0° e 180°.'};
+    c = Math.sqrt(a*a+b*b-2*a*b*Math.cos(C*rad));
+    A = Math.acos((b*b+c*c-a*a)/(2*b*c))/rad;
+    B = 180-A-C;
+  } else if(mode==='asa'){
+    A=vals.A;B=vals.B;c=vals.c;
+    if(!(c>0)) return {error:'Il lato deve essere positivo.'};
+    C = 180-A-B;
+    if(!(A>0&&B>0&&C>0)) return {error:'La somma degli angoli deve essere inferiore a 180°.'};
+    a = c*Math.sin(A*rad)/Math.sin(C*rad);
+    b = c*Math.sin(B*rad)/Math.sin(C*rad);
+  } else if(mode==='aas'){
+    A=vals.A;B=vals.B;a=vals.a;
+    if(!(a>0)) return {error:'Il lato deve essere positivo.'};
+    C = 180-A-B;
+    if(!(A>0&&B>0&&C>0)) return {error:'La somma degli angoli deve essere inferiore a 180°.'};
+    b = a*Math.sin(B*rad)/Math.sin(A*rad);
+    c = a*Math.sin(C*rad)/Math.sin(A*rad);
+  } else if(mode==='ssa'){
+    a=vals.a;b=vals.b;A=vals.A;
+    if(!(a>0&&b>0)) return {error:'I lati devono essere positivi.'};
+    if(!(A>0&&A<180)) return {error:'L\'angolo deve essere compreso tra 0° e 180°.'};
+    const sinB = b*Math.sin(A*rad)/a;
+    if(sinB>1.0000001) return {error:'Nessuna soluzione: i dati non individuano alcun triangolo.'};
+    const B1 = Math.asin(Math.min(1,sinB))/rad;
+    const B2 = 180-B1;
+    const sols=[];
+    [B1,B2].forEach(Bx=>{
+      const Cx=180-A-Bx;
+      if(Cx>1e-9){
+        const cx = a*Math.sin(Cx*rad)/Math.sin(A*rad);
+        sols.push(triFromABC(a,b,cx,A,Bx,Cx));
+      }
+    });
+    // rimuove eventuali duplicati (caso limite B=90°)
+    if(sols.length===2 && Math.abs(sols[0].B-sols[1].B)<1e-6) sols.pop();
+    if(sols.length===0) return {error:'Nessuna soluzione valida trovata per i dati inseriti.'};
+    if(sols.length===1) return sols[0];
+    return {ambiguous:true, solutions:sols};
+  }
+  return triFromABC(a,b,c,A,B,C);
+}
+function triFromABC(a,b,c,A,B,C){
+  const s=(a+b+c)/2;
+  const areaSq = s*(s-a)*(s-b)*(s-c);
+  if(areaSq<=0) return {error:'Configurazione non valida (area nulla o negativa).'};
+  const area = Math.sqrt(areaSq);
+  return {A,B,C,a,b,c,area,perimeter:a+b+c,
+    ha:2*area/a, hb:2*area/b, hc:2*area/c,
+    inradius:area/s, circumradius:(a*b*c)/(4*area)};
+}
+function solveRightTriangle(known, vals){
+  const rad=Math.PI/180;
+  let a,b,c,A,B;
+  if(known==='ab'){
+    a=vals.a;b=vals.b;
+    if(!(a>0&&b>0)) return {error:'I cateti devono essere positivi.'};
+    c=Math.hypot(a,b); A=Math.atan2(a,b)/rad; B=90-A;
+  } else if(known==='ac'){
+    a=vals.a;c=vals.c;
+    if(!(a>0&&c>a)) return {error:'Deve essere: ipotenusa c > cateto a > 0.'};
+    b=Math.sqrt(c*c-a*a); A=Math.asin(a/c)/rad; B=90-A;
+  } else if(known==='aA'){
+    a=vals.a;A=vals.A;
+    if(!(a>0)) return {error:'Il cateto deve essere positivo.'};
+    if(!(A>0&&A<90)) return {error:'L\'angolo deve essere compreso tra 0° e 90°.'};
+    B=90-A; c=a/Math.sin(A*rad); b=a/Math.tan(A*rad);
+  } else if(known==='cA'){
+    c=vals.c;A=vals.A;
+    if(!(c>0)) return {error:'L\'ipotenusa deve essere positiva.'};
+    if(!(A>0&&A<90)) return {error:'L\'angolo deve essere compreso tra 0° e 90°.'};
+    B=90-A; a=c*Math.sin(A*rad); b=c*Math.cos(A*rad);
+  }
+  const area=a*b/2, perimeter=a+b+c;
+  const h=a*b/c, m=a*a/c, n=b*b/c;
+  return {A,B,C:90,a,b,c,area,perimeter,h,m,n,inradius:(a+b-c)/2,circumradius:c/2};
+}
+
+function fmtT(v,d=4){ return isFinite(v)?v.toFixed(d).replace(/\.?0+$/,''):'—'; }
+
+function triResultBlock(r, titlePrefix){
+  const rows = [
+    ['Angolo A (vertice A)', fmtT(r.A,3)+'°'], ['Angolo B (vertice B)', fmtT(r.B,3)+'°'], ['Angolo C (vertice C)', fmtT(r.C,3)+'°'],
+    ['Lato a (B—C, opposto ad A)', fmtT(r.a)], ['Lato b (C—A, opposto a B)', fmtT(r.b)], ['Lato c (A—B, opposto a C)', fmtT(r.c)],
+    ['Area', fmtT(r.area)], ['Perimetro', fmtT(r.perimeter)],
+  ];
+  if(r.ha!==undefined) rows.push(['Altezza su a', fmtT(r.ha)],['Altezza su b', fmtT(r.hb)],['Altezza su c', fmtT(r.hc)]);
+  if(r.h!==undefined) rows.push(['Altezza su ipotenusa', fmtT(r.h)],['Proiezione cateto a', fmtT(r.m)],['Proiezione cateto b', fmtT(r.n)]);
+  rows.push(['Raggio inscritto', fmtT(r.inradius)], ['Raggio circoscritto', fmtT(r.circumradius)]);
+  const grid = rows.map(([l,v])=>`<div class="mc"><div class="ml">${l}</div><div class="mv">${v}</div></div>`).join('');
+  return `${titlePrefix?`<div class="sol-title">${titlePrefix}</div>`:''}
+    <div class="svgwrap">${drawTriangleSVG(r.a,r.b,r.c,r.A,r.B,r.C)}</div>
+    <div class="results-grid2">${grid}</div>`;
+}
+function angleArc(cx,cy,p1,p2,r){
+  const a1=Math.atan2(p1.y-cy,p1.x-cx), a2=Math.atan2(p2.y-cy,p2.x-cx);
+  let diff=a2-a1;
+  while(diff<=-Math.PI) diff+=2*Math.PI;
+  while(diff>Math.PI) diff-=2*Math.PI;
+  const sweep=diff>0?1:0;
+  const x1=cx+r*Math.cos(a1), y1=cy+r*Math.sin(a1);
+  const x2=cx+r*Math.cos(a1+diff), y2=cy+r*Math.sin(a1+diff);
+  const mid=a1+diff/2;
+  return {path:`M${x1.toFixed(1)},${y1.toFixed(1)} A${r},${r} 0 0 ${sweep} ${x2.toFixed(1)},${y2.toFixed(1)}`,
+    lx:cx+(r+13)*Math.cos(mid), ly:cy+(r+13)*Math.sin(mid)};
+}
+function drawTriangleSVG(a,b,c,Adeg,Bdeg,Cdeg){
+  if(!(a>0&&b>0&&c>0)) return '';
+  const W=300,H=220,pad=44;
+  // B=(0,0) C=(a,0); A trovato da lati b=AC, c=AB
+  let Ax=(c*c+a*a-b*b)/(2*a);
+  let Ay=Math.sqrt(Math.max(0,c*c-Ax*Ax));
+  const xs=[0,a,Ax], ys=[0,0,Ay];
+  const minX=Math.min(...xs),maxX=Math.max(...xs),minY=0,maxY=Math.max(...ys);
+  const sx=(W-2*pad)/Math.max(maxX-minX,1e-6), sy=(H-2*pad)/Math.max(maxY-minY,1e-6);
+  const s=Math.min(sx,sy);
+  const tx=x=>pad+(x-minX)*s, ty=y=>H-pad-(y-minY)*s;
+  const B={x:tx(0),y:ty(0)}, C={x:tx(a),y:ty(0)}, A={x:tx(Ax),y:ty(Ay)};
+  const cxg=(A.x+B.x+C.x)/3, cyg=(A.y+B.y+C.y)/3;
+  // etichette lati: a=BC (opposto ad A), b=CA (opposto a B), c=AB (opposto a C)
+  const sideLbl=(P1,P2,letter,val)=>{
+    const mx=(P1.x+P2.x)/2, my=(P1.y+P2.y)/2;
+    let dx=mx-cxg, dy=my-cyg; const dl=Math.hypot(dx,dy)||1; dx/=dl; dy/=dl;
+    const lx=mx+dx*16, ly=my+dy*16;
+    return `<text x="${lx.toFixed(1)}" y="${ly.toFixed(1)}" font-family="DM Mono" font-size="11" fill="#4fc3f7" text-anchor="middle" dominant-baseline="middle">${letter}=${fmtT(val,3)}</text>`;
+  };
+  const arcR=20;
+  const arcA=angleArc(A.x,A.y,B,C,arcR), arcB=angleArc(B.x,B.y,C,A,arcR), arcC=angleArc(C.x,C.y,A,B,arcR);
+  const angLbl=(pos,val)=>`<text x="${pos.lx.toFixed(1)}" y="${pos.ly.toFixed(1)}" font-family="DM Mono" font-size="9.5" fill="#ffa726" text-anchor="middle" dominant-baseline="middle">${fmtT(val,1)}°</text>`;
+  return `<svg width="${W}" height="${H}" viewBox="0 0 ${W} ${H}">
+    <polygon points="${A.x},${A.y} ${B.x},${B.y} ${C.x},${C.y}" fill="rgba(79,195,247,.08)" stroke="#4fc3f7" stroke-width="1.6"/>
+    <path d="${arcA.path}" fill="none" stroke="#ffa726" stroke-width="1.3"/>
+    <path d="${arcB.path}" fill="none" stroke="#ffa726" stroke-width="1.3"/>
+    <path d="${arcC.path}" fill="none" stroke="#ffa726" stroke-width="1.3"/>
+    ${angLbl(arcA,Adeg)}${angLbl(arcB,Bdeg)}${angLbl(arcC,Cdeg)}
+    ${sideLbl(B,C,'a',a)}${sideLbl(C,A,'b',b)}${sideLbl(A,B,'c',c)}
+    <circle cx="${B.x}" cy="${B.y}" r="2.8" fill="#e8e9ec"/><circle cx="${C.x}" cy="${C.y}" r="2.8" fill="#e8e9ec"/><circle cx="${A.x}" cy="${A.y}" r="2.8" fill="#e8e9ec"/>
+    <text x="${B.x-9}" y="${B.y+13}" font-family="Barlow Condensed" font-size="13" font-weight="700" fill="#e8e9ec" text-anchor="middle">B</text>
+    <text x="${C.x+9}" y="${C.y+13}" font-family="Barlow Condensed" font-size="13" font-weight="700" fill="#e8e9ec" text-anchor="middle">C</text>
+    <text x="${A.x}" y="${A.y-12}" font-family="Barlow Condensed" font-size="13" font-weight="700" fill="#e8e9ec" text-anchor="middle">A</text>
+  </svg>`;
+}
+
+let LAST_TRI_RESULT=null;
+function solveTriAndRender(){
+  const out = document.getElementById('tri-output');
+  LAST_TRI_RESULT=null;
+  let r;
+  if(TRI_MODE==='right'){
+    const vals={}; RIGHT_KNOWN[RIGHT_KNOWN_K].fields.forEach(f=>vals[f.k]=triVal(f.k));
+    r = solveRightTriangle(RIGHT_KNOWN_K, vals);
+  } else {
+    const vals={}; TRI_MODES[TRI_MODE].fields.forEach(f=>vals[f.k]=triVal(f.k));
+    r = solveGeneralTriangle(TRI_MODE, vals);
+  }
+  if(!r || r.error){ out.innerHTML = `<div class="warnbox">${r?r.error:'Dati insufficienti.'}</div>`; return; }
+  if(r.ambiguous){
+    out.innerHTML = `<div class="infobox">Caso ambiguo (SSA): con i dati inseriti esistono due triangoli possibili. Sono mostrate entrambe le soluzioni.</div>`
+      + triResultBlock(r.solutions[0],'Soluzione 1')
+      + triResultBlock(r.solutions[1],'Soluzione 2');
+    LAST_TRI_RESULT=r;
+    return;
+  }
+  out.innerHTML = triResultBlock(r,'');
+  LAST_TRI_RESULT=r;
+}
+function copyTriSummary(btn){
+  if(!LAST_TRI_RESULT){ return; }
+  const fmt=r=>`Angoli: A=${fmtT(r.A,3)}°  B=${fmtT(r.B,3)}°  C=${fmtT(r.C,3)}°\nLati: a=${fmtT(r.a)}  b=${fmtT(r.b)}  c=${fmtT(r.c)}\nArea=${fmtT(r.area)}  Perimetro=${fmtT(r.perimeter)}\nRaggio inscritto=${fmtT(r.inradius)}  Raggio circoscritto=${fmtT(r.circumradius)}`;
+  let text = 'RISOLUTORE TRIANGOLI — riepilogo\n\n';
+  if(LAST_TRI_RESULT.ambiguous){
+    text += 'Caso ambiguo (SSA), due soluzioni:\n\nSoluzione 1:\n'+fmt(LAST_TRI_RESULT.solutions[0])+'\n\nSoluzione 2:\n'+fmt(LAST_TRI_RESULT.solutions[1]);
+  } else {
+    text += fmt(LAST_TRI_RESULT);
+  }
+  copyToClipboardBtn(text, btn);
+}
+mkTriModes(); renderTriInputs();
+
+/* ============================================================ GEOMETRIA */
+const GEO_GROUPS = { piane:'Figure piane', solidi:'Solidi' };
+const SHAPES = {
+  cerchio:{group:'piane',label:'Cerchio',desc:'A = π·r² · Perimetro = 2·π·r',fields:[{k:'r',l:'Raggio r'}],calc:v=>({'Area':Math.PI*v.r*v.r,'Circonferenza':2*Math.PI*v.r})},
+  settore:{group:'piane',label:'Settore circolare',desc:'A = π·r²·θ/360° · Arco = 2·π·r·θ/360°. Porzione di cerchio delimitata da due raggi e da un arco.',fields:[{k:'r',l:'Raggio r'},{k:'theta',l:'Angolo θ (°)'}],calc:v=>({'Area':Math.PI*v.r*v.r*v.theta/360,'Lunghezza arco':2*Math.PI*v.r*v.theta/360})},
+  rettangolo:{group:'piane',label:'Rettangolo',desc:'A = b·h · Perimetro = 2(b+h)',fields:[{k:'b',l:'Base b'},{k:'h',l:'Altezza h'}],calc:v=>({'Area':v.b*v.h,'Perimetro':2*(v.b+v.h)})},
+  triangolo:{group:'piane',label:'Triangolo (base×altezza)',desc:'A = b·h/2, dove h è l\'altezza relativa alla base b (distanza perpendicolare dal vertice opposto). Per il calcolo da 3 lati/angoli usa il tab "Risolutore Triangoli".',fields:[{k:'b',l:'Base b'},{k:'h',l:'Altezza h'}],calc:v=>({'Area':v.b*v.h/2})},
+  trapezio:{group:'piane',label:'Trapezio',desc:'A = (B+b)·h/2, dove B e b sono le basi (i due lati paralleli) e h la distanza tra esse.',fields:[{k:'B',l:'Base maggiore B'},{k:'b',l:'Base minore b'},{k:'h',l:'Altezza h'}],calc:v=>({'Area':(v.B+v.b)*v.h/2})},
+  parallelogramma:{group:'piane',label:'Parallelogramma',desc:'A = b·h, con h altezza perpendicolare alla base b (non il lato obliquo).',fields:[{k:'b',l:'Base b'},{k:'h',l:'Altezza h'}],calc:v=>({'Area':v.b*v.h})},
+  rombo:{group:'piane',label:'Rombo',desc:'A = d₁·d₂/2, prodotto delle due diagonali (perpendicolari tra loro) diviso 2.',fields:[{k:'d1',l:'Diagonale d1'},{k:'d2',l:'Diagonale d2'}],calc:v=>({'Area':v.d1*v.d2/2})},
+  poligono:{group:'piane',label:'Poligono regolare',desc:'A = n·l²/(4·tan(π/n)), valida per qualunque poligono regolare con n lati uguali e angoli uguali (es. n=6 → esagono).',fields:[{k:'n',l:'Numero lati n'},{k:'l',l:'Lato l'}],calc:v=>{const n=Math.round(v.n),l=v.l;return{'Area':(n*l*l)/(4*Math.tan(Math.PI/n)),'Perimetro':n*l};}},
+  ellisse:{group:'piane',label:'Ellisse',desc:'A = π·a·b, con a e b semiassi maggiore/minore. Il perimetro non ha formula esatta: si usa l\'approssimazione di Ramanujan (errore trascurabile).',fields:[{k:'a',l:'Semiasse a'},{k:'b',l:'Semiasse b'}],calc:v=>({'Area':Math.PI*v.a*v.b,'Perimetro (approssimato)':Math.PI*(3*(v.a+v.b)-Math.sqrt((3*v.a+v.b)*(v.a+3*v.b)))})},
+  sfera:{group:'solidi',label:'Sfera',desc:'V = 4/3·π·r³ · Superficie = 4·π·r²',fields:[{k:'r',l:'Raggio r'}],calc:v=>({'Volume':4/3*Math.PI*v.r**3,'Superficie':4*Math.PI*v.r*v.r})},
+  cubo:{group:'solidi',label:'Cubo',desc:'V = l³ · Superficie = 6·l² (6 facce quadrate)',fields:[{k:'l',l:'Lato l'}],calc:v=>({'Volume':v.l**3,'Superficie':6*v.l*v.l})},
+  parallelepipedo:{group:'solidi',label:'Parallelepipedo',desc:'V = a·b·c · Superficie = 2(ab+bc+ac), solido con 6 facce rettangolari.',fields:[{k:'a',l:'Lato a'},{k:'b',l:'Lato b'},{k:'c',l:'Lato c'}],calc:v=>({'Volume':v.a*v.b*v.c,'Superficie':2*(v.a*v.b+v.b*v.c+v.a*v.c)})},
+  cilindro:{group:'solidi',label:'Cilindro',desc:'V = π·r²·h · Superficie totale = 2πr(r+h) (include le due basi circolari).',fields:[{k:'r',l:'Raggio r'},{k:'h',l:'Altezza h'}],calc:v=>({'Volume':Math.PI*v.r*v.r*v.h,'Superficie totale':2*Math.PI*v.r*(v.r+v.h)})},
+  cono:{group:'solidi',label:'Cono',desc:'V = π·r²·h/3 · Superficie laterale = π·r·l, con l = √(r²+h²) generatrice (apotema) del cono.',fields:[{k:'r',l:'Raggio r'},{k:'h',l:'Altezza h'}],calc:v=>{const l=Math.hypot(v.r,v.h);return{'Volume':Math.PI*v.r*v.r*v.h/3,'Superficie laterale':Math.PI*v.r*l,'Superficie totale':Math.PI*v.r*(v.r+l)};}},
+  tronco_cono:{group:'solidi',label:'Tronco di cono',desc:'Cono privato della punta con un taglio parallelo alla base. R e r sono i raggi delle due basi, h l\'altezza tra le basi.',fields:[{k:'R',l:'Raggio maggiore R'},{k:'r',l:'Raggio minore r'},{k:'h',l:'Altezza h'}],calc:v=>{const l=Math.hypot(v.R-v.r,v.h);return{'Volume':Math.PI*v.h*(v.R*v.R+v.r*v.r+v.R*v.r)/3,'Superficie laterale':Math.PI*(v.R+v.r)*l,'Superficie totale':Math.PI*(v.R*v.R+v.r*v.r+(v.R+v.r)*l)};}},
+  piramide:{group:'solidi',label:'Piramide regolare',desc:'V = A_base·h/3, con base poligono regolare di n lati e h altezza (distanza dal vertice al piano di base).',fields:[{k:'n',l:'Numero lati base n'},{k:'l',l:'Lato base l'},{k:'h',l:'Altezza h'}],calc:v=>{const n=Math.round(v.n),l=v.l,h=v.h;const areaBase=(n*l*l)/(4*Math.tan(Math.PI/n));const apotBase=l/(2*Math.tan(Math.PI/n));const apotLat=Math.hypot(h,apotBase);const supLat=n*l*apotLat/2;return{'Volume':areaBase*h/3,'Area di base':areaBase,'Superficie laterale':supLat,'Superficie totale':areaBase+supLat};}},
+  prisma:{group:'solidi',label:'Prisma regolare',desc:'V = A_base·h, con base poligono regolare di n lati e h altezza (distanza tra le due basi).',fields:[{k:'n',l:'Numero lati base n'},{k:'l',l:'Lato base l'},{k:'h',l:'Altezza h'}],calc:v=>{const n=Math.round(v.n),l=v.l,h=v.h;const areaBase=(n*l*l)/(4*Math.tan(Math.PI/n));const perimBase=n*l;return{'Volume':areaBase*h,'Area di base':areaBase,'Superficie laterale':perimBase*h,'Superficie totale':2*areaBase+perimBase*h};}},
+  toro:{group:'solidi',label:'Toro',desc:'V = 2π²·R·r² · Superficie = 4π²·R·r, dove R è il raggio dal centro del toro al centro del tubo e r il raggio del tubo (ciambella).',fields:[{k:'R',l:'Raggio maggiore R'},{k:'r',l:'Raggio minore r'}],calc:v=>({'Volume':2*Math.PI*Math.PI*v.R*v.r*v.r,'Superficie':4*Math.PI*Math.PI*v.R*v.r})},
+};
+let GEO_GROUP='piane', GEO_SHAPE='cerchio';
+function mkGeoGroups(){
+  document.getElementById('geo-groups').innerHTML = Object.entries(GEO_GROUPS).map(([k,l])=>
+    `<button class="chip${k===GEO_GROUP?' on':''}" onclick="setGeoGroup('${k}')">${l}</button>`).join('');
+}
+function setGeoGroup(g){
+  GEO_GROUP=g;
+  const first = Object.entries(SHAPES).find(([k,s])=>s.group===g);
+  GEO_SHAPE = first ? first[0] : GEO_SHAPE;
+  mkGeoGroups(); mkGeoShapes(); renderGeoInputs();
+}
+function mkGeoShapes(){
+  document.getElementById('geo-shapes').innerHTML = Object.entries(SHAPES).filter(([k,s])=>s.group===GEO_GROUP).map(([k,s])=>
+    `<button class="chip${k===GEO_SHAPE?' on':''}" onclick="setGeoShape('${k}')">${s.label}</button>`).join('');
+}
+function setGeoShape(k){ GEO_SHAPE=k; mkGeoShapes(); renderGeoInputs(); }
+function renderGeoInputs(){
+  const shape = SHAPES[GEO_SHAPE];
+  document.getElementById('geo-shape-lbl').textContent = shape.label;
+  document.getElementById('geo-shape-desc').textContent = shape.desc || '';
+  document.getElementById('geo-inputs').innerHTML = shape.fields.map(f=>
+    `<div class="field"><div class="flabel">${f.l}</div><input type="number" class="finput" id="gf-${f.k}" value="${f.k==='n'?6:f.k==='theta'?90:1}" min="0" oninput="renderGeoResults()"></div>`).join('');
+  renderGeoResults();
+}
+let LAST_GEO_RESULT=null;
+function renderGeoResults(){
+  const shape = SHAPES[GEO_SHAPE];
+  const vals={}; let ok=true;
+  shape.fields.forEach(f=>{ const v=parseFloat(document.getElementById('gf-'+f.k).value); vals[f.k]=v; if(isNaN(v)||v<0) ok=false; if(f.k==='n'&&v<3) ok=false; });
+  const grid = document.getElementById('geo-results');
+  if(!ok){ grid.innerHTML='<div class="fempty">Inserisci valori validi (positivi).</div>'; LAST_GEO_RESULT=null; return; }
+  const res = shape.calc(vals);
+  grid.innerHTML = Object.entries(res).map(([l,v],i)=>
+    `<div class="mc${i===0?' hi':''}"><div class="ml">${l}</div><div class="mv">${fmtT(v,4)}</div></div>`).join('');
+  LAST_GEO_RESULT = {shape:shape.label, vals, res};
+}
+function copyGeoSummary(btn){
+  if(!LAST_GEO_RESULT) return;
+  const {shape,vals,res} = LAST_GEO_RESULT;
+  let text = `GEOMETRIA — ${shape}\n\nDati:\n` + Object.entries(vals).map(([k,v])=>`  ${k} = ${v}`).join('\n');
+  text += '\n\nRisultati:\n' + Object.entries(res).map(([l,v])=>`  ${l} = ${fmtT(v,4)}`).join('\n');
+  copyToClipboardBtn(text, btn);
+}
+mkGeoGroups(); mkGeoShapes(); renderGeoInputs();
+
+/* ============================================================ COSTANTI FISICHE E DI INGEGNERIA */
+const CONSTANTS = {
+  fisiche:{label:'Costanti fisiche generali',icon:'🌌',desc:'Costanti universali di uso ricorrente in fisica e meccanica.',items:[
+    {n:'Accelerazione di gravità standard',sym:'g',val:'9.80665',unit:'m/s²'},
+    {n:'Costante di gravitazione universale',sym:'G',val:'6.674×10⁻¹¹',unit:'N·m²/kg²'},
+    {n:'Costante universale dei gas',sym:'R',val:'8.314',unit:'J/(mol·K)'},
+    {n:'Numero di Avogadro',sym:'Nₐ',val:'6.022×10²³',unit:'1/mol'},
+    {n:'Costante di Boltzmann',sym:'k',val:'1.380649×10⁻²³',unit:'J/K'},
+    {n:'Velocità della luce nel vuoto',sym:'c',val:'299792458',unit:'m/s'},
+    {n:'Pressione atmosferica standard',sym:'atm',val:'101325',unit:'Pa'},
+    {n:'Zero assoluto',sym:'0 K',val:'−273.15',unit:'°C'},
+  ]},
+  elastici:{label:'Materiali — moduli elastici',icon:'🔩',desc:'Valori tipici indicativi. Per progettazione strutturale fare sempre riferimento alla scheda tecnica del materiale/norma specifica.',items:[
+    {n:'Acciaio da costruzione — E',sym:'E',val:'206000',unit:'MPa'},
+    {n:'Acciaio da costruzione — G',sym:'G',val:'80000',unit:'MPa'},
+    {n:'Acciaio inox — E',sym:'E',val:'193000',unit:'MPa'},
+    {n:'Alluminio (leghe) — E',sym:'E',val:'69000',unit:'MPa'},
+    {n:'Alluminio (leghe) — G',sym:'G',val:'26000',unit:'MPa'},
+    {n:'Rame — E',sym:'E',val:'110000',unit:'MPa'},
+    {n:'Ottone — E',sym:'E',val:'100000',unit:'MPa'},
+    {n:'Titanio (Ti-6Al-4V) — E',sym:'E',val:'110000',unit:'MPa'},
+    {n:'Ghisa grigia — E',sym:'E',val:'100000',unit:'MPa'},
+    {n:'Bronzo — E',sym:'E',val:'100000',unit:'MPa'},
+    {n:'Coefficiente di Poisson (acciaio)',sym:'ν',val:'0.30',unit:'—'},
+    {n:'Coefficiente di Poisson (alluminio)',sym:'ν',val:'0.33',unit:'—'},
+  ]},
+  densita_mat:{label:'Materiali — densità',icon:'⬤',desc:'Densità di riferimento a temperatura ambiente.',items:[
+    {n:'Acciaio',sym:'ρ',val:'7850',unit:'kg/m³'},
+    {n:'Acciaio inox',sym:'ρ',val:'8000',unit:'kg/m³'},
+    {n:'Ghisa grigia',sym:'ρ',val:'7200',unit:'kg/m³'},
+    {n:'Alluminio',sym:'ρ',val:'2700',unit:'kg/m³'},
+    {n:'Rame',sym:'ρ',val:'8960',unit:'kg/m³'},
+    {n:'Ottone',sym:'ρ',val:'8500',unit:'kg/m³'},
+    {n:'Bronzo',sym:'ρ',val:'8800',unit:'kg/m³'},
+    {n:'Titanio',sym:'ρ',val:'4500',unit:'kg/m³'},
+    {n:'Piombo',sym:'ρ',val:'11340',unit:'kg/m³'},
+    {n:'Zinco',sym:'ρ',val:'7140',unit:'kg/m³'},
+    {n:'Vetro',sym:'ρ',val:'2500',unit:'kg/m³'},
+    {n:'Calcestruzzo',sym:'ρ',val:'2400',unit:'kg/m³'},
+    {n:'Legno (pino/abete)',sym:'ρ',val:'500',unit:'kg/m³'},
+    {n:'Acqua (4°C)',sym:'ρ',val:'1000',unit:'kg/m³'},
+    {n:'Aria (15°C, 1 atm)',sym:'ρ',val:'1.225',unit:'kg/m³'},
+  ]},
+  termiche:{label:'Materiali — proprietà termiche',icon:'🌡️',desc:'Coefficiente di dilatazione lineare α e calore specifico c a temperatura ambiente.',items:[
+    {n:'Acciaio — α',sym:'α',val:'12×10⁻⁶',unit:'1/K'},
+    {n:'Alluminio — α',sym:'α',val:'23×10⁻⁶',unit:'1/K'},
+    {n:'Rame — α',sym:'α',val:'17×10⁻⁶',unit:'1/K'},
+    {n:'Ottone — α',sym:'α',val:'19×10⁻⁶',unit:'1/K'},
+    {n:'Titanio — α',sym:'α',val:'8.6×10⁻⁶',unit:'1/K'},
+    {n:'Vetro — α',sym:'α',val:'9×10⁻⁶',unit:'1/K'},
+    {n:'Acciaio — calore specifico c',sym:'c',val:'460',unit:'J/(kg·K)'},
+    {n:'Alluminio — calore specifico c',sym:'c',val:'900',unit:'J/(kg·K)'},
+    {n:'Rame — calore specifico c',sym:'c',val:'385',unit:'J/(kg·K)'},
+    {n:'Acqua — calore specifico c',sym:'c',val:'4186',unit:'J/(kg·K)'},
+    {n:'Aria — calore specifico c',sym:'c',val:'1005',unit:'J/(kg·K)'},
+    {n:'Acciaio — conducibilità termica k',sym:'k',val:'50',unit:'W/(m·K)'},
+    {n:'Alluminio — conducibilità termica k',sym:'k',val:'237',unit:'W/(m·K)'},
+    {n:'Rame — conducibilità termica k',sym:'k',val:'400',unit:'W/(m·K)'},
+  ]},
+  attrito:{label:'Coefficienti di attrito tipici',icon:'⛰️',desc:'Valori indicativi (statico/dinamico), fortemente dipendenti da finitura superficiale, lubrificazione e condizioni ambientali: verificare sempre sperimentalmente per applicazioni critiche.',items:[
+    {n:'Acciaio su acciaio (a secco)',sym:'μs/μd',val:'0.6 / 0.4',unit:'—'},
+    {n:'Acciaio su acciaio (lubrificato)',sym:'μs/μd',val:'0.1 / 0.05',unit:'—'},
+    {n:'Alluminio su acciaio',sym:'μs',val:'0.45–0.6',unit:'—'},
+    {n:'Ghisa su ghisa',sym:'μs',val:'0.15–0.2 (lubr.)',unit:'—'},
+    {n:'Gomma su asfalto (asciutto)',sym:'μs',val:'0.7–0.9',unit:'—'},
+    {n:'Teflon (PTFE) su acciaio',sym:'μs',val:'0.04',unit:'—'},
+    {n:'Legno su legno',sym:'μs',val:'0.25–0.5',unit:'—'},
+    {n:'Cuscinetti volventi (rotolamento)',sym:'μ',val:'0.001–0.005',unit:'—'},
+  ]},
+};
+let CONST_CAT='fisiche';
+function mkConstCats(){
+  document.getElementById('const-cats').innerHTML = Object.entries(CONSTANTS).map(([k,c])=>
+    `<button class="chip${k===CONST_CAT?' on':''}" onclick="setConstCat('${k}')">${c.icon} ${c.label}</button>`).join('');
+}
+function setConstCat(k){
+  CONST_CAT=k; mkConstCats();
+  const c = CONSTANTS[k];
+  document.getElementById('const-catlbl').textContent = c.label;
+  document.getElementById('const-catdesc').textContent = c.desc;
+  document.getElementById('const-results').innerHTML = c.items.map((it,i)=>
+    `<div class="mc"><div class="ml">${it.n} (${it.sym})</div><div class="mv">${it.val}</div><div class="mu">${it.unit}</div></div>`).join('');
+}
+mkConstCats(); setConstCat('fisiche');
+
+/* ============================================================ STRUMENTI */
+const TOOLS_MENU = { stat:'📊 Statistica di processo (Cp/Cpk)', sec:'📐 Sezioni composte' };
+let TOOLS_CUR='stat';
+function mkToolsMenu(){
+  document.getElementById('tools-menu').innerHTML = Object.entries(TOOLS_MENU).map(([k,l])=>
+    `<button class="chip${k===TOOLS_CUR?' on':''}" onclick="setTool('${k}')">${l}</button>`).join('');
+}
+function setTool(k){
+  TOOLS_CUR=k; mkToolsMenu();
+  document.getElementById('toolbox-stat').classList.toggle('show',k==='stat');
+  document.getElementById('toolbox-sec').classList.toggle('show',k==='sec');
+}
+mkToolsMenu();
+
+/* --- Statistica di processo: Cp / Cpk --- */
+function renderStatCalc(){
+  const raw = document.getElementById('st-data').value;
+  const usl = parseFloat(document.getElementById('st-usl').value);
+  const lsl = parseFloat(document.getElementById('st-lsl').value);
+  const out = document.getElementById('st-out'), warn = document.getElementById('st-warn');
+  const data = raw.split(/[\s,;]+/).map(s=>parseFloat(s)).filter(v=>!isNaN(v));
+  if(data.length<2){ out.innerHTML=''; warn.innerHTML='<div class="warnbox">Inserisci almeno 2 misure numeriche valide.</div>'; return; }
+  if(isNaN(usl)||isNaN(lsl)||usl<=lsl){ out.innerHTML=''; warn.innerHTML='<div class="warnbox">USL deve essere maggiore di LSL.</div>'; return; }
+  warn.innerHTML='';
+  const n = data.length;
+  const mean = data.reduce((a,b)=>a+b,0)/n;
+  const variance = data.reduce((a,b)=>a+(b-mean)*(b-mean),0)/(n-1);
+  const sd = Math.sqrt(variance);
+  const min = Math.min(...data), max = Math.max(...data), range = max-min;
+  const cp = sd>0 ? (usl-lsl)/(6*sd) : Infinity;
+  const cpu = sd>0 ? (usl-mean)/(3*sd) : Infinity;
+  const cpl = sd>0 ? (mean-lsl)/(3*sd) : Infinity;
+  const cpk = Math.min(cpu,cpl);
+  const judge = cpk>=1.67?'Alta capacità':cpk>=1.33?'Adeguato':cpk>=1.0?'Marginale':'Non adeguato';
+  const judgeColor = cpk>=1.33?'hi':'';
+  out.innerHTML = [
+    ['N misure', n, ''], ['Media x̄', fmtT(mean,5), ''], ['Deviazione std. s', fmtT(sd,5), ''],
+    ['Minimo', fmtT(min,5), ''], ['Massimo', fmtT(max,5), ''], ['Campo (range)', fmtT(range,5), ''],
+    ['Cp', fmtT(cp,3), ''], ['Cpu', fmtT(cpu,3), ''], ['Cpl', fmtT(cpl,3), ''],
+    ['Cpk', fmtT(cpk,3), judge],
+  ].map(([l,v,sub])=>`<div class="mc${l==='Cpk'?' '+judgeColor:''}"><div class="ml">${l}</div><div class="mv">${v}</div>${sub?`<div class="mu">${sub}</div>`:''}</div>`).join('');
+}
+renderStatCalc();
+
+/* --- Sezioni composte: baricentro e momenti d'inerzia --- */
+let SEC_ROWS = [
+  {b:100, h:10, xc:50, yc:95},
+  {b:10,  h:80, xc:5,  yc:40},
+];
+function secAddRow(){ SEC_ROWS.push({b:20,h:20,xc:0,yc:0}); renderSecTable(); }
+function secDelRow(i){ if(SEC_ROWS.length<=1) return; SEC_ROWS.splice(i,1); renderSecTable(); }
+function secUpdate(i,k,v){ SEC_ROWS[i][k]=parseFloat(v)||0; renderSecResults(); }
+function renderSecTable(){
+  document.getElementById('sec-table').innerHTML = SEC_ROWS.map((r,i)=>`
+    <div class="sec-row">
+      <input type="number" class="finput" value="${r.b}" oninput="secUpdate(${i},'b',this.value)">
+      <input type="number" class="finput" value="${r.h}" oninput="secUpdate(${i},'h',this.value)">
+      <input type="number" class="finput" value="${r.xc}" oninput="secUpdate(${i},'xc',this.value)">
+      <input type="number" class="finput" value="${r.yc}" oninput="secUpdate(${i},'yc',this.value)">
+      <button class="sec-del" onclick="secDelRow(${i})" title="Rimuovi rettangolo">✕</button>
+    </div>`).join('');
+  renderSecResults();
+}
+let LAST_SEC_RESULT=null;
+function renderSecResults(){
+  const out = document.getElementById('sec-out');
+  const rows = SEC_ROWS.filter(r=>r.b>0 && r.h>0);
+  if(!rows.length){ out.innerHTML='<div class="fempty">Aggiungi almeno un rettangolo con base e altezza positive.</div>'; LAST_SEC_RESULT=null; return; }
+  let A=0, Sx=0, Sy=0;
+  rows.forEach(r=>{ const a=r.b*r.h; A+=a; Sx+=a*r.yc; Sy+=a*r.xc; });
+  const xg = Sy/A, yg = Sx/A;
+  let Ix=0, Iy=0;
+  rows.forEach(r=>{
+    const a=r.b*r.h;
+    const ixLocal = r.b*Math.pow(r.h,3)/12, iyLocal = r.h*Math.pow(r.b,3)/12;
+    Ix += ixLocal + a*Math.pow(r.yc-yg,2);
+    Iy += iyLocal + a*Math.pow(r.xc-xg,2);
+  });
+  const rhoX = Math.sqrt(Ix/A), rhoY = Math.sqrt(Iy/A);
+  const res = {'Area totale A':A,'Baricentro xg':xg,'Baricentro yg':yg,'Momento inerzia Ix':Ix,'Momento inerzia Iy':Iy,'Raggio giratore ρx':rhoX,'Raggio giratore ρy':rhoY};
+  out.innerHTML = Object.entries(res).map(([l,v],i)=>`<div class="mc${i<3?' hi':''}"><div class="ml">${l}</div><div class="mv">${fmtT(v,4)}</div></div>`).join('');
+  LAST_SEC_RESULT = {rows:JSON.parse(JSON.stringify(rows)), res};
+}
+function copySecSummary(btn){
+  if(!LAST_SEC_RESULT) return;
+  let text = 'SEZIONI COMPOSTE — riepilogo\n\nRettangoli (b, h, xc, yc):\n';
+  LAST_SEC_RESULT.rows.forEach((r,i)=>{ text += `  #${i+1}: b=${r.b}  h=${r.h}  xc=${r.xc}  yc=${r.yc}\n`; });
+  text += '\nRisultati:\n' + Object.entries(LAST_SEC_RESULT.res).map(([l,v])=>`  ${l} = ${fmtT(v,4)}`).join('\n');
+  copyToClipboardBtn(text, btn);
+}
+renderSecTable();
+
+/* ============================================================ RICERCA GLOBALE */
+function globalSearchIndex(q){
+  const items=[];
+  Object.entries(FORMULE).forEach(([k,c])=>{
+    c.items.forEach(it=>{
+      items.push({type:'Formula',tag:c.label,name:it.n,extra:it.f+' '+(it.v||'')+' '+(it.note||''),
+        action:()=>{showTab('form');setFormCat(k);const s=document.getElementById('form-search');s.value=it.n;renderFormulas();}});
+    });
+  });
+  Object.entries(CONV_CATS).forEach(([k,c])=>{
+    items.push({type:'Convertitore',tag:'Unità di misura',name:c.label,extra:Object.values(c.units).map(u=>u.l).join(', '),
+      action:()=>{showTab('conv');setConvCat(k);}});
+  });
+  items.push({type:'Convertitore',tag:'Unità di misura',name:'Temperatura',extra:'Celsius Kelvin Fahrenheit Rankine',
+    action:()=>{showTab('conv');setConvCat('temperatura');}});
+  Object.entries(CONSTANTS).forEach(([k,c])=>{
+    c.items.forEach(it=>{
+      items.push({type:'Costante',tag:c.label,name:it.n,extra:it.val+' '+it.unit,
+        action:()=>{showTab('const');setConstCat(k);}});
+    });
+  });
+  items.push({type:'Strumento',tag:'Strumenti',name:'Statistica di processo (Cp/Cpk)',extra:'capacità processo media deviazione standard tolleranza',
+    action:()=>{showTab('tools');setTool('stat');}});
+  items.push({type:'Strumento',tag:'Strumenti',name:'Sezioni composte',extra:'baricentro momento inerzia rettangoli L T C',
+    action:()=>{showTab('tools');setTool('sec');}});
+  items.push({type:'Calcolatore',tag:'Trigonometria',name:'Seno coseno tangente cotangente secante cosecante',extra:'cerchio goniometrico',
+    action:()=>{showTab('trig');}});
+  items.push({type:'Calcolatore',tag:'Triangoli',name:'Risolutore triangoli SSS SAS ASA AAS SSA rettangolo',extra:'lati angoli vertici',
+    action:()=>{showTab('tri');}});
+  items.push({type:'Calcolatore',tag:'Geometria',name:'Aree e volumi figure piane e solidi',extra:'cerchio sfera cono cilindro piramide prisma',
+    action:()=>{showTab('geo');}});
+  if(!q) return [];
+  const ql=q.toLowerCase();
+  return items.filter(it=>(it.name+' '+it.extra+' '+it.tag).toLowerCase().includes(ql)).slice(0,20);
+}
+function renderGlobalSearch(){
+  const q = document.getElementById('gsearch').value.trim();
+  const box = document.getElementById('gsearch-results');
+  if(!q){ box.classList.remove('show'); box.innerHTML=''; return; }
+  const results = globalSearchIndex(q);
+  window.__gsResults = results;
+  box.innerHTML = results.length ? results.map((it,i)=>
+    `<div class="gsr-item" onmousedown="event.preventDefault();runGlobalSearchAction(${i})"><div class="gsr-tag">${it.type} · ${it.tag}</div><div class="gsr-name">${it.name}</div></div>`).join('')
+    : '<div class="gsr-item" style="color:var(--dim);cursor:default">Nessun risultato.</div>';
+  box.classList.add('show');
+}
+function runGlobalSearchAction(i){
+  const it = window.__gsResults && window.__gsResults[i];
+  if(!it) return;
+  it.action();
+  document.getElementById('gsearch-results').classList.remove('show');
+  document.getElementById('gsearch').value='';
+}
+
+/* ============================================================ RIPRISTINO ULTIMO TAB */
+(function initLastTab(){
+  let t='conv';
+  try{ const s=localStorage.getItem('fc_lastTab'); if(s && TAB_KEYS.includes(s)) t=s; }catch(e){}
+  showTab(t);
+})();
+</script>
+</body>
+</html>
