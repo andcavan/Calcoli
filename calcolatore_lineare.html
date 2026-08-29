@@ -7,25 +7,15 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@300;400;500&family=Barlow+Condensed:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<link rel="stylesheet" href="theme.css">
 <style>
-:root{
-  --bg:#0e0f11;--bg1:#141519;--bg2:#1c1d23;--bg3:#23252d;
-  --border:rgba(255,255,255,.07);--border2:rgba(255,255,255,.13);
-  --text:#e8e9ec;--muted:#7a7d8a;--dim:#4a4d5a;
-  --acc:#4fc3f7;--acc2:#0288d1;
-  --up:#66bb6a;--dn:#ef5350;--amber:#ffa726;--violet:#b39ddb;
-  --mono:'DM Mono',monospace;--cond:'Barlow Condensed',sans-serif;
-}
-*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+
 html{background:var(--bg);color:var(--text);font-family:var(--mono);font-size:13px}
 body{min-height:100vh}
 
 /* HEADER */
 .header{border-bottom:1px solid var(--border);padding:11px 20px;display:flex;align-items:center;gap:12px;flex-wrap:wrap}
-.header h1{font-family:var(--cond);font-size:20px;font-weight:700;letter-spacing:.04em;text-transform:uppercase}
-.sub{font-size:10px;color:var(--muted);letter-spacing:.1em;text-transform:uppercase;flex:1}
-.dot{width:7px;height:7px;border-radius:50%;background:var(--acc);display:inline-block;margin-right:6px;animation:pulse 2s ease-in-out infinite}
-@keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
+
 .inc-strip{display:flex;align-items:center;gap:3px;background:var(--bg2);border:1px solid var(--border2);border-radius:6px;padding:3px}
 .inc-lbl{font-size:9px;color:var(--dim);text-transform:uppercase;letter-spacing:.1em;padding:0 5px 0 3px;white-space:nowrap}
 .inc-btn{font-family:var(--mono);font-size:11px;padding:3px 9px;border:1px solid transparent;border-radius:4px;background:transparent;color:var(--muted);cursor:pointer;transition:all .12s}
@@ -38,11 +28,10 @@ body{min-height:100vh}
 .panel{background:var(--bg2);border:1px solid var(--border2);border-radius:8px;padding:10px 11px}
 
 .stitle{font-family:var(--cond);font-size:10px;font-weight:600;letter-spacing:.17em;color:var(--muted);text-transform:uppercase;margin-bottom:8px;display:flex;align-items:center;gap:6px}
-.stitle::after{content:'';flex:1;height:1px;background:var(--border)}
 
 /* FIELD */
-.field{margin-bottom:8px}.field:last-child{margin-bottom:0}
-.fhdr{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:4px}
+.field{margin-bottom:8px}
+
 .flabel{color:var(--muted);font-size:11px;letter-spacing:.03em}
 .fval{color:var(--acc);font-size:12px;font-weight:500;min-width:74px;text-align:right;font-family:var(--mono)}
 /* known input fields in solve modes */
@@ -54,24 +43,11 @@ body{min-height:100vh}
 .field.derived .numinput{opacity:.3;pointer-events:none}
 .field.derived .arr{opacity:.2;pointer-events:none;cursor:default}
 
-.srow{display:flex;align-items:center;gap:4px}
-.arr{flex-shrink:0;width:25px;height:25px;display:flex;align-items:center;justify-content:center;background:var(--bg2);border:1px solid var(--border2);border-radius:5px;cursor:pointer;color:var(--muted);font-size:10px;transition:all .12s;user-select:none;-webkit-user-select:none}
-.arr:hover{border-color:var(--acc);color:var(--acc);background:rgba(79,195,247,.08)}
-.arr:active{transform:scale(.88)}
-.arr.held{border-color:var(--acc);color:var(--acc);background:rgba(79,195,247,.18)}
-.numinput{flex:1;height:25px;background:var(--bg3);border:1px solid var(--border2);border-radius:5px;color:var(--acc);font-family:var(--mono);font-size:12px;font-weight:500;text-align:center;outline:none;padding:0 4px;min-width:0;transition:border-color .12s}
-.numinput:focus{border-color:var(--acc);background:var(--bg2)}
-.numinput:hover{border-color:rgba(79,195,247,.4)}
 /* remove number spinners */
-.numinput::-webkit-outer-spin-button,.numinput::-webkit-inner-spin-button{-webkit-appearance:none;margin:0}
-.numinput[type=number]{-moz-appearance:textfield}
 
 /* PROFILE CHIPS */
 .pgrid{display:grid;grid-template-columns:repeat(5,1fr);gap:4px;margin-bottom:6px}
-.pchip{border:1px solid var(--border2);border-radius:5px;padding:5px 2px 4px;cursor:pointer;text-align:center;background:transparent;color:var(--dim);transition:all .15s}
-.pchip:hover{border-color:var(--acc2);color:var(--muted);background:var(--bg2)}
-.pchip.on{border-color:var(--acc);background:rgba(79,195,247,.1);color:var(--acc)}
-.pchip svg{display:block;margin:0 auto}
+
 .pclbl{font-size:8px;display:block;margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-family:var(--cond);font-weight:500;letter-spacing:.04em}
 .pdesc{font-size:10px;color:var(--dim);min-height:20px;line-height:1.4;margin-bottom:6px}
 
@@ -80,10 +56,6 @@ body{min-height:100vh}
 ═══════════════════════════════════════════ */
 .mode-panel{}
 .mode-grid{display:grid;grid-template-columns:1fr 1fr;gap:4px}
-.mmode-btn{border:1px solid var(--border2);border-radius:6px;padding:6px 5px;cursor:pointer;background:transparent;color:var(--dim);font-family:var(--cond);font-size:10px;font-weight:600;letter-spacing:.05em;text-transform:uppercase;transition:all .14s;text-align:center;line-height:1.3}
-.mmode-btn:hover{background:var(--bg3);color:var(--muted)}
-.mmode-btn.on{border-color:var(--acc);background:rgba(79,195,247,.12);color:var(--acc)}
-.mmode-btn .mm-sub{font-size:8.5px;display:block;opacity:.7;margin-top:1.5px;font-weight:400;letter-spacing:.02em;font-family:var(--mono);text-transform:none}
 
 /* Constraint badge */
 .cbadge{display:inline-flex;align-items:center;gap:4px;font-size:9px;font-family:var(--cond);font-weight:600;letter-spacing:.05em;text-transform:uppercase;padding:3px 7px;border-radius:3px;margin-bottom:7px}
@@ -102,34 +74,23 @@ body{min-height:100vh}
 .ssc-u{font-size:10px;color:rgba(79,195,247,.55);margin-left:3px}
 
 /* warning box */
-.warnbox{background:rgba(239,83,80,.08);border:1px solid rgba(239,83,80,.25);border-radius:6px;padding:7px 11px;font-size:11px;color:#ef9a9a;display:none;margin-top:6px;line-height:1.4}
-.warnbox.show{display:block}
 
 /* INCLINAZIONE */
 .inc-section{}
 .dir-toggle{display:grid;grid-template-columns:1fr 1fr;gap:4px;margin-bottom:9px}
-.dir-btn{display:flex;align-items:center;justify-content:center;gap:5px;padding:6px 4px;border:1px solid var(--border2);border-radius:6px;cursor:pointer;background:transparent;color:var(--muted);font-family:var(--cond);font-size:11px;font-weight:600;letter-spacing:.05em;text-transform:uppercase;transition:all .14s}
-.dir-btn:hover{background:var(--bg3)}
-.dir-btn.up.on{border-color:var(--up);background:rgba(102,187,106,.12);color:var(--up)}
-.dir-btn.dn.on{border-color:var(--dn);background:rgba(239,83,80,.12);color:var(--dn)}
+
 .diag-wrap{display:flex;justify-content:center;margin-bottom:8px}
 .ang-lbl{text-anchor:middle;dominant-baseline:middle;font-family:'DM Mono',monospace;font-size:11px;fill:#4fc3f7;font-weight:500}
 .irow{display:flex;gap:4px;flex-wrap:wrap}
-.ichip{flex:1;min-width:58px;background:var(--bg3);border:1px solid var(--border);border-radius:4px;padding:4px 4px;text-align:center}
-.ichip .il{font-size:9px;color:var(--dim);text-transform:uppercase;letter-spacing:.04em;font-family:var(--cond);margin-bottom:1px}
-.ichip .iv{font-size:12px;font-weight:500;color:var(--text)}
-.ichip .iu{font-size:9px;color:var(--dim);margin-left:1px}
 
 /* MAIN */
 .main{padding:10px 13px;display:flex;flex-direction:column;gap:9px}
 .pbar{display:flex;height:23px;border-radius:5px;overflow:hidden;gap:2px}
 .pseg{display:flex;align-items:center;justify-content:center;font-family:var(--cond);font-size:10px;font-weight:600;letter-spacing:.07em;text-transform:uppercase;overflow:hidden;white-space:nowrap;transition:flex .3s cubic-bezier(.4,0,.2,1);padding:0 5px;border-radius:4px}
 .mrow{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:6px}
-.mc{background:var(--bg1);border:1px solid var(--border);border-radius:6px;padding:7px 9px}
-.mc.hi{border-color:rgba(79,195,247,.35);background:rgba(79,195,247,.05)}
-.mc.hi .mv{color:var(--acc)}
+
 .ml{font-size:9px;color:var(--muted);letter-spacing:.07em;text-transform:uppercase;margin-bottom:2px;font-family:var(--cond)}
-.mv{font-size:15px;font-weight:500;color:var(--text);line-height:1}
+
 .mu{font-size:9px;color:var(--dim);margin-top:2px}
 .cfull,.chalf{background:var(--bg1);border:1px solid var(--border);border-radius:8px;padding:10px 13px}
 .chrow{display:grid;grid-template-columns:1fr 1fr 1fr;gap:7px}
@@ -143,18 +104,13 @@ body{min-height:100vh}
 .dv{font-size:12px;font-weight:500;color:var(--text)}
 .dv .u{font-size:10px;color:var(--dim);font-weight:400;margin-left:2px}
 
-::-webkit-scrollbar{width:5px}::-webkit-scrollbar-track{background:var(--bg)}::-webkit-scrollbar-thumb{background:var(--bg3);border-radius:3px}
+::-webkit-scrollbar{width:5px}
 
 /* BACK BUTTON */
-.back-btn{font-family:var(--cond,'Barlow Condensed',sans-serif);font-size:10px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--muted,#7a7d8a);text-decoration:none;border:1px solid var(--border2,rgba(255,255,255,.13));border-radius:4px;padding:4px 10px;transition:all .15s;white-space:nowrap;flex-shrink:0}
-.back-btn:hover{color:var(--acc,#4fc3f7);border-color:var(--acc,#4fc3f7)}
+.back-btn{font-family:var(--cond,'Barlow Condensed',sans-serif);font-size:10px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--muted,#9a9dab);text-decoration:none;border:1px solid var(--border2,rgba(255,255,255,.13));border-radius:4px;padding:4px 10px;transition:all .15s;white-space:nowrap;flex-shrink:0}
 
 /* TOOLTIP */
 [data-tip]{position:relative;cursor:default}
-@keyframes tipIn{from{opacity:0}to{opacity:1}}
-[data-tip]:hover::after{content:attr(data-tip);position:absolute;bottom:calc(100% + 7px);left:0;background:#1e2130;border:1px solid rgba(79,195,247,.25);color:#c8cad4;font-size:10px;padding:7px 11px;border-radius:6px;white-space:pre-wrap;max-width:280px;min-width:180px;z-index:999;line-height:1.6;pointer-events:none;font-family:var(--mono);text-align:left;box-shadow:0 4px 20px rgba(0,0,0,.5);animation:tipIn .12s ease .6s both}
-[data-tip]:hover::before{content:'';position:absolute;bottom:calc(100% + 1px);left:20px;border:5px solid transparent;border-top-color:#1e2130;z-index:1000;pointer-events:none;animation:tipIn .12s ease .6s both}
-[data-tip].tr:hover::after{left:auto;right:0}
 
 /* distance display field */
 .dfield{margin-top:6px;padding-top:6px;border-top:1px solid var(--border)}
@@ -253,6 +209,22 @@ body{min-height:100vh}
         <button class="arr" data-key="massa" data-dir="-1">&#9660;</button>
         <input type="number" id="rm" class="numinput" value="100" min="0.01" max="5000" onchange="setVal('massa',+this.value)" oninput="slid('massa',+this.value)">
         <button class="arr" data-key="massa" data-dir="1">&#9650;</button>
+      </div>
+    </div>
+    <div class="field" id="fld-mu">
+      <div class="fhdr"><span class="flabel" data-tip="Coefficiente di attrito della guida.\nSi oppone SEMPRE al moto: F = mu * m * g * cos(theta).\nGuide a ricircolo di sfere: 0.002 ÷ 0.01\nPattini a strisciamento lubrificati: 0.05 ÷ 0.15\nStrisciamento a secco: 0.15 ÷ 0.30\n0 = attrito trascurato">Attrito guida mu</span><span style="font-size:10px;color:var(--dim)">[-]</span></div>
+      <div class="srow">
+        <button class="arr" data-key="mu" data-dir="-1">&#9660;</button>
+        <input type="number" id="rmu" class="numinput" value="0" min="0" max="2" step="0.005" onchange="setVal('mu',+this.value)" oninput="slid('mu',+this.value)">
+        <button class="arr" data-key="mu" data-dir="1">&#9650;</button>
+      </div>
+    </div>
+    <div class="field" id="fld-fres">
+      <div class="fhdr"><span class="flabel" data-tip="Carico resistente costante, indipendente dalla massa.\nTenute, catene di trascinamento, forza di lavorazione, precarico dei pattini.\nSi somma all'attrito e si oppone al moto.">Carico resistente</span><span style="font-size:10px;color:var(--dim)">N</span></div>
+      <div class="srow">
+        <button class="arr" data-key="Fres" data-dir="-1">&#9660;</button>
+        <input type="number" id="rfres" class="numinput" value="0" min="0" max="1000000" step="1" onchange="setVal('Fres',+this.value)" oninput="slid('Fres',+this.value)">
+        <button class="arr" data-key="Fres" data-dir="1">&#9650;</button>
       </div>
     </div>
   </div>
@@ -359,7 +331,8 @@ const G=9.81;
 ══════════════════════════════════════ */
 // Main motion parameters
 const ST={massa:100,vmax:1,tacc:3,tcv:8,tdec:2,
-          profAcc:'sinusoid',profDec:'lineare',angolo:0,dir:'su'};
+          profAcc:'sinusoid',profDec:'lineare',angolo:0,dir:'su',
+          mu:0, Fres:0};
 
 // Solve mode state — stores user-entered known values for each mode
 const SM={
@@ -385,6 +358,8 @@ const FLD={
   tcv:   {rid:'rc',lid:'lc',min:0,   max:300},
   tdec:  {rid:'rd',lid:'ld',min:.01, max:120},
   angolo:{rid:'rang',lid:'lang',min:0,max:90},
+  mu:    {rid:'rmu',  lid:'lmu',  min:0, max:2},
+  Fres:  {rid:'rfres',lid:'lfres',min:0, max:1e6},
 };
 // Solve-input field registry (injected extra sliders)
 const SMFLD={
@@ -408,6 +383,8 @@ function fmtVal(key,v){
   if(key==='massa') return v%1===0?v+' kg':v.toFixed(d)+' kg';
   if(key==='vmax')  return v.toFixed(Math.max(d,3))+' m/s';
   if(key==='angolo')return v.toFixed(Math.max(d,1))+' °';
+  if(key==='mu')    return v.toFixed(3);
+  if(key==='Fres')  return v.toFixed(1)+' N';
   return v.toFixed(d)+' s';
 }
 const fp=(v,d=3)=>isFinite(v)?v.toFixed(d):'∞';
@@ -416,31 +393,32 @@ function numFmt(key,v){
   if(key==='massa') return v%1===0?String(v):v.toFixed(2);
   if(key==='angolo')return v.toFixed(1);
   if(key==='vmax')  return v.toFixed(3);
+  if(key==='mu')    return v.toFixed(3);
+  if(key==='Fres')  return v.toFixed(1);
   return v.toFixed(2);
 }
 
 /* ══════════════════════════════════════
    VALUE SETTERS
 ══════════════════════════════════════ */
+// Accoppiamento tacc ↔ tdec: la variazione di uno compensa l'altro; tcv resta invariato.
+// Usato sia da setVal (onchange) che da slid (oninput) che da slidDist (campi distanza),
+// così la compensazione è live e non solo al "commit" del valore.
+function coupleAccDec(key,v){
+  const other=key==='tacc'?'tdec':'tacc';
+  const delta=v-ST[key];
+  ST[key]=v;
+  const newOther=Math.max(FLD[other].min, ST[other]-delta);
+  ST[other]=newOther;
+  const inpOther=document.getElementById(FLD[other].rid);
+  if(inpOther) inpOther.value=numFmt(other,newOther);
+}
 function setVal(key,raw){
   const c=FLD[key];
   const v=Math.max(c.min,Math.min(c.max,parseFloat(raw)||0));
 
-  // Accoppiamento tacc ↔ tdec: la variazione di uno compensa l'altro; tcv resta invariato
-  if(key==='tacc'){
-    const delta=v-ST.tacc;
-    ST.tacc=v;
-    const newDec=Math.max(FLD.tdec.min, ST.tdec-delta);
-    ST.tdec=newDec;
-    const inpDec=document.getElementById(FLD.tdec.rid);
-    if(inpDec) inpDec.value=numFmt('tdec',newDec);
-  } else if(key==='tdec'){
-    const delta=v-ST.tdec;
-    ST.tdec=v;
-    const newAcc=Math.max(FLD.tacc.min, ST.tacc-delta);
-    ST.tacc=newAcc;
-    const inpAcc=document.getElementById(FLD.tacc.rid);
-    if(inpAcc) inpAcc.value=numFmt('tacc',newAcc);
+  if(key==='tacc'||key==='tdec'){
+    coupleAccDec(key,v);
   } else {
     ST[key]=v;
   }
@@ -453,9 +431,14 @@ function setVal(key,raw){
   recalc();
 }
 function slid(key,v){
-  // oninput: aggiorna solo il valore corrente senza coupling (valore potenzialmente parziale)
+  // oninput: valore potenzialmente parziale mentre l'utente digita/trascina
   const val=parseFloat(v);
-  if(!isNaN(val)) ST[key]=val;
+  if(isNaN(val)) return;
+  if(key==='tacc'||key==='tdec'){
+    coupleAccDec(key,val);
+  } else {
+    ST[key]=val;
+  }
   if(key==='angolo')drawDiag();
   recalc();
 }
@@ -513,7 +496,7 @@ function slidDist(phase, s){
     // s_acc = kA * vmax * tacc  →  tacc = s / (kA * vmax)
     const kA=profInt(ST.profAcc);
     const t=Math.max(0.001, s/(Math.max(kA,1e-9)*vmax));
-    ST.tacc=t;
+    coupleAccDec('tacc',t);
     const inp=document.getElementById('ra');
     if(inp&&document.activeElement!==inp) inp.value=fp(t,4);
     recalc();
@@ -521,7 +504,7 @@ function slidDist(phase, s){
     // s_dec = kD * vmax * tdec  →  tdec = s / (kD * vmax)
     const kD=profInt(ST.profDec);
     const t=Math.max(0.001, s/(Math.max(kD,1e-9)*vmax));
-    ST.tdec=t;
+    coupleAccDec('tdec',t);
     const inp=document.getElementById('rd');
     if(inp&&document.activeElement!==inp) inp.value=fp(t,4);
     recalc();
@@ -882,13 +865,38 @@ function compute(){
   const sA=s[iA],sC=s[iC],sT=s[N];
   const aMax=Math.max(...a),aMin=Math.min(...a),jMax=Math.max(...j.map(Math.abs));
   const Fpeso=massa*G,FpesoP=massa*gComp,FpesoN=massa*G*cosA;
-  const FmotAcc=isUp?massa*aMax+FpesoP:Math.max(0,massa*aMax-FpesoP);
-  const FfrenDec=isUp?Math.max(0,massa*(-aMin)-FpesoP):massa*(-aMin)+FpesoP;
+
+  // Attrito e carico resistente: su una guida reale sono spesso confrontabili
+  // con la componente di gravita'. L'attrito si oppone SEMPRE al moto, quindi
+  // il suo segno non dipende dal verso della corsa.
+  const mu=Math.max(0,ST.mu||0), Fres=Math.max(0,ST.Fres||0);
+  const Fattr=mu*FpesoN + Fres;
+
+  // Forza motrice istantanea, con il segno del moto:
+  //   F(t) = m*a(t) + m*g*sin(theta)*(+1 salita / -1 discesa) + Fattr
+  const segG = isUp ? 1 : -1;
+  const Fist = a.map(ai => massa*ai + segG*FpesoP + Fattr);
+
+  const FmotAcc  = Math.max(0, ...Fist);          // spinta massima richiesta
+  const FfrenDec = Math.max(0, ...Fist.map(x=>-x)); // frenatura massima
+
+  // Potenza di picco REALE: massimo di |F(t)*v(t)|, non F_picco*v_max.
+  // Con un profilo sinusoidale il picco di accelerazione cade dove v vale
+  // circa meta' di v_max, quindi F_picco*v_max sovrastima la potenza.
+  let PmAcc=0,PmDec=0,sq=0;
+  for(let i=0;i<=N;i++){
+    const Pi=Fist[i]*v[i];
+    if(Pi>=0) PmAcc=Math.max(PmAcc,Pi); else PmDec=Math.max(PmDec,-Pi);
+    if(i>0) sq+=Math.pow((Math.abs(Fist[i])+Math.abs(Fist[i-1]))/2,2)*(ttot/N);
+  }
+  const Frms=Math.sqrt(sq/ttot);   // forza quadratica media, per scegliere il motore
+
   const hTot=sT*sinA,EpTot=massa*G*hTot,EcMax=.5*massa*vmax*vmax;
-  const lavoroMotore=isUp?EcMax+EpTot:EcMax-EpTot;
+  const Eattr=Fattr*sT;            // energia dissipata dall'attrito
+  const lavoroMotore=(isUp?EcMax+EpTot:EcMax-EpTot)+Eattr;
   return{t,v,a,j,s,ttot,sA,sCv:sC-sA,sD:sT-sC,sT,aMax,aMin,aPeak:Math.max(aMax,-aMin),jMax,
-    Fpeso,FpesoP,FpesoN,FmotAcc,FfrenDec,hTot,EpTot,EcMax,lavoroMotore,
-    PmAcc:FmotAcc*vmax,PmDec:FfrenDec*vmax,
+    Fpeso,FpesoP,FpesoN,Fattr,mu,Fres,FmotAcc,FfrenDec,Frms,
+    hTot,EpTot,EcMax,Eattr,lavoroMotore,PmAcc,PmDec,
     vMean:sT/ttot,sinA,cosA,isUp,angolo,tacc,tcv,tdec,massa,vmax};
 }
 
@@ -932,7 +940,7 @@ function render(r,solved){
     ['Dislivello',  fp(r.hTot,3),'m',    false],
     ['v massima',   fp(r.vmax,3),'m/s',  hiVmax],
     ['F motrice',   fp(r.FmotAcc,1),'N', false],
-    ['En. totale',  fp(r.lavoroMotore,1),'J',false],
+    ['F RMS',       fp(r.Frms,1),'N', false],
   ].map(([l,v,u,hi])=>`<div class="mc${hi?' hi':''}"><div class="ml">${l}</div><div class="mv">${v}</div><div class="mu">${u}</div></div>`).join('');
 
   upCh(cV,r.t,r.v);upCh(cA,r.t,r.a);upCh(cJ,r.t,r.j);upCh(cS,r.t,r.s);
@@ -957,13 +965,16 @@ function render(r,solved){
       ['Peso',        fp(r.Fpeso,2),'N'],
       ['F‖ parallela',fp(r.FpesoP,2),'N'],
       ['F⊥ normale',  fp(r.FpesoN,2),'N'],
+      ['F attrito',   fp(r.Fattr,2),'N'],
       ['F mot. acc.', fp(r.FmotAcc,2),'N'],
       ['F fren. dec.',fp(r.FfrenDec,2),'N'],
+      ['F RMS ciclo', fp(r.Frms,2),'N'],
       ['Direzione',   r.isUp?'salita':'discesa',''],
     ]],
     ['Energia',[
       ['En. cin.',    fp(r.EcMax,2),'J'],
       ['En. pot.',    fp(r.EpTot,2),'J'],
+      ['En. attrito', fp(r.Eattr,2),'J'],
       ['Lavoro mot.', fp(r.lavoroMotore,2),'J'],
       ['P max acc.',  fp(r.PmAcc,2),'W'],
       ['P max dec.',  fp(r.PmDec,2),'W'],
@@ -981,13 +992,13 @@ function mkChart(id,col,fc,sm){
       fill:{target:'origin',above:fc,below:fc.replace('.12','.07')}}]},
     options:{responsive:true,maintainAspectRatio:false,animation:{duration:55},
       plugins:{legend:{display:false},tooltip:{mode:'index',intersect:false,
-        backgroundColor:'#1c1d23',titleColor:'#7a7d8a',bodyColor:'#e8e9ec',
+        backgroundColor:'#1c1d23',titleColor:'#9a9dab',bodyColor:'#e8e9ec',
         borderColor:'rgba(255,255,255,0.1)',borderWidth:1,
         titleFont:{family:"'DM Mono'",size:10},bodyFont:{family:"'DM Mono'",size:11},
         callbacks:{label:c=>' '+c.parsed.y.toFixed(4)}}},
       scales:{
-        x:{ticks:{maxTicksLimit:6,font:{family:"'DM Mono'",size:10},color:'#4a4d5a'},grid:{color:'rgba(255,255,255,0.04)'},border:{display:false}},
-        y:{suggestedMin:sm,ticks:{maxTicksLimit:4,font:{family:"'DM Mono'",size:10},color:'#4a4d5a'},grid:{color:'rgba(255,255,255,0.04)'},border:{display:false}}
+        x:{ticks:{maxTicksLimit:6,font:{family:"'DM Mono'",size:10},color:'#7d8090'},grid:{color:'rgba(255,255,255,0.04)'},border:{display:false}},
+        y:{suggestedMin:sm,ticks:{maxTicksLimit:4,font:{family:"'DM Mono'",size:10},color:'#7d8090'},grid:{color:'rgba(255,255,255,0.04)'},border:{display:false}}
       }}});
 }
 function upCh(ch,l,d){ch.data.labels=l;ch.data.datasets[0].data=d;ch.update('none');}

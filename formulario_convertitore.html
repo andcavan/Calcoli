@@ -6,24 +6,14 @@
 <title>Convertitore &amp; Formulario</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@300;400;500&family=Barlow+Condensed:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="theme.css">
 <style>
-:root{
-  --bg:#0e0f11;--bg1:#141519;--bg2:#1c1d23;--bg3:#23252d;
-  --border:rgba(255,255,255,.07);--border2:rgba(255,255,255,.13);
-  --text:#e8e9ec;--muted:#7a7d8a;--dim:#4a4d5a;
-  --acc:#4fc3f7;--acc2:#0288d1;
-  --up:#66bb6a;--dn:#ef5350;--amber:#ffa726;--violet:#b39ddb;
-  --mono:'DM Mono',monospace;--cond:'Barlow Condensed',sans-serif;
-}
-*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+
 html{background:var(--bg);color:var(--text);font-family:var(--mono);font-size:13px}
 body{min-height:100vh}
 
 .header{border-bottom:1px solid var(--border);padding:11px 20px;display:flex;align-items:center;gap:12px;flex-wrap:wrap}
-.header h1{font-family:var(--cond);font-size:20px;font-weight:700;letter-spacing:.04em;text-transform:uppercase}
-.sub{font-size:10px;color:var(--muted);letter-spacing:.1em;text-transform:uppercase;flex:1}
-.dot{width:7px;height:7px;border-radius:50%;background:var(--acc);display:inline-block;margin-right:6px;animation:pulse 2s ease-in-out infinite}
-@keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
+
 .back-btn{font-family:var(--cond);font-size:10px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);text-decoration:none;border:1px solid var(--border2);border-radius:4px;padding:4px 10px;transition:all .15s;white-space:nowrap;flex-shrink:0}
 .back-btn:hover{color:var(--acc);border-color:var(--acc)}
 
@@ -36,21 +26,14 @@ body{min-height:100vh}
 .tabpanel.show{display:block}
 
 .chiprow{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px}
-.chip{font-family:var(--cond);font-size:11px;font-weight:600;letter-spacing:.03em;padding:6px 12px;border:1px solid var(--border2);border-radius:6px;background:var(--bg2);color:var(--muted);cursor:pointer;transition:all .13s;white-space:nowrap}
-.chip:hover{color:var(--text);background:var(--bg3)}
-.chip.on{border-color:var(--acc);background:rgba(79,195,247,.12);color:var(--acc)}
 
 .panel{background:var(--bg2);border:1px solid var(--border2);border-radius:8px;padding:14px 16px;margin-bottom:12px}
 .stitle{font-family:var(--cond);font-size:10px;font-weight:600;letter-spacing:.17em;color:var(--muted);text-transform:uppercase;margin-bottom:10px;display:flex;align-items:center;gap:6px}
-.stitle::after{content:'';flex:1;height:1px;background:var(--border)}
 
 /* CONVERTER */
 .conv-input-row{display:flex;gap:8px;align-items:stretch;margin-bottom:4px;flex-wrap:wrap}
-.numinput{flex:1;min-width:140px;height:38px;background:var(--bg3);border:1px solid var(--border2);border-radius:6px;color:var(--acc);font-family:var(--mono);font-size:16px;font-weight:500;text-align:center;outline:none;padding:0 8px;transition:border-color .12s}
-.numinput:focus{border-color:var(--acc);background:var(--bg2)}
-.numinput::-webkit-outer-spin-button,.numinput::-webkit-inner-spin-button{-webkit-appearance:none;margin:0}
-.numinput[type=number]{-moz-appearance:textfield}
-.unitsel{height:38px;background:var(--bg3);border:1px solid var(--border2);border-radius:6px;color:var(--text);font-family:var(--mono);font-size:12px;padding:0 8px;min-width:160px;cursor:pointer}
+
+.unitsel{height:25px;background:var(--bg3);border:1px solid var(--border2);border-radius:5px;color:var(--text);font-family:var(--mono);font-size:12px;padding:0 4px;min-width:160px;cursor:pointer}
 .results-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:8px;margin-top:10px}
 .rchip{background:var(--bg1);border:1px solid var(--border);border-radius:7px;padding:9px 11px;cursor:pointer;transition:all .13s}
 .rchip:hover{border-color:var(--acc2);background:var(--bg3)}
@@ -87,7 +70,7 @@ body{min-height:100vh}
 .mc.hi .mv{color:var(--acc)}
 .mu{font-size:9px;color:var(--dim);margin-top:2px}
 
-.warnbox{background:rgba(239,83,80,.08);border:1px solid rgba(239,83,80,.25);border-radius:6px;padding:9px 12px;font-size:11.5px;color:#ef9a9a;line-height:1.5;margin-bottom:10px}
+.warnbox{display:block;margin-bottom:10px}
 .infobox{background:rgba(255,167,38,.08);border:1px solid rgba(255,167,38,.22);border-radius:6px;padding:9px 12px;font-size:11.5px;color:var(--amber);line-height:1.5;margin-bottom:10px}
 
 .svgwrap{display:flex;justify-content:center;margin-bottom:10px}
@@ -100,7 +83,7 @@ body{min-height:100vh}
 .legend-row span{display:inline-flex;align-items:center;gap:4px}
 .legend-row i{width:10px;height:2.5px;border-radius:2px;display:inline-block}
 
-::-webkit-scrollbar{width:5px}::-webkit-scrollbar-track{background:var(--bg)}::-webkit-scrollbar-thumb{background:var(--bg3);border-radius:3px}
+::-webkit-scrollbar{width:5px}
 
 /* COPY / HISTORY */
 .mc,.rchip{position:relative;cursor:pointer}
@@ -974,8 +957,8 @@ const FORMULE = {
       note:'Valido per piccole oscillazioni (ampiezza angolare < ~15°) e assenza di attrito.'},
     {n:'Rapporto di trasmissione ingranaggi', f:'τ = ω_out/ω_in = z_in/z_out', v:'z: numero di denti della ruota dentata',
       note:'Il rapporto di trasmissione è inversamente proporzionale al rapporto tra i numeri di denti; la coppia si trasforma in modo inverso rispetto alla velocità.'},
-    {n:'Rapporto di riduzione a cinghia', f:'τ = D_pulita/D_motrice = n_out/n_in', v:'D: diametro primitivo delle pulegge',
-      note:''},
+    {n:'Rapporto di riduzione a cinghia', f:'τ = D_motrice/D_condotta = n_out/n_in', v:'D: diametro primitivo delle pulegge [mm]',
+      note:'La puleggia condotta più grande della motrice riduce la velocità e moltiplica la coppia. Per le cinghie dentate vale anche τ = z_motrice/z_condotta, con z numero di denti.'},
     {n:'Velocità periferica cinghia/ingranaggio', f:'v = π·D·n/60', v:'D: diametro [m], n: giri/min',
       note:'Deve essere uguale su entrambi gli organi collegati (motore e condotto) affinché non vi sia slittamento.'},
     {n:'Smorzamento critico', f:'c_cr = 2·√(k·m)', v:'',

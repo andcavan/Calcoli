@@ -7,88 +7,43 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@300;400;500&family=Barlow+Condensed:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <script src="anelli_db.js"></script>
+<link rel="stylesheet" href="theme.css">
 <style>
-:root{
-  --bg:#0e0f11;--bg1:#141519;--bg2:#1c1d23;--bg3:#23252d;
-  --border:rgba(255,255,255,.07);--border2:rgba(255,255,255,.13);
-  --text:#e8e9ec;--muted:#7a7d8a;--dim:#4a4d5a;
-  --acc:#4fc3f7;--acc2:#0288d1;
-  --up:#66bb6a;--dn:#ef5350;--amber:#ffa726;--violet:#b39ddb;
-  --mono:'DM Mono',monospace;--cond:'Barlow Condensed',sans-serif;
-}
-*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+
 html{background:var(--bg);color:var(--text);font-family:var(--mono);font-size:13px;min-height:100vh}
 body{display:flex;flex-direction:column;align-items:center;min-height:100vh;padding:20px}
 
 .header{border-bottom:1px solid var(--border);padding:11px 20px;display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:20px;width:100%;max-width:1100px}
-.header h1{font-family:var(--cond);font-size:20px;font-weight:700;letter-spacing:.04em;text-transform:uppercase}
-.sub{font-size:10px;color:var(--muted);letter-spacing:.1em;text-transform:uppercase;flex:1}
-.dot{width:7px;height:7px;border-radius:50%;background:var(--acc);display:inline-block;margin-right:6px;animation:pulse 2s ease-in-out infinite}
-@keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
 
 .container{max-width:1100px;width:100%;display:grid;grid-template-columns:340px 1fr;gap:20px}
 
 .panel{background:var(--bg2);border:1px solid var(--border2);border-radius:8px;padding:15px;display:flex;flex-direction:column;gap:12px}
 
 .stitle{font-family:var(--cond);font-size:10px;font-weight:600;letter-spacing:.17em;color:var(--muted);text-transform:uppercase;margin-bottom:4px;display:flex;align-items:center;gap:6px}
-.stitle::after{content:'';flex:1;height:1px;background:var(--border)}
 
 .field{margin-bottom:6px}
-.field:last-child{margin-bottom:0}
-.fhdr{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:4px}
+
 .flabel{color:var(--muted);font-size:11px;letter-spacing:.03em}
 .funit{font-size:10px;color:var(--dim)}
 
-.srow{display:flex;align-items:center;gap:4px}
-.arr{flex-shrink:0;width:25px;height:25px;display:flex;align-items:center;justify-content:center;background:var(--bg2);border:1px solid var(--border2);border-radius:5px;cursor:pointer;color:var(--muted);font-size:10px;transition:all .12s;user-select:none}
-.arr:hover{border-color:var(--acc);color:var(--acc);background:rgba(79,195,247,.08)}
-.arr:active{transform:scale(.88)}
-
-.numinput{flex:1;height:25px;background:var(--bg3);border:1px solid var(--border2);border-radius:5px;color:var(--acc);font-family:var(--mono);font-size:12px;font-weight:500;text-align:center;outline:none;padding:0 4px;transition:border-color .12s}
-.numinput:focus{border-color:var(--acc);background:var(--bg2)}
-.numinput:hover{border-color:rgba(79,195,247,.4)}
-.numinput::-webkit-outer-spin-button,.numinput::-webkit-inner-spin-button{-webkit-appearance:none;margin:0}
-.numinput[type=number]{-moz-appearance:textfield}
-
-.select-field{width:100%;height:25px;background:var(--bg3);border:1px solid var(--border2);border-radius:5px;color:var(--acc);font-family:var(--mono);font-size:12px;font-weight:500;padding:0 4px;outline:none;transition:border-color .12s;cursor:pointer}
-.select-field:focus{border-color:var(--acc);background:var(--bg2)}
-.select-field:hover{border-color:rgba(79,195,247,.4)}
-.select-field option{background:var(--bg2);color:var(--acc)}
-
-
 /* Results grid */
-.results-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
-.results-grid-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px}
-.result-box{background:var(--bg1);border:1px solid var(--border);border-radius:6px;padding:10px}
-.result-label{font-size:9px;color:var(--muted);letter-spacing:.07em;text-transform:uppercase;margin-bottom:4px;font-family:var(--cond)}
-.result-value{font-size:16px;font-weight:500;color:var(--acc);font-family:var(--mono)}
-.result-unit{font-size:10px;color:var(--dim);margin-left:3px}
 
 /* Schematic */
 .schematic-wrap{background:var(--bg1);border:1px solid var(--border);border-radius:6px;padding:10px;display:flex;justify-content:center}
 .schematic-wrap svg{width:100%;max-width:440px;height:auto}
 
 /* Verification */
-.result-section{background:rgba(79,195,247,.05);border:1px solid rgba(79,195,247,.2);border-radius:8px;padding:12px}
-.result-section-title{font-family:var(--cond);font-size:10px;font-weight:700;letter-spacing:.14em;color:var(--acc);text-transform:uppercase;margin-bottom:8px;display:flex;align-items:center;gap:8px}
-.result-section-title::after{content:'';flex:1;height:1px;background:rgba(79,195,247,.15)}
-.verification-grid{display:grid;grid-template-columns:1fr;gap:5px}
+
 .verify-item{display:flex;justify-content:space-between;align-items:center;padding:5px 8px;background:var(--bg1);border:1px solid var(--border);border-radius:4px;font-size:11px}
 .verify-label{color:var(--muted)}
 .verify-value{color:var(--text);font-weight:500;font-family:var(--mono)}
-.verify-unit{font-size:9px;color:var(--dim);margin-left:4px}
+
 .verify-status{padding:2px 6px;border-radius:3px;font-size:9px;font-weight:600;margin-left:6px}
-.verify-status.ok{background:rgba(102,187,106,.2);color:var(--up);border:1px solid var(--up)}
-.verify-status.warn{background:rgba(255,167,38,.2);color:var(--amber);border:1px solid var(--amber)}
-.verify-status.err{background:rgba(239,83,80,.2);color:var(--dn);border:1px solid var(--dn)}
 
 /* Table */
 .table-container{overflow-x:auto;max-height:200px;overflow-y:auto}
-.dim-table{width:100%;border-collapse:collapse;font-size:10px}
-.dim-table th{background:rgba(79,195,247,.1);color:var(--acc2);padding:5px 4px;text-align:center;border:1px solid var(--border2);font-weight:600;letter-spacing:.05em;position:sticky;top:0}
-.dim-table td{padding:4px;border:1px solid var(--border2);text-align:center;color:var(--text)}
+
 .dim-table tr.active-row{background:rgba(79,195,247,.12)}
-.dim-table tr:hover{background:rgba(79,195,247,.05)}
 
 .back-btn{font-family:var(--cond);font-size:10px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);text-decoration:none;border:1px solid var(--border2);border-radius:4px;padding:4px 10px;transition:all .15s;white-space:nowrap}
 .back-btn:hover{color:var(--acc);border-color:var(--acc)}
@@ -96,12 +51,7 @@ body{display:flex;flex-direction:column;align-items:center;min-height:100vh;padd
 .calc-btn{background:rgba(79,195,247,.15);border:1px solid rgba(79,195,247,.3);color:var(--acc);padding:8px;border-radius:6px;cursor:pointer;font-family:var(--cond);font-weight:700;letter-spacing:.08em;font-size:12px;width:100%;margin-top:4px;transition:all .15s}
 .calc-btn:hover{background:rgba(79,195,247,.25)}
 
-[data-tip]{position:relative;cursor:help}
 [data-tip]:hover::after{content:attr(data-tip);position:absolute;bottom:calc(100% + 7px);left:0;background:#1e2130;border:1px solid rgba(79,195,247,.25);color:#c8cad4;font-size:10px;padding:7px 11px;border-radius:6px;white-space:pre-wrap;max-width:280px;min-width:160px;z-index:999;line-height:1.6;pointer-events:none;font-family:var(--mono);text-align:left;box-shadow:0 4px 20px rgba(0,0,0,.5)}
-
-::-webkit-scrollbar{width:5px;height:5px}
-::-webkit-scrollbar-track{background:var(--bg)}
-::-webkit-scrollbar-thumb{background:var(--bg3);border-radius:3px}
 
 .warn-box{background:rgba(255,167,38,.07);border:1px solid rgba(255,167,38,.25);border-radius:5px;padding:8px 10px;font-size:10px;color:var(--amber);display:none}
 .info-box{background:rgba(79,195,247,.06);border:1px solid rgba(79,195,247,.18);border-radius:5px;padding:8px 10px;font-size:10px;color:var(--acc)}
@@ -111,27 +61,16 @@ body{display:flex;flex-direction:column;align-items:center;min-height:100vh;padd
 
 /* Primary shaft/bore toggle */
 .mount-toggle{display:grid;grid-template-columns:1fr 1fr;gap:0;border:1px solid var(--border2);border-radius:7px;overflow:hidden}
-.mount-btn{background:var(--bg3);border:none;padding:12px 8px;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:5px;transition:all .18s;color:var(--muted);font-family:var(--mono)}
-.mount-btn + .mount-btn{border-left:1px solid var(--border2)}
-.mount-btn:hover{background:var(--bg2)}
-.mount-btn.active-shaft{background:rgba(102,187,106,.12);color:var(--up)}
-.mount-btn.active-bore{background:rgba(179,157,219,.15);color:var(--violet)}
+
 .mount-btn svg{width:52px;height:42px}
-.mount-btn .mlabel{font-family:var(--cond);font-size:14px;font-weight:700;letter-spacing:.06em;text-transform:uppercase}
-.mount-btn .mnorm{font-size:9px;opacity:.7;letter-spacing:.04em}
 
 /* Variant row */
 .variant-row{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}
-.var-btn{background:var(--bg3);border:1px solid var(--border2);border-radius:6px;padding:7px 4px 5px;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:3px;transition:all .15s;color:var(--muted);font-family:var(--mono)}
-.var-btn:hover{border-color:rgba(79,195,247,.35)}
+
 .var-btn svg{width:40px;height:32px}
-.var-btn .vname{font-family:var(--cond);font-size:12px;font-weight:700;letter-spacing:.04em}
-.var-btn .vsub{font-size:8px;color:var(--dim);text-align:center;line-height:1.2}
+
 /* active variants coloured by category */
-.var-btn.active-shaft{border-color:var(--up);background:rgba(102,187,106,.1);color:var(--up)}
-.var-btn.active-shaft .vsub{color:rgba(102,187,106,.6)}
-.var-btn.active-bore{border-color:var(--violet);background:rgba(179,157,219,.1);color:var(--violet)}
-.var-btn.active-bore .vsub{color:rgba(179,157,219,.6)}
+
 </style>
 </head>
 <body>
@@ -316,7 +255,8 @@ body{display:flex;flex-direction:column;align-items:center;min-height:100vh;padd
     </div>
   </div>
 
-  <div class="warn-box" id="warn-box">⚠ Diametro non presente nelle tabelle DIN 471/472. Seleziona un diametro standard.</div>
+  <div class="warn-box" id="db-note" style="display:none"></div>
+<div class="warn-box" id="warn-box">⚠ Diametro non presente nelle tabelle DIN 471/472. Seleziona un diametro standard.</div>
 
   <div class="info-box" style="font-size:9px;line-height:1.7">
     <strong>Tipi disponibili — Seeger Catalog</strong><br>
@@ -334,7 +274,7 @@ body{display:flex;flex-direction:column;align-items:center;min-height:100vh;padd
 
   <div class="schematic-wrap">
     <svg id="schematic-svg" viewBox="0 0 440 160" xmlns="http://www.w3.org/2000/svg">
-      <text x="220" y="80" text-anchor="middle" fill="#4a4d5a" font-size="12" font-family="DM Mono,monospace">Inserire i parametri e calcolare</text>
+      <text x="220" y="80" text-anchor="middle" fill="#7d8090" font-size="12" font-family="DM Mono,monospace">Inserire i parametri e calcolare</text>
     </svg>
   </div>
 
@@ -376,6 +316,10 @@ body{display:flex;flex-direction:column;align-items:center;min-height:100vh;padd
       <div class="result-label">Spessore s</div>
       <div class="result-value"><span id="res-m">—</span><span class="result-unit">mm</span></div>
     </div>
+    <div class="result-box" data-tip="Profondita' radiale della gola.\nAlbero: t = (d1 − d2)/2\nForo:   t = (d2 − d1)/2">
+      <div class="result-label">Prof. gola t</div>
+      <div class="result-value"><span id="res-tgola">—</span><span class="result-unit">mm</span></div>
+    </div>
     <div class="result-box" data-tip="Forza assiale massima ammissibile\nValori da catalogo DIN 471/472 (Lühr+Kierfeld)\nAnello in C75S, sede in acciaio ≥ 150 HB">
       <div class="result-label">Fa catalog.</div>
       <div class="result-value" style="font-size:13px"><span id="res-fa-cat">—</span><span class="result-unit">N</span></div>
@@ -404,6 +348,10 @@ body{display:flex;flex-direction:column;align-items:center;min-height:100vh;padd
       <div class="verify-item" style="border-color:rgba(79,195,247,.3)">
         <span class="verify-label" style="color:var(--acc)">Fa ammissibile corretto</span>
         <div><span class="verify-value" style="color:var(--acc);font-size:14px" id="vfy-fa-adm">—</span><span class="verify-unit">N</span></div>
+      </div>
+      <div class="verify-item">
+        <span class="verify-label">Limitato da</span>
+        <div><span class="verify-value" id="vfy-limite" style="font-size:10px">—</span></div>
       </div>
       <div class="verify-item" style="border-color:rgba(79,195,247,.3)">
         <span class="verify-label">Fa applicata</span>
@@ -442,7 +390,10 @@ function getTable(type) {
 /* ─── STATE ─── */
 let currentRingType = 'A';
 let currentForShaft = true;
-let currentKh = 1.0; // type factor (1.0 standard, 1.6 heavy)
+// Fattore di tipo. Resta 1.0 per tutte le varianti perche' ognuna ha gia'
+// la propria tabella di portate in anelli_db.js: applicare qui un fattore
+// aggiuntivo conterebbe due volte la stessa differenza.
+let currentKh = 1.0;
 let currentRow = null;
 
 /* ─── MOUNT SELECTOR ─── */
@@ -518,13 +469,26 @@ function calculate() {
   currentRow = row;
 
   const [, d2, m, s, t, g, d3, Fa_cat] = row;  // d1=nominale(=d), d2=sede, m=largh.sede, s=spessore, t=prof.gola, g=sporgenza
-  const Fa_adm = Fa_cat * ks * kr * kh;
+
+  // Il catalogo fornisce DUE portate distinte e indipendenti:
+  //   Fa,N  capacita' dell'ANELLO -> dipende dal suo materiale (kr) e dal tipo
+  //   Fa,g  capacita' della GOLA  -> dipende dal materiale della sede (ks)
+  // Il limite del collegamento e' il MINORE dei due. Moltiplicarli fra loro,
+  // come faceva la versione precedente, faceva crescere del 30% anche la
+  // portata dell'anello quando si sceglieva una sede piu' dura, che non
+  // c'entra con la resistenza dell'anello stesso.
+  const Fa_anello = Fa_cat * kr * kh;
+  const Fa_gola   = Fa_cat * ks;
+  const Fa_adm    = Math.min(Fa_anello, Fa_gola);
+  const limite    = Fa_anello <= Fa_gola ? 'anello' : 'gola';
 
   // Fill dimension results
   document.getElementById('res-d1').textContent = d2.toFixed(1);
   document.getElementById('res-b').textContent  = m.toFixed(2);
   document.getElementById('res-t').textContent  = g.toFixed(2);
   document.getElementById('res-d3').textContent = d3.toFixed(1);
+  const tEl = document.getElementById('res-tgola');
+  if (tEl) tEl.textContent = t.toFixed(2);
   document.getElementById('res-m').textContent  = s.toFixed(1);
   document.getElementById('res-fa-cat').textContent = Fa_cat.toLocaleString('it-IT');
 
@@ -549,6 +513,10 @@ function calculate() {
   document.getElementById('vfy-kr').textContent = `× ${kr.toFixed(2)}`;
   document.getElementById('vfy-kh').textContent = `${currentRingType}  ×  ${kh.toFixed(2)}`;
   document.getElementById('vfy-fa-adm').textContent = Math.round(Fa_adm).toLocaleString('it-IT');
+  const limEl = document.getElementById('vfy-limite');
+  if (limEl) limEl.textContent = limite === 'anello'
+    ? 'anello (' + Math.round(Fa_anello).toLocaleString('it-IT') + ' N < gola ' + Math.round(Fa_gola).toLocaleString('it-IT') + ' N)'
+    : 'gola ('   + Math.round(Fa_gola).toLocaleString('it-IT')   + ' N < anello ' + Math.round(Fa_anello).toLocaleString('it-IT') + ' N)';
   document.getElementById('vfy-fa-app').textContent = Fa_app.toLocaleString('it-IT');
   document.getElementById('vfy-sf').textContent = isFinite(sf) ? sf.toFixed(2) : '∞';
   document.getElementById('vfy-pct').textContent = pct.toFixed(1);
@@ -559,6 +527,27 @@ function calculate() {
   else { statusEl.textContent = 'INSUFF.'; statusEl.className = 'verify-status err'; }
 
   document.getElementById('verify-section').style.display = 'block';
+
+  // Coerenza dei dati di catalogo fra varianti della stessa misura:
+  // una sezione RIDOTTA (AV/JV) non puo' avere portata superiore al tipo
+  // standard (A/J) a parita' di diametro e geometria di gola.
+  const dbNote = document.getElementById('db-note');
+  if (dbNote) {
+    const base = currentForShaft ? ANELLI_DB['A'] : ANELLI_DB['J'];
+    const rowBase = base && base.rows.find(r => r[0] === d);
+    const ridotto = ['AV','JV'].includes(currentRingType);
+    if (ridotto && rowBase && Fa_cat > rowBase[7]) {
+      dbNote.style.display = 'block';
+      dbNote.innerHTML = '\u26a0 <b>Dato di catalogo da verificare:</b> il tipo '
+        + currentRingType + ' (sezione ridotta) riporta F<sub>a</sub> = '
+        + Fa_cat.toLocaleString('it-IT') + ' N, superiore ai '
+        + rowBase[7].toLocaleString('it-IT') + ' N del tipo standard di pari diametro. '
+        + 'Le due colonne potrebbero provenire da grandezze diverse del catalogo '
+        + '(portata dell\u2019anello e portata della gola). Confrontare con la scheda del fornitore prima di usare il valore.';
+    } else {
+      dbNote.style.display = 'none';
+    }
+  }
 
   // Schematic
   drawSchematic(d, d2, m, g, d3, s);
@@ -617,7 +606,7 @@ function drawShaftSchematic(svg, W, H, cx, cy, d, d2, m, g, d3, s) {
   const cShaft = '#2a3a4a';
   const cGroove = '#141519';
   const cRing = '#4fc3f7';
-  const cDim = '#7a7d8a';
+  const cDim = '#9a9dab';
   const cAcc = '#4fc3f7';
   const textProps = `font-family="DM Mono,monospace" font-size="10" fill="${cDim}"`;
   const labelProps = `font-family="DM Mono,monospace" font-size="9" fill="${cAcc}"`;
@@ -644,7 +633,7 @@ function drawShaftSchematic(svg, W, H, cx, cy, d, d2, m, g, d3, s) {
   sv += `<rect x="${gx-mpx/2+1}" y="${cy+r2+1}" width="${mpx-2}" height="${spx-2}" fill="${cRing}" rx="1" opacity="0.85"/>`;
 
   // Dimension lines
-  const lineCol = '#4a4d5a';
+  const lineCol = '#7d8090';
 
   // d1: full shaft diameter
   const dLineX = leftX + 20;
@@ -685,7 +674,7 @@ function drawBoreSchematic(svg, W, H, cx, cy, d, d2, m, g, d3, s) {
   const cSeat = '#2a3a4a';
   const cBore = '#141519';
   const cRing = '#b39ddb';
-  const cDim = '#7a7d8a';
+  const cDim = '#9a9dab';
   const cAcc = '#b39ddb';
   const textProps = `font-family="DM Mono,monospace" font-size="10" fill="${cDim}"`;
 
@@ -713,16 +702,16 @@ function drawBoreSchematic(svg, W, H, cx, cy, d, d2, m, g, d3, s) {
 
   // d1: bore diameter
   const dLineX = gx - mpx/2 - wallT - 12;
-  sv += dimLine(dLineX, top, bot, '#4a4d5a');
+  sv += dimLine(dLineX, top, bot, '#7d8090');
   sv += `<text x="${dLineX - 4}" y="${cy + 4}" ${textProps} text-anchor="end" transform="rotate(-90,${dLineX-4},${cy+4})">d₁ = ${d} mm</text>`;
 
   // g: groove depth
   const gLineX = dLineX + 12;
-  sv += dimLine(gLineX, top - gpx, top, '#4a4d5a');
+  sv += dimLine(gLineX, top - gpx, top, '#7d8090');
   sv += `<text x="${gLineX - 3}" y="${top - gpx/2 + 3}" ${textProps} text-anchor="end" transform="rotate(-90,${gLineX-3},${top-gpx/2+3})">g=${g}</text>`;
 
   // m: groove width
-  sv += dimLineH(gx - mpx/2, gx + mpx/2, top - gpx - 12, '#4a4d5a');
+  sv += dimLineH(gx - mpx/2, gx + mpx/2, top - gpx - 12, '#7d8090');
   sv += `<text x="${gx}" y="${top - gpx - 16}" ${textProps} text-anchor="middle">m = ${m} mm</text>`;
 
   sv += `<text x="${cx}" y="${H - 8}" font-family="DM Mono,monospace" font-size="9" fill="${cAcc}" text-anchor="middle">Foro Ø ${d} · Sede Ø ${d2} · m ${m} · g ${g}</text>`;
@@ -788,7 +777,7 @@ function clearResults() {
     if (el) el.textContent = '—';
   });
   const svg = document.getElementById('schematic-svg');
-  svg.innerHTML = `<text x="220" y="80" text-anchor="middle" fill="#4a4d5a" font-family="DM Mono,monospace" font-size="12">Diametro non in tabella</text>`;
+  svg.innerHTML = `<text x="220" y="80" text-anchor="middle" fill="#7d8090" font-family="DM Mono,monospace" font-size="12">Diametro non in tabella</text>`;
 }
 
 /* ─── INIT ─── */

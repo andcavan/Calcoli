@@ -5,19 +5,19 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Calcolatore Molle | UNI EN 13906</title>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@300;400;500&family=Barlow+Condensed:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="theme.css">
 <style>
 :root{
   --bg:#0e0f11;--bg2:#1c1d23;--bg3:#1a1e28;
   --surface:#1e2330;--surface2:#252c3d;
-  --border:#2e3550;--border2:#3d4663;
+  --border:rgba(255,255,255,.07);--border2:rgba(255,255,255,.13);
   --accent:#4fc3f7;--accent2:#7bb8ff;
-  --gold:#f0b429;--gold2:#ffd166;
-  --green:#3ecf8e;--red:#f66d6d;--orange:#ff8c42;--violet:#b39ddb;
-  --text:#e2e8f4;--text2:#8a94aa;--text3:#5a6278;
+  --gold:#ffa726;--gold2:#ffd166;
+  --green:#66bb6a;--red:#ef5350;--orange:#ff8c42;--violet:#b39ddb;
+  --text:#e8e9ec;--text2:#9a9dab;--text3:#7d8090;
   --mono:'DM Mono',monospace;--head:'Barlow Condensed',sans-serif;
   --r:8px;--r2:14px;
 }
-*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 body{background:var(--bg);color:var(--text);font-family:var(--mono);font-size:13px;min-height:100vh}
 
 header{background:var(--bg2);border-bottom:1px solid var(--border);padding:0 28px;display:flex;align-items:center;gap:18px;height:68px;position:sticky;top:0;z-index:200}
@@ -94,8 +94,8 @@ header h1 span{color:var(--accent)}
 .diagram-title{font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.4px;margin-bottom:12px}
 canvas{display:block;max-width:100%}
 
-.info-box{background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);padding:12px 14px;margin-bottom:14px;font-size:11px;color:var(--text3);line-height:1.7}
-.info-box strong{color:var(--text2)}
+.info-box{background:rgba(79,195,247,.06);border:1px solid rgba(79,195,247,.18);border-radius:var(--r);padding:12px 14px;margin-bottom:14px;font-size:11px;color:var(--accent);line-height:1.7}
+.info-box strong{color:var(--text)}
 .norm-ref{background:var(--bg3);border-left:3px solid var(--gold);border-radius:0 var(--r) var(--r) 0;padding:10px 14px;margin-bottom:14px;font-size:10px;color:var(--text3);line-height:1.8}
 .norm-ref strong{color:var(--gold2);display:block;margin-bottom:4px;letter-spacing:.3px;text-transform:uppercase}
 
@@ -170,6 +170,15 @@ canvas{display:block;max-width:100%}
           <option value="cn">Chiuse non rettificate</option>
           <option value="og">Aperte e rettificate</option>
           <option value="on">Aperte non rettificate</option>
+        </select>
+      </div>
+      <div class="field">
+        <label data-tip="Vincolo delle estremita' — determina il coefficiente di appoggio nu della verifica di instabilita' (EN 13906-1).\nEntrambe guidate (piatte parallele, molla in sede): nu = 0.5\nUna guidata e una libera di ruotare: nu = 0.7\nEntrambe incernierate: nu = 1\nUna incastrata e una libera: nu = 2">Appoggi (instabilit&agrave;)</label>
+        <select id="c-seat">
+          <option value="0.5" selected>Entrambe le estremit&agrave; guidate (&nu; = 0,5)</option>
+          <option value="0.7">Una guidata, una libera di ruotare (&nu; = 0,7)</option>
+          <option value="1">Entrambe incernierate (&nu; = 1)</option>
+          <option value="2">Una incastrata, una libera (&nu; = 2)</option>
         </select>
       </div>
     </div>
@@ -433,7 +442,10 @@ canvas{display:block;max-width:100%}
 <script>
 /* ─── MATERIAL DATA ─── */
 const MAT_G = {sh:81500,vd:81500,inox:73000,crsi:80000,cuzn:37000,cuzn2:40000};
-const MAT_E = {sh:206000,vd:206000,inox:193000,crsi:206000};
+// Moduli di elasticita' [MPa] — servono alle molle a torsione.
+// Senza le leghe di rame il campo E restava sul valore dell'acciaio,
+// raddoppiando la rigidezza angolare calcolata.
+const MAT_E = {sh:206000,vd:206000,inox:193000,crsi:206000,cuzn:100000,cuzn2:115000};
 const MAT_NAME = {
   sh:'Acciaio SH/DH (EN 10270-1)',
   vd:'Cr-V VD/VDSiCr (EN 10270-2)',
@@ -448,7 +460,10 @@ function updateMat(prefix){
   const mat = document.getElementById(prefix+'-mat').value;
   if(prefix==='to'){
     const el = document.getElementById('to-E');
-    if(mat!=='custom' && MAT_E[mat]) el.value = MAT_E[mat];
+    if(mat!=='custom'){
+      if(MAT_E[mat]) el.value = MAT_E[mat];
+      else { el.value=''; el.placeholder='inserire E del materiale'; }
+    }
   } else {
     const el = document.getElementById(prefix+'-G');
     if(mat!=='custom' && MAT_G[mat]) el.value = MAT_G[mat];
@@ -484,15 +499,24 @@ function fmt(v,dec=2){return isNaN(v)||!isFinite(v)?'—':v.toFixed(dec);}
 function fmtN(v){return fmt(v,1);}
 
 /* ─── END TYPE DATA ─── */
-function endData(type, n, d){
-  // returns {ntot, Lc, endName}
+// n = spire ATTIVE. Restituisce spire totali, lunghezza a blocco e passo
+// del tratto attivo. Le quattro combinazioni hanno formule diverse:
+// usare quella delle "chiuse e rettificate" per tutte falsava passo e blocco.
+function endData(type, n, d, L0){
+  let ntot, Lc, p, endName;
   switch(type){
-    case 'cg': return {ntot:n+2, Lc:d*(n+2),        endName:'Chiuse e rettificate'};
-    case 'cn': return {ntot:n+2, Lc:d*(n+3),        endName:'Chiuse non rettificate'};
-    case 'og': return {ntot:n,   Lc:d*n,             endName:'Aperte e rettificate'};
-    case 'on': return {ntot:n,   Lc:d*(n+1),         endName:'Aperte non rettificate'};
-    default:   return {ntot:n+2, Lc:d*(n+2),         endName:'Chiuse e rettificate'};
+    case 'cg':  // chiuse e rettificate
+      ntot=n+2; Lc=d*ntot;     p=(L0-2*d)/n;     endName='Chiuse e rettificate'; break;
+    case 'cn':  // chiuse non rettificate
+      ntot=n+2; Lc=d*(ntot+1); p=(L0-3*d)/n;     endName='Chiuse non rettificate'; break;
+    case 'og':  // aperte e rettificate
+      ntot=n+1; Lc=d*ntot;     p=L0/(n+1);       endName='Aperte e rettificate'; break;
+    case 'on':  // aperte non rettificate
+      ntot=n;   Lc=d*(ntot+1); p=(L0-d)/n;       endName='Aperte non rettificate'; break;
+    default:
+      ntot=n+2; Lc=d*ntot;     p=(L0-2*d)/n;     endName='Chiuse e rettificate';
   }
+  return {ntot, Lc, p, endName};
 }
 
 /* ─── STRESS BAR HTML ─── */
@@ -525,7 +549,7 @@ function calcComp(){
   // Geometry
   const c  = D/d;
   const Kw = wahl(c);
-  const ed = endData(ends, n, d);
+  const ed = endData(ends, n, d, L0);
   const Lc = ed.Lc;
   const ntot = ed.ntot;
 
@@ -549,14 +573,21 @@ function calcComp(){
   const fC = L0 - Lc;   // deflection to solid
   const FC = k * fC;    // solid force
 
-  // Stresses [MPa]
-  const tau1 = Kw * 8*F1*D / (Math.PI * Math.pow(d,3));
-  const tau2 = Kw * 8*F2*D / (Math.PI * Math.pow(d,3));
-  const tauC = Kw * 8*FC*D / (Math.PI * Math.pow(d,3));
+  // Tensioni tangenziali [MPa]
+  // EN 13906-1 distingue due grandezze:
+  //   tau   = 8*F*D/(pi*d^3)   NON corretta  -> verifiche STATICHE
+  //   tau_k = Kw * tau         corretta Wahl -> verifiche a FATICA
+  // Applicare Kw anche alla verifica a blocco (statica) da' valori piu' alti
+  // di quelli di catalogo e non e' quanto prescrive la norma.
+  const tauNom = F => 8*F*D / (Math.PI * Math.pow(d,3));
+  const tau1  = tauNom(F1),  tau2  = tauNom(F2),  tauC  = tauNom(FC);
+  const tau1k = Kw * tau1,   tau2k = Kw * tau2,   tauCk = Kw * tauC;
 
-  // Allowable (EN 13906-1: τkh ≤ 0.45·Rm, τkB ≤ 0.65·Rm)
+  // Ammissibili EN 13906-1 (acciai da molle trafilati patentati):
+  //   lavoro statico   tau_zul   = 0.45*Rm
+  //   a blocco         tau_c,zul = 0.56*Rm
   const tauLimWork = Rm ? 0.45*Rm : null;
-  const tauLimSolid= Rm ? 0.65*Rm : null;
+  const tauLimSolid= Rm ? 0.56*Rm : null;
 
   // Status checks
   const checks = [];
@@ -573,14 +604,30 @@ function calcComp(){
   }
   if(tauLimSolid){
     const ok = tauC <= tauLimSolid;
-    checks.push({label:`τ blocco (${fmt(tauC)} MPa) ${ok?'≤':'>'} 0.65·Rm (${fmt(tauLimSolid)} MPa)`,ok});
+    checks.push({label:`τ blocco (${fmt(tauC)} MPa) ${ok?'≤':'>'} 0.56·Rm (${fmt(tauLimSolid)} MPa)`,ok});
   }
   if(c<4) checks.push({label:`Indice di molla c=${fmt(c,1)} < 4 (avvolgimento difficile)`,ok:false});
-  else if(c>16) checks.push({label:`Indice c=${fmt(c,1)} > 16 (instabilità possibile)`,ok:false});
+  else if(c>16) checks.push({label:`Indice c=${fmt(c,1)} > 16 (tolleranze e avvolgimento critici)`,ok:false});
   else checks.push({label:`Indice c = ${fmt(c,1)} (4÷16 ✓)`,ok:true});
 
-  // Pitch
-  const p = (L0 - d*(ntot-n)) / n;
+  // ── Instabilita' laterale (svergolamento) — EN 13906-1 §5.5
+  // La molla e' stabile finche' la freccia resta sotto quella critica.
+  // Forma chiusa che riproduce il diagramma della norma per gli acciai
+  // da molle (E/G = 2.53); le due costanti valgono 0.812 e 2.62:
+  //     s_K/L0 = 0.812 · [ 1 - sqrt( 1 - (2.62·D/(nu·L0))^2 ) ]
+  // Sotto nu·L0/D = 2.62 il radicando e' negativo: la molla e' tozza e
+  // non instabilizza per nessuna freccia raggiungibile.
+  const nu_seat = parseFloat(document.getElementById('c-seat').value) || 0.5;
+  const lam  = nu_seat * L0 / D;            // snellezza equivalente
+  const arg  = 1 - Math.pow(2.62 / lam, 2);
+  const sK   = arg <= 0 ? Infinity : 0.812 * L0 * (1 - Math.sqrt(arg));
+  const fMax = Math.max(f1, f2, 0);
+  if (sK === Infinity) {
+    checks.push({label:`Instabilita': ν·L₀/D = ${fmt(lam,2)} < 2,62 — molla tozza, stabile a qualsiasi freccia ✓`, ok:true});
+  } else {
+    const okBuck = fMax > 0 ? fMax < sK : true;
+    checks.push({label:`Instabilita': freccia max ${fmt(fMax,1)} mm ${okBuck?'<':'≥'} freccia critica ${fmt(sK,1)} mm (ν=${nu_seat}, ν·L₀/D=${fmt(lam,2)})`, ok:okBuck});
+  }
 
   const html = `
   <div class="results-header">
@@ -649,25 +696,30 @@ function calcComp(){
   </div>
 
   <div class="result-section">
-    <div class="result-section-title">Tensioni tangenziali (Wahl)</div>
+    <div class="result-section-title">Tensioni tangenziali</div>
     <div class="result-grid">
       <div class="result-card ${tau1>0&&tauLimWork&&tau1>tauLimWork?'red':tau1>0?'green':''}">
-        <div class="rc-label">τ₁ (@ F₁)</div>
+        <div class="rc-label">τ₁ (@ F₁) — statica</div>
         <div class="rc-value ${tau1>0&&tauLimWork&&tau1>tauLimWork?'red':tau1>0?'green':''}">${fmt(tau1)}<span class="rc-unit">MPa</span></div>
         ${tauLimWork?stressBarHtml(tau1/tauLimWork,tau1,tauLimWork):''}
       </div>
       <div class="result-card ${tau2>0&&tauLimWork&&tau2>tauLimWork?'red':tau2>0?'green':''}">
-        <div class="rc-label">τ₂ (@ F₂) — tensione lavoro massima</div>
+        <div class="rc-label">τ₂ (@ F₂) — statica, lavoro max</div>
         <div class="rc-value ${tau2>0&&tauLimWork&&tau2>tauLimWork?'red':tau2>0?'green':''}">${fmt(tau2)}<span class="rc-unit">MPa</span></div>
         ${tauLimWork?stressBarHtml(tau2/tauLimWork,tau2,tauLimWork):''}
       </div>
       <div class="result-card ${tauLimSolid&&tauC>tauLimSolid?'red':'orange'}">
-        <div class="rc-label">τ<sub>c</sub> (a blocco)</div>
+        <div class="rc-label">τ<sub>c</sub> (a blocco) — statica</div>
         <div class="rc-value ${tauLimSolid&&tauC>tauLimSolid?'red':'orange'}">${fmt(tauC)}<span class="rc-unit">MPa</span></div>
         ${tauLimSolid?stressBarHtml(tauC/tauLimSolid,tauC,tauLimSolid):''}
       </div>
+      <div class="result-card">
+        <div class="rc-label">τ<sub>k</sub> corretta Wahl — per la fatica</div>
+        <div class="rc-value">${fmt(tau2k)}<span class="rc-unit">MPa</span></div>
+        <div class="rc-note">τ<sub>k1</sub> = ${fmt(tau1k)} · τ<sub>k</sub> blocco = ${fmt(tauCk)} MPa · K<sub>w</sub> = ${fmt(Kw,3)}</div>
+      </div>
     </div>
-    ${!Rm?'<div class="info-box"><strong>Nota:</strong> Inserire Rm per visualizzare i limiti ammissibili (0.45·Rm per lavoro, 0.65·Rm a blocco secondo UNI EN 13906-1).</div>':''}
+    ${!Rm?'<div class="info-box"><strong>Nota:</strong> Inserire Rm per visualizzare i limiti ammissibili (0.45·Rm per lavoro e 0.56·Rm a blocco, su tensione NON corretta, secondo UNI EN 13906-1).</div>':''}
   </div>
 
   <div class="result-section">
@@ -676,8 +728,10 @@ function calcComp(){
       <div class="formula-row"><span class="formula-name">Rigidità</span><span class="formula-expr">k = G·d⁴ / (8·D³·n)</span></div>
       <div class="formula-row"><span class="formula-name">Indice molla</span><span class="formula-expr">c = D/d</span></div>
       <div class="formula-row"><span class="formula-name">Fattore Wahl</span><span class="formula-expr">K<sub>w</sub> = (4c−1)/(4c−4) + 0.615/c</span></div>
-      <div class="formula-row"><span class="formula-name">Tensione tangenziale</span><span class="formula-expr">τ = K<sub>w</sub>·8·F·D / (π·d³)</span></div>
+      <div class="formula-row"><span class="formula-name">Tensione statica</span><span class="formula-expr">τ = 8·F·D / (π·d³)</span></div>
+      <div class="formula-row"><span class="formula-name">Tensione corretta (fatica)</span><span class="formula-expr">τ<sub>k</sub> = K<sub>w</sub>·τ</span></div>
       <div class="formula-row"><span class="formula-name">Lunghezza a blocco (chiuse/rett.)</span><span class="formula-expr">L<sub>c</sub> = d·n<sub>tot</sub></span></div>
+      <div class="formula-row"><span class="formula-name">Freccia critica (instabilità)</span><span class="formula-expr">s<sub>K</sub> = 0,812·L₀·[1 − √(1 − (2,62·D/(ν·L₀))²)]</span></div>
     </div>
   </div>
 

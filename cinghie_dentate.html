@@ -7,25 +7,13 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@300;400;500&family=Barlow+Condensed:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <script src="cinghie_db.js"></script>
+<link rel="stylesheet" href="theme.css">
 <style>
-:root{
-  --bg:#0e0f11;--bg1:#141519;--bg2:#1c1d23;--bg3:#23252d;
-  --border:rgba(255,255,255,.07);--border2:rgba(255,255,255,.13);
-  --text:#e8e9ec;--muted:#7a7d8a;--dim:#4a4d5a;
-  --acc:#4fc3f7;--acc2:#0288d1;
-  --up:#66bb6a;--dn:#ef5350;--amber:#ffa726;--violet:#b39ddb;
-  --mono:'DM Mono',monospace;--cond:'Barlow Condensed',sans-serif;
-}
-*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+
 html{background:var(--bg);color:var(--text);font-family:var(--mono);font-size:13px;min-height:100vh}
 body{display:flex;flex-direction:column;align-items:center;min-height:100vh;padding:20px}
 
 .header{border-bottom:1px solid var(--border);padding:11px 20px;display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:20px;width:100%;max-width:1180px}
-.header h1{font-family:var(--cond);font-size:20px;font-weight:700;letter-spacing:.04em;text-transform:uppercase}
-.sub{font-size:10px;color:var(--muted);letter-spacing:.1em;text-transform:uppercase;flex:1}
-.dot{width:7px;height:7px;border-radius:50%;background:var(--acc);display:inline-block;margin-right:6px;animation:pulse 2s ease-in-out infinite}
-@keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
-.norm-badge{font-family:var(--cond);font-size:10px;font-weight:600;letter-spacing:.08em;color:var(--acc);background:rgba(79,195,247,.08);border:1px solid rgba(79,195,247,.22);border-radius:4px;padding:3px 9px;white-space:nowrap}
 
 .container{max-width:1180px;width:100%;display:grid;grid-template-columns:340px 1fr;gap:20px}
 @media(max-width:900px){.container{grid-template-columns:1fr}}
@@ -34,63 +22,19 @@ body{display:flex;flex-direction:column;align-items:center;min-height:100vh;padd
 .rpanel{display:flex;flex-direction:column;gap:14px}
 
 .stitle{font-family:var(--cond);font-size:10px;font-weight:600;letter-spacing:.17em;color:var(--muted);text-transform:uppercase;margin-bottom:4px;display:flex;align-items:center;gap:6px}
-.stitle::after{content:'';flex:1;height:1px;background:var(--border)}
 
 .field{margin-bottom:6px}
-.field:last-child{margin-bottom:0}
-.fhdr{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:4px}
+
 .flabel{color:var(--muted);font-size:11px;letter-spacing:.03em}
 .funit{font-size:10px;color:var(--dim)}
 .frow2{display:grid;grid-template-columns:1fr 1fr;gap:8px}
 
-.srow{display:flex;align-items:center;gap:4px}
-.arr{flex-shrink:0;width:25px;height:25px;display:flex;align-items:center;justify-content:center;background:var(--bg2);border:1px solid var(--border2);border-radius:5px;cursor:pointer;color:var(--muted);font-size:10px;transition:all .12s;user-select:none}
-.arr:hover{border-color:var(--acc);color:var(--acc);background:rgba(79,195,247,.08)}
-.arr:active{transform:scale(.88)}
-
-.numinput{flex:1;width:100%;height:25px;background:var(--bg3);border:1px solid var(--border2);border-radius:5px;color:var(--acc);font-family:var(--mono);font-size:12px;font-weight:500;text-align:center;outline:none;padding:0 4px;transition:border-color .12s}
-.numinput:focus{border-color:var(--acc);background:var(--bg2)}
-.numinput:hover{border-color:rgba(79,195,247,.4)}
-.numinput::-webkit-outer-spin-button,.numinput::-webkit-inner-spin-button{-webkit-appearance:none;margin:0}
-.numinput[type=number]{-moz-appearance:textfield}
-
-.select-field{width:100%;height:25px;background:var(--bg3);border:1px solid var(--border2);border-radius:5px;color:var(--acc);font-family:var(--mono);font-size:12px;font-weight:500;padding:0 4px;outline:none;transition:border-color .12s;cursor:pointer}
-.select-field:focus{border-color:var(--acc);background:var(--bg2)}
-.select-field:hover{border-color:rgba(79,195,247,.4)}
-.select-field option{background:var(--bg2);color:var(--acc)}
-
 /* Toggle secondario (2..4 opzioni testuali) */
-.seg{display:grid;gap:0;border:1px solid var(--border2);border-radius:6px;overflow:hidden}
-.seg-2{grid-template-columns:1fr 1fr}
-.seg-4{grid-template-columns:1fr 1fr 1fr 1fr}
-.seg-btn{background:var(--bg3);border:none;padding:6px 4px;cursor:pointer;color:var(--muted);font-family:var(--cond);font-size:12px;font-weight:600;letter-spacing:.04em;transition:all .15s}
-.seg-btn + .seg-btn{border-left:1px solid var(--border2)}
-.seg-btn:hover{background:var(--bg2)}
-.seg-btn.on{background:rgba(79,195,247,.12);color:var(--acc)}
 
 /* Risultati */
-.results-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
-.results-grid-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px}
-.result-box{background:var(--bg1);border:1px solid var(--border);border-radius:6px;padding:10px}
-.result-label{font-size:9px;color:var(--muted);letter-spacing:.07em;text-transform:uppercase;margin-bottom:4px;font-family:var(--cond)}
-.result-value{font-size:16px;font-weight:500;color:var(--acc);font-family:var(--mono)}
-.result-unit{font-size:10px;color:var(--dim);margin-left:3px}
 
 .schematic-wrap{background:var(--bg1);border:1px solid var(--border);border-radius:6px;padding:10px;display:flex;justify-content:center}
 .schematic-wrap svg{width:100%;max-width:520px;height:auto}
-
-.result-section{background:rgba(79,195,247,.05);border:1px solid rgba(79,195,247,.2);border-radius:8px;padding:12px}
-.result-section-title{font-family:var(--cond);font-size:10px;font-weight:700;letter-spacing:.14em;color:var(--acc);text-transform:uppercase;margin-bottom:8px;display:flex;align-items:center;gap:8px}
-.result-section-title::after{content:'';flex:1;height:1px;background:rgba(79,195,247,.15)}
-.verification-grid{display:grid;grid-template-columns:1fr;gap:5px}
-.verify-item{display:flex;justify-content:space-between;align-items:center;padding:5px 8px;background:var(--bg1);border:1px solid var(--border);border-radius:4px;font-size:11px;gap:8px}
-.verify-label{color:var(--muted);flex:1}
-.verify-value{color:var(--text);font-weight:500;font-family:var(--mono);white-space:nowrap}
-.verify-unit{font-size:9px;color:var(--dim);margin-left:4px}
-.verify-status{padding:2px 6px;border-radius:3px;font-size:9px;font-weight:600;margin-left:6px;white-space:nowrap}
-.verify-status.ok{background:rgba(102,187,106,.2);color:var(--up);border:1px solid var(--up)}
-.verify-status.warn{background:rgba(255,167,38,.2);color:var(--amber);border:1px solid var(--amber)}
-.verify-status.err{background:rgba(239,83,80,.2);color:var(--dn);border:1px solid var(--dn)}
 
 /* Barra di utilizzo */
 .util{width:70px;height:5px;background:var(--bg3);border-radius:3px;overflow:hidden;flex-shrink:0}
@@ -99,26 +43,13 @@ body{display:flex;flex-direction:column;align-items:center;min-height:100vh;padd
 .util span.warn{background:var(--amber)}
 .util span.err{background:var(--dn)}
 
-.table-container{overflow-x:auto;max-height:230px;overflow-y:auto;position:relative}
-.dim-table{width:100%;border-collapse:collapse;font-size:10px}
-.dim-table th{background:rgba(79,195,247,.1);color:var(--acc2);padding:5px 4px;text-align:center;border:1px solid var(--border2);font-weight:600;letter-spacing:.05em;position:sticky;top:0}
-.dim-table td{padding:4px;border:1px solid var(--border2);text-align:center;color:var(--text)}
 .dim-table tr.active-row{background:rgba(79,195,247,.12)}
-.dim-table tr:hover{background:rgba(79,195,247,.05)}
 
 .back-btn{font-family:var(--cond);font-size:10px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);text-decoration:none;border:1px solid var(--border2);border-radius:4px;padding:4px 10px;transition:all .15s;white-space:nowrap}
 .back-btn:hover{color:var(--acc);border-color:var(--acc)}
 
-[data-tip]{position:relative;cursor:help}
 [data-tip]:hover::after{content:attr(data-tip);position:absolute;bottom:calc(100% + 7px);left:0;background:#1e2130;border:1px solid rgba(79,195,247,.25);color:#c8cad4;font-size:10px;padding:7px 11px;border-radius:6px;white-space:pre-wrap;max-width:280px;min-width:170px;z-index:999;line-height:1.6;pointer-events:none;font-family:var(--mono);text-align:left;box-shadow:0 4px 20px rgba(0,0,0,.5)}
 
-::-webkit-scrollbar{width:5px;height:5px}
-::-webkit-scrollbar-track{background:var(--bg)}
-::-webkit-scrollbar-thumb{background:var(--bg3);border-radius:3px}
-
-.warn-box{background:rgba(255,167,38,.07);border:1px solid rgba(255,167,38,.25);border-radius:5px;padding:8px 10px;font-size:10px;color:var(--amber);line-height:1.6}
-.info-box{background:rgba(79,195,247,.06);border:1px solid rgba(79,195,247,.18);border-radius:5px;padding:8px 10px;font-size:10px;color:var(--acc);line-height:1.6}
-.note{font-size:10px;color:var(--dim);line-height:1.6}
 .hidden{display:none !important}
 
 .norms{font-size:10px;color:var(--muted);line-height:1.8}
@@ -311,7 +242,15 @@ function box(label,value,unit){
     <div class="result-value">${value}<span class="result-unit">${unit||''}</span></div>
   </div>`;
 }
-function sfClass(sf){ if(!isFinite(sf)) return 'err'; if(sf>=1.1) return 'ok'; if(sf>=1.0) return 'warn'; return 'err'; }
+function sfClass(sf){
+  // Un rapporto infinito (denominatore nullo: v=0, coppia nulla) e' il caso
+  // PIU' favorevole, non un errore: solo NaN o valori negativi sono anomali.
+  if(isNaN(sf) || sf<0) return 'err';
+  if(!isFinite(sf))     return 'ok';
+  if(sf>=1.1) return 'ok';
+  if(sf>=1.0) return 'warn';
+  return 'err';
+}
 function sfLabel(cl){ return cl==='ok'?'OK':(cl==='warn'?'LIMITE':'INSUFF.'); }
 function vrow(label,value,unit,sf,tip){
   const cl=sfClass(sf);
@@ -480,7 +419,7 @@ function calculate(){
     vrow('Potenza: P_adm ≥ P_d', fp(r.Padm,2), 'kW', r.Padm/r.Pd,
          'Potenza ammissibile della cinghia selezionata.\nP_adm = F_u,spec · b · K_z · v') +
     vrow('Coppia: M_adm ≥ M_progetto', fp(r.Madm,1), 'Nm', r.Madm/r.Mreq,
-         'Coppia trasmissibile all\'albero motore dalla cinghia selezionata.\nM_adm = F_u,spec · b · K_z · d₁/2\nConfronto con la coppia di progetto M = 9550·P_d/n₁.') +
+         'Coppia trasmissibile all\'albero motore dalla cinghia selezionata.\nM_adm = F_u,spec · b · K_z · d₁/2\nNOTA: essendo P = M·ω questo margine coincide algebricamente con quello di potenza: si tratta di una lettura alternativa, non di una verifica indipendente.') +
     vrow('Larghezza: b_std ≥ b_rich', fp(r.bSel,1), 'mm', r.bSel/r.bReq,
          'La larghezza standard deve coprire quella richiesta dalla potenza di progetto.') +
     vrow('Denti in presa z_m ≥ 6', isFinite(r.zm)?r.zm:'—', '', r.zm/6,
@@ -501,13 +440,17 @@ function suggerimento(r){
   // Trova, nella stessa famiglia, il primo profilo la cui capacità (larghezza max) copre P_d
   const list = SISTEMI[sistema].profili;
   let cons=null;
+  // Il profilo consigliato va valutato alle STESSE condizioni della verifica:
+  // con il fattore K_z dei denti in presa e rispettando z_min e v_max,
+  // altrimenti puo' indicare un profilo che poi non passa.
+  const Kz2 = isFinite(r.Kz) ? r.Kz : 1;
   for(const key of list){
     const pr=PROFILI[key];
     const dp=r.z1*pr.p/PI;
     const vv=PI*dp*r.n1/60000;
     const bmax=largMM(pr.larg[pr.larg.length-1]);
-    const Pmax=pr.Fu_spec*bmax*vv/1000;
-    if(Pmax>=r.Pd){cons=pr.nome;break;}
+    const Pmax=pr.Fu_spec*bmax*Kz2*vv/1000;
+    if(Pmax>=r.Pd && r.z1>=pr.zmin && vv<=pr.vmax){cons=pr.nome;break;}
   }
   if(!cons){
     return `<div class="warn-box">Con il profilo più grande della famiglia ${SISTEMI[sistema].label} la potenza di progetto (${fp(r.Pd,2)} kW) è al limite: valutare un passo maggiore o una famiglia superiore.</div>`;
@@ -553,7 +496,7 @@ function drawSchema(r){
   const lx1=x1 + r1*Math.sin(th), ly1=yc + r1*Math.cos(th);
   const lx2=x2 + r2*Math.sin(th), ly2=yc + r2*Math.cos(th);
 
-  const g='#4fc3f7', mut='#7a7d8a', dim='#4a4d5a';
+  const g='#4fc3f7', mut='#9a9dab', dim='#7d8090';
   let s2='';
   // cinghia (path chiuso: arco piccola → tangente sup → arco grande → tangente inf)
   s2+=`<path d="M ${ux1.toFixed(1)} ${uy1.toFixed(1)}

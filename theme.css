@@ -1,0 +1,218 @@
+/* ══════════════════════════════════════════════════════════════
+   TEMA CONDIVISO — Moduli calcolo meccanico
+   Palette, chrome di pagina e componenti UI comuni a più schede.
+   Una modifica qui si applica a tutte le pagine che lo includono
+   con <link rel="stylesheet" href="theme.css">.
+   Ogni pagina mantiene nel proprio <style> solo le regole
+   specifiche del suo layout (dimensioni pannelli, griglie, ecc.):
+   quelle dichiarate dopo questo file nel sorgente HTML vincono
+   in caso di stessa specificità, quindi eventuali personalizzazioni
+   locali restano valide.
+══════════════════════════════════════════════════════════════ */
+
+:root{
+  --bg:#0e0f11;--bg1:#141519;--bg2:#1c1d23;--bg3:#23252d;
+  --border:rgba(255,255,255,.07);--border2:rgba(255,255,255,.13);
+  --text:#e8e9ec;--muted:#9a9dab;--dim:#7d8090;
+  --acc:#4fc3f7;--acc2:#0288d1;
+  --up:#66bb6a;--dn:#ef5350;--amber:#ffa726;--violet:#b39ddb;
+  --green:#66bb6a;--red:#ef5350;
+  --r:6px;--r2:10px;
+  --mono:'DM Mono',monospace;--cond:'Barlow Condensed',sans-serif;
+}
+
+/* RESET */
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+
+/* SCROLLBAR */
+::-webkit-scrollbar{width:5px;height:5px}
+::-webkit-scrollbar-track{background:var(--bg)}
+::-webkit-scrollbar-thumb{background:var(--bg3);border-radius:3px}
+
+/* HEADER / BRAND */
+.header h1{font-family:var(--cond);font-size:20px;font-weight:700;letter-spacing:.04em;text-transform:uppercase}
+.sub{font-size:10px;color:var(--muted);letter-spacing:.1em;text-transform:uppercase;flex:1}
+.dot{width:7px;height:7px;border-radius:50%;background:var(--acc);display:inline-block;margin-right:6px;animation:pulse 2s ease-in-out infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
+
+.back-btn{font-family:var(--cond,'Barlow Condensed',sans-serif);font-size:10px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--muted,#9a9dab);text-decoration:none;border:1px solid var(--border2,rgba(255,255,255,.13));border-radius:4px;padding:4px 10px;transition:all .15s;white-space:nowrap;flex-shrink:0}
+.back-btn:hover{color:var(--acc,#4fc3f7);border-color:var(--acc,#4fc3f7)}
+
+/* SECTION TITLE underline + generic field header spacing */
+.stitle::after{content:'';flex:1;height:1px;background:var(--border)}
+.fhdr{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:4px}
+.field:last-child{margin-bottom:0}
+.srow{display:flex;align-items:center;gap:4px}
+.arr:active{transform:scale(.88)}
+
+/* NUMBER INPUT */
+.numinput:hover{border-color:rgba(79,195,247,.4)}
+.numinput:focus{border-color:var(--acc);background:var(--bg2)}
+.numinput::-webkit-outer-spin-button,.numinput::-webkit-inner-spin-button{-webkit-appearance:none;margin:0}
+.numinput[type=number]{-moz-appearance:textfield}
+.numinput[readonly]{color:var(--muted);background:var(--bg1);cursor:default}
+
+/* TOOLTIP [data-tip] */
+[data-tip]{position:relative;cursor:help}
+@keyframes tipIn{from{opacity:0}to{opacity:1}}
+[data-tip]:hover::after{content:attr(data-tip);position:absolute;bottom:calc(100% + 7px);left:0;background:#1e2130;border:1px solid rgba(79,195,247,.25);color:#c8cad4;font-size:10px;padding:7px 11px;border-radius:6px;white-space:pre-wrap;max-width:280px;min-width:180px;z-index:999;line-height:1.6;pointer-events:none;font-family:var(--mono);text-align:left;box-shadow:0 4px 20px rgba(0,0,0,.5);animation:tipIn .12s ease .6s both}
+[data-tip]:hover::before{content:'';position:absolute;bottom:calc(100% + 1px);left:20px;border:5px solid transparent;border-top-color:#1e2130;z-index:1000;pointer-events:none;animation:tipIn .12s ease .6s both}
+[data-tip].tr:hover::after{left:auto;right:0}
+
+/* UTILITY */
+.hidden{display:none!important}
+
+/* MESSAGE BOXES */
+.warnbox{background:rgba(239,83,80,.08);border:1px solid rgba(239,83,80,.25);border-radius:6px;padding:7px 11px;font-size:11px;color:#ef9a9a;display:none;margin-top:6px;line-height:1.4}
+.warnbox.show{display:block}
+.warn-box{background:rgba(255,167,38,.07);border:1px solid rgba(255,167,38,.25);border-radius:5px;padding:8px 10px;font-size:10px;color:var(--amber);line-height:1.6}
+.info-box{background:rgba(79,195,247,.06);border:1px solid rgba(79,195,247,.18);border-radius:5px;padding:8px 10px;font-size:10px;color:var(--acc);line-height:1.6}
+
+/* ══════════════════════════════════════════════════════════════
+   "CARD" RESULT SYSTEM — griglie di risultati/verifica/tabelle
+   (anelli_elastici, cinghie_dentate, connessioni_bullonate,
+   dimensionamento-rullo-bombato, linguette_chiavette)
+══════════════════════════════════════════════════════════════ */
+.results-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.results-grid-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px}
+.result-box{background:var(--bg1);border:1px solid var(--border);border-radius:6px;padding:10px}
+.result-label{font-size:9px;color:var(--muted);letter-spacing:.07em;text-transform:uppercase;margin-bottom:4px;font-family:var(--cond)}
+.result-value{font-size:16px;font-weight:500;color:var(--acc);font-family:var(--mono)}
+.result-unit{font-size:10px;color:var(--dim);margin-left:3px}
+.result-section{background:rgba(79,195,247,.05);border:1px solid rgba(79,195,247,.2);border-radius:8px;padding:12px}
+.result-section-title{font-family:var(--cond);font-size:10px;font-weight:700;letter-spacing:.14em;color:var(--acc);text-transform:uppercase;margin-bottom:8px;display:flex;align-items:center;gap:8px}
+.result-section-title::after{content:'';flex:1;height:1px;background:rgba(79,195,247,.15)}
+
+.verification-grid{display:grid;grid-template-columns:1fr;gap:5px}
+.verify-item{display:flex;justify-content:space-between;align-items:center;padding:5px 8px;background:var(--bg1);border:1px solid var(--border);border-radius:4px;font-size:11px;gap:8px}
+.verify-label{color:var(--muted);flex:1}
+.verify-value{color:var(--text);font-weight:500;font-family:var(--mono);white-space:nowrap}
+.verify-unit{font-size:9px;color:var(--dim);margin-left:4px}
+.verify-status{padding:2px 6px;border-radius:3px;font-size:9px;font-weight:600;margin-left:6px;white-space:nowrap}
+.verify-status.ok{background:rgba(102,187,106,.2);color:var(--up);border:1px solid var(--up)}
+.verify-status.warn{background:rgba(255,167,38,.2);color:var(--amber);border:1px solid var(--amber)}
+.verify-status.err{background:rgba(239,83,80,.2);color:var(--dn);border:1px solid var(--dn)}
+
+.table-container{overflow-x:auto;max-height:230px;overflow-y:auto;position:relative}
+.dim-table{width:100%;border-collapse:collapse;font-size:10px}
+.dim-table th{background:rgba(79,195,247,.1);color:var(--acc2);padding:5px 4px;text-align:center;border:1px solid var(--border2);font-weight:600;letter-spacing:.05em;position:sticky;top:0}
+.dim-table td{padding:4px;border:1px solid var(--border2);text-align:center;color:var(--text)}
+.dim-table tr:hover{background:rgba(79,195,247,.05)}
+
+.select-field{width:100%;height:25px;background:var(--bg3);border:1px solid var(--border2);border-radius:5px;color:var(--acc);font-family:var(--mono);font-size:12px;font-weight:500;padding:0 4px;outline:none;transition:border-color .12s;cursor:pointer}
+.select-field:hover{border-color:rgba(79,195,247,.4)}
+.select-field:focus{border-color:var(--acc);background:var(--bg2)}
+.select-field option{background:var(--bg2);color:var(--acc)}
+
+.norm-badge{font-family:var(--cond);font-size:10px;font-weight:600;letter-spacing:.08em;color:var(--acc);background:rgba(79,195,247,.08);border:1px solid rgba(79,195,247,.22);border-radius:4px;padding:3px 9px;white-space:nowrap}
+
+/* NOTE — box con bordo sinistro (sostituisce le versioni "solo testo") */
+.note{font-size:10px;color:var(--dim);padding:6px 8px;background:rgba(255,255,255,.02);border-radius:3px;border-left:2px solid var(--border2);line-height:1.6}
+
+/* ══════════════════════════════════════════════════════════════
+   NUMBER INPUT + FRECCE SPINNER (▲▼) — base condivisa
+══════════════════════════════════════════════════════════════ */
+.numinput{flex:1;width:100%;height:25px;background:var(--bg3);border:1px solid var(--border2);border-radius:5px;color:var(--acc);font-family:var(--mono);font-size:12px;font-weight:500;text-align:center;outline:none;padding:0 4px;min-width:0;transition:border-color .12s}
+.arr{flex-shrink:0;width:25px;height:25px;display:flex;align-items:center;justify-content:center;background:var(--bg2);border:1px solid var(--border2);border-radius:5px;cursor:pointer;color:var(--muted);font-size:10px;transition:all .12s;user-select:none;-webkit-user-select:none}
+.arr:hover{border-color:var(--acc);color:var(--acc);background:rgba(79,195,247,.08)}
+.arr.held{border-color:var(--acc);color:var(--acc);background:rgba(79,195,247,.18)}
+
+/* ══════════════════════════════════════════════════════════════
+   PULSANTI "A SCELTA" (tab/modalità/toggle) — convenzione colore:
+   blu = scelta singola generica, verde/violetto = coppia di
+   categorie (es. albero/foro), verde/rosso = direzione.
+══════════════════════════════════════════════════════════════ */
+
+/* Modalità di calcolo (calcolatore_lineare/angolare) */
+.mmode-btn{border:1px solid var(--border2);border-radius:6px;padding:6px 5px;cursor:pointer;background:transparent;color:var(--dim);font-family:var(--cond);font-size:10px;font-weight:600;letter-spacing:.05em;text-transform:uppercase;transition:all .14s;text-align:center;line-height:1.3}
+.mmode-btn:hover{background:var(--bg3);color:var(--muted)}
+.mmode-btn.on{border-color:var(--acc);background:rgba(79,195,247,.12);color:var(--acc)}
+.mmode-btn .mm-sub{font-size:8.5px;display:block;margin-top:1.5px;font-weight:400;letter-spacing:.02em;font-family:var(--mono);text-transform:none}
+
+/* Toggle a due categorie (VDI/EC3, albero/foro) */
+.mode-btn,.mount-btn{background:var(--bg3);border:none;padding:12px 8px;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:5px;transition:all .18s;color:var(--muted);font-family:var(--mono)}
+.mode-btn + .mode-btn,.mount-btn + .mount-btn{border-left:1px solid var(--border2)}
+.mode-btn:hover,.mount-btn:hover{background:var(--bg2)}
+.mode-btn.active-vdi,.mode-btn.active-shaft,.mount-btn.active-vdi,.mount-btn.active-shaft{background:rgba(102,187,106,.12);color:var(--up)}
+.mode-btn.active-ec3,.mode-btn.active-bore,.mount-btn.active-ec3,.mount-btn.active-bore{background:rgba(179,157,219,.15);color:var(--violet)}
+.mode-btn .mlabel,.mount-btn .mlabel{font-family:var(--cond);font-size:14px;font-weight:700;letter-spacing:.06em;text-transform:uppercase}
+.mode-btn .mnorm,.mount-btn .mnorm{font-size:9px;letter-spacing:.04em}
+
+/* Varianti prodotto (anelli_elastici) */
+.var-btn{background:var(--bg3);border:1px solid var(--border2);border-radius:6px;padding:7px 4px 5px;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:3px;transition:all .15s;color:var(--muted);font-family:var(--mono)}
+.var-btn:hover{border-color:rgba(79,195,247,.35)}
+.var-btn .vname{font-family:var(--cond);font-size:12px;font-weight:700;letter-spacing:.04em}
+.var-btn .vsub{font-size:8px;color:var(--dim);text-align:center;line-height:1.2}
+.var-btn.active-shaft{border-color:var(--up);background:rgba(102,187,106,.1);color:var(--up)}
+.var-btn.active-shaft .vsub{color:rgba(102,187,106,.6)}
+.var-btn.active-bore{border-color:var(--violet);background:rgba(179,157,219,.1);color:var(--violet)}
+.var-btn.active-bore .vsub{color:rgba(179,157,219,.6)}
+
+/* Toggle direzionale (verde=su/orario, rosso=giù/antiorario) */
+.dir-btn{display:flex;align-items:center;justify-content:center;gap:5px;padding:6px 4px;border:1px solid var(--border2);border-radius:6px;cursor:pointer;background:transparent;color:var(--muted);font-family:var(--cond);font-size:11px;font-weight:600;letter-spacing:.05em;text-transform:uppercase;transition:all .14s}
+.dir-btn:hover{background:var(--bg3)}
+.dir-btn.up.on,.dir-btn.cw.on{border-color:var(--up);background:rgba(102,187,106,.12);color:var(--up)}
+.dir-btn.dn.on,.dir-btn.ccw.on{border-color:var(--dn);background:rgba(239,83,80,.12);color:var(--dn)}
+
+/* Tab strip (ruote_dentate) */
+.tab-btn{font-family:var(--cond);font-size:11px;font-weight:600;letter-spacing:.04em;text-transform:uppercase;padding:7px 4px;border:none;cursor:pointer;border-radius:4px;background:transparent;color:var(--muted);transition:all .15s}
+.tab-btn.active{background:var(--bg3);color:var(--acc);border:1px solid rgba(79,195,247,.2)}
+
+/* Chip pillola — categoria/strumento (formulario_convertitore) */
+.chip{font-family:var(--cond);font-size:11px;font-weight:600;letter-spacing:.03em;padding:6px 12px;border:1px solid var(--border2);border-radius:6px;background:var(--bg2);color:var(--muted);cursor:pointer;transition:all .13s;white-space:nowrap}
+.chip:hover{color:var(--text);background:var(--bg3)}
+.chip.on{border-color:var(--acc);background:rgba(79,195,247,.12);color:var(--acc)}
+
+/* Chip compatta — modalità input P/T (ruote_dentate) */
+.pt-chip{font-family:var(--cond);font-size:10px;font-weight:600;letter-spacing:.04em;text-transform:uppercase;padding:4px 10px;border:1px solid var(--border2);border-radius:3px;cursor:pointer;background:transparent;color:var(--muted);transition:all .1s}
+.pt-chip.active{background:rgba(79,195,247,.1);border-color:rgba(79,195,247,.4);color:var(--acc)}
+.pt-chip.active-green{background:rgba(102,187,106,.1);border-color:rgba(102,187,106,.4);color:var(--up)}
+
+/* Chip forma profilo con icona SVG (calcolatore_lineare/angolare) */
+.pchip{border:1px solid var(--border2);border-radius:5px;padding:5px 2px 4px;cursor:pointer;text-align:center;background:transparent;color:var(--dim);transition:all .15s}
+.pchip:hover{border-color:var(--acc2);color:var(--muted);background:var(--bg2)}
+.pchip.on{border-color:var(--acc);background:rgba(79,195,247,.1);color:var(--acc)}
+.pchip svg{display:block;margin:0 auto}
+
+/* Chip unità di misura (calcolatore_angolare) */
+.uchip{flex:1;min-width:48px;background:var(--bg3);border:1px solid var(--border);border-radius:4px;padding:5px 4px;text-align:center;cursor:pointer;transition:all .13s}
+.uchip:hover{border-color:var(--acc2)}
+.uchip.on{border-color:var(--acc);background:rgba(79,195,247,.1)}
+.uchip .ul{font-size:9px;color:var(--dim);text-transform:uppercase;letter-spacing:.04em;font-family:var(--cond);margin-bottom:1px}
+.uchip .uv{font-size:12px;font-weight:500;color:var(--text)}
+
+/* Info-chip — tile KPI di sola lettura, NON selezionabile (calcolatore_lineare/angolare) */
+.ichip{flex:1;min-width:58px;background:var(--bg3);border:1px solid var(--border);border-radius:4px;padding:4px 4px;text-align:center}
+.ichip .il{font-size:9px;color:var(--dim);text-transform:uppercase;letter-spacing:.04em;font-family:var(--cond);margin-bottom:1px}
+.ichip .iv{font-size:12px;font-weight:500;color:var(--text)}
+.ichip .iu{font-size:9px;color:var(--dim);margin-left:1px}
+
+/* Classificazione accoppiamento a semaforo, non cliccabile (accoppiamenti_iso) */
+.fit-chip{border:1px solid var(--border2);border-radius:5px;padding:6px 2px;cursor:default;text-align:center;background:transparent;color:var(--dim);transition:all .2s}
+.fit-chip.on.lasco{border-color:var(--up);background:rgba(102,187,106,.12);color:var(--up)}
+.fit-chip.on.incerto{border-color:var(--amber);background:rgba(255,167,38,.12);color:var(--amber)}
+.fit-chip.on.forzato{border-color:var(--dn);background:rgba(239,83,80,.12);color:var(--dn)}
+.fit-chip .fc-ico{font-size:15px;display:block;margin-bottom:2px}
+.fit-chip .fc-lbl{font-size:8px;font-family:var(--cond);font-weight:600;letter-spacing:.06em;text-transform:uppercase}
+
+/* Segmented control 2/4 vie (cinghie_dentate, dimensionamento-rullo-bombato) */
+.seg{display:grid;gap:0;border:1px solid var(--border2);border-radius:6px;overflow:hidden}
+.seg-2{grid-template-columns:1fr 1fr}
+.seg-4{grid-template-columns:1fr 1fr 1fr 1fr}
+.seg-btn{background:var(--bg3);border:none;padding:6px 4px;cursor:pointer;color:var(--muted);font-family:var(--cond);font-size:12px;font-weight:600;letter-spacing:.04em;transition:all .15s}
+.seg-btn + .seg-btn{border-left:1px solid var(--border2)}
+.seg-btn:hover{background:var(--bg2)}
+.seg-btn.on{background:rgba(79,195,247,.12);color:var(--acc)}
+
+/* Toggle radio-styled (viti_madreviti) */
+.rdbtn{flex:1;height:25px;display:flex;align-items:center;justify-content:center;gap:4px;background:var(--bg3);border:1px solid var(--border2);border-radius:5px;cursor:pointer;font-size:10px;font-family:var(--cond);font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--dim);transition:all .15s;user-select:none}
+.rdbtn:has(input:checked){border-color:var(--acc);background:rgba(79,195,247,.1);color:var(--acc)}
+.rdbtn.dir-raise:has(input:checked){border-color:var(--up);background:rgba(102,187,106,.1);color:var(--up)}
+.rdbtn.dir-lower:has(input:checked){border-color:var(--amber);background:rgba(255,167,38,.1);color:var(--amber)}
+.rdbtn input{display:none}
+
+/* KPI card generica (calcolatore_lineare/angolare) */
+.mc{background:var(--bg1);border:1px solid var(--border);border-radius:6px;padding:7px 9px}
+.mc.hi{border-color:rgba(79,195,247,.35);background:rgba(79,195,247,.05)}
+.mc.hi .mv{color:var(--acc)}
+.mv{font-size:15px;font-weight:500;color:var(--text);line-height:1}

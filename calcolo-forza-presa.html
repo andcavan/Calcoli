@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Calcolo Forza di Presa — Pinze Industriali</title>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@300;400;500&family=Barlow+Condensed:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="theme.css">
 <style>
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -24,7 +25,7 @@
   /* ── Header ── */
   header {
     margin-bottom: 32px;
-    border-bottom: 1px solid rgba(232,228,221,0.1);
+    border-bottom: 1px solid rgba(255,255,255,0.1);
     padding-bottom: 24px;
   }
   .header-top {
@@ -36,9 +37,9 @@
 
   .logo-icon {
     width: 44px; height: 44px; border-radius: 10px;
-    border: 1px solid rgba(196,91,40,0.3);
+    border: 1px solid rgba(79,195,247,0.3);
     display: flex; align-items: center; justify-content: center;
-    background: rgba(196,91,40,0.08); flex-shrink: 0;
+    background: rgba(79,195,247,0.08); flex-shrink: 0;
   }
 
   h1 {
@@ -47,56 +48,56 @@
     color: #e8e9ec; letter-spacing: .04em; text-transform: uppercase;
   }
   .subtitle {
-    font-size: 12px; color: #7a7d8a;
+    font-size: 12px; color: #9a9dab;
     margin-top: 2px; letter-spacing: 0.5px;
   }
 
   .info-btn {
     width: 32px; height: 32px; border-radius: 50%;
-    border: 1px solid rgba(232,228,221,0.15);
-    background: transparent; color: #8a8580;
+    border: 1px solid rgba(255,255,255,0.15);
+    background: transparent; color: #9a9dab;
     font-size: 14px; cursor: pointer;
     font-family: 'Barlow Condensed', sans-serif;
     flex-shrink: 0; display: flex; align-items: center; justify-content: center;
     transition: all 0.2s;
   }
-  .info-btn:hover { border-color: #C45B28; color: #C45B28; }
+  .info-btn:hover { border-color: #4fc3f7; color: #4fc3f7; }
 
   /* ── Info Panel ── */
   .info-panel {
     margin-top: 20px; padding: 18px; border-radius: 10px;
-    background: rgba(196,91,40,0.06);
-    border: 1px solid rgba(196,91,40,0.15);
+    background: rgba(79,195,247,0.06);
+    border: 1px solid rgba(79,195,247,0.15);
     display: none;
   }
   .info-panel.open { display: block; }
   .info-panel-title {
-    font-size: 13px; font-weight: 500; color: #C45B28;
+    font-size: 13px; font-weight: 500; color: #4fc3f7;
     margin-bottom: 8px; text-transform: uppercase; letter-spacing: 1px;
   }
   .formula {
     font-family: 'Barlow Condensed', sans-serif;
-    font-size: 20px; color: #e8e4dd; margin-bottom: 6px;
+    font-size: 20px; color: #e8e9ec; margin-bottom: 6px;
   }
   .info-grid {
     display: grid; grid-template-columns: 1fr 1fr;
     gap: 4px 16px; margin-top: 12px;
-    font-size: 12px; color: #8a8580;
+    font-size: 12px; color: #9a9dab;
   }
   .info-note {
-    font-size: 11px; color: #6a6560;
+    font-size: 11px; color: #7d8090;
     font-style: italic; margin-top: 10px;
   }
 
   /* ── Back Button ── */
-  .back-btn{font-family:'Barlow Condensed',sans-serif;font-size:10px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:#7a7d8a;text-decoration:none;border:1px solid rgba(232,228,221,0.15);border-radius:4px;padding:4px 10px;transition:all .15s;white-space:nowrap;flex-shrink:0;display:inline-block;margin-bottom:12px}
-  .back-btn:hover{color:#C45B28;border-color:#C45B28}
+  .back-btn{font-family:'Barlow Condensed',sans-serif;font-size:10px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:#9a9dab;text-decoration:none;border:1px solid rgba(255,255,255,0.15);border-radius:4px;padding:4px 10px;transition:all .15s;white-space:nowrap;flex-shrink:0;display:inline-block;margin-bottom:12px}
+  .back-btn:hover{color:#4fc3f7;border-color:#4fc3f7}
 
   /* ── Tooltip ── */
   [data-tip]{position:relative;cursor:default}
   @keyframes tipIn{from{opacity:0}to{opacity:1}}
-  [data-tip]:hover::after{content:attr(data-tip);position:absolute;bottom:calc(100% + 7px);left:0;background:#222220;border:1px solid rgba(196,91,40,.3);color:#e8e9ec;font-size:11px;padding:8px 12px;border-radius:8px;white-space:pre-wrap;max-width:280px;min-width:180px;z-index:999;line-height:1.7;pointer-events:none;font-family:'DM Mono',monospace;text-align:left;box-shadow:0 4px 20px rgba(0,0,0,.5);animation:tipIn .12s ease .6s both}
-  [data-tip]:hover::before{content:'';position:absolute;bottom:calc(100% + 1px);left:20px;border:5px solid transparent;border-top-color:#222220;z-index:1000;pointer-events:none;animation:tipIn .12s ease .6s both}
+  [data-tip]:hover::after{content:attr(data-tip);position:absolute;bottom:calc(100% + 7px);left:0;background:#1e2130;border:1px solid rgba(79,195,247,.3);color:#e8e9ec;font-size:11px;padding:8px 12px;border-radius:8px;white-space:pre-wrap;max-width:280px;min-width:180px;z-index:999;line-height:1.7;pointer-events:none;font-family:'DM Mono',monospace;text-align:left;box-shadow:0 4px 20px rgba(0,0,0,.5);animation:tipIn .12s ease .6s both}
+  [data-tip]:hover::before{content:'';position:absolute;bottom:calc(100% + 1px);left:20px;border:5px solid transparent;border-top-color:#1e2130;z-index:1000;pointer-events:none;animation:tipIn .12s ease .6s both}
 
   /* ── Form ── */
   .form-section { display: flex; flex-direction: column; gap: 20px; }
@@ -108,35 +109,35 @@
 
   label {
     font-size: 11px; text-transform: uppercase;
-    letter-spacing: 1px; color: #8a8580;
+    letter-spacing: 1px; color: #9a9dab;
     display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
   }
 
   .mu-badge {
-    font-size: 11px; color: #C45B28;
-    background: rgba(196,91,40,0.1);
+    font-size: 11px; color: #4fc3f7;
+    background: rgba(79,195,247,0.1);
     padding: 2px 8px; border-radius: 4px;
   }
 
   input, select {
     font-family: 'DM Mono', monospace;
     padding: 12px 14px; border-radius: 8px;
-    border: 1px solid rgba(232,228,221,0.12);
-    background: rgba(232,228,221,0.04);
-    color: #e8e4dd; font-size: 15px;
+    border: 1px solid rgba(255,255,255,0.12);
+    background: rgba(255,255,255,0.04);
+    color: #e8e9ec; font-size: 15px;
     transition: all 0.2s;
   }
   select {
     font-size: 14px; appearance: none; cursor: pointer;
-    background-image: url("data:image/svg+xml,%3Csvg width='10' height='6' viewBox='0 0 10 6' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1 1L5 5L9 1' stroke='%238a8580' stroke-width='1.5' stroke-linecap='round'/%3E%3C/svg%3E");
+    background-image: url("data:image/svg+xml,%3Csvg width='10' height='6' viewBox='0 0 10 6' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1 1L5 5L9 1' stroke='%239a9dab' stroke-width='1.5' stroke-linecap='round'/%3E%3C/svg%3E");
     background-repeat: no-repeat;
     background-position: right 14px center;
     padding-right: 36px;
   }
-  select option { background: #1a1a18; color: #e8e4dd; }
+  select option { background: #1c1d23; color: #e8e9ec; }
   input:focus, select:focus {
-    outline: none; border-color: #C45B28;
-    box-shadow: 0 0 0 3px rgba(196,91,40,0.15);
+    outline: none; border-color: #4fc3f7;
+    box-shadow: 0 0 0 3px rgba(79,195,247,0.15);
   }
   input::placeholder { color: #4a4540; }
 
@@ -149,16 +150,16 @@
 
   .toggle-btn {
     flex: 1; padding: 10px 12px; border-radius: 8px;
-    border: 1px solid rgba(232,228,221,0.12);
-    background: transparent; color: #8a8580;
+    border: 1px solid rgba(255,255,255,0.12);
+    background: transparent; color: #9a9dab;
     font-size: 13px; cursor: pointer;
     display: flex; align-items: center; justify-content: center; gap: 6px;
     font-family: 'DM Mono', monospace; transition: all 0.2s;
   }
-  .toggle-btn:hover { border-color: rgba(196,91,40,0.3); }
+  .toggle-btn:hover { border-color: rgba(79,195,247,0.3); }
   .toggle-btn.active {
-    border: 1px solid rgba(196,91,40,0.5);
-    background: rgba(196,91,40,0.1); color: #C45B28;
+    border: 1px solid rgba(79,195,247,0.5);
+    background: rgba(79,195,247,0.1); color: #4fc3f7;
   }
   .toggle-btn .icon { font-size: 18px; }
 
@@ -173,28 +174,28 @@
 
   .btn-calc {
     flex: 1; padding: 14px; border-radius: 10px;
-    border: none; background: #C45B28; color: #fff;
+    border: none; background: #4fc3f7; color: #fff;
     font-size: 14px; font-weight: 500; cursor: pointer;
     font-family: 'DM Mono', monospace;
     letter-spacing: 1px; text-transform: uppercase;
     transition: all 0.2s;
   }
-  .btn-calc:hover { background: #b35020; transform: translateY(-1px); }
+  .btn-calc:hover { background: #0288d1; transform: translateY(-1px); }
   .btn-calc:active { transform: translateY(0); }
 
   .btn-reset {
     padding: 14px 24px; border-radius: 10px;
-    border: 1px solid rgba(232,228,221,0.12);
-    background: transparent; color: #8a8580;
+    border: 1px solid rgba(255,255,255,0.12);
+    background: transparent; color: #9a9dab;
     font-size: 13px; cursor: pointer;
     font-family: 'DM Mono', monospace; transition: all 0.2s;
   }
-  .btn-reset:hover { background: rgba(196,91,40,0.1); }
+  .btn-reset:hover { background: rgba(79,195,247,0.1); }
 
   /* ── Results ── */
   .result-section {
     margin-top: 32px; padding-top: 24px;
-    border-top: 1px solid rgba(232,228,221,0.1);
+    border-top: 1px solid rgba(255,255,255,0.1);
     display: none;
   }
   .result-section.visible {
@@ -208,7 +209,7 @@
 
   .result-header { display: flex; align-items: center; gap: 10px; margin-bottom: 20px; }
   .pulse-dot {
-    width: 8px; height: 8px; border-radius: 50%; background: #C45B28;
+    width: 8px; height: 8px; border-radius: 50%; background: #4fc3f7;
     animation: pulse 2s ease-in-out infinite; display: inline-block;
   }
   @keyframes pulse {
@@ -217,41 +218,41 @@
   }
   .result-title {
     font-size: 11px; text-transform: uppercase;
-    letter-spacing: 2px; color: #8a8580;
+    letter-spacing: 2px; color: #9a9dab;
   }
 
   .result-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
   @media (max-width: 480px) { .result-grid { grid-template-columns: 1fr; } }
 
   .result-card {
-    background: rgba(232,228,221,0.05);
-    border: 1px solid rgba(232,228,221,0.1);
+    background: rgba(255,255,255,0.05);
+    border: 1px solid rgba(255,255,255,0.1);
     border-radius: 10px; padding: 18px 16px;
     display: flex; flex-direction: column; gap: 4px;
   }
   .result-card.accent {
-    border: 1px solid rgba(196,91,40,0.4);
-    background: rgba(196,91,40,0.06);
+    border: 1px solid rgba(79,195,247,0.4);
+    background: rgba(79,195,247,0.06);
   }
   .result-card .rc-label {
     font-size: 11px; text-transform: uppercase;
-    letter-spacing: 1px; color: #8a8580;
+    letter-spacing: 1px; color: #9a9dab;
     display: block;
   }
   .result-card .rc-value {
     font-family: 'Barlow Condensed', sans-serif;
-    font-size: 28px; color: #e8e4dd; line-height: 1.1;
+    font-size: 28px; color: #e8e9ec; line-height: 1.1;
   }
-  .result-card.accent .rc-value { color: #C45B28; }
-  .result-card .rc-sub { font-size: 12px; color: #6a6560; }
+  .result-card.accent .rc-value { color: #4fc3f7; }
+  .result-card .rc-sub { font-size: 12px; color: #7d8090; }
 
   .summary-box {
     margin-top: 20px; padding: 18px; border-radius: 10px;
-    background: rgba(232,228,221,0.03);
-    border: 1px solid rgba(232,228,221,0.08);
+    background: rgba(255,255,255,0.03);
+    border: 1px solid rgba(255,255,255,0.08);
   }
-  .summary-text { font-size: 13px; color: #8a8580; line-height: 1.6; }
-  .summary-highlight { font-size: 14px; color: #e8e4dd; margin-top: 10px; line-height: 1.5; }
+  .summary-text { font-size: 13px; color: #9a9dab; line-height: 1.6; }
+  .summary-highlight { font-size: 14px; color: #e8e9ec; margin-top: 10px; line-height: 1.5; }
 
   /* ── Custom mu row ── */
   #custom-mu-row { display: none; margin-top: 8px; }
@@ -260,7 +261,7 @@
   /* ── Footer ── */
   footer {
     margin-top: 40px; padding-top: 16px;
-    border-top: 1px solid rgba(232,228,221,0.06);
+    border-top: 1px solid rgba(255,255,255,0.06);
     font-size: 11px; color: #4a4540; text-align: center;
   }
 </style>
@@ -276,9 +277,9 @@
       <div class="header-left">
         <div class="logo-icon">
           <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
-            <path d="M7 8L3 12L7 16" stroke="#C45B28" stroke-width="2" stroke-linecap="round"/>
-            <path d="M17 8L21 12L17 16" stroke="#C45B28" stroke-width="2" stroke-linecap="round"/>
-            <line x1="12" y1="3" x2="12" y2="21" stroke="#C45B28" stroke-width="1.5" stroke-dasharray="3 3"/>
+            <path d="M7 8L3 12L7 16" stroke="#4fc3f7" stroke-width="2" stroke-linecap="round"/>
+            <path d="M17 8L21 12L17 16" stroke="#4fc3f7" stroke-width="2" stroke-linecap="round"/>
+            <line x1="12" y1="3" x2="12" y2="21" stroke="#4fc3f7" stroke-width="1.5" stroke-dasharray="3 3"/>
           </svg>
         </div>
         <div>
@@ -291,17 +292,19 @@
 
     <div class="info-panel" id="info-panel">
       <p class="info-panel-title">Formula utilizzata</p>
-      <p class="formula">F<sub>presa</sub> = (m · g · k<sub>s</sub>) / (n · μ<sub>s</sub>)</p>
+      <p class="formula">F<sub>ganascia</sub> = (m · (g + a) · k<sub>s</sub> · k<sub>geo</sub>) / (n · μ<sub>s</sub>)</p>
       <p class="formula">P = F<sub>presa per ganascia</sub> / A</p>
       <div class="info-grid">
         <span><b>m</b> = massa oggetto</span>
         <span><b>g</b> = 9.81 m/s²</span>
+        <span><b>a</b> = accelerazione manipolatore</span>
         <span><b>k<sub>s</sub></b> = fattore di sicurezza</span>
+        <span><b>k<sub>geo</sub></b> = 1,0 su attrito · 0,3 in appoggio</span>
         <span><b>n</b> = numero ganasce</span>
         <span><b>μ<sub>s</sub></b> = coeff. attrito statico</span>
         <span><b>A</b> = area di contatto</span>
       </div>
-      <p class="info-note">Per presa verticale (ganasce sopra/sotto) la gravità è già sostenuta → fattore 0.5. Per presa orizzontale (ganasce ai lati) l'attrito deve vincere tutto il peso → fattore 1.0.</p>
+      <p class="info-note">Il fattore geometrico vale 1,0 quando il carico grava sull&rsquo;attrito (caso di progetto normale) e 0,3 quando una battuta lo sostiene per forma. L&rsquo;accelerazione del manipolatore si somma alla gravita&#768;: a = 0 solo per manipolazioni statiche.</p>
     </div>
   </header>
 
@@ -313,15 +316,17 @@
       <div class="field">
         <label for="weight" data-tip="Massa dell'oggetto da afferrare\nUnità: kg\nRange tipico: 0.1 ÷ 500 kg\nDetermina la forza peso F = m × g da vincere con l'attrito">Peso oggetto (kg)</label>
         <input type="number" id="weight" min="0" step="0.01" placeholder="es. 5.0">
+        <label for="accel" style="margin-top:10px" data-tip="Accelerazione massima del manipolatore durante la movimentazione, inclusa quella di arresto di emergenza.\nSi somma alla gravità: a_tot = g + a.\nRobot antropomorfi: 5÷15 m/s². Assi lineari veloci: 10÷30 m/s². Manipolazione statica: 0.">Accelerazione manipolatore (m/s²)</label>
+        <input type="number" id="accel" min="0" step="0.5" value="0" placeholder="es. 10">
       </div>
       <div class="field">
-        <label data-tip="Orientamento geometrico della presa rispetto alla gravità\nVerticale: ganasce sopra/sotto — attrito deve vincere solo inerzia\nOrizzontale: ganasce ai lati — attrito deve vincere tutto il peso\nInfluisce sul fattore geometrico nella formula">Orientamento presa</label>
+        <label data-tip="Direzione del carico rispetto alle superfici di presa.\n\nCARICO SULL&#39;ATTRITO (predefinito, caso peggiore): la risultante agisce PARALLELA alle facce delle ganasce ed è equilibrata dal solo attrito.\n\nCARICO IN APPOGGIO: la risultante spinge PERPENDICOLARMENTE contro una battuta che la sostiene per forma. All&#39;attrito resta la sola quota tangenziale, ma la presa va comunque garantita: si applica un minimo del 30%.">Direzione del carico</label>
         <div class="toggle-row">
-          <button class="toggle-btn active" id="btn-vertical" onclick="setOrientation('vertical')">
-            <span class="icon">↕</span> Verticale (no gravità)
+          <button class="toggle-btn active" id="btn-horizontal" onclick="setOrientation('horizontal')">
+            <span class="icon">&#8597;</span> Carico sull&rsquo;attrito
           </button>
-          <button class="toggle-btn" id="btn-horizontal" onclick="setOrientation('horizontal')">
-            <span class="icon">↔</span> Orizzontale (gravità)
+          <button class="toggle-btn" id="btn-vertical" onclick="setOrientation('vertical')">
+            <span class="icon">&#8869;</span> Carico in appoggio
           </button>
         </div>
       </div>
@@ -329,7 +334,7 @@
 
     <!-- Row 2: Material -->
     <div class="field">
-      <label for="material" data-tip="Coppia di materiali ganascia/oggetto — determina il coefficiente di attrito μs statico\nValori tipici: gomma/acciaio ~0.8, acciaio/acciaio ~0.15÷0.3\nμs più alto → forza di presa minore necessaria\nUsa 'Personalizzato' per inserire un valore specifico">
+      <label for="material" data-tip="Coppia di materiali ganascia/oggetto — determina il coefficiente di attrito μs statico\nValori di progetto: gomma/acciaio ~0.6, acciaio/acciaio ~0.15 (0.35 se zigrinato)\nμs più alto → forza di presa minore necessaria\nUsa 'Personalizzato' per inserire un valore specifico">
         Materiali a contatto
         <span class="mu-badge" id="mu-badge">μ<sub>s</sub> = 0.80</span>
       </label>
@@ -432,34 +437,40 @@
 
 <script>
 // ── Data ──
+// Coefficienti di attrito statico per ganasce industriali.
+// Sono valori DI PROGETTO su superfici in condizioni reali (lavorate, non
+// perfettamente pulite, con possibile velo d'olio), non i valori da manuale
+// di fisica per superfici pulite e asciutte — che per acciaio-acciaio
+// arrivano a 0,74 e porterebbero a sottodimensionare la pinza di tre volte.
 const FRICTION = {
-  "Acciaio - Acciaio": { s: 0.74, k: 0.57 },
-  "Acciaio - Alluminio": { s: 0.61, k: 0.47 },
-  "Acciaio - Ottone": { s: 0.51, k: 0.44 },
-  "Acciaio - Rame": { s: 0.53, k: 0.36 },
-  "Acciaio - Ghisa": { s: 0.40, k: 0.23 },
+  "Acciaio - Acciaio": { s: 0.15, k: 0.12 },
+  "Acciaio - Acciaio (zigrinato)": { s: 0.35, k: 0.30 },
+  "Acciaio - Alluminio": { s: 0.25, k: 0.20 },
+  "Acciaio - Ottone": { s: 0.20, k: 0.17 },
+  "Acciaio - Rame": { s: 0.22, k: 0.18 },
+  "Acciaio - Ghisa": { s: 0.20, k: 0.16 },
   "Acciaio - Teflon (PTFE)": { s: 0.04, k: 0.04 },
-  "Acciaio - Gomma": { s: 0.80, k: 0.70 },
-  "Acciaio - Legno": { s: 0.50, k: 0.40 },
-  "Acciaio - Plastica (ABS)": { s: 0.35, k: 0.30 },
-  "Acciaio - Vetro": { s: 0.50, k: 0.40 },
-  "Acciaio - Ceramica": { s: 0.40, k: 0.30 },
-  "Alluminio - Alluminio": { s: 1.05, k: 0.40 },
-  "Alluminio - Gomma": { s: 0.80, k: 0.60 },
-  "Alluminio - Plastica (ABS)": { s: 0.30, k: 0.25 },
-  "Gomma - Gomma": { s: 1.15, k: 0.90 },
-  "Gomma - Cemento": { s: 1.00, k: 0.80 },
-  "Gomma - Vetro": { s: 0.75, k: 0.60 },
-  "Gomma - Legno": { s: 0.70, k: 0.55 },
-  "Legno - Legno": { s: 0.50, k: 0.30 },
-  "Legno - Plastica (ABS)": { s: 0.40, k: 0.30 },
-  "Vetro - Vetro": { s: 0.94, k: 0.40 },
+  "Acciaio - Gomma": { s: 0.60, k: 0.50 },
+  "Acciaio - Legno": { s: 0.35, k: 0.28 },
+  "Acciaio - Plastica (ABS)": { s: 0.25, k: 0.22 },
+  "Acciaio - Vetro": { s: 0.25, k: 0.20 },
+  "Acciaio - Ceramica": { s: 0.25, k: 0.20 },
+  "Alluminio - Alluminio": { s: 0.30, k: 0.25 },
+  "Alluminio - Gomma": { s: 0.55, k: 0.45 },
+  "Alluminio - Plastica (ABS)": { s: 0.22, k: 0.18 },
+  "Gomma - Gomma": { s: 0.70, k: 0.60 },
+  "Gomma - Cemento": { s: 0.70, k: 0.60 },
+  "Gomma - Vetro": { s: 0.50, k: 0.40 },
+  "Gomma - Legno": { s: 0.50, k: 0.42 },
+  "Legno - Legno": { s: 0.35, k: 0.25 },
+  "Legno - Plastica (ABS)": { s: 0.30, k: 0.25 },
+  "Vetro - Vetro": { s: 0.40, k: 0.30 },
   "Teflon (PTFE) - Teflon (PTFE)": { s: 0.04, k: 0.04 },
   "Personalizzato": { s: 0, k: 0 }
 };
 
 // ── State ──
-let orientation = "vertical";
+let orientation = "horizontal";   // caso peggiore: carico interamente sull'attrito
 let jaws = 2;
 
 // ── Init ──
@@ -549,13 +560,19 @@ function calculate() {
               : A_raw * 1e6;
 
   const g = 9.81;
-  const W = m * g;
+  const a = Math.max(0, parseFloat(document.getElementById("accel").value) || 0);
+  // La forza da trattenere non e' solo il peso: durante la movimentazione
+  // (e soprattutto in un arresto di emergenza) l'inerzia si somma alla
+  // gravita'. Con a = 0 si ricade nel caso statico.
+  const W  = m * g;              // peso, per la sola visualizzazione
+  const Fi = m * (g + a);        // forza risultante da trattenere
 
-  // Vertical: gravity supported by bottom jaw → 0.5
-  // Horizontal: friction must counteract full weight → 1.0
-  const ef = orientation === "horizontal" ? 1.0 : 0.5;
+  // k_geo: 1.0 quando la risultante grava sull'attrito (caso di progetto
+  // normale); 0.3 quando una battuta la sostiene per forma — non 0, perche'
+  // la presa deve comunque restare stabile contro vibrazioni e coppie.
+  const ef = orientation === "horizontal" ? 1.0 : 0.3;
 
-  const F_total = (W * sf * ef) / mu;
+  const F_total = (Fi * sf * ef) / mu;
   const F_jaw = F_total / jaws;
   const P = F_jaw / A_m2;
   const P_bar = P * 1e-5;
@@ -572,10 +589,12 @@ function calculate() {
   document.getElementById("r-ppsi").textContent = fmt(P / 6894.76, 2) + " psi";
 
   document.getElementById("summary-text").innerHTML =
-    `Per bloccare un oggetto di <b>${m} kg</b> (${fmt(W)} N) ` +
-    `con ${jaws} ganasce in <b>${mat}</b> (μ<sub>s</sub>=${mu}), ` +
+    `Per trattenere un oggetto di <b>${m} kg</b> ` +
+    `(peso ${fmt(W)} N; con a = ${a} m/s² la forza da equilibrare è <b>${fmt(Fi)} N</b>) ` +
+    `con ${jaws} ganasce in <b>${mat}</b> (μ<sub>s</sub> = ${mu}), ` +
     `area ${A_mm2.toFixed(1)} mm² per ganascia, ` +
-    `fattore di sicurezza ${sf}×:`;
+    `fattore di sicurezza ${sf}× e carico ` +
+    `${orientation === "horizontal" ? "sull’attrito (k_geo = 1,0)" : "in appoggio (k_geo = 0,3)"}:`;
 
   document.getElementById("summary-highlight").innerHTML =
     `Servono <b>${fmt(F_jaw)} N</b> per ganascia, ` +
@@ -587,6 +606,7 @@ function calculate() {
 // ── Real-time listeners ──
 document.addEventListener('DOMContentLoaded', function() {
   document.getElementById('weight').addEventListener('input', calculate);
+  document.getElementById('accel').addEventListener('input', calculate);
   document.getElementById('area').addEventListener('input', calculate);
   document.getElementById('area-unit').addEventListener('change', calculate);
   document.getElementById('safety').addEventListener('change', calculate);
@@ -596,14 +616,15 @@ document.addEventListener('DOMContentLoaded', function() {
 // ── Reset ──
 function resetForm() {
   document.getElementById("weight").value = "";
+  document.getElementById("accel").value = "0";
   document.getElementById("area").value = "";
   document.getElementById("area-unit").value = "mm2";
   document.getElementById("material").value = "Acciaio - Gomma";
   document.getElementById("safety").value = "2.0";
   document.getElementById("custom-mu").value = "";
   document.getElementById("custom-mu-row").classList.remove("visible");
-  document.getElementById("mu-badge").innerHTML = "μ<sub>s</sub> = 0.80";
-  setOrientation("vertical");
+  document.getElementById("mu-badge").innerHTML = "μ<sub>s</sub> = 0.60";
+  setOrientation("horizontal");
   setJaws(2);
   document.getElementById("results").classList.remove("visible");
 }

@@ -5,19 +5,19 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Trave a Flessione</title>
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@300;400;500&family=Barlow+Condensed:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="theme.css">
 <style>
 :root{
   --bg:#0e0f11;--bg2:#1c1d23;--bg3:#1a1e28;
   --surface:#1e2330;--surface2:#252c3d;
-  --border:#2e3550;--border2:#3d4663;
+  --border:rgba(255,255,255,.07);--border2:rgba(255,255,255,.13);
   --accent:#4fc3f7;--accent2:#7bb8ff;
-  --gold:#f0b429;--gold2:#ffd166;
-  --green:#3ecf8e;--red:#f66d6d;--orange:#ff8c42;--violet:#b39ddb;
-  --text:#e2e8f4;--text2:#8a94aa;--text3:#5a6278;
+  --gold:#ffa726;--gold2:#ffd166;
+  --green:#66bb6a;--red:#ef5350;--orange:#ff8c42;--violet:#b39ddb;
+  --text:#e8e9ec;--text2:#9a9dab;--text3:#7d8090;
   --mono:'DM Mono',monospace;--head:'Barlow Condensed',sans-serif;
   --r:8px;
 }
-*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 body{background:var(--bg);color:var(--text);font-family:var(--mono);font-size:13px;min-height:100vh}
 
 header{background:var(--bg2);border-bottom:1px solid var(--border);padding:0 28px;display:flex;align-items:center;gap:18px;height:68px;position:sticky;top:0;z-index:200}
@@ -438,9 +438,29 @@ function clearAll(){
 // ═══════════════════════════════════════════════════════
 function v(id){return parseFloat(document.getElementById(id)?.value)||0;}
 
+// Area resistente a taglio Av: parte della sezione che porta effettivamente
+// il taglio. Per i profili aperti è l'anima; per le sezioni piene si usa il
+// fattore di taglio (5/6 per rettangoli, 0.9 per i tondi).
+function shearArea(type, A, dims){
+  switch(type){
+    case 'tondo':        return 0.9  * A;
+    case 'tubo_tondo':   return 0.5  * A;            // ~2A/π per tubi sottili
+    case 'rettangolare':
+    case 'quadrata':
+    case 'esagonale':    return 5/6  * A;
+    case 'tubo_rett':    return 2 * dims.H * dims.t; // le due anime verticali
+    case 'tubo_quad':    return 2 * dims.S * dims.t;
+    case 'H':            return dims.H * dims.tw;    // anima piena (EN 1993-1-1)
+    case 'U':            return dims.H * dims.tw;
+    case 'T':            return dims.hw * dims.tw;
+    case 'L':            return dims.b2 * dims.t;
+    default:             return A;
+  }
+}
+
 function getSectionProps(){
   const type = document.getElementById('sec-type').value;
-  let A=0, I=0, W=0, yc=0, desc='', valid=true;
+  let A=0, I=0, W=0, yc=0, desc='', valid=true, dims={};
 
   switch(type){
     case 'tondo':{
@@ -458,24 +478,27 @@ function getSectionProps(){
     case 'tubo_tondo':{
       const D=v('d-D'),t=v('d-t_td'),d=D-2*t;
       if(D<=0||t<=0||d<=0){valid=false;break;}
-      A=Math.PI*(D*D-d*d)/4; I=Math.PI*(D*D*D*D-d*d*d*d)/64; W=I/(D/2);
+      A=Math.PI*(D*D-d*d)/4; I=Math.PI*(D*D*D*D-d*d*d*d)/64; W=I/(D/2); dims={D,t};
       desc=`⌀${D}×${t} mm`; break;}
     case 'tubo_rett':{
       const B=v('d-Br'),H=v('d-Hr'),t=v('d-t_tr'),b=B-2*t,h=H-2*t;
       if(B<=0||H<=0||t<=0||b<=0||h<=0){valid=false;break;}
-      A=B*H-b*h; I=(B*H*H*H-b*h*h*h)/12; W=I/(H/2);
+      A=B*H-b*h; I=(B*H*H*H-b*h*h*h)/12; W=I/(H/2); dims={B,H,t};
       desc=`${B}×${H}×${t} mm`; break;}
     case 'tubo_quad':{
       const S=v('d-Aq'),t=v('d-t_tq'),s=S-2*t;
       if(S<=0||t<=0||s<=0){valid=false;break;}
-      A=S*S-s*s; I=(S*S*S*S-s*s*s*s)/12; W=I/(S/2);
+      A=S*S-s*s; I=(S*S*S*S-s*s*s*s)/12; W=I/(S/2); dims={S,t};
       desc=`□${S}×${t} mm`; break;}
     case 'esagonale':{
       const s=v('d-s'); if(s<=0){valid=false;break;}
-      const a=s/Math.sqrt(3);
+      const a=s/Math.sqrt(3);              // lato, da apertura di chiave s
       A=3*Math.sqrt(3)/2*a*a;
-      I=5*Math.sqrt(3)/16*a*a*a*a;
-      W=I/(s/2);
+      I=5*Math.sqrt(3)/16*a*a*a*a;         // uguale per i due assi principali
+      // La distanza dalla fibra estrema dipende dall'orientamento: s/2 con i
+      // piani perpendicolari all'asse, a (= s/√3) sugli spigoli. Si adotta il
+      // caso peggiore, altrimenti W risulta sovrastimato del 15%.
+      W=I/a;
       desc=`AF${s} mm`; break;}
     case 'L':{
       const b1=v('d-Lb1'),b2=v('d-Lb2'),t=v('d-Lt');
@@ -485,7 +508,7 @@ function getSectionProps(){
       const y1=t/2, y2=t+(b2-t)/2;
       yc=(A1*y1+A2*y2)/A;
       I=b1*t*t*t/12+A1*(yc-y1)*(yc-y1)+t*(b2-t)*(b2-t)*(b2-t)/12+A2*(yc-y2)*(yc-y2);
-      W=I/Math.max(b2-yc,yc);
+      W=I/Math.max(b2-yc,yc); dims={b1,b2,t};
       desc=`L${b1}×${b2}×${t} mm`; break;}
     case 'T':{
       const bf=v('d-Tbf'),tf=v('d-Ttf'),hw=v('d-Thw'),tw=v('d-Ttw');
@@ -495,7 +518,7 @@ function getSectionProps(){
       const yf=hw+tf/2, yw=hw/2;
       yc=(Af*yf+Aw*yw)/A;
       I=bf*tf*tf*tf/12+Af*(yf-yc)*(yf-yc)+tw*hw*hw*hw/12+Aw*(yw-yc)*(yw-yc);
-      W=I/Math.max(hw+tf-yc,yc);
+      W=I/Math.max(hw+tf-yc,yc); dims={bf,tf,hw,tw};
       desc=`T${bf}×${hw}+${tf}/${tw} mm`; break;}
     case 'H':{
       const bf=v('d-Hbf'),H=v('d-HH'),tf=v('d-Htf'),tw=v('d-Htw');
@@ -505,7 +528,7 @@ function getSectionProps(){
       const Af=bf*tf, Aw=tw*hw;
       A=2*Af+Aw; yc=H/2;
       I=2*(bf*tf*tf*tf/12+Af*(H/2-tf/2)*(H/2-tf/2))+tw*hw*hw*hw/12;
-      W=I/(H/2);
+      W=I/(H/2); dims={bf,H,tf,tw};
       desc=`H${bf}×${H}×${tf}/${tw} mm`; break;}
     case 'U':{
       const b=v('d-Ub'),H=v('d-UH'),tf=v('d-Utf'),tw=v('d-Utw');
@@ -515,10 +538,11 @@ function getSectionProps(){
       const Aweb=tw*H, Afl=bf*tf;
       A=Aweb+2*Afl; yc=H/2;
       I=tw*H*H*H/12+2*(bf*tf*tf*tf/12+Afl*(H/2-tf/2)*(H/2-tf/2));
-      W=I/(H/2);
+      W=I/(H/2); dims={b,H,tf,tw};
       desc=`U${b}×${H}×${tf}/${tw} mm`; break;}
   }
-  return {A, I, W, yc, desc, valid};
+  const Av = valid ? shearArea(type, A, dims) : 0;
+  return {A, I, W, yc, Av, desc, valid};
 }
 
 // ═══════════════════════════════════════════════════════
@@ -827,8 +851,14 @@ function drawDiagram(canvas, xs, ys, color, label, zero='baseline'){
   ctx.beginPath(); ctx.moveTo(toX(xs[0]),H/2);
   for(let i=0;i<n;i++) ctx.lineTo(toX(xs[i]),toY(ys[i]));
   ctx.lineTo(toX(xs[n-1]),H/2); ctx.closePath();
-  ctx.fillStyle=color.replace(')',',0.2)').replace('rgb','rgba');
+  // I colori in C sono esadecimali: le replace su 'rgb(' non trovano nulla e
+  // l'area resterebbe piena. Si usa globalAlpha, che funziona con qualunque
+  // notazione di colore.
+  ctx.save();
+  ctx.globalAlpha=0.20;
+  ctx.fillStyle=color;
   ctx.fill();
+  ctx.restore();
 
   // line
   ctx.strokeStyle=color; ctx.lineWidth=2;
@@ -876,7 +906,7 @@ function autoCalc(){
   }
   showResults();
 
-  const {A,I,W,desc} = sec;
+  const {A,I,W,Av,desc} = sec;
   const EI=E*I;
 
   // Solve FEM
@@ -892,11 +922,24 @@ function autoCalc(){
   const sigma_max=Mmax/W;
   const CS=fy/sigma_max;
 
+  // Verifica a taglio: tau_max = V/Av confrontata col limite di von Mises
+  // fy/sqrt(3). Su sezioni tozze o a parete sottile puo' governare il taglio.
+  const tau_lim = fy/Math.sqrt(3);
+  const tau_max = Av>0 ? Vmax/Av : NaN;
+  const CS_tau  = (isFinite(tau_max) && tau_max>0) ? tau_lim/tau_max : Infinity;
+
+  // Interazione M+V (EN 1993-1-1 §6.2.8): oltre il 50% della resistenza a
+  // taglio la resistenza a flessione va ridotta.
+  const utilV = isFinite(CS_tau) && CS_tau>0 ? 1/CS_tau : 0;
+  const rhoV  = utilV > 0.5 ? Math.pow(2*utilV - 1, 2) : 0;
+  const CS_glob = Math.min(CS, CS_tau);
+
   // Section props
   document.getElementById('sec-props').innerHTML=
     rcCard('Area A',fmt(A,1),'mm²','accent')+
     rcCard('Inerzia I',A>0?(I>=1e6?fmt(I/1e4,1)+' cm⁴':fmt(I,0)+' mm⁴'):'—','','accent')+
-    rcCard('Modulo W',W>=1e3?fmt(W/1e3,2)+' cm³':fmt(W,1)+' mm³','','accent',desc);
+    rcCard('Modulo W',W>=1e3?fmt(W/1e3,2)+' cm³':fmt(W,1)+' mm³','','accent',desc)+
+    rcCard('Area taglio A<sub>v</sub>',fmt(Av,1),'mm²','accent');
 
   // Reactions
   const bcLabel={'ss':'Appoggio–Appoggio','cant':'Mensola','fp':'Incastro–Appoggio','ff':'Incastro–Incastro'};
@@ -908,11 +951,13 @@ function autoCalc(){
   document.getElementById('reactions').innerHTML=rxHtml;
 
   // Status
-  const sfCls=CS>=2?'ok':CS>=1.2?'warn':'fail';
-  const sfLbl=CS>=2?'OK':'CS BASSO';
+  const sfCls=CS_glob>=2?'ok':CS_glob>=1.2?'warn':'fail';
+  const sfLbl=CS_glob>=2?'OK':CS_glob>=1?'CS BASSO':'NON VERIFICATO';
+  const govern=CS_tau<CS?'taglio':'flessione';
   document.getElementById('status-bar').innerHTML=
     `<div class="chip ok">Calcolo completato</div>
-     <div class="chip ${sfCls}">${sfLbl} — CS ${fmt(CS,2)}</div>
+     <div class="chip ${sfCls}">${sfLbl} — CS ${fmt(CS_glob,2)} (${govern})</div>
+     ${rhoV>0?'<div class="chip warn">Interazione M+V: V &gt; 0,5·V_Rd</div>':''}
      <div class="chip">${bcLabel[bcType]}</div>`;
 
   // Max values
@@ -921,9 +966,14 @@ function autoCalc(){
   document.getElementById('max-vals').innerHTML=
     rcCard('M<sub>max</sub>',fmtM(Mmax),'','gold')+
     rcCard('V<sub>max</sub>',fmtN(Vmax),'')+
+    rcCard('τ<sub>max</sub>',fmt(tau_max,1),'MPa',
+           (isFinite(CS_tau)&&CS_tau<1)?'red':(CS_tau<1.5?'orange':'green'),
+           `A_v = ${fmt(Av,0)} mm² · limite fy/√3 = ${fmt(tau_lim,0)} MPa`)+
     rcCard('σ<sub>max</sub>',fmt(sigma_max,1),'MPa',sigma_max>fy?'red':'green',`fy = ${fy} MPa`)+
     rcCard('Freccia max δ',fmt(dmax,2),'mm',deflOk?'green':'warn',`L/300 = ${fmt(L_300,1)} mm`)+
-    rcCard('Coeff. sicurezza',fmt(CS,2),'',CS>=2?'green':CS>=1.2?'orange':'red','σ_max/fy');
+    rcCard('CS flessione',fmt(CS,2),'',CS>=2?'green':CS>=1.2?'orange':'red','fy / σ_max')+
+    rcCard('CS taglio',isFinite(CS_tau)?fmt(CS_tau,2):'∞','',
+           CS_tau>=2?'green':CS_tau>=1.2?'orange':'red','(fy/√3) / τ_max');
 
   // Draw
   drawBeam(document.getElementById('c-beam'), L, loads, bcType);

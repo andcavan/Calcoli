@@ -199,7 +199,9 @@ const EC3 = {
   // 0.6 per 4.6/5.6/8.8 filettate, 0.5 per 4.8/5.8/6.8/10.9 filettate
   alfaV: (cls, filettoNelPiano) => {
     if (!filettoNelPiano) return 0.6;
-    return (cls === '10.9' || cls === '4.8' || cls === '5.8' || cls === '6.8') ? 0.5 : 0.6;
+    // 0.5 per 4.8, 5.8, 6.8 e 10.9 (tab. 3.4). La 12.9 non e' coperta dalla
+    // norma: per analogia con la 10.9 si adotta il valore piu' cautelativo.
+    return ['4.8','5.8','6.8','10.9','12.9'].includes(cls) ? 0.5 : 0.6;
   },
   // Classi di superficie per giunti ad attrito (EN 1090-2 tab. 18)
   superfici: [

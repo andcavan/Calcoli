@@ -7,44 +7,26 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@300;400;500&family=Barlow+Condensed:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<link rel="stylesheet" href="theme.css">
 <style>
-:root{
-  --bg:#0e0f11;--bg1:#141519;--bg2:#1c1d23;--bg3:#23252d;
-  --border:rgba(255,255,255,.07);--border2:rgba(255,255,255,.13);
-  --text:#e8e9ec;--muted:#7a7d8a;--dim:#4a4d5a;
-  --acc:#4fc3f7;--acc2:#0288d1;
-  --up:#66bb6a;--dn:#ef5350;--amber:#ffa726;--violet:#b39ddb;
-  --mono:'DM Mono',monospace;--cond:'Barlow Condensed',sans-serif;
-}
-*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+
 html{background:var(--bg);color:var(--text);font-family:var(--mono);font-size:13px}
 body{min-height:100vh}
 .header{border-bottom:1px solid var(--border);padding:11px 20px;display:flex;align-items:center;gap:12px;flex-wrap:wrap}
-.header h1{font-family:var(--cond);font-size:20px;font-weight:700;letter-spacing:.04em;text-transform:uppercase}
-.sub{font-size:10px;color:var(--muted);letter-spacing:.1em;text-transform:uppercase;flex:1}
-.dot{width:7px;height:7px;border-radius:50%;background:var(--acc);display:inline-block;margin-right:6px;animation:pulse 2s ease-in-out infinite}
-@keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
+
 .norm-badge{font-size:9px;color:var(--acc);background:rgba(79,195,247,.1);border:1px solid rgba(79,195,247,.25);border-radius:4px;padding:3px 8px;letter-spacing:.08em;font-family:var(--cond);font-weight:600}
 .layout{display:flex;flex-direction:column;min-height:calc(100vh - 51px)}
 .panels-top{display:grid;grid-template-columns:minmax(0,1.2fr) minmax(0,1.1fr) minmax(0,1.1fr) minmax(0,1fr) minmax(0,.9fr);gap:8px;padding:10px 13px;border-bottom:1px solid var(--border);align-items:start}
 .panel{background:var(--bg2);border:1px solid var(--border2);border-radius:8px;padding:10px 11px}
 .stitle{font-family:var(--cond);font-size:10px;font-weight:600;letter-spacing:.17em;color:var(--muted);text-transform:uppercase;margin-bottom:8px;display:flex;align-items:center;gap:6px}
-.stitle::after{content:'';flex:1;height:1px;background:var(--border)}
-.field{margin-bottom:8px}.field:last-child{margin-bottom:0}
-.fhdr{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:4px}
+
+.field{margin-bottom:8px}
+
 .flabel{color:var(--muted);font-size:11px;letter-spacing:.03em}
 .fval{color:var(--acc);font-size:12px;font-weight:500;min-width:80px;text-align:right;font-family:var(--mono)}
 .field.output .flabel{color:var(--amber)}
 .field.output .fval{color:var(--amber)}
-.srow{display:flex;align-items:center;gap:4px}
-.arr{flex-shrink:0;width:25px;height:25px;display:flex;align-items:center;justify-content:center;background:var(--bg2);border:1px solid var(--border2);border-radius:5px;cursor:pointer;color:var(--muted);font-size:10px;transition:all .12s;user-select:none}
-.arr:hover{border-color:var(--acc);color:var(--acc);background:rgba(79,195,247,.08)}
-.arr:active{transform:scale(.88)}
-.numinput{flex:1;height:25px;background:var(--bg3);border:1px solid var(--border2);border-radius:5px;color:var(--acc);font-family:var(--mono);font-size:12px;font-weight:500;text-align:center;outline:none;padding:0 4px;min-width:0;transition:border-color .12s}
-.numinput:focus{border-color:var(--acc);background:var(--bg2)}
-.numinput:hover{border-color:rgba(79,195,247,.4)}
-.numinput::-webkit-outer-spin-button,.numinput::-webkit-inner-spin-button{-webkit-appearance:none;margin:0}
-.numinput[type=number]{-moz-appearance:textfield}
+
 .sel{width:100%;height:25px;background:var(--bg3);border:1px solid var(--border2);border-radius:5px;color:var(--acc);font-family:var(--mono);font-size:11px;outline:none;padding:0 6px;cursor:pointer;transition:border-color .12s;-webkit-appearance:none;appearance:none}
 .sel:focus{border-color:var(--acc);background:var(--bg2)}
 .sel-wrap{position:relative}
@@ -52,24 +34,13 @@ body{min-height:100vh}
 
 /* TOOLTIP */
 [data-tip]{position:relative;cursor:default}
-@keyframes tipIn{from{opacity:0}to{opacity:1}}
-[data-tip]:hover::after{content:attr(data-tip);position:absolute;bottom:calc(100% + 7px);left:0;background:#1e2130;border:1px solid rgba(79,195,247,.25);color:#c8cad4;font-size:10px;padding:7px 11px;border-radius:6px;white-space:pre-wrap;max-width:280px;min-width:180px;z-index:999;line-height:1.6;pointer-events:none;font-family:var(--mono);text-align:left;box-shadow:0 4px 20px rgba(0,0,0,.5);animation:tipIn .12s ease .6s both}
-[data-tip]:hover::before{content:'';position:absolute;bottom:calc(100% + 1px);left:20px;border:5px solid transparent;border-top-color:#1e2130;z-index:1000;pointer-events:none;animation:tipIn .12s ease .6s both}
-[data-tip].tr:hover::after{left:auto;right:0}
 
 /* BACK BUTTON */
-.back-btn{font-family:var(--cond,'Barlow Condensed',sans-serif);font-size:10px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--muted,#7a7d8a);text-decoration:none;border:1px solid var(--border2,rgba(255,255,255,.13));border-radius:4px;padding:4px 10px;transition:all .15s;white-space:nowrap;flex-shrink:0}
-.back-btn:hover{color:var(--acc,#4fc3f7);border-color:var(--acc,#4fc3f7)}
+.back-btn{font-family:var(--cond,'Barlow Condensed',sans-serif);font-size:10px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--muted,#9a9dab);text-decoration:none;border:1px solid var(--border2,rgba(255,255,255,.13));border-radius:4px;padding:4px 10px;transition:all .15s;white-space:nowrap;flex-shrink:0}
 
 /* FIT TYPE CHIPS */
 .fit-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:4px;margin-bottom:8px}
 .fit-section-label{font-size:9px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);border-top:1px solid rgba(255,255,255,.06);margin:6px 0 5px;padding-top:6px}
-.fit-chip{border:1px solid var(--border2);border-radius:5px;padding:6px 2px;cursor:default;text-align:center;background:transparent;color:var(--dim);transition:all .2s}
-.fit-chip.on.lasco{border-color:var(--up);background:rgba(102,187,106,.12);color:var(--up)}
-.fit-chip.on.incerto{border-color:var(--amber);background:rgba(255,167,38,.12);color:var(--amber)}
-.fit-chip.on.forzato{border-color:var(--dn);background:rgba(239,83,80,.12);color:var(--dn)}
-.fit-chip .fc-ico{font-size:15px;display:block;margin-bottom:2px}
-.fit-chip .fc-lbl{font-size:8px;font-family:var(--cond);font-weight:600;letter-spacing:.06em;text-transform:uppercase}
 
 /* RESULT STRIP */
 .result-strip{background:rgba(79,195,247,.04);border:1px solid rgba(79,195,247,.18);border-radius:8px;padding:10px 14px;margin:0 13px}
@@ -99,7 +70,6 @@ body{min-height:100vh}
 .tsc.chg .tsc-v{color:var(--dn)}
 
 .warnbox{background:rgba(239,83,80,.08);border:1px solid rgba(239,83,80,.25);border-radius:6px;padding:7px 11px;font-size:11px;color:#ef9a9a;display:none;margin:6px 13px 0;line-height:1.6}
-.warnbox.show{display:block}
 
 .main{padding:10px 13px;display:flex;flex-direction:column;gap:9px}
 .charts-row{display:grid;grid-template-columns:1fr 1fr;gap:8px}
@@ -465,12 +435,54 @@ const IT_TAB={
 };
 
 function getIT(ri,g){return IT_TAB[Math.max(4,Math.min(12,parseInt(g)))][ri];}
+
+// Δ = IT_n − IT_(n−1) — ISO 286-1: correzione da sommare allo scostamento
+// dei FORI in posizione K÷ZC per qualità fino a IT8 compresa.
+// Sopra IT8 vale la regola generale ES = −ei (Δ = 0).
+function getDelta(ri, g){
+  const n = Math.max(4, Math.min(12, parseInt(g)));
+  if (n > 8) return 0;
+  return IT_TAB[n][ri] - IT_TAB[n-1][ri];
+}
 function getRangeIdx(D){for(let i=0;i<RANGES.length;i++)if(D<=RANGES[i])return i;return RANGES.length-1;}
 
+
+// ── Scostamenti fondamentali con intervalli FINI (ISO 286-1) ──────────────
+// Le posizioni r, s, t, u, x sono tabellate su scaglioni piu' stretti dei 13
+// usati per gli IT: usarne uno solo per 50-80 o 120-180 falsa lo scostamento
+// anche di 10 um. Limiti superiori degli scaglioni (mm):
+const FINE_LIM = [3,6,10,14,18,24,30,40,50,65,80,100,120,140,160,180,
+                  200,225,250,280,315,355,400,450,500];
+// ei in um (null = posizione non definita per quello scaglione)
+const FINE_DEV = {
+  r: [ 10, 15, 19, 23, 23, 28, 28, 34, 34, 41, 43, 51, 54, 63, 65, 68,
+       77, 80, 84, 94, 98,108,114,126,132],
+  s: [ 14, 19, 23, 28, 28, 35, 35, 43, 43, 53, 59, 71, 79, 92,100,108,
+      122,130,140,158,170,190,208,232,252],
+  t: [null,null,null,null,null,null,41, 48, 54, 66, 75, 91,104,122,134,146,
+      166,180,196,218,240,268,294,330,360],
+  u: [ 18, 23, 28, 33, 33, 41, 48, 60, 70, 87,102,124,144,170,190,210,
+      236,258,284,315,350,390,435,490,540],
+  x: [ 20, 28, 34, 40, 45, 54, 64, 80, 97,122,146,178,210,248,280,310,
+      350,385,425,475,525,590,660,740,820],
+};
+function fineIdx(D){
+  for(let i=0;i<FINE_LIM.length;i++) if(D<=FINE_LIM[i]) return i;
+  return FINE_LIM.length-1;
+}
+function fineDev(letter, D){
+  const tab = FINE_DEV[letter];
+  if(!tab) return null;
+  const v = tab[fineIdx(D)];
+  return (v === null || v === undefined) ? null : v;
+}
 // ═══════════════════════════════════════
 //  SCOSTAMENTI FONDAMENTALI ALBERO (es in μm per lettere a÷h; ei per p÷z)
 // ═══════════════════════════════════════
-function shaftFund(letter, ri, D) {
+// D  = diametro su cui valutare le FORMULE (media geometrica dello scaglione)
+// Dnom = diametro nominale reale, per le tabelle a scaglioni fini
+function shaftFund(letter, ri, D, grade, Dnom) {
+  if (Dnom === undefined) Dnom = D;
   const l = letter.toLowerCase();
   switch(l) {
     case 'a':
@@ -489,7 +501,10 @@ function shaftFund(letter, ri, D) {
     case 'g': return -Math.round(2.5*Math.pow(D,0.34));
     case 'h': return 0;
     case 'js': return 0;
-    case 'k': return 0;
+    // k: ei = +0.6·∛D per le qualità da IT4 a IT7, 0 per le altre.
+    // Il grado viene passato come 4° argomento (assente ⇒ si assume IT4÷IT7).
+    case 'k': return (grade === undefined || (grade >= 4 && grade <= 7))
+                     ? Math.round(0.6 * Math.cbrt(D)) : 0;
     case 'm': {
       const tab=[2,4,6,7,8,9,11,13,15,17,20,21,23];
       return tab[ri];
@@ -503,24 +518,24 @@ function shaftFund(letter, ri, D) {
       return tab[ri];
     }
     case 'r': {
-      const tab=[10,15,19,23,28,34,41,51,63,77,98,114,132];
-      return tab[ri];
+      const v = fineDev('r', Dnom);
+      return v === null ? 0 : v;
     }
     case 's': {
-      const tab=[14,19,23,28,35,43,59,79,100,122,158,190,226];
-      return tab[ri];
+      const v = fineDev('s', Dnom);
+      return v === null ? 0 : v;
     }
     case 't': {
-      const tab=[18,23,28,33,41,48,66,91,114,144,186,226,272];
-      return tab[ri];
+      const v = fineDev('t', Dnom);
+      return v === null ? 0 : v;
     }
     case 'u': {
-      const tab=[18,23,28,33,41,60,87,124,170,225,300,360,445];
-      return tab[ri];
+      const v = fineDev('u', Dnom);
+      return v === null ? 0 : v;
     }
     case 'x': {
-      const tab=[20,28,34,40,64,90,130,188,280,380,500,600,740];
-      return tab[ri];
+      const v = fineDev('x', Dnom);
+      return v === null ? 0 : v;
     }
     default: return 0;
   }
@@ -576,27 +591,30 @@ function compute(){
   if(sl==='h'){es=0;ei=-IT_s;}
   else if(sl==='js'){es=Math.round(IT_s/2);ei=-Math.round(IT_s/2);}
   else if(sl==='k'||sl==='m'||sl==='n'||sl==='p'||sl==='r'||sl==='s'||sl==='t'||sl==='u'||sl==='x'){
-    // lettere p÷z: lo scostamento fondamentale è ei (inferiore positivo)
-    ei=shaftFund(sl,ri,D); es=ei+IT_s;
+    // lettere k÷z: lo scostamento fondamentale è ei (inferiore, positivo)
+    ei=shaftFund(sl,ri,Dm,si,D); es=ei+IT_s;
   } else {
-    // lettere a÷g: scostamento fondamentale è es (superiore negativo)
-    es=shaftFund(sl,ri,D); ei=es-IT_s;
+    // lettere a÷g: lo scostamento fondamentale è es (superiore, negativo)
+    es=shaftFund(sl,ri,Dm,si,D); ei=es-IT_s;
   }
 
   // FORO: scostamenti EI,ES
-  let EI,ES;
+  let EI,ES,dlt=0;
   const hl=hp.toUpperCase();
   if(hl==='H'){EI=0;ES=IT_h;}
   else if(hl==='JS'){ES=Math.round(IT_h/2);EI=-Math.round(IT_h/2);}
   else if(['K','M','N','P','R','S','T','U','X'].includes(hl)){
-    // Fori K÷X: EI = -ei_albero_corrispondente (speculare)
-    // Approssimazione: EI_foro = -es_albero + IT_foro ??? 
-    // Standard: per fori P÷Z: ES = -ei_albero; EI = ES - IT_foro
-    const ei_a=shaftFund(hl.toLowerCase(),ri,D);
-    ES=-ei_a; EI=ES-IT_h;
+    // Fori K÷ZC — ISO 286-1 regola generale:  ES = −ei(albero) + Δ
+    // con Δ = IT_n − IT_(n−1) per le qualità fino a IT8, Δ = 0 sopra.
+    // Senza Δ le posizioni di transizione e forzamento (K7, M7, N7, P7…)
+    // risultano spostate verso il basso di 8÷15 µm.
+    const ei_a = shaftFund(hl.toLowerCase(), ri, Dm, hi, D);
+    dlt = getDelta(ri, hi);
+    ES = -ei_a + dlt;
+    EI = ES - IT_h;
   } else {
     // Fori A÷G: EI = |es_albero| (positivo); ES = EI + IT
-    EI=Math.abs(shaftFund(hl.toLowerCase(),ri,D));
+    EI=Math.abs(shaftFund(hl.toLowerCase(),ri,Dm,hi,D));
     ES=EI+IT_h;
   }
 
@@ -626,7 +644,7 @@ function compute(){
   const dDs=D*as*dT/1000, dDh=D*ah*dT/1000;
   const ei_T=ei+dDs, es_T=es+dDs, EI_T=EI+dDh, ES_T=ES+dDh;
 
-  return{D,Tw,ri,Dm,i_val,IT_s,IT_h,es,ei,EI,ES,Jmax,Jmin,Ttot,fitClass,
+  return{D,Tw,ri,Dm,i_val,IT_s,IT_h,es,ei,EI,ES,dlt,Jmax,Jmin,Ttot,fitClass,
     fitName:fitNames[fitClass],
     as,ah,dT,dDT,dDs,dDh,ei_T,es_T,EI_T,ES_T,JmaxT,JminT,fitClassT,
     fitNameT:fitNames[fitClassT],
@@ -782,13 +800,13 @@ let chTol, chTemp;
 function initCharts(){
   const base={
     responsive:true,maintainAspectRatio:false,animation:{duration:60},
-    plugins:{legend:{display:true,labels:{color:'#7a7d8a',font:{family:"'DM Mono'",size:10},boxWidth:10}},
-      tooltip:{backgroundColor:'#1c1d23',titleColor:'#7a7d8a',bodyColor:'#e8e9ec',
+    plugins:{legend:{display:true,labels:{color:'#9a9dab',font:{family:"'DM Mono'",size:10},boxWidth:10}},
+      tooltip:{backgroundColor:'#1c1d23',titleColor:'#9a9dab',bodyColor:'#e8e9ec',
         borderColor:'rgba(255,255,255,.1)',borderWidth:1,
         titleFont:{family:"'DM Mono'",size:10},bodyFont:{family:"'DM Mono'",size:11}}},
     scales:{
-      x:{ticks:{font:{family:"'DM Mono'",size:9},color:'#4a4d5a'},grid:{color:'rgba(255,255,255,.04)'},border:{display:false}},
-      y:{ticks:{font:{family:"'DM Mono'",size:9},color:'#4a4d5a'},grid:{color:'rgba(255,255,255,.04)'},border:{display:false}}
+      x:{ticks:{font:{family:"'DM Mono'",size:9},color:'#7d8090'},grid:{color:'rgba(255,255,255,.04)'},border:{display:false}},
+      y:{ticks:{font:{family:"'DM Mono'",size:9},color:'#7d8090'},grid:{color:'rgba(255,255,255,.04)'},border:{display:false}}
     }
   };
 
@@ -812,10 +830,10 @@ function initCharts(){
       ...base.scales,
       y:{
         ...base.scales.y,
-        title:{display:true,text:'Scostamento dal Ø nominale (μm)',color:'#4a4d5a',font:{family:"'DM Mono'",size:9}},
+        title:{display:true,text:'Scostamento dal Ø nominale (μm)',color:'#7d8090',font:{family:"'DM Mono'",size:9}},
         grid:{color:'rgba(255,255,255,.04)'},
         border:{display:false},
-        ticks:{font:{family:"'DM Mono'",size:9},color:'#4a4d5a'}
+        ticks:{font:{family:"'DM Mono'",size:9},color:'#7d8090'}
       }
     }
   };

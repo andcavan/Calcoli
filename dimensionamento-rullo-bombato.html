@@ -6,25 +6,13 @@
 <title>Rullo Bombato - Schiena d'Asino</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@300;400;500&family=Barlow+Condensed:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="theme.css">
 <style>
-:root{
-  --bg:#0e0f11;--bg1:#141519;--bg2:#1c1d23;--bg3:#23252d;
-  --border:rgba(255,255,255,.07);--border2:rgba(255,255,255,.13);
-  --text:#e8e9ec;--muted:#7a7d8a;--dim:#4a4d5a;
-  --acc:#4fc3f7;--acc2:#0288d1;
-  --up:#66bb6a;--dn:#ef5350;--amber:#ffa726;--violet:#b39ddb;
-  --mono:'DM Mono',monospace;--cond:'Barlow Condensed',sans-serif;
-}
-*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+
 html{background:var(--bg);color:var(--text);font-family:var(--mono);font-size:13px;min-height:100vh}
 body{display:flex;flex-direction:column;align-items:center;min-height:100vh;padding:20px}
 
 .header{border-bottom:1px solid var(--border);padding:11px 20px;display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:20px;width:100%;max-width:1180px}
-.header h1{font-family:var(--cond);font-size:20px;font-weight:700;letter-spacing:.04em;text-transform:uppercase}
-.sub{font-size:10px;color:var(--muted);letter-spacing:.1em;text-transform:uppercase;flex:1}
-.dot{width:7px;height:7px;border-radius:50%;background:var(--acc);display:inline-block;margin-right:6px;animation:pulse 2s ease-in-out infinite}
-@keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
-.norm-badge{font-family:var(--cond);font-size:10px;font-weight:600;letter-spacing:.08em;color:var(--acc);background:rgba(79,195,247,.08);border:1px solid rgba(79,195,247,.22);border-radius:4px;padding:3px 9px;white-space:nowrap}
 
 .container{max-width:1180px;width:100%;display:grid;grid-template-columns:340px 1fr;gap:20px}
 @media(max-width:900px){.container{grid-template-columns:1fr}}
@@ -33,38 +21,15 @@ body{display:flex;flex-direction:column;align-items:center;min-height:100vh;padd
 .rpanel{display:flex;flex-direction:column;gap:14px}
 
 .stitle{font-family:var(--cond);font-size:10px;font-weight:600;letter-spacing:.17em;color:var(--muted);text-transform:uppercase;margin-bottom:4px;display:flex;align-items:center;gap:6px}
-.stitle::after{content:'';flex:1;height:1px;background:var(--border)}
 
 .field{margin-bottom:6px}
-.field:last-child{margin-bottom:0}
+
 .fhdr{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:4px;gap:8px}
 .flabel{color:var(--muted);font-size:11px;letter-spacing:.03em}
 .funit{font-size:10px;color:var(--dim);white-space:nowrap}
 .frow2{display:grid;grid-template-columns:1fr 1fr;gap:8px}
 
-.srow{display:flex;align-items:center;gap:4px}
-.arr{flex-shrink:0;width:25px;height:25px;display:flex;align-items:center;justify-content:center;background:var(--bg2);border:1px solid var(--border2);border-radius:5px;cursor:pointer;color:var(--muted);font-size:10px;transition:all .12s;user-select:none}
-.arr:hover{border-color:var(--acc);color:var(--acc);background:rgba(79,195,247,.08)}
-.arr:active{transform:scale(.88)}
-
-.numinput{flex:1;width:100%;height:25px;background:var(--bg3);border:1px solid var(--border2);border-radius:5px;color:var(--acc);font-family:var(--mono);font-size:12px;font-weight:500;text-align:center;outline:none;padding:0 4px;transition:border-color .12s}
-.numinput:focus{border-color:var(--acc);background:var(--bg2)}
-.numinput:hover{border-color:rgba(79,195,247,.4)}
-.numinput::-webkit-outer-spin-button,.numinput::-webkit-inner-spin-button{-webkit-appearance:none;margin:0}
-.numinput[type=number]{-moz-appearance:textfield}
-
-.select-field{width:100%;height:25px;background:var(--bg3);border:1px solid var(--border2);border-radius:5px;color:var(--acc);font-family:var(--mono);font-size:12px;font-weight:500;padding:0 4px;outline:none;transition:border-color .12s;cursor:pointer}
-.select-field:focus{border-color:var(--acc);background:var(--bg2)}
-.select-field:hover{border-color:rgba(79,195,247,.4)}
-.select-field option{background:var(--bg2);color:var(--acc)}
-
 /* Toggle secondario (2 opzioni testuali) */
-.seg{display:grid;gap:0;border:1px solid var(--border2);border-radius:6px;overflow:hidden}
-.seg-2{grid-template-columns:1fr 1fr}
-.seg-btn{background:var(--bg3);border:none;padding:6px 4px;cursor:pointer;color:var(--muted);font-family:var(--cond);font-size:12px;font-weight:600;letter-spacing:.04em;transition:all .15s}
-.seg-btn + .seg-btn{border-left:1px solid var(--border2)}
-.seg-btn:hover{background:var(--bg2)}
-.seg-btn.on{background:rgba(79,195,247,.12);color:var(--acc)}
 
 /* Badge stato AUTO / MANUALE */
 .autotag{font-family:var(--cond);font-size:9px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;padding:2px 6px;border-radius:3px;white-space:nowrap;align-self:center}
@@ -72,51 +37,21 @@ body{display:flex;flex-direction:column;align-items:center;min-height:100vh;padd
 .autotag.manual{color:var(--amber);background:rgba(255,167,38,.12);border:1px solid rgba(255,167,38,.3)}
 
 /* Risultati */
-.results-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
-.results-grid-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px}
-.result-box{background:var(--bg1);border:1px solid var(--border);border-radius:6px;padding:10px}
+
 .result-box.accent{border-color:rgba(255,167,38,.35)}
-.result-label{font-size:9px;color:var(--muted);letter-spacing:.07em;text-transform:uppercase;margin-bottom:4px;font-family:var(--cond)}
-.result-value{font-size:16px;font-weight:500;color:var(--acc);font-family:var(--mono)}
+
 .result-box.accent .result-value{color:var(--amber)}
-.result-unit{font-size:10px;color:var(--dim);margin-left:3px}
 
 .schematic-wrap{background:var(--bg1);border:1px solid var(--border);border-radius:6px;padding:10px;display:flex;justify-content:center}
 .schematic-wrap svg{width:100%;max-width:640px;height:auto}
 
-.result-section{background:rgba(79,195,247,.05);border:1px solid rgba(79,195,247,.2);border-radius:8px;padding:12px}
-.result-section-title{font-family:var(--cond);font-size:10px;font-weight:700;letter-spacing:.14em;color:var(--acc);text-transform:uppercase;margin-bottom:8px;display:flex;align-items:center;gap:8px}
-.result-section-title::after{content:'';flex:1;height:1px;background:rgba(79,195,247,.15)}
-.verification-grid{display:grid;grid-template-columns:1fr;gap:5px}
-.verify-item{display:flex;justify-content:space-between;align-items:center;padding:5px 8px;background:var(--bg1);border:1px solid var(--border);border-radius:4px;font-size:11px;gap:8px}
-.verify-label{color:var(--muted);flex:1}
-.verify-value{color:var(--text);font-weight:500;font-family:var(--mono);white-space:nowrap}
-.verify-unit{font-size:9px;color:var(--dim);margin-left:4px}
-.verify-status{padding:2px 6px;border-radius:3px;font-size:9px;font-weight:600;margin-left:6px;white-space:nowrap}
-.verify-status.ok{background:rgba(102,187,106,.2);color:var(--up);border:1px solid var(--up)}
-.verify-status.warn{background:rgba(255,167,38,.2);color:var(--amber);border:1px solid var(--amber)}
-.verify-status.err{background:rgba(239,83,80,.2);color:var(--dn);border:1px solid var(--dn)}
-
-.table-container{overflow-x:auto;max-height:230px;overflow-y:auto;position:relative}
-.dim-table{width:100%;border-collapse:collapse;font-size:10px}
-.dim-table th{background:rgba(79,195,247,.1);color:var(--acc2);padding:5px 4px;text-align:center;border:1px solid var(--border2);font-weight:600;letter-spacing:.05em;position:sticky;top:0}
-.dim-table td{padding:4px;border:1px solid var(--border2);text-align:center;color:var(--text)}
 .dim-table td.center-col{background:rgba(255,167,38,.1);color:var(--amber);font-weight:600}
-.dim-table tr:hover{background:rgba(79,195,247,.05)}
 
 .back-btn{font-family:var(--cond);font-size:10px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);text-decoration:none;border:1px solid var(--border2);border-radius:4px;padding:4px 10px;transition:all .15s;white-space:nowrap;background:none;cursor:pointer}
 .back-btn:hover{color:var(--acc);border-color:var(--acc)}
 
-[data-tip]{position:relative;cursor:help}
 [data-tip]:hover::after{content:attr(data-tip);position:absolute;bottom:calc(100% + 7px);left:0;background:#1e2130;border:1px solid rgba(79,195,247,.25);color:#c8cad4;font-size:10px;padding:7px 11px;border-radius:6px;white-space:pre-wrap;max-width:280px;min-width:170px;z-index:999;line-height:1.6;pointer-events:none;font-family:var(--mono);text-align:left;box-shadow:0 4px 20px rgba(0,0,0,.5)}
 
-::-webkit-scrollbar{width:5px;height:5px}
-::-webkit-scrollbar-track{background:var(--bg)}
-::-webkit-scrollbar-thumb{background:var(--bg3);border-radius:3px}
-
-.warn-box{background:rgba(255,167,38,.07);border:1px solid rgba(255,167,38,.25);border-radius:5px;padding:8px 10px;font-size:10px;color:var(--amber);line-height:1.6}
-.info-box{background:rgba(79,195,247,.06);border:1px solid rgba(79,195,247,.18);border-radius:5px;padding:8px 10px;font-size:10px;color:var(--acc);line-height:1.6}
-.note{font-size:10px;color:var(--dim);line-height:1.6}
 .hidden{display:none !important}
 
 .norms{font-size:10px;color:var(--muted);line-height:1.8}
@@ -250,11 +185,17 @@ footer{margin-top:34px;font-size:10px;color:var(--dim);letter-spacing:.04em;text
         <input type="number" id="k1" class="numinput" value="" min="0" step="0.1" placeholder="da scheda" oninput="recalcAll()">
       </div>
     </div>
-    <div class="field">
-      <div class="fhdr"><span class="flabel" data-tip="Peso proprio del rullo (albero + corpo). Incide poco rispetto alla tensione del nastro nei rulli piccoli/medi.">Massa rullo  m</span><span class="funit">kg</span></div>
-      <input type="number" id="mTr" class="numinput" value="0" min="0" step="0.1" oninput="recalcAll()">
+    <div class="frow2">
+      <div class="field">
+        <div class="fhdr"><span class="flabel" data-tip="Peso proprio del rullo (albero + corpo). Incide poco rispetto alla tensione del nastro nei rulli piccoli/medi.">Massa rullo  m</span><span class="funit">kg</span></div>
+        <input type="number" id="mTr" class="numinput" value="0" min="0" step="0.1" oninput="recalcAll()">
+      </div>
+      <div class="field">
+        <div class="fhdr"><span class="flabel" data-tip="Angolo di avvolgimento del nastro sul rullo.&#10;180° = rullo di testa/coda (i due rami sono paralleli, la risultante vale 2·T).&#10;90° = rinvio ad angolo retto (risultante 1,41·T).&#10;Con angoli diversi da 180° usare 2·T sovrastima il carico.">Avvolgimento α</span><span class="funit">°</span></div>
+        <input type="number" id="wrap" class="numinput" value="180" min="1" max="360" step="5" oninput="recalcAll()">
+      </div>
     </div>
-    <div class="note">FR = √[(2·ε%·k1%·b₀)² + (9.81·m)²]</div>
+    <div class="note">FR = √[(2·T·sin(α/2))² + (9.81·m)²]  con  T = ε%·k1%·b₀</div>
   </div>
 
   <div class="field">
@@ -542,7 +483,7 @@ footer{margin-top:34px;font-size:10px;color:var(--dim);letter-spacing:.04em;text
 
     const clY = centerY;
     svg.appendChild(svgEl('line', {x1:xPx(-b/2)-30, y1:clY, x2:xPx(b/2)+30, y2:clY,
-      stroke:'#4a4d5a', 'stroke-width':1, 'stroke-dasharray':'14,4,2,4'}));
+      stroke:'#7d8090', 'stroke-width':1, 'stroke-dasharray':'14,4,2,4'}));
 
     svg.appendChild(svgEl('path', {d:d, fill:'url(#steelGrad)', stroke:'#e8e9ec', 'stroke-width':1.4, 'stroke-linejoin':'round'}));
 
@@ -557,8 +498,8 @@ footer{margin-top:34px;font-size:10px;color:var(--dim);letter-spacing:.04em;text
 
     const dimY = centerY + Dc/2*pxPerMm*1.35 + 42;
     const capL = xPx(-b/2), capR = xPx(b/2);
-    svg.appendChild(svgEl('line', {x1:capL, y1:centerY+radiusPx(-b/2), x2:capL, y2:dimY+8, stroke:'#4a4d5a', 'stroke-width':0.8}));
-    svg.appendChild(svgEl('line', {x1:capR, y1:centerY+radiusPx(b/2), x2:capR, y2:dimY+8, stroke:'#4a4d5a', 'stroke-width':0.8}));
+    svg.appendChild(svgEl('line', {x1:capL, y1:centerY+radiusPx(-b/2), x2:capL, y2:dimY+8, stroke:'#7d8090', 'stroke-width':0.8}));
+    svg.appendChild(svgEl('line', {x1:capR, y1:centerY+radiusPx(b/2), x2:capR, y2:dimY+8, stroke:'#7d8090', 'stroke-width':0.8}));
     svg.appendChild(svgEl('line', {x1:capL, y1:dimY, x2:capR, y2:dimY, stroke:'#4fc3f7', 'stroke-width':1.2, 'marker-start':'url(#arrow)', 'marker-end':'url(#arrow)'}));
     svg.appendChild(text((capL+capR)/2, dimY-8, `b = ${fmt(b,1)} mm`, {'text-anchor':'middle'}));
 
@@ -651,6 +592,8 @@ footer{margin-top:34px;font-size:10px;color:var(--dim);letter-spacing:.04em;text
   }
 
   // ---------- main recalculation ----------
+  // Esposta su window: gli attributi oninput/onchange nell'HTML si risolvono
+  // nello scope globale, e dentro la IIFE non sarebbero visibili.
   function recalcAll(){
     const bo = parseFloat(boEl.value) || 0;
     const ply = parseInt(plyEl.value,10) || 1;
@@ -686,7 +629,7 @@ footer{margin-top:34px;font-size:10px;color:var(--dim);letter-spacing:.04em;text
   // ---------- deflection check ----------
   const EmatEl = $('Emat'), EcustomInput = $('EcustomInput');
 
-  ['FR','eps','k1','mTr','Lspan','dSolid','dOut','dIn'].forEach(id=>{
+  ['FR','eps','k1','mTr','wrap','Lspan','dSolid','dOut','dIn'].forEach(id=>{
     const el = $(id);
     if(el) el.addEventListener('input', recalcAll);
   });
@@ -702,7 +645,17 @@ footer{margin-top:34px;font-size:10px;color:var(--dim);letter-spacing:.04em;text
       const eps = parseFloat($('eps').value)||0;
       const k1 = parseFloat($('k1').value)||0;
       const mTr = parseFloat($('mTr').value)||0;
-      FR = Math.sqrt(Math.pow(2*(eps/100)*k1*bo,2) + Math.pow(9.81*mTr,2));
+      const wrap = parseFloat($('wrap').value)||180;
+      // Tiro per ramo di nastro [N].
+      // k1% è il tiro per mm di larghezza a UN PER CENTO di allungamento,
+      // quindi a ε% vale k1·ε per mm:   T = k1 · ε · b0
+      // (la versione precedente divideva ε per 100 pur avendo k1 già
+      //  riferito all'1%, sottostimando il tiro di 100 volte)
+      const T = k1 * eps * bo;
+      // La risultante dei due rami dipende dall'angolo di avvolgimento:
+      // 2·T·sin(α/2) vale 2T a 180° e 1.41·T a 90°.
+      const Fnastro = 2 * T * Math.sin(wrap/2 * Math.PI/180);
+      FR = Math.sqrt(Fnastro*Fnastro + Math.pow(9.81*mTr,2));
     }
     const l = parseFloat($('Lspan').value);
     let E = EmatEl.value === 'custom' ? parseFloat(EcustomInput.value) : parseFloat(EmatEl.value);
@@ -735,9 +688,12 @@ footer{margin-top:34px;font-size:10px;color:var(--dim);letter-spacing:.04em;text
       : '<div class="warn-box">Supera il limite consigliato: irrigidire l\'albero (diametro maggiore o appoggi più ravvicinati) prima di affidarsi alla bombatura per il centraggio.</div>';
   }
 
+  window.recalcAll = recalcAll;
+
   $('printBtn').addEventListener('click', function(){ window.print(); });
 
-  $('Lspan').value = round(300*1.3,0);
+  // Interasse cuscinetti di primo tentativo: 1.3 × larghezza nastro inserita
+  $('Lspan').value = round((parseFloat(boEl.value)||300) * 1.3, 0);
 
   recalcAll();
 })();

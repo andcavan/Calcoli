@@ -7,44 +7,26 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@300;400;500&family=Barlow+Condensed:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<link rel="stylesheet" href="theme.css">
 <style>
-:root{
-  --bg:#0e0f11;--bg1:#141519;--bg2:#1c1d23;--bg3:#23252d;
-  --border:rgba(255,255,255,.07);--border2:rgba(255,255,255,.13);
-  --text:#e8e9ec;--muted:#7a7d8a;--dim:#4a4d5a;
-  --acc:#4fc3f7;--acc2:#0288d1;
-  --up:#66bb6a;--dn:#ef5350;--amber:#ffa726;--violet:#b39ddb;
-  --mono:'DM Mono',monospace;--cond:'Barlow Condensed',sans-serif;
-}
-*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+
 html{background:var(--bg);color:var(--text);font-family:var(--mono);font-size:13px}
 body{min-height:100vh}
 .header{border-bottom:1px solid var(--border);padding:11px 20px;display:flex;align-items:center;gap:12px;flex-wrap:wrap}
-.header h1{font-family:var(--cond);font-size:20px;font-weight:700;letter-spacing:.04em;text-transform:uppercase}
-.sub{font-size:10px;color:var(--muted);letter-spacing:.1em;text-transform:uppercase;flex:1}
-.dot{width:7px;height:7px;border-radius:50%;background:var(--acc);display:inline-block;margin-right:6px;animation:pulse 2s ease-in-out infinite}
-@keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
+
 .norm-badge{font-size:9px;color:var(--acc);background:rgba(79,195,247,.1);border:1px solid rgba(79,195,247,.25);border-radius:4px;padding:3px 8px;letter-spacing:.08em;font-family:var(--cond);font-weight:600}
 .layout{display:flex;flex-direction:column;min-height:calc(100vh - 51px)}
 .panels-top{display:grid;grid-template-columns:minmax(0,1.2fr) minmax(0,1fr) minmax(0,1fr) minmax(0,1fr) minmax(0,1fr);gap:8px;padding:10px 13px;border-bottom:1px solid var(--border);align-items:start}
 .panel{background:var(--bg2);border:1px solid var(--border2);border-radius:8px;padding:10px 11px}
 .stitle{font-family:var(--cond);font-size:10px;font-weight:600;letter-spacing:.17em;color:var(--muted);text-transform:uppercase;margin-bottom:8px;display:flex;align-items:center;gap:6px}
-.stitle::after{content:'';flex:1;height:1px;background:var(--border)}
-.field{margin-bottom:8px}.field:last-child{margin-bottom:0}
-.fhdr{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:4px}
+
+.field{margin-bottom:8px}
+
 .flabel{color:var(--muted);font-size:11px;letter-spacing:.03em}
 .fval{color:var(--acc);font-size:12px;font-weight:500;min-width:80px;text-align:right;font-family:var(--mono)}
 .field.output .flabel{color:var(--amber)}
 .field.output .fval{color:var(--amber)}
-.srow{display:flex;align-items:center;gap:4px}
-.arr{flex-shrink:0;width:25px;height:25px;display:flex;align-items:center;justify-content:center;background:var(--bg2);border:1px solid var(--border2);border-radius:5px;cursor:pointer;color:var(--muted);font-size:10px;transition:all .12s;user-select:none}
-.arr:hover{border-color:var(--acc);color:var(--acc);background:rgba(79,195,247,.08)}
-.arr:active{transform:scale(.88)}
-.numinput{flex:1;height:25px;background:var(--bg3);border:1px solid var(--border2);border-radius:5px;color:var(--acc);font-family:var(--mono);font-size:12px;font-weight:500;text-align:center;outline:none;padding:0 4px;min-width:0;transition:border-color .12s}
-.numinput:focus{border-color:var(--acc);background:var(--bg2)}
-.numinput:hover{border-color:rgba(79,195,247,.4)}
-.numinput::-webkit-outer-spin-button,.numinput::-webkit-inner-spin-button{-webkit-appearance:none;margin:0}
-.numinput[type=number]{-moz-appearance:textfield}
+
 .numinput:disabled{opacity:.4;cursor:not-allowed}
 .sel{width:100%;height:25px;background:var(--bg3);border:1px solid var(--border2);border-radius:5px;color:var(--acc);font-family:var(--mono);font-size:11px;outline:none;padding:0 6px;cursor:pointer;transition:border-color .12s;-webkit-appearance:none;appearance:none}
 .sel:focus{border-color:var(--acc);background:var(--bg2)}
@@ -52,11 +34,7 @@ body{min-height:100vh}
 .sel-wrap::after{content:'▾';position:absolute;right:7px;top:50%;transform:translateY(-50%);color:var(--muted);pointer-events:none;font-size:10px}
 /* radio buttons */
 .radio-row{display:flex;gap:4px;margin-bottom:6px}
-.rdbtn{flex:1;height:25px;display:flex;align-items:center;justify-content:center;gap:4px;background:var(--bg3);border:1px solid var(--border2);border-radius:5px;cursor:pointer;font-size:10px;font-family:var(--cond);font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--dim);transition:all .15s;user-select:none}
-.rdbtn:has(input:checked){border-color:var(--acc);background:rgba(79,195,247,.1);color:var(--acc)}
-.rdbtn.dir-raise:has(input:checked){border-color:var(--up);background:rgba(102,187,106,.1);color:var(--up)}
-.rdbtn.dir-lower:has(input:checked){border-color:var(--amber);background:rgba(255,167,38,.1);color:var(--amber)}
-.rdbtn input{display:none}
+
 /* checkbox */
 .cb-row{display:flex;align-items:center;gap:6px;margin-bottom:6px;cursor:pointer;font-size:10px;color:var(--muted)}
 .cb-row input[type=checkbox]{accent-color:var(--acc);width:12px;height:12px;cursor:pointer}
@@ -74,14 +52,12 @@ body{min-height:100vh}
 .sf-chip.fail{border-color:var(--dn);color:var(--dn);background:rgba(239,83,80,.1)}
 /* TOOLTIP */
 [data-tip]{position:relative;cursor:default}
-@keyframes tipIn{from{opacity:0}to{opacity:1}}
+
 [data-tip]:hover::after{content:attr(data-tip);position:absolute;bottom:calc(100% + 7px);left:0;background:#1e2130;border:1px solid rgba(79,195,247,.25);color:#c8cad4;font-size:10px;padding:7px 11px;border-radius:6px;white-space:pre-wrap;max-width:290px;min-width:180px;z-index:999;line-height:1.6;pointer-events:none;font-family:var(--mono);text-align:left;box-shadow:0 4px 20px rgba(0,0,0,.5);animation:tipIn .12s ease .6s both}
-[data-tip]:hover::before{content:'';position:absolute;bottom:calc(100% + 1px);left:20px;border:5px solid transparent;border-top-color:#1e2130;z-index:1000;pointer-events:none;animation:tipIn .12s ease .6s both}
-[data-tip].tr:hover::after{left:auto;right:0}
 
 /* BACK BUTTON */
-.back-btn{font-family:var(--cond,'Barlow Condensed',sans-serif);font-size:10px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--muted,#7a7d8a);text-decoration:none;border:1px solid var(--border2,rgba(255,255,255,.13));border-radius:4px;padding:4px 10px;transition:all .15s;white-space:nowrap;flex-shrink:0}
-.back-btn:hover{color:var(--acc,#4fc3f7);border-color:var(--acc,#4fc3f7)}
+.back-btn{font-family:var(--cond,'Barlow Condensed',sans-serif);font-size:10px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--muted,#9a9dab);text-decoration:none;border:1px solid var(--border2,rgba(255,255,255,.13));border-radius:4px;padding:4px 10px;transition:all .15s;white-space:nowrap;flex-shrink:0}
+
 /* RESULT STRIP */
 .result-strip{background:rgba(79,195,247,.04);border:1px solid rgba(79,195,247,.18);border-radius:8px;padding:10px 14px;margin:0 13px}
 .rs-title{font-family:var(--cond);font-size:10px;font-weight:700;letter-spacing:.14em;color:var(--acc);text-transform:uppercase;margin-bottom:8px;display:flex;align-items:center;gap:8px}
@@ -118,7 +94,7 @@ body{min-height:100vh}
 .vc.warn .vc-v{color:var(--amber)}
 .vc.fail .vc-v{color:var(--dn)}
 .warnbox{background:rgba(239,83,80,.08);border:1px solid rgba(239,83,80,.25);border-radius:6px;padding:7px 11px;font-size:11px;color:#ef9a9a;display:none;margin:6px 13px 0;line-height:1.6}
-.warnbox.show{display:block}
+
 .main{padding:10px 13px;display:flex;flex-direction:column;gap:9px}
 .charts-row{display:grid;grid-template-columns:1fr 1fr;gap:8px}
 .chart-wrap{background:var(--bg2);border:1px solid var(--border2);border-radius:8px;padding:10px;height:230px;position:relative}
@@ -132,7 +108,7 @@ body{min-height:100vh}
 .dv{color:var(--text);font-size:11px;font-weight:500}
 .section-div{padding:5px 13px;font-family:var(--cond);font-size:9px;font-weight:700;letter-spacing:.2em;color:var(--dim);text-transform:uppercase;display:flex;align-items:center;gap:8px}
 .section-div::after{content:'';flex:1;height:1px;background:var(--border)}
-.hidden{display:none!important}
+
 .sep{border-top:1px solid var(--border);margin:6px 0}
 </style>
 </head>
@@ -415,6 +391,26 @@ body{min-height:100vh}
     </div>
   </div>
 
+  <div class="field" data-tip="Lunghezza libera fra gli appoggi (mm).&#10;Governa il carico di punta in compressione e la velocità critica flessionale.&#10;Inserire 0 per saltare le due verifiche.">
+    <div class="fhdr"><span class="flabel">Lungh. libera L</span></div>
+    <div class="srow">
+      <button class="arr" onclick="step('in-Lfree',-25)">−</button>
+      <input class="numinput" type="number" id="in-Lfree" value="0" min="0" max="20000" step="25" oninput="recalc()">
+      <button class="arr" onclick="step('in-Lfree',25)">+</button>
+      <span style="font-size:10px;color:var(--muted);white-space:nowrap">mm</span>
+    </div>
+  </div>
+
+  <div class="field" data-tip="Vincoli agli estremi della vite.&#10;Determina il coefficiente di lunghezza libera di inflessione (Eulero) e il fattore della velocità critica.">
+    <div class="fhdr"><span class="flabel">Vincoli estremi</span></div>
+    <select class="numinput" id="in-mount" style="width:100%" onchange="recalc()">
+      <option value="fixfree">Incastro – libero  (β=2,0)</option>
+      <option value="pinpin" selected>Appoggio – appoggio  (β=1,0)</option>
+      <option value="fixpin">Incastro – appoggio  (β=0,7)</option>
+      <option value="fixfix">Incastro – incastro  (β=0,5)</option>
+    </select>
+  </div>
+
   <div class="sep"></div>
   <div class="field output" data-tip="Tensione equivalente di Von Mises nel nucleo della vite (MPa).&#10;σ_eq = √(σ_a² + 3·τ_t²)&#10;σ_a = Fₐ / (π/4·d₁²) — tensione assiale&#10;τ_t = M / (π/16·d₁³) — tensione torsionale">
     <div class="fhdr"><span class="flabel">σ_eq nucleo vite</span><span class="fval" id="lbl-sigma-eq">—</span></div>
@@ -577,7 +573,16 @@ const TR=[
   {d:80, p:10,  label:'TR 80×10'},
   {d:90, p:12,  label:'TR 90×12'},
   {d:100,p:12,  label:'TR 100×12'},
-].map(t=>({...t, d2:t.d-t.p/2, d1:t.d-t.p}));
+].map(t=>{
+  // ISO 2904 — gioco di fondo ac: 0.15 per p≤2, 0.25 per 2<p≤12, 0.5 oltre.
+  //   d2 = d − p/2        diametro medio
+  //   d3 = d − p − 2·ac   NOCCIOLO DELLA VITE  (d − p è invece D1, il
+  //                       diametro interno della madrevite: usarlo qui
+  //                       sovrastimerebbe l'area resistente del ~6%)
+  //   D4 = d + 2·ac       diametro esterno della madrevite
+  const ac = t.p <= 2 ? 0.15 : (t.p <= 12 ? 0.25 : 0.5);
+  return {...t, ac, d2: t.d - t.p/2, d1: t.d - t.p - 2*ac, D1: t.d - t.p, D4: t.d + 2*ac};
+});
 
 // ═══════════════════════════════════
 //  MATERIALI
@@ -719,8 +724,8 @@ function compute(){
   const phi=Math.atan(lead/(Math.PI*d2));
   const self_locking=phi<=rho_p;
 
-  // Rendimento
-  const eta_s=Math.tan(phi)/Math.tan(phi+rho_p);
+  // Rendimento del solo filetto
+  const eta_f=Math.tan(phi)/Math.tan(phi+rho_p);
   const eta_a=self_locking?0:Math.tan(phi-rho_p)/Math.tan(phi);
 
   // Coppia filetto per unità di forza [N·mm/N]
@@ -735,6 +740,11 @@ function compute(){
 
   const Mt_raise_pN=Mf_raise_pN+Mc_pN;
   const Mt_lower_pN=Mf_lower_pN+Mc_pN;
+
+  // Rendimento COMPLESSIVO: il lavoro utile per giro è Fa·lead, quello speso
+  // è 2π·(coppia filetto + coppia spalla). Con una ralla non lubrificata la
+  // spalla può assorbire più del filetto stesso.
+  const eta_s = Mt_raise_pN>0 ? lead/(2*Math.PI*Mt_raise_pN) : 0;
 
   // Modo e direzione
   const mode=document.querySelector('input[name="mode"]:checked').value;
@@ -755,8 +765,7 @@ function compute(){
   }else if(mode==='torque'){
     const Mi=parseFloat(document.getElementById('in-M').value)||50;
     M_tot=Mi;
-    // distribute: M_thread = M_tot * Mf/Mt
-    const ratio=pN>0?Mf_raise_pN*((dir==='raise'?1:Mf_lower_pN/Mf_raise_pN))/pN:1;
+    // ripartizione: M_filetto = M_tot · Mf/Mt
     M_thread=M_tot*(dir==='raise'?Mf_raise_pN:Mf_lower_pN)/pN;
     M_collar_val=use_collar?M_tot*Mc_pN/pN:0;
     Fa=Mi*1e3/pN;
@@ -779,6 +788,24 @@ function compute(){
   const sm=SCREW_MAT[smk];
   const nutn=NUT_MAT[nm];
 
+  // Carico di punta (Eulero) e velocità critica flessionale
+  const Lfree = parseFloat(document.getElementById('in-Lfree').value)||0;
+  const mount = document.getElementById('in-mount').value;
+  const BETA  = {fixfree:2.0, pinpin:1.0, fixpin:0.7, fixfix:0.5}[mount] || 1.0;
+  // coefficiente della velocità critica (λ² del modo fondamentale / 2π)
+  const NCRIT = {fixfree:0.36, pinpin:1.00, fixpin:1.56, fixfix:2.27}[mount] || 1.0;
+  const E_S = 206000;                       // acciaio [MPa]
+  const RHO = 7.85e-9;                      // [t/mm³] → N·s²/mm⁴ con g in mm/s²
+  const I3  = Math.PI/64*Math.pow(d1,4);    // inerzia del nocciolo [mm⁴]
+  const A3n = Math.PI/4*d1*d1;
+  let Fcrit=NaN, sf_buckling=NaN, n_crit=NaN;
+  if (Lfree > 0) {
+    const Llib = BETA*Lfree;
+    Fcrit = Math.PI*Math.PI*E_S*I3/(Llib*Llib);          // [N]
+    // velocità critica: n_cr = NCRIT · (π/2)·√(E·I/(ρ·A))/L² · 60/(2π)  [rpm]
+    n_crit = NCRIT * (Math.PI/2) * Math.sqrt(E_S*I3/(RHO*A3n)) / (Lfree*Lfree) * 60/(2*Math.PI);
+  }
+
   let sigma_eq=NaN,sigma_p=NaN,tau_th=NaN,sf_screw=NaN,sf_bearing=NaN,sf_shear=NaN;
   if(le>0&&isFinite(Fa)&&Fa>0){
     const h_eng=th.type==='tr'?0.5*p:0.5413*p;
@@ -794,14 +821,18 @@ function compute(){
     sf_bearing=nutn.sigma_p_adm/sigma_p;
     sf_shear=(sm.sigma_y/Math.sqrt(3))/tau_th;
   }
+  // L'instabilità riguarda solo la vite COMPRESSA (sollevamento di un carico
+  // che spinge sulla vite): in trazione non si verifica.
+  if (isFinite(Fcrit) && isFinite(Fa) && Fa > 0) sf_buckling = Fcrit/Fa;
 
   return{
     th,d,p,d2,d1,lead,ns,alpha_half,
-    mu,mu_p,rho_p,phi,self_locking,eta_s,eta_a,
+    mu,mu_p,rho_p,phi,self_locking,eta_s,eta_f,eta_a,
     Mf_raise_pN,Mf_lower_pN,Mc_pN,Mt_raise_pN,Mt_lower_pN,
     Fa,M_thread,M_collar_val,M_tot,P_mech,
     v_mm_s,n_rpm,
     le,sigma_eq,sigma_p,tau_th,sf_screw,sf_bearing,sf_shear,
+    Lfree,mount,BETA,Fcrit,sf_buckling,n_crit,
     sm,nutn,sf_in,
     mode,dir,use_collar,nm
   };
@@ -867,7 +898,8 @@ function render(r){
   const vs=document.getElementById('vfy-strip');
   if(r.le>0&&isFinite(r.sigma_eq)){
     vs.style.display='';
-    const worst=Math.min(r.sf_screw,r.sf_bearing,r.sf_shear);
+    const worst=Math.min(r.sf_screw,r.sf_bearing,r.sf_shear,
+                         (r.Lfree>0&&isFinite(r.sf_buckling))?r.sf_buckling:Infinity);
     const cls=sfClass(worst);
     vs.className='vfy-strip '+(cls==='ok'?'':''+cls);
     document.getElementById('vfy-title').textContent=cls==='ok'?'✓ Verifica OK':cls==='warn'?'⚠ Verifica — attenzione':'✗ Verifica FALLITA';
@@ -875,18 +907,27 @@ function render(r){
       {l:'SF nucleo vite',v:fp(r.sf_screw,2),u:'(adm: σ_y/SF='+fp(r.sm.sigma_y/r.sf_in,0)+' MPa)',cls:sfClass(r.sf_screw)},
       {l:'SF fianco mad.',v:fp(r.sf_bearing,2),u:'(σ_p='+fp(r.sigma_p,1)+' / adm='+fp(r.nutn.sigma_p_adm,0)+' MPa)',cls:sfClass(r.sf_bearing)},
       {l:'SF taglio fil.',v:fp(r.sf_shear,2),u:'(τ='+fp(r.tau_th,1)+' MPa)',cls:sfClass(r.sf_shear)},
-    ].map(({l,v,u,cls})=>`<div class="vc ${cls}"><div class="vc-l">${l}</div><div class="vc-v">${v} <span style="font-size:9px;opacity:.6">${u}</span></div></div>`).join('');
+    ].concat(r.Lfree>0&&isFinite(r.sf_buckling)?[
+      {l:'SF carico punta',v:fp(r.sf_buckling,2),u:'(F_cr='+fp(r.Fcrit,0)+' N, β='+r.BETA+')',cls:sfClass(r.sf_buckling)},
+    ]:[]).map(({l,v,u,cls})=>`<div class="vc ${cls}"><div class="vc-l">${l}</div><div class="vc-v">${v} <span style="font-size:9px;opacity:.6">${u}</span></div></div>`).join('');
   }else{vs.style.display='none';}
 
   // Warnings
   const wb=document.getElementById('warnbox');
   const w=[];
   if(!r.self_locking) w.push('⚠  Non autobloccante: la vite arretra sotto carico assiale. Necessario un freno o una ralla di arresto.');
-  if(r.eta_s<0.25) w.push('ℹ  Rendimento di sollevamento basso ('+fp(r.eta_s*100,1)+'%): considerare filettatura a più principi o lubrificazione migliore.');
+  if(r.eta_s<0.25) w.push('ℹ  Rendimento complessivo basso ('+fp(r.eta_s*100,1)+'%): considerare filettatura a più principi, lubrificazione migliore o un cuscinetto reggispinta al posto della ralla.');
+  if(r.use_collar && r.eta_f-r.eta_s>0.1) w.push('ℹ  La spalla assorbe una quota rilevante della coppia: η passa da '+fp(r.eta_f*100,1)+'% (solo filetto) a '+fp(r.eta_s*100,1)+'% (complessivo). Un reggispinta a rotolamento recupererebbe gran parte della perdita.');
   if(r.le>0&&isFinite(r.sf_screw)&&r.sf_screw<r.sf_in) w.push('✗  Nucleo vite non verificato: SF='+fp(r.sf_screw,2)+' < SF_richiesto='+fp(r.sf_in,1));
   if(r.le>0&&isFinite(r.sf_bearing)&&r.sf_bearing<r.sf_in) w.push('✗  Pressione di fianco madrevite non verificata: SF='+fp(r.sf_bearing,2)+' < SF_richiesto='+fp(r.sf_in,1));
   if(r.le>0&&isFinite(r.sf_shear)&&r.sf_shear<r.sf_in) w.push('✗  Taglio filetto vite non verificato: SF='+fp(r.sf_shear,2)+' < SF_richiesto='+fp(r.sf_in,1));
   if(r.nm==='steel'&&r.mu<0.1) w.push('⚠  Accoppiamento acciaio-acciaio con μ basso: rischio di incollaggio (stick-slip). Verificare lubrificazione.');
+  if(r.Lfree>0&&isFinite(r.sf_buckling)&&r.sf_buckling<r.sf_in)
+    w.push('✗  Carico di punta non verificato: F_cr = '+fp(r.Fcrit,0)+' N, SF = '+fp(r.sf_buckling,2)+' < '+fp(r.sf_in,1)+'. Ridurre la lunghezza libera, irrigidire i vincoli o aumentare il diametro.');
+  if(r.Lfree>0&&r.n_rpm>0&&isFinite(r.n_crit)&&r.n_rpm>0.8*r.n_crit)
+    w.push('⚠  Velocità di rotazione ('+fp(r.n_rpm,0)+' rpm) oltre l’ 80% della velocità critica flessionale ('+fp(r.n_crit,0)+' rpm): rischio di risonanza (whip).');
+  if(r.Lfree===0)
+    w.push('ℹ  Inserire la lunghezza libera per attivare le verifiche di carico di punta e velocità critica.');
   wb.className='warnbox'+(w.length?' show':'');
   wb.innerHTML=w.join('<br>');
 
@@ -914,7 +955,8 @@ function render(r){
       ${row('φ angolo elica',fp(deg(r.phi),3)+'°')}
       ${row('ρ\'−φ',fp(deg(r.rho_p-r.phi),3)+'°')}
       ${row('Auto-bloccante',r.self_locking?'Sì (ρ\'≥φ)':'No (ρ\'<φ)')}
-      ${row('η sollevamento',fp(r.eta_s*100,2)+'%')}
+      ${row('η complessivo',fp(r.eta_s*100,2)+'%')}
+      ${row('η solo filetto',fp(r.eta_f*100,2)+'%')}
       ${row('η abbassamento',r.self_locking?'0 (autoblocc.)':fp(r.eta_a*100,2)+'%')}
       ${row('Materiale vite',r.sm.n)}
       ${row('Materiale mad.',r.nutn.n)}
@@ -944,6 +986,9 @@ function render(r){
       ${row('SF fianco mad.',fp(r.sf_bearing,2))}
       ${row('τ taglio fil.',fp(r.tau_th,1)+' MPa')}
       ${row('SF taglio fil.',fp(r.sf_shear,2))}
+      ${r.Lfree>0?row('F critica (Eulero)',fp(r.Fcrit,0)+' N'):''}
+      ${r.Lfree>0?row('SF carico di punta',fp(r.sf_buckling,2)):''}
+      ${r.Lfree>0?row('Velocità critica',fp(r.n_crit,0)+' rpm'):''}
       `:`<div class="dr"><span class="dk" style="color:var(--dim);font-style:italic">Inserire l_e per la verifica</span></div>`}
     </div>`;
 
@@ -958,13 +1003,13 @@ let chMF, chEta;
 function initCharts(){
   const base={
     responsive:true,maintainAspectRatio:false,animation:{duration:60},
-    plugins:{legend:{display:true,labels:{color:'#7a7d8a',font:{family:"'DM Mono'",size:10},boxWidth:10}},
-      tooltip:{backgroundColor:'#1c1d23',titleColor:'#7a7d8a',bodyColor:'#e8e9ec',
+    plugins:{legend:{display:true,labels:{color:'#9a9dab',font:{family:"'DM Mono'",size:10},boxWidth:10}},
+      tooltip:{backgroundColor:'#1c1d23',titleColor:'#9a9dab',bodyColor:'#e8e9ec',
         borderColor:'rgba(255,255,255,.1)',borderWidth:1,
         titleFont:{family:"'DM Mono'",size:10},bodyFont:{family:"'DM Mono'",size:11}}},
     scales:{
-      x:{ticks:{font:{family:"'DM Mono'",size:9},color:'#4a4d5a'},grid:{color:'rgba(255,255,255,.04)'},border:{display:false}},
-      y:{ticks:{font:{family:"'DM Mono'",size:9},color:'#4a4d5a'},grid:{color:'rgba(255,255,255,.04)'},border:{display:false}}
+      x:{ticks:{font:{family:"'DM Mono'",size:9},color:'#7d8090'},grid:{color:'rgba(255,255,255,.04)'},border:{display:false}},
+      y:{ticks:{font:{family:"'DM Mono'",size:9},color:'#7d8090'},grid:{color:'rgba(255,255,255,.04)'},border:{display:false}}
     }
   };
 

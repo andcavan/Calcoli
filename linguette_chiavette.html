@@ -6,92 +6,52 @@
 <title>Calcolatore Linguette - DIN 6885 A</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@300;400;500&family=Barlow+Condensed:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="theme.css">
 <style>
-:root{
-  --bg:#0e0f11;--bg1:#141519;--bg2:#1c1d23;--bg3:#23252d;
-  --border:rgba(255,255,255,.07);--border2:rgba(255,255,255,.13);
-  --text:#e8e9ec;--muted:#7a7d8a;--dim:#4a4d5a;
-  --acc:#4fc3f7;--acc2:#0288d1;
-  --up:#66bb6a;--dn:#ef5350;--amber:#ffa726;--violet:#b39ddb;
-  --mono:'DM Mono',monospace;--cond:'Barlow Condensed',sans-serif;
-}
-*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+
 html{background:var(--bg);color:var(--text);font-family:var(--mono);font-size:13px;min-height:100vh}
 body{display:flex;flex-direction:column;align-items:center;min-height:100vh;padding:20px}
 
 .header{border-bottom:1px solid var(--border);padding:11px 20px;display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:20px}
-.header h1{font-family:var(--cond);font-size:20px;font-weight:700;letter-spacing:.04em;text-transform:uppercase}
-.sub{font-size:10px;color:var(--muted);letter-spacing:.1em;text-transform:uppercase;flex:1}
-.dot{width:7px;height:7px;border-radius:50%;background:var(--acc);display:inline-block;margin-right:6px;animation:pulse 2s ease-in-out infinite}
-@keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
 
 .container{max-width:1000px;width:100%;display:grid;grid-template-columns:1fr 1.2fr;gap:20px}
 
 .panel{background:var(--bg2);border:1px solid var(--border2);border-radius:8px;padding:15px;display:flex;flex-direction:column;gap:12px}
 
 .stitle{font-family:var(--cond);font-size:10px;font-weight:600;letter-spacing:.17em;color:var(--muted);text-transform:uppercase;margin-bottom:8px;display:flex;align-items:center;gap:6px}
-.stitle::after{content:'';flex:1;height:1px;background:var(--border)}
 
 .field{margin-bottom:8px}
-.field:last-child{margin-bottom:0}
-.fhdr{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:4px}
+
 .flabel{color:var(--muted);font-size:11px;letter-spacing:.03em}
 .funit{font-size:10px;color:var(--dim)}
 
-.srow{display:flex;align-items:center;gap:4px}
-.arr{flex-shrink:0;width:25px;height:25px;display:flex;align-items:center;justify-content:center;background:var(--bg2);border:1px solid var(--border2);border-radius:5px;cursor:pointer;color:var(--muted);font-size:10px;transition:all .12s;user-select:none}
-.arr:hover{border-color:var(--acc);color:var(--acc);background:rgba(79,195,247,.08)}
-.arr:active{transform:scale(.88)}
-
-.numinput{flex:1;height:25px;background:var(--bg3);border:1px solid var(--border2);border-radius:5px;color:var(--acc);font-family:var(--mono);font-size:12px;font-weight:500;text-align:center;outline:none;padding:0 4px;transition:border-color .12s}
-.numinput:focus{border-color:var(--acc);background:var(--bg2)}
-.numinput:hover{border-color:rgba(79,195,247,.4)}
-.numinput::-webkit-outer-spin-button,.numinput::-webkit-inner-spin-button{-webkit-appearance:none;margin:0}
-.numinput[type=number]{-moz-appearance:textfield}
-
-.select-field{width:100%;height:25px;background:var(--bg3);border:1px solid var(--border2);border-radius:5px;color:var(--acc);font-family:var(--mono);font-size:12px;font-weight:500;padding:0 4px;outline:none;transition:border-color .12s;cursor:pointer}
-.select-field:focus{border-color:var(--acc);background:var(--bg2)}
-.select-field:hover{border-color:rgba(79,195,247,.4)}
 .select-field option{background:var(--bg2);color:var(--acc);padding:4px}
-
-.results-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
-.result-box{background:var(--bg1);border:1px solid var(--border);border-radius:6px;padding:10px}
-.result-label{font-size:9px;color:var(--muted);letter-spacing:.07em;text-transform:uppercase;margin-bottom:4px;font-family:var(--cond)}
-.result-value{font-size:16px;font-weight:500;color:var(--acc);font-family:var(--mono)}
-.result-unit{font-size:10px;color:var(--dim);margin-left:3px}
 
 .table-container{overflow-x:auto}
 .dim-table{width:100%;border-collapse:collapse;font-size:10px;margin-bottom:10px}
 .dim-table th{background:rgba(79,195,247,.1);color:var(--acc2);padding:6px 4px;text-align:center;border:1px solid var(--border2);font-weight:600;letter-spacing:.05em}
 .dim-table td{padding:5px 4px;border:1px solid var(--border2);text-align:center;color:var(--text)}
-.dim-table tr:hover{background:rgba(79,195,247,.05)}
 
 .checkbox-group{display:flex;align-items:center;gap:8px;margin:8px 0}
 .checkbox-group input[type="checkbox"]{width:16px;height:16px;cursor:pointer}
 .checkbox-group label{font-size:11px;color:var(--text);cursor:pointer}
 
 .result-section{background:rgba(79,195,247,.05);border:1px solid rgba(79,195,247,.2);border-radius:8px;padding:12px;margin-top:12px}
-.result-section-title{font-family:var(--cond);font-size:10px;font-weight:700;letter-spacing:.14em;color:var(--acc);text-transform:uppercase;margin-bottom:8px;display:flex;align-items:center;gap:8px}
-.result-section-title::after{content:'';flex:1;height:1px;background:rgba(79,195,247,.15)}
 
 .verification-grid{display:grid;grid-template-columns:1fr;gap:6px}
 .verify-item{display:flex;justify-content:space-between;align-items:center;padding:6px;background:var(--bg1);border:1px solid var(--border);border-radius:4px;font-size:11px}
 .verify-label{color:var(--muted)}
 .verify-value{color:var(--text);font-weight:500;font-family:var(--mono)}
-.verify-unit{font-size:9px;color:var(--dim);margin-left:4px}
+
 .verify-status{padding:2px 6px;border-radius:3px;font-size:9px;font-weight:600}
-.verify-status.ok{background:rgba(102,187,106,.2);color:var(--up);border:1px solid var(--up)}
-.verify-status.warn{background:rgba(255,167,38,.2);color:var(--amber);border:1px solid var(--amber)}
 
 .back-btn{font-family:var(--cond);font-size:10px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);text-decoration:none;border:1px solid var(--border2);border-radius:4px;padding:4px 10px;transition:all .15s;white-space:nowrap}
 .back-btn:hover{color:var(--acc);border-color:var(--acc)}
 
-[data-tip]{position:relative;cursor:help}
 [data-tip]:hover::after{content:attr(data-tip);position:absolute;bottom:calc(100% + 7px);left:0;background:#1e2130;border:1px solid rgba(79,195,247,.25);color:#c8cad4;font-size:10px;padding:7px 11px;border-radius:6px;white-space:pre-wrap;max-width:280px;min-width:180px;z-index:999;line-height:1.6;pointer-events:none;font-family:var(--mono);text-align:left;box-shadow:0 4px 20px rgba(0,0,0,.5)}
 
 ::-webkit-scrollbar{width:5px}
-::-webkit-scrollbar-track{background:var(--bg)}
-::-webkit-scrollbar-thumb{background:var(--bg3);border-radius:3px}
+
 </style>
 </head>
 <body>
@@ -118,6 +78,9 @@ body{display:flex;flex-direction:column;align-items:center;min-height:100vh;padd
         <input type="number" id="diameter" class="numinput" value="20" min="6" max="110" step="1" onchange="calculate()" oninput="calculate()">
         <button class="arr" onclick="adjustValue('diameter',1)">▲</button>
       </div>
+      <div id="range-msg" style="display:none;margin-top:6px;padding:7px 9px;
+           border-left:3px solid #ffa726;background:rgba(255,167,38,.10);
+           border-radius:3px;font-size:11px;line-height:1.5;color:#e8e9ec"></div>
     </div>
 
     <div class="field">
@@ -227,6 +190,18 @@ body{display:flex;flex-direction:column;align-items:center;min-height:100vh;padd
       </div>
     </div>
 
+    <div class="field">
+      <div class="fhdr">
+        <span class="flabel" data-tip="Fattore di applicazione K_A\nMoltiplica la coppia nominale per tenere conto degli urti della macchina condotta e del motore.\nCorrisponde al K_A di ISO 6336 / DIN 6892.">Fattore applicazione K_A</span>
+      </div>
+      <select id="app-factor" class="select-field" style="width:100%" onchange="calculate()">
+        <option value="1.0">1,0 — Uniforme (motore elettrico, carico costante)</option>
+        <option value="1.3">1,3 — Urti leggeri (ventilatori, pompe)</option>
+        <option value="1.7">1,7 — Urti medi (trasportatori, macch. utensili)</option>
+        <option value="2.5">2,5 — Urti forti (frantoi, presse, laminatoi)</option>
+      </select>
+    </div>
+
   </div>
 
   <!-- PANNELLO RISULTATI -->
@@ -327,14 +302,21 @@ body{display:flex;flex-direction:column;align-items:center;min-height:100vh;padd
 
       <div class="verification-grid">
         <div class="verify-item">
-          <span class="verify-label">Coppia trasmessa</span>
+          <span class="verify-label" data-tip="Coppia di progetto = coppia nominale × fattore di applicazione K_A">Coppia di progetto</span>
           <div>
             <span class="verify-value" id="verify-torque">-</span>
             <span class="verify-unit">N·m</span>
           </div>
         </div>
         <div class="verify-item">
-          <span class="verify-label" data-tip="τ = 2T / (b · l · d)">Tensione a taglio</span>
+          <span class="verify-label" data-tip="Lunghezza portante l' = l − b.\nLe linguette forma A hanno gli estremi arrotondati: i due semicerchi non trasmettono carico.">Lunghezza portante l&prime;</span>
+          <div>
+            <span class="verify-value" id="verify-lp">-</span>
+            <span class="verify-unit">mm</span>
+          </div>
+        </div>
+        <div class="verify-item">
+          <span class="verify-label" data-tip="τ = 2T / (b · l&prime; · d)   con l&prime; = l − b">Tensione a taglio</span>
           <div>
             <span class="verify-value" id="verify-shear">-</span>
             <span class="verify-unit">MPa</span>
@@ -399,15 +381,30 @@ const KEYWAY_STANDARDS = [
 ];
 
 // Tensioni ammissibili per materiali (MPa)
+// Tensioni AMMISSIBILI DI PROGETTO per collegamenti con linguetta (MPa).
+// Non sono le tensioni di snervamento del materiale: la pressione ammissibile
+// sul fianco tiene conto del contatto strisciante e della distribuzione non
+// uniforme del carico lungo la linguetta. Riferimento: prassi DIN 6892 /
+// manualistica, carico statico o con urti leggeri.
 const MATERIAL_PROPS = {
-  'steel-C45': { name: 'Acciaio C45', sigma_adm: 280, tau_adm: 160 },
-  'steel-C60': { name: 'Acciaio C60', sigma_adm: 380, tau_adm: 220 },
-  'steel-alloy': { name: 'Acciaio legato', sigma_adm: 450, tau_adm: 260 },
-  'cast-iron': { name: 'Ghisa grigia', sigma_adm: 200, tau_adm: 120 },
-  'aluminum': { name: 'Alluminio', sigma_adm: 140, tau_adm: 80 }
+  'steel-C45':   { name: 'Acciaio C45',    sigma_adm: 120, tau_adm: 90 },
+  'steel-C60':   { name: 'Acciaio C60',    sigma_adm: 150, tau_adm: 110 },
+  'steel-alloy': { name: 'Acciaio legato', sigma_adm: 180, tau_adm: 130 },
+  'cast-iron':   { name: 'Ghisa grigia',   sigma_adm:  80, tau_adm: 60 },
+  'aluminum':    { name: 'Alluminio',      sigma_adm:  55, tau_adm: 40 }
+};
+
+// Fattore di applicazione: moltiplica la coppia nominale (come KA in ISO 6336)
+const APP_FACTORS = {
+  '1.0': 'Uniforme — motore elettrico, carico costante',
+  '1.3': 'Urti leggeri — ventilatori, pompe centrifughe',
+  '1.7': 'Urti medi — trasportatori, macchine utensili',
+  '2.5': 'Urti forti — frantoi, presse, laminatoi',
 };
 
 let currentKeyway = null;
+// true quando l'utente ha scelto esplicitamente una lunghezza dalla tendina
+let userPickedLength = false;
 
 function getKeywayForDiameter(d) {
   return KEYWAY_STANDARDS.find(k => d >= k.d_min && d <= k.d_max);
@@ -428,6 +425,11 @@ function togglePowerCoupling() {
   calculate();
 }
 
+// Le linguette DIN 6885 forma A hanno gli estremi arrotondati: la lunghezza
+// che lavora davvero è l' = l − b. Usare l nominale sovrastima l'area
+// resistente del 20÷30% su linguette corte.
+function bearingLength(l, b) { return Math.max(l - b, 0); }
+
 function computeMinLength(diameter, torque) {
   if (!currentKeyway || torque <= 0) return { lMin: 0, lRecommended: currentKeyway ? currentKeyway.l : 0 };
   const T_Nmm = torque * 1000;
@@ -436,10 +438,12 @@ function computeMinLength(diameter, torque) {
   const { b, t1, t2 } = currentKeyway;
   const d = diameter;
 
-  const lMin_shear = (2 * T_Nmm) / (b  * d * propsShaft.tau_adm);
-  const lMin_shaft = (2 * T_Nmm) / (t1 * d * propsShaft.sigma_adm);
-  const lMin_hub   = (2 * T_Nmm) / (t2 * d * propsHub.sigma_adm);
-  const lMin = Math.max(lMin_shear, lMin_shaft, lMin_hub);
+  // Lunghezze PORTANTI minime...
+  const lp_shear = (2 * T_Nmm) / (b  * d * propsShaft.tau_adm);
+  const lp_shaft = (2 * T_Nmm) / (t1 * d * propsShaft.sigma_adm);
+  const lp_hub   = (2 * T_Nmm) / (t2 * d * propsHub.sigma_adm);
+  // ...convertite in lunghezza NOMINALE da ordinare (l = l' + b)
+  const lMin = Math.max(lp_shear, lp_shaft, lp_hub) + b;
 
   const stdLengths = STANDARD_LENGTHS[b] || [currentKeyway.l];
   const lRecommended = stdLengths.find(l => l >= lMin) || stdLengths[stdLengths.length - 1];
@@ -452,26 +456,44 @@ function calculate() {
   const rpm = parseFloat(document.getElementById('rpm').value);
   const usePower = document.getElementById('use-power').checked;
 
-  let torque = 0;
+  let torqueNom = 0;
   if (usePower) {
-    const power = parseFloat(document.getElementById('power').value) * 1000; // kW to W
-    torque = (power * 60) / (2 * Math.PI * rpm);
+    const power = parseFloat(document.getElementById('power').value) * 1000; // kW → W
+    torqueNom = (rpm > 0) ? (power * 60) / (2 * Math.PI * rpm) : 0;
   } else {
-    torque = parseFloat(document.getElementById('torque').value);
+    torqueNom = parseFloat(document.getElementById('torque').value);
   }
+  if (!isFinite(torqueNom) || torqueNom < 0) torqueNom = 0;
+  // Coppia di progetto = coppia nominale × fattore di applicazione
+  const KA = parseFloat(document.getElementById('app-factor').value) || 1.0;
+  const torque = torqueNom * KA;
 
   // Get keyway dimensions
+  const prevB = currentKeyway ? currentKeyway.b : null;
   currentKeyway = getKeywayForDiameter(diameter);
+  // Cambiando sezione di linguetta la scelta precedente non ha più senso
+  if (currentKeyway && prevB !== null && currentKeyway.b !== prevB) userPickedLength = false;
 
+  const rangeMsg = document.getElementById('range-msg');
   if (!currentKeyway) {
-    alert('Diametro non rientra negli intervalli standard (6-110 mm)');
+    // Niente alert: calculate() è agganciata a oninput, comparirebbe
+    // un popup a ogni tasto premuto mentre si digita il diametro.
+    if (rangeMsg) {
+      rangeMsg.style.display = 'block';
+      rangeMsg.textContent = isNaN(diameter)
+        ? 'Inserire il diametro dell’albero.'
+        : `Ø ${diameter} mm fuori dagli intervalli DIN 6885 tabellati (6–110 mm).`;
+    }
+    document.getElementById('verify-section').style.display = 'none';
     return;
   }
+  if (rangeMsg) rangeMsg.style.display = 'none';
 
   // Calcola lunghezza minima necessaria prima di aggiornare il dropdown
   const { lMin, lRecommended } = computeMinLength(diameter, torque);
 
-  // Update length options, pre-selezionando la lunghezza raccomandata
+  // Aggiorna le opzioni conservando la scelta dell'utente: la lunghezza
+  // consigliata viene preselezionata solo se non ne ha già scelta una valida.
   updateLengthOptions(lRecommended);
 
   // Get selected length - use manual if active, otherwise recommended
@@ -520,6 +542,13 @@ function updateLengthOptions(lRecommended) {
   const lengths = STANDARD_LENGTHS[currentKeyway.b] || [currentKeyway.l];
   const minLength = currentKeyway.l;
 
+  // Scelta da conservare: quella corrente dell'utente se ancora disponibile
+  // nella nuova lista, altrimenti la consigliata. Senza questo, selezionare
+  // una lunghezza dalla tendina era impossibile perché calculate() la
+  // riportava ogni volta sulla consigliata.
+  const prev = parseFloat(select.value);
+  const keep = (userPickedLength && lengths.includes(prev)) ? prev : lRecommended;
+
   select.innerHTML = '';
   lengths.forEach(l => {
     const opt = document.createElement('option');
@@ -528,7 +557,7 @@ function updateLengthOptions(lRecommended) {
     if (l === minLength) label += ' (min. std.)';
     if (l === lRecommended) label += ' ← consigliata';
     opt.textContent = label;
-    if (l === lRecommended) opt.selected = true;
+    if (l === keep) opt.selected = true;
     select.appendChild(opt);
   });
 }
@@ -540,13 +569,15 @@ function verifyKeyway(diameter, length, torque, lMin, lRecommended) {
   const T_Nmm = torque * 1000; // N·m → N·mm
   const { b, t1, t2 } = currentKeyway;
   const d = diameter;
+  const lp = bearingLength(length, b);   // lunghezza portante l' = l − b
 
-  // F = 2T/d ; τ = F/(b·l) ; σ_c = F/(t·l)
-  const shearStress        = (2 * T_Nmm) / (b  * length * d);
-  const contactStressShaft = (2 * T_Nmm) / (t1 * length * d);
-  const contactStressHub   = (2 * T_Nmm) / (t2 * length * d);
+  // F = 2T/d ; τ = F/(b·l') ; σ_c = F/(t·l')
+  const shearStress        = lp > 0 ? (2 * T_Nmm) / (b  * lp * d) : Infinity;
+  const contactStressShaft = lp > 0 ? (2 * T_Nmm) / (t1 * lp * d) : Infinity;
+  const contactStressHub   = lp > 0 ? (2 * T_Nmm) / (t2 * lp * d) : Infinity;
 
   document.getElementById('verify-torque').textContent        = torque.toFixed(2);
+  document.getElementById('verify-lp').textContent            = lp.toFixed(1);
   document.getElementById('verify-shear').textContent         = shearStress.toFixed(1);
   document.getElementById('verify-contact-shaft').textContent = contactStressShaft.toFixed(1);
   document.getElementById('verify-contact-hub').textContent   = contactStressHub.toFixed(1);
@@ -619,6 +650,7 @@ function toggleManualLength() {
 }
 
 function useLengthOption() {
+  userPickedLength = true;
   if (!useManualLengthFlag) {
     calculate();
   }

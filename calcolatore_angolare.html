@@ -7,24 +7,14 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@300;400;500&family=Barlow+Condensed:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<link rel="stylesheet" href="theme.css">
 <style>
-:root{
-  --bg:#0e0f11;--bg1:#141519;--bg2:#1c1d23;--bg3:#23252d;
-  --border:rgba(255,255,255,.07);--border2:rgba(255,255,255,.13);
-  --text:#e8e9ec;--muted:#7a7d8a;--dim:#4a4d5a;
-  --acc:#4fc3f7;--acc2:#0288d1;
-  --up:#66bb6a;--dn:#ef5350;--amber:#ffa726;--violet:#b39ddb;
-  --mono:'DM Mono',monospace;--cond:'Barlow Condensed',sans-serif;
-}
-*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+
 html{background:var(--bg);color:var(--text);font-family:var(--mono);font-size:13px}
 body{min-height:100vh}
 
 .header{border-bottom:1px solid var(--border);padding:11px 20px;display:flex;align-items:center;gap:12px;flex-wrap:wrap}
-.header h1{font-family:var(--cond);font-size:20px;font-weight:700;letter-spacing:.04em;text-transform:uppercase}
-.sub{font-size:10px;color:var(--muted);letter-spacing:.1em;text-transform:uppercase;flex:1}
-.dot{width:7px;height:7px;border-radius:50%;background:var(--acc);display:inline-block;margin-right:6px;animation:pulse 2s ease-in-out infinite}
-@keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
+
 .inc-strip{display:flex;align-items:center;gap:3px;background:var(--bg2);border:1px solid var(--border2);border-radius:6px;padding:3px}
 .inc-lbl{font-size:9px;color:var(--dim);text-transform:uppercase;letter-spacing:.1em;padding:0 5px 0 3px;white-space:nowrap}
 .inc-btn{font-family:var(--mono);font-size:11px;padding:3px 9px;border:1px solid transparent;border-radius:4px;background:transparent;color:var(--muted);cursor:pointer;transition:all .12s}
@@ -36,10 +26,9 @@ body{min-height:100vh}
 .panel{background:var(--bg2);border:1px solid var(--border2);border-radius:8px;padding:10px 11px}
 
 .stitle{font-family:var(--cond);font-size:10px;font-weight:600;letter-spacing:.17em;color:var(--muted);text-transform:uppercase;margin-bottom:8px;display:flex;align-items:center;gap:6px}
-.stitle::after{content:'';flex:1;height:1px;background:var(--border)}
 
-.field{margin-bottom:8px}.field:last-child{margin-bottom:0}
-.fhdr{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:4px}
+.field{margin-bottom:8px}
+
 .flabel{color:var(--muted);font-size:11px;letter-spacing:.03em;cursor:default}
 .fval{color:var(--acc);font-size:12px;font-weight:500;min-width:74px;text-align:right;font-family:var(--mono)}
 .field.known .flabel{color:var(--acc)}
@@ -49,30 +38,12 @@ body{min-height:100vh}
 .field.derived .numinput{opacity:.3;pointer-events:none}
 .field.derived .arr{opacity:.2;pointer-events:none;cursor:default}
 
-.srow{display:flex;align-items:center;gap:4px}
-.arr{flex-shrink:0;width:25px;height:25px;display:flex;align-items:center;justify-content:center;background:var(--bg2);border:1px solid var(--border2);border-radius:5px;cursor:pointer;color:var(--muted);font-size:10px;transition:all .12s;user-select:none;-webkit-user-select:none}
-.arr:hover{border-color:var(--acc);color:var(--acc);background:rgba(79,195,247,.08)}
-.arr:active{transform:scale(.88)}
-.arr.held{border-color:var(--acc);color:var(--acc);background:rgba(79,195,247,.18)}
-.numinput{flex:1;height:25px;background:var(--bg3);border:1px solid var(--border2);border-radius:5px;color:var(--acc);font-family:var(--mono);font-size:12px;font-weight:500;text-align:center;outline:none;padding:0 4px;min-width:0;transition:border-color .12s}
-.numinput:focus{border-color:var(--acc);background:var(--bg2)}
-.numinput:hover{border-color:rgba(79,195,247,.4)}
-.numinput::-webkit-outer-spin-button,.numinput::-webkit-inner-spin-button{-webkit-appearance:none;margin:0}
-.numinput[type=number]{-moz-appearance:textfield}
-
 .pgrid{display:grid;grid-template-columns:repeat(5,1fr);gap:4px;margin-bottom:6px}
-.pchip{border:1px solid var(--border2);border-radius:5px;padding:5px 2px 4px;cursor:pointer;text-align:center;background:transparent;color:var(--dim);transition:all .15s}
-.pchip:hover{border-color:var(--acc2);color:var(--muted);background:var(--bg2)}
-.pchip.on{border-color:var(--acc);background:rgba(79,195,247,.1);color:var(--acc)}
-.pchip svg{display:block;margin:0 auto}
+
 .pclbl{font-size:8px;display:block;margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-family:var(--cond);font-weight:500;letter-spacing:.04em}
 .pdesc{font-size:10px;color:var(--dim);min-height:20px;line-height:1.4;margin-bottom:6px}
 
 .mode-grid{display:grid;grid-template-columns:1fr 1fr;gap:4px}
-.mmode-btn{border:1px solid var(--border2);border-radius:6px;padding:6px 5px;cursor:pointer;background:transparent;color:var(--dim);font-family:var(--cond);font-size:10px;font-weight:600;letter-spacing:.05em;text-transform:uppercase;transition:all .14s;text-align:center;line-height:1.3}
-.mmode-btn:hover{background:var(--bg3);color:var(--muted)}
-.mmode-btn.on{border-color:var(--acc);background:rgba(79,195,247,.12);color:var(--acc)}
-.mmode-btn .mm-sub{font-size:8.5px;display:block;opacity:.7;margin-top:1.5px;font-weight:400;letter-spacing:.02em;font-family:var(--mono);text-transform:none}
 
 .solve-strip{background:rgba(79,195,247,.05);border:1px solid rgba(79,195,247,.2);border-radius:8px;padding:10px 14px;display:none}
 .solve-strip.show{display:block}
@@ -83,39 +54,23 @@ body{min-height:100vh}
 .ssc-l{font-size:9px;color:var(--acc2);text-transform:uppercase;letter-spacing:.1em;margin-bottom:2px;font-family:var(--cond)}
 .ssc-v{font-size:18px;font-weight:500;color:var(--acc)}
 .ssc-u{font-size:10px;color:rgba(79,195,247,.55);margin-left:3px}
-.warnbox{background:rgba(239,83,80,.08);border:1px solid rgba(239,83,80,.25);border-radius:6px;padding:7px 11px;font-size:11px;color:#ef9a9a;display:none;margin-top:6px;line-height:1.4}
-.warnbox.show{display:block}
 
 .dir-toggle{display:grid;grid-template-columns:1fr 1fr;gap:4px;margin-bottom:9px}
-.dir-btn{display:flex;align-items:center;justify-content:center;gap:5px;padding:6px 4px;border:1px solid var(--border2);border-radius:6px;cursor:pointer;background:transparent;color:var(--muted);font-family:var(--cond);font-size:11px;font-weight:600;letter-spacing:.05em;text-transform:uppercase;transition:all .14s}
-.dir-btn:hover{background:var(--bg3)}
-.dir-btn.cw.on{border-color:var(--up);background:rgba(102,187,106,.12);color:var(--up)}
-.dir-btn.ccw.on{border-color:var(--dn);background:rgba(239,83,80,.12);color:var(--dn)}
+
 .diag-wrap{display:flex;justify-content:center;margin-bottom:8px}
 .ang-lbl{text-anchor:middle;dominant-baseline:middle;font-family:'DM Mono',monospace;font-size:11px;fill:#4fc3f7;font-weight:500}
 
 .urow{display:flex;gap:4px;flex-wrap:wrap;margin-bottom:8px}
-.uchip{flex:1;min-width:48px;background:var(--bg3);border:1px solid var(--border);border-radius:4px;padding:5px 4px;text-align:center;cursor:pointer;transition:all .13s}
-.uchip:hover{border-color:var(--acc2)}
-.uchip.on{border-color:var(--acc);background:rgba(79,195,247,.1)}
-.uchip .ul{font-size:9px;color:var(--dim);text-transform:uppercase;letter-spacing:.04em;font-family:var(--cond);margin-bottom:1px}
-.uchip .uv{font-size:12px;font-weight:500;color:var(--text)}
 
 .irow{display:flex;gap:4px;flex-wrap:wrap}
-.ichip{flex:1;min-width:58px;background:var(--bg3);border:1px solid var(--border);border-radius:4px;padding:4px 4px;text-align:center}
-.ichip .il{font-size:9px;color:var(--dim);text-transform:uppercase;letter-spacing:.04em;font-family:var(--cond);margin-bottom:1px}
-.ichip .iv{font-size:12px;font-weight:500;color:var(--text)}
-.ichip .iu{font-size:9px;color:var(--dim);margin-left:1px}
 
 .main{padding:10px 13px;display:flex;flex-direction:column;gap:9px}
 .pbar{display:flex;height:23px;border-radius:5px;overflow:hidden;gap:2px}
 .pseg{display:flex;align-items:center;justify-content:center;font-family:var(--cond);font-size:10px;font-weight:600;letter-spacing:.07em;text-transform:uppercase;overflow:hidden;white-space:nowrap;transition:flex .3s cubic-bezier(.4,0,.2,1);padding:0 5px;border-radius:4px}
 .mrow{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:6px}
-.mc{background:var(--bg1);border:1px solid var(--border);border-radius:6px;padding:7px 9px;cursor:default}
-.mc.hi{border-color:rgba(79,195,247,.35);background:rgba(79,195,247,.05)}
-.mc.hi .mv{color:var(--acc)}
+
 .ml{font-size:9px;color:var(--muted);letter-spacing:.07em;text-transform:uppercase;margin-bottom:2px;font-family:var(--cond)}
-.mv{font-size:15px;font-weight:500;color:var(--text);line-height:1}
+
 .mu{font-size:9px;color:var(--dim);margin-top:2px}
 
 .cfull,.chalf{background:var(--bg1);border:1px solid var(--border);border-radius:8px;padding:10px 13px}
@@ -134,19 +89,15 @@ body{min-height:100vh}
 .tt.vis{opacity:1}
 .tt-ttl{font-family:var(--cond);font-size:9px;font-weight:700;letter-spacing:.14em;color:var(--acc);text-transform:uppercase;margin-bottom:4px}
 
-::-webkit-scrollbar{width:5px}::-webkit-scrollbar-track{background:var(--bg)}::-webkit-scrollbar-thumb{background:var(--bg3);border-radius:3px}
+::-webkit-scrollbar{width:5px}
 .dfield{margin-top:6px;padding-top:6px;border-top:1px solid var(--border)}
 
 /* BACK BUTTON */
-.back-btn{font-family:var(--cond,'Barlow Condensed',sans-serif);font-size:10px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--muted,#7a7d8a);text-decoration:none;border:1px solid var(--border2,rgba(255,255,255,.13));border-radius:4px;padding:4px 10px;transition:all .15s;white-space:nowrap;flex-shrink:0}
-.back-btn:hover{color:var(--acc,#4fc3f7);border-color:var(--acc,#4fc3f7)}
+.back-btn{font-family:var(--cond,'Barlow Condensed',sans-serif);font-size:10px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--muted,#9a9dab);text-decoration:none;border:1px solid var(--border2,rgba(255,255,255,.13));border-radius:4px;padding:4px 10px;transition:all .15s;white-space:nowrap;flex-shrink:0}
 
 /* TOOLTIP */
 [data-tip]{position:relative;cursor:default}
-@keyframes tipIn{from{opacity:0}to{opacity:1}}
-[data-tip]:hover::after{content:attr(data-tip);position:absolute;bottom:calc(100% + 7px);left:0;background:#1e2130;border:1px solid rgba(79,195,247,.25);color:#c8cad4;font-size:10px;padding:7px 11px;border-radius:6px;white-space:pre-wrap;max-width:280px;min-width:180px;z-index:999;line-height:1.6;pointer-events:none;font-family:var(--mono);text-align:left;box-shadow:0 4px 20px rgba(0,0,0,.5);animation:tipIn .12s ease .6s both}
-[data-tip]:hover::before{content:'';position:absolute;bottom:calc(100% + 1px);left:20px;border:5px solid transparent;border-top-color:#1e2130;z-index:1000;pointer-events:none;animation:tipIn .12s ease .6s both}
-[data-tip].tr:hover::after{left:auto;right:0}
+
 </style>
 </head>
 <body>
@@ -698,14 +649,37 @@ function compute(){
   const sARad=u.toRad(Math.abs(s[iA])),sCRad=u.toRad(Math.abs(s[iC])),sTRad=u.toRad(Math.abs(s[N]));
   const sA=u.fromRad(sARad),sC=u.fromRad(sCRad),sT=u.fromRad(sTRad);
   const sCv=sC-sA,sD=sT-sC;
-  const aMaxRad=Math.max(...a.map(x=>Math.abs(u.toRad(x))));
-  const aMinRad=Math.max(...a.map(x=>Math.abs(u.toRad(-x))));
+  // I due picchi vanno separati per SEGNO, non per valore assoluto: prendere
+  // |α| in entrambi i casi renderebbe la coppia di frenata sempre uguale a
+  // quella di accelerazione. Nota: a[] è già moltiplicato per sign (senso di
+  // rotazione), quindi si torna al segno "fisico" dividendo per sign.
+  const sign=isCW?1:-1;
+  const aFis=a.map(x=>u.toRad(x)*sign);          // accelerazione con segno fisico
+  const aMaxRad=Math.max(0,...aFis);             // picco in accelerazione
+  const aMinRad=Math.max(0,...aFis.map(x=>-x));  // picco in decelerazione
   const jMaxRad=Math.max(...j.map(x=>Math.abs(u.toRad(x))));
   const TqAcc=inerzia*aMaxRad,TqDec=inerzia*aMinRad;
   const EcMax=.5*inerzia*vmaxRad*vmaxRad;
+
+  // Potenza di picco reale: il massimo di |T(t)·ω(t)|, non T_picco·ω_max.
+  // Con un profilo sinusoidale il picco di α cade dove ω ≈ 0.5·ω_max.
+  let PmAcc=0,PmDec=0;
+  for(let i=0;i<=N;i++){
+    const wi=Math.abs(u.toRad(v[i])), ai=aFis[i];
+    const Pi=inerzia*Math.abs(ai)*wi;
+    if(ai>=0) PmAcc=Math.max(PmAcc,Pi); else PmDec=Math.max(PmDec,Pi);
+  }
+  // Coppia quadratica media sul ciclo (criterio di scelta del motore)
+  let sq=0;
+  for(let i=1;i<=N;i++){
+    const dt=ttot/N, Tm=inerzia*(Math.abs(aFis[i])+Math.abs(aFis[i-1]))/2;
+    sq+=Tm*Tm*dt;
+  }
+  const TqRms=Math.sqrt(sq/ttot);
+
   return{t,v,a,j,s,ttot,sA,sCv,sD,sT,
     aMax:u.fromRad(aMaxRad),aMin:u.fromRad(aMinRad),jMax:u.fromRad(jMaxRad),
-    TqAcc,TqDec,EcMax,PmAcc:TqAcc*vmaxRad,PmDec:TqDec*vmaxRad,
+    TqAcc,TqDec,TqRms,EcMax,PmAcc,PmDec,
     vMean:sT/ttot,vmaxDisp:vmax,tacc,tcv,tdec,isCW,vmaxRad};
 }
 
@@ -738,9 +712,9 @@ function render(r,solved){
     ['Tempo tot.',   fp(r.ttot,2),      's',    false,  'Durata totale del ciclo di rotazione.'],
     ['Angolo tot.',  fp(r.sT,3),        u.sym,  hiS,    'Spostamento angolare totale percorso.'],
     ['ω massima',    fp(r.vmaxDisp,3),  u.vSym, hiV,    'Velocità angolare di crociera massima.'],
-    ['Coppia acc.',  fp(r.TqAcc,2),     'N·m',  false,  'Coppia motrice in accelerazione: T = J · α.'],
-    ['Coppia dec.',  fp(r.TqDec,2),     'N·m',  false,  'Coppia frenante in decelerazione: T = J · α_dec.'],
-    ['En. cin.',     fp(r.EcMax,2),     'J',    false,  'Energia cinetica massima: Ec = ½ · J · ω².'],
+    ['Coppia acc.',  fp(r.TqAcc,2),     'N·m',  false,  'Coppia motrice al picco di accelerazione: T = J · α_max. Da confrontare con la coppia di picco del motore.'],
+    ['Coppia dec.',  fp(r.TqDec,2),     'N·m',  false,  'Coppia frenante al picco di decelerazione: T = J · α_dec. Con tempi o profili diversi fra le due rampe i due valori differiscono.'],
+    ['Coppia RMS',   fp(r.TqRms,2),     'N·m',  false,  'Coppia quadratica media sul ciclo: è il valore da confrontare con la coppia nominale del motore, mentre i picchi vanno confrontati con la coppia di picco.'],
   ].map(([l,v,uu,hi,tip])=>`<div class="mc${hi?' hi':''}" data-tip="${tip}" data-ttl="${l}"><div class="ml">${l}</div><div class="mv">${v}</div><div class="mu">${uu}</div></div>`).join('');
 
   upCh(cV,r.t,r.v);upCh(cA,r.t,r.a);upCh(cJ,r.t,r.j);upCh(cS,r.t,r.s);
@@ -764,6 +738,7 @@ function render(r,solved){
     ['Coppia / Inerzia',[
       ['Coppia acc.',   fp(r.TqAcc,3),'N·m'],
       ['Coppia dec.',   fp(r.TqDec,3),'N·m'],
+      ['Coppia RMS',    fp(r.TqRms,3),'N·m'],
       ['Inerzia J',     fp(ST.inerzia,4),'kg·m²'],
       ['Pot. max acc.', fp(r.PmAcc,2),'W'],
       ['Pot. max dec.', fp(r.PmDec,2),'W'],
@@ -787,13 +762,13 @@ function mkChart(id,col,fc,sm){
       fill:{target:'origin',above:fc,below:fc.replace('.12','.07')}}]},
     options:{responsive:true,maintainAspectRatio:false,animation:{duration:55},
       plugins:{legend:{display:false},tooltip:{mode:'index',intersect:false,
-        backgroundColor:'#1c1d23',titleColor:'#7a7d8a',bodyColor:'#e8e9ec',
+        backgroundColor:'#1c1d23',titleColor:'#9a9dab',bodyColor:'#e8e9ec',
         borderColor:'rgba(255,255,255,0.1)',borderWidth:1,
         titleFont:{family:"'DM Mono'",size:10},bodyFont:{family:"'DM Mono'",size:11},
         callbacks:{label:c=>' '+c.parsed.y.toFixed(4)}}},
       scales:{
-        x:{ticks:{maxTicksLimit:6,font:{family:"'DM Mono'",size:10},color:'#4a4d5a'},grid:{color:'rgba(255,255,255,0.04)'},border:{display:false}},
-        y:{suggestedMin:sm,ticks:{maxTicksLimit:4,font:{family:"'DM Mono'",size:10},color:'#4a4d5a'},grid:{color:'rgba(255,255,255,0.04)'},border:{display:false}}
+        x:{ticks:{maxTicksLimit:6,font:{family:"'DM Mono'",size:10},color:'#7d8090'},grid:{color:'rgba(255,255,255,0.04)'},border:{display:false}},
+        y:{suggestedMin:sm,ticks:{maxTicksLimit:4,font:{family:"'DM Mono'",size:10},color:'#7d8090'},grid:{color:'rgba(255,255,255,0.04)'},border:{display:false}}
       }}});
 }
 function upCh(ch,l,d){ch.data.labels=l;ch.data.datasets[0].data=d;ch.update('none');}
