@@ -1,0 +1,862 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Carico di Punta - Eulero / Johnson-Tetmajer</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@300;400;500&family=Barlow+Condensed:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="theme.css">
+<style>
+
+html{background:var(--bg);color:var(--text);font-family:var(--mono);font-size:13px;min-height:100vh}
+body{display:flex;flex-direction:column;align-items:center;min-height:100vh;padding:20px}
+
+.header{border-bottom:1px solid var(--border);padding:11px 20px;display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:20px;width:100%;max-width:1180px}
+
+.container{max-width:1180px;width:100%;display:grid;grid-template-columns:340px 1fr;gap:20px}
+@media(max-width:900px){.container{grid-template-columns:1fr}}
+
+.panel{background:var(--bg2);border:1px solid var(--border2);border-radius:8px;padding:15px;display:flex;flex-direction:column;gap:12px}
+.rpanel{display:flex;flex-direction:column;gap:14px}
+
+.stitle{font-family:var(--cond);font-size:10px;font-weight:600;letter-spacing:.17em;color:var(--muted);text-transform:uppercase;margin-bottom:4px;display:flex;align-items:center;gap:6px}
+
+.field{margin-bottom:6px}
+
+.flabel{color:var(--muted);font-size:11px;letter-spacing:.03em}
+.funit{font-size:10px;color:var(--dim)}
+.frow2{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+
+/* Pannelli dimensioni: e' visibile solo quello della sezione scelta */
+.dim-panel{display:none}
+.dim-panel.active{display:block}
+
+.schematic-wrap{background:var(--bg1);border:1px solid var(--border);border-radius:6px;padding:10px;display:flex;justify-content:center}
+.schematic-wrap svg{width:100%;max-width:420px;height:auto}
+
+/* Barra di utilizzo */
+.util{width:70px;height:5px;background:var(--bg3);border-radius:3px;overflow:hidden;flex-shrink:0}
+.util span{display:block;height:100%;border-radius:3px}
+.util span.ok{background:var(--up)}
+.util span.warn{background:var(--amber)}
+.util span.err{background:var(--dn)}
+
+.dim-table tr.active-row{background:rgba(79,195,247,.12)}
+.dim-table tr.active-row td{color:var(--acc);font-weight:500}
+
+/* Badge del campo di validita' */
+.campo{font-family:var(--cond);font-size:10px;font-weight:700;letter-spacing:.09em;text-transform:uppercase;padding:2px 9px;border-radius:4px;white-space:nowrap}
+.campo.eulero{background:rgba(79,195,247,.12);color:var(--acc);border:1px solid rgba(79,195,247,.35)}
+.campo.inel{background:rgba(255,167,38,.12);color:var(--amber);border:1px solid rgba(255,167,38,.35)}
+.campo.tozza{background:rgba(179,157,219,.14);color:var(--violet);border:1px solid rgba(179,157,219,.35)}
+
+.back-btn{font-family:var(--cond);font-size:10px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);text-decoration:none;border:1px solid var(--border2);border-radius:4px;padding:4px 10px;transition:all .15s;white-space:nowrap;background:transparent;cursor:pointer}
+.back-btn:hover{color:var(--acc);border-color:var(--acc)}
+
+[data-tip]:hover::after{content:attr(data-tip);position:absolute;bottom:calc(100% + 7px);left:0;background:#1e2130;border:1px solid rgba(79,195,247,.25);color:#c8cad4;font-size:10px;padding:7px 11px;border-radius:6px;white-space:pre-wrap;max-width:280px;min-width:170px;z-index:999;line-height:1.6;pointer-events:none;font-family:var(--mono);text-align:left;box-shadow:0 4px 20px rgba(0,0,0,.5)}
+
+.hidden{display:none !important}
+.seg-btn[disabled]{opacity:.35;cursor:not-allowed}
+
+/* Gli avvisi possono essere piu' di uno: vanno distanziati tra loro */
+#hint{display:flex;flex-direction:column;gap:8px}
+#hint:empty{display:none}
+
+footer{margin-top:34px;font-size:10px;color:var(--dim);letter-spacing:.04em;text-align:center;line-height:1.8}
+
+@media print{.back-btn{display:none !important}body{padding:0}}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <a href="index.html" class="back-btn">← Ritorna</a>
+  <h1><span class="dot"></span>Carico di Punta</h1>
+  <div class="sub">Instabilità · Eulero · Johnson-Tetmajer · Snellezza</div>
+  <span class="norm-badge">Eulero · EN 1993-1-1 (rif.)</span>
+  <button class="back-btn" id="printBtn">🖶 Stampa</button>
+</div>
+
+<div class="container">
+
+<!-- ═══ PANNELLO INPUT ═══ -->
+<div class="panel">
+
+  <div class="stitle">Sezione dell'asta</div>
+
+  <div class="field">
+    <div class="fhdr"><span class="flabel" data-tip="L'instabilità si manifesta attorno all'asse di minore inerzia: il calcolo usa sempre I_min, non I_x.">Tipo di sezione</span></div>
+    <select id="sec-type" class="select-field" onchange="onSectionChange()">
+      <option value="tondo">Tonda piena</option>
+      <option value="rettangolare">Rettangolare piena</option>
+      <option value="quadrata">Quadrata piena</option>
+      <option value="tubo_tondo">Tubo tondo</option>
+      <option value="tubo_rett">Tubo rettangolare</option>
+      <option value="tubo_quad">Tubo quadro</option>
+      <option value="esagonale">Esagonale (AF)</option>
+      <option value="L">Angolare L</option>
+      <option value="T">Profilo T</option>
+      <option value="H">Profilo H / I</option>
+      <option value="U">Profilo U</option>
+    </select>
+  </div>
+
+  <div class="dim-panel active" id="dim-tondo">
+    <div class="field">
+      <div class="fhdr"><span class="flabel">Diametro d</span><span class="funit">mm</span></div>
+      <input type="number" id="d-d" class="numinput" value="20" min="0" step="1" oninput="calculate()">
+    </div>
+  </div>
+
+  <div class="dim-panel" id="dim-rettangolare">
+    <div class="frow2">
+      <div class="field">
+        <div class="fhdr"><span class="flabel">Base b</span><span class="funit">mm</span></div>
+        <input type="number" id="d-b" class="numinput" value="20" min="0" step="1" oninput="calculate()">
+      </div>
+      <div class="field">
+        <div class="fhdr"><span class="flabel">Altezza h</span><span class="funit">mm</span></div>
+        <input type="number" id="d-h" class="numinput" value="60" min="0" step="1" oninput="calculate()">
+      </div>
+    </div>
+  </div>
+
+  <div class="dim-panel" id="dim-quadrata">
+    <div class="field">
+      <div class="fhdr"><span class="flabel">Lato a</span><span class="funit">mm</span></div>
+      <input type="number" id="d-a" class="numinput" value="40" min="0" step="1" oninput="calculate()">
+    </div>
+  </div>
+
+  <div class="dim-panel" id="dim-tubo_tondo">
+    <div class="frow2">
+      <div class="field">
+        <div class="fhdr"><span class="flabel">Ø esterno D</span><span class="funit">mm</span></div>
+        <input type="number" id="d-D" class="numinput" value="60" min="0" step="1" oninput="calculate()">
+      </div>
+      <div class="field">
+        <div class="fhdr"><span class="flabel">Spessore t</span><span class="funit">mm</span></div>
+        <input type="number" id="d-t_td" class="numinput" value="4" min="0" step="0.5" oninput="calculate()">
+      </div>
+    </div>
+  </div>
+
+  <div class="dim-panel" id="dim-tubo_rett">
+    <div class="frow2">
+      <div class="field">
+        <div class="fhdr"><span class="flabel">B esterno</span><span class="funit">mm</span></div>
+        <input type="number" id="d-Br" class="numinput" value="80" min="0" step="1" oninput="calculate()">
+      </div>
+      <div class="field">
+        <div class="fhdr"><span class="flabel">H esterno</span><span class="funit">mm</span></div>
+        <input type="number" id="d-Hr" class="numinput" value="120" min="0" step="1" oninput="calculate()">
+      </div>
+    </div>
+    <div class="field">
+      <div class="fhdr"><span class="flabel">Spessore t</span><span class="funit">mm</span></div>
+      <input type="number" id="d-t_tr" class="numinput" value="5" min="0" step="0.5" oninput="calculate()">
+    </div>
+  </div>
+
+  <div class="dim-panel" id="dim-tubo_quad">
+    <div class="frow2">
+      <div class="field">
+        <div class="fhdr"><span class="flabel">Lato est. A</span><span class="funit">mm</span></div>
+        <input type="number" id="d-Aq" class="numinput" value="100" min="0" step="1" oninput="calculate()">
+      </div>
+      <div class="field">
+        <div class="fhdr"><span class="flabel">Spessore t</span><span class="funit">mm</span></div>
+        <input type="number" id="d-t_tq" class="numinput" value="5" min="0" step="0.5" oninput="calculate()">
+      </div>
+    </div>
+  </div>
+
+  <div class="dim-panel" id="dim-esagonale">
+    <div class="field">
+      <div class="fhdr"><span class="flabel" data-tip="Apertura di chiave: distanza tra due facce parallele.">Travers. piatte AF</span><span class="funit">mm</span></div>
+      <input type="number" id="d-s" class="numinput" value="41" min="0" step="1" oninput="calculate()">
+    </div>
+  </div>
+
+  <div class="dim-panel" id="dim-L">
+    <div class="frow2">
+      <div class="field">
+        <div class="fhdr"><span class="flabel">Ala b₁</span><span class="funit">mm</span></div>
+        <input type="number" id="d-Lb1" class="numinput" value="80" min="0" step="1" oninput="calculate()">
+      </div>
+      <div class="field">
+        <div class="fhdr"><span class="flabel">Ala b₂</span><span class="funit">mm</span></div>
+        <input type="number" id="d-Lb2" class="numinput" value="80" min="0" step="1" oninput="calculate()">
+      </div>
+    </div>
+    <div class="field">
+      <div class="fhdr"><span class="flabel">Spessore t</span><span class="funit">mm</span></div>
+      <input type="number" id="d-Lt" class="numinput" value="8" min="0" step="1" oninput="calculate()">
+    </div>
+  </div>
+
+  <div class="dim-panel" id="dim-T">
+    <div class="frow2">
+      <div class="field">
+        <div class="fhdr"><span class="flabel">Ala b_f</span><span class="funit">mm</span></div>
+        <input type="number" id="d-Tbf" class="numinput" value="120" min="0" step="1" oninput="calculate()">
+      </div>
+      <div class="field">
+        <div class="fhdr"><span class="flabel">Sp. flangia t_f</span><span class="funit">mm</span></div>
+        <input type="number" id="d-Ttf" class="numinput" value="12" min="0" step="1" oninput="calculate()">
+      </div>
+    </div>
+    <div class="frow2">
+      <div class="field">
+        <div class="fhdr"><span class="flabel">Anima h_w</span><span class="funit">mm</span></div>
+        <input type="number" id="d-Thw" class="numinput" value="100" min="0" step="1" oninput="calculate()">
+      </div>
+      <div class="field">
+        <div class="fhdr"><span class="flabel">Sp. anima t_w</span><span class="funit">mm</span></div>
+        <input type="number" id="d-Ttw" class="numinput" value="8" min="0" step="1" oninput="calculate()">
+      </div>
+    </div>
+  </div>
+
+  <div class="dim-panel" id="dim-H">
+    <div class="frow2">
+      <div class="field">
+        <div class="fhdr"><span class="flabel">Ala b_f</span><span class="funit">mm</span></div>
+        <input type="number" id="d-Hbf" class="numinput" value="100" min="0" step="1" oninput="calculate()">
+      </div>
+      <div class="field">
+        <div class="fhdr"><span class="flabel">Altezza H</span><span class="funit">mm</span></div>
+        <input type="number" id="d-HH" class="numinput" value="200" min="0" step="1" oninput="calculate()">
+      </div>
+    </div>
+    <div class="frow2">
+      <div class="field">
+        <div class="fhdr"><span class="flabel">Sp. flangia t_f</span><span class="funit">mm</span></div>
+        <input type="number" id="d-Htf" class="numinput" value="15" min="0" step="1" oninput="calculate()">
+      </div>
+      <div class="field">
+        <div class="fhdr"><span class="flabel">Sp. anima t_w</span><span class="funit">mm</span></div>
+        <input type="number" id="d-Htw" class="numinput" value="9" min="0" step="1" oninput="calculate()">
+      </div>
+    </div>
+  </div>
+
+  <div class="dim-panel" id="dim-U">
+    <div class="frow2">
+      <div class="field">
+        <div class="fhdr"><span class="flabel">Largh. b</span><span class="funit">mm</span></div>
+        <input type="number" id="d-Ub" class="numinput" value="80" min="0" step="1" oninput="calculate()">
+      </div>
+      <div class="field">
+        <div class="fhdr"><span class="flabel">Altezza H</span><span class="funit">mm</span></div>
+        <input type="number" id="d-UH" class="numinput" value="180" min="0" step="1" oninput="calculate()">
+      </div>
+    </div>
+    <div class="frow2">
+      <div class="field">
+        <div class="fhdr"><span class="flabel">Sp. flangia t_f</span><span class="funit">mm</span></div>
+        <input type="number" id="d-Utf" class="numinput" value="11" min="0" step="1" oninput="calculate()">
+      </div>
+      <div class="field">
+        <div class="fhdr"><span class="flabel">Sp. anima t_w</span><span class="funit">mm</span></div>
+        <input type="number" id="d-Utw" class="numinput" value="7" min="0" step="1" oninput="calculate()">
+      </div>
+    </div>
+  </div>
+
+  <div class="stitle">Materiale</div>
+
+  <div class="field">
+    <div class="fhdr"><span class="flabel">Materiale</span></div>
+    <select id="mat-sel" class="select-field" onchange="onMatChange()">
+      <option value="S235" selected>Acciaio S235 — fy 235 MPa</option>
+      <option value="S275">Acciaio S275 — fy 275 MPa</option>
+      <option value="S355">Acciaio S355 — fy 355 MPa</option>
+      <option value="S690">Acciaio S690 — fy 690 MPa</option>
+      <option value="Al6061">Alluminio 6061-T6 — fy 276 MPa</option>
+      <option value="Al6082">Alluminio 6082-T6 — fy 255 MPa</option>
+      <option value="custom">Personalizzato</option>
+    </select>
+  </div>
+
+  <div class="frow2">
+    <div class="field">
+      <div class="fhdr"><span class="flabel" data-tip="Modulo elastico. Acciaio ≈ 210000 MPa, alluminio ≈ 70000 MPa. Nel carico critico euleriano entra solo E: la resistenza del materiale non influisce.">Modulo E</span><span class="funit">MPa</span></div>
+      <input type="number" id="mat-E" class="numinput" value="210000" min="1" step="1000" oninput="calculate()">
+    </div>
+    <div class="field">
+      <div class="fhdr"><span class="flabel" data-tip="Tensione di snervamento: limita la tensione critica nel campo delle aste tozze e definisce la snellezza di transizione.">Snervamento fy</span><span class="funit">MPa</span></div>
+      <input type="number" id="mat-fy" class="numinput" value="235" min="1" step="5" oninput="calculate()">
+    </div>
+  </div>
+
+  <div class="stitle">Geometria e vincoli</div>
+
+  <div class="field">
+    <div class="fhdr"><span class="flabel">Lunghezza asta L</span><span class="funit">mm</span></div>
+    <div class="srow">
+      <div class="arr" onclick="adjust('L',-50)">−</div>
+      <input id="L" class="numinput" type="number" value="1000" min="1" step="50" oninput="calculate()">
+      <div class="arr" onclick="adjust('L',50)">+</div>
+    </div>
+  </div>
+
+  <div class="field">
+    <div class="fhdr"><span class="flabel" data-tip="β = fattore di lunghezza libera di inflessione. L₀ = β·L è la distanza tra i punti di flesso della deformata critica.">Vincoli agli estremi</span></div>
+    <select id="mount" class="select-field" onchange="calculate()">
+      <option value="fixfix">Incastro – Incastro · β = 0,5</option>
+      <option value="fixpin">Incastro – Cerniera · β = 0,7</option>
+      <option value="pinpin" selected>Cerniera – Cerniera · β = 1,0</option>
+      <option value="fixfree">Incastro – Libero (mensola) · β = 2,0</option>
+    </select>
+  </div>
+
+  <div class="stitle">Carico</div>
+
+  <div class="field">
+    <div class="fhdr"><span class="flabel">Forza di compressione F</span><span class="funit">N</span></div>
+    <div class="srow">
+      <div class="arr" onclick="adjust('F',-500)">−</div>
+      <input id="F" class="numinput" type="number" value="5000" min="0" step="500" oninput="calculate()">
+      <div class="arr" onclick="adjust('F',500)">+</div>
+    </div>
+  </div>
+
+  <div class="field">
+    <div class="fhdr"><span class="flabel" data-tip="Coefficiente di sicurezza richiesto verso il carico critico. Per l'instabilità si adottano valori più alti che per la resistenza: 3÷5 nella costruzione di macchine.">CS richiesto a instabilità</span></div>
+    <div class="srow">
+      <div class="arr" onclick="adjust('sfmin',-0.5)">−</div>
+      <input id="sfmin" class="numinput" type="number" value="3" min="1" step="0.5" oninput="calculate()">
+      <div class="arr" onclick="adjust('sfmin',0.5)">+</div>
+    </div>
+  </div>
+
+  <div class="stitle">Campo inelastico</div>
+
+  <div class="field">
+    <div class="fhdr"><span class="flabel" data-tip="Formulazione usata per λ < λ_lim, dove Eulero non è più valido. Johnson: parabola raccordata con continuità e tangenza alla curva di Eulero, applicabile a qualunque materiale. Tetmajer: retta sperimentale, tarata sugli acciai da costruzione.">Formula per aste tozze</span></div>
+    <div class="seg seg-2">
+      <button class="seg-btn on" id="m-johnson" onclick="setMethod('johnson')">Johnson</button>
+      <button class="seg-btn" id="m-tetmajer" onclick="setMethod('tetmajer')">Tetmajer</button>
+    </div>
+  </div>
+
+  <div class="note">
+    <b>Eulero</b> (1744): P_cr = π²·E·I_min / L₀², valida solo in campo elastico (λ ≥ λ_lim).<br>
+    <b>Johnson</b>: parabola σ_cr = fy − (fy/2π)²·λ²/E, tangente alla curva di Eulero in λ_lim = π·√(2E/fy).<br>
+    <b>Tetmajer</b>: retta sperimentale σ_cr = a − b·λ per acciai da costruzione, con λ_lim = π·√(E/0,8·fy).<br>
+    Approccio alle curve di instabilità χ: <b>EN 1993-1-1 §6.3.1</b>.
+  </div>
+
+</div>
+
+<!-- ═══ PANNELLO RISULTATI ═══ -->
+<div class="rpanel">
+
+  <div id="hint"></div>
+
+  <div class="result-section">
+    <div class="result-section-title">Geometria della sezione — <span id="secDesc"></span></div>
+    <div class="results-grid-3" id="geoGrid"></div>
+  </div>
+
+  <div class="schematic-wrap"><div id="schema"></div></div>
+
+  <div class="result-section">
+    <div class="result-section-title">Instabilità <span id="campoBadge"></span></div>
+    <div class="results-grid-3" id="bucGrid"></div>
+  </div>
+
+  <div class="result-section">
+    <div class="result-section-title">Verifiche</div>
+    <div class="verification-grid" id="verGrid"></div>
+  </div>
+
+  <div class="result-section">
+    <div class="result-section-title">Curva σ_cr(λ) — <span id="curveTitle"></span></div>
+    <div class="table-container">
+      <table class="dim-table" id="curveTable"></table>
+    </div>
+  </div>
+
+</div>
+</div>
+
+<footer>
+  Andrea Cavani · Moduli calcolo HTML<br>
+  Verifica di massima all'instabilità per compressione. Non copre l'instabilità flesso-torsionale,
+  l'imbozzamento locale delle pareti sottili né le imperfezioni geometriche: per il dimensionamento
+  strutturale fare riferimento a EN 1993-1-1.
+</footer>
+
+<script>
+// ═══════════════════════════════════════════════════════
+//  STATO
+// ═══════════════════════════════════════════════════════
+let method = 'johnson';   // 'johnson' = parabola | 'tetmajer' = retta sperimentale
+
+// ═══════════════════════════════════════════════════════
+//  DATI
+// ═══════════════════════════════════════════════════════
+// fam identifica la famiglia per i coefficienti di Tetmajer, tarati
+// sperimentalmente sui soli acciai da costruzione.
+const MATS = {
+  S235:  {E:210000, fy:235, fam:'dolce'},
+  S275:  {E:210000, fy:275, fam:'dolce'},
+  S355:  {E:210000, fy:355, fam:'duro'},
+  S690:  {E:210000, fy:690, fam:'duro'},
+  Al6061:{E:70000,  fy:276, fam:'nd'},
+  Al6082:{E:70000,  fy:255, fam:'nd'},
+  custom:{E:210000, fy:355, fam:'nd'}
+};
+
+// Tetmajer: sigma_cr = a - b*lambda  [MPa]
+const TET = {
+  dolce:{a:310, b:1.14, nome:'acciaio dolce (Fe360/S235-S275)'},
+  duro: {a:335, b:0.62, nome:'acciaio duro (S355 e superiori)'}
+};
+
+const MOUNTS = {
+  fixfix: {beta:0.5, nome:'Incastro – Incastro'},
+  fixpin: {beta:0.7, nome:'Incastro – Cerniera'},
+  pinpin: {beta:1.0, nome:'Cerniera – Cerniera'},
+  fixfree:{beta:2.0, nome:'Incastro – Libero'}
+};
+
+// Sezioni aperte a parete sottile: soggette anche a instabilita'
+// flesso-torsionale, che questo modulo non calcola.
+const OPEN_SECTIONS = ['L','T','U'];
+
+// Sotto questa snellezza il fenomeno non e' l'instabilita' ma il semplice
+// schiacciamento: il calcolo resta valido ma non e' quello determinante.
+const LAM_TOZZA = 20;
+
+// ═══════════════════════════════════════════════════════
+//  HELPER
+// ═══════════════════════════════════════════════════════
+const $  = id => document.getElementById(id);
+const fp = (v,n=1) => isFinite(v) ? v.toFixed(n) : '—';
+// Separatore delle migliaia a spazio: il punto italiano sarebbe ambiguo
+// accanto ai decimali prodotti da toFixed (360.000 mm⁴ vs 5.00 mm).
+const fi = v => isFinite(v) ? String(Math.round(v)).replace(/\B(?=(\d{3})+(?!\d))/g,' ') : '—';
+const PI = Math.PI;
+
+function box(label,value,unit){
+  return `<div class="result-box">
+    <div class="result-label">${label}</div>
+    <div class="result-value">${value}<span class="result-unit">${unit||''}</span></div>
+  </div>`;
+}
+function sfClass(sf){
+  // Un rapporto infinito (denominatore nullo: F=0, asta scarica) e' il caso
+  // PIU' favorevole, non un errore: solo NaN o valori negativi sono anomali.
+  if(isNaN(sf) || sf<0) return 'err';
+  if(!isFinite(sf))     return 'ok';
+  if(sf>=1.1) return 'ok';
+  if(sf>=1.0) return 'warn';
+  return 'err';
+}
+function sfLabel(cl){ return cl==='ok'?'OK':(cl==='warn'?'LIMITE':'INSUFF.'); }
+function vrow(label,value,unit,sf,tip){
+  const cl=sfClass(sf);
+  const pct=Math.min(100, isFinite(sf)&&sf>0 ? 100/sf : 100);
+  return `<div class="verify-item">
+    <span class="verify-label"${tip?` data-tip="${tip}"`:''}>${label}</span>
+    <span class="util"><span class="${cl}" style="width:${pct}%"></span></span>
+    <span class="verify-value">${value}<span class="verify-unit">${unit||''}</span></span>
+    <span class="verify-status ${cl}">${sfLabel(cl)}</span>
+  </div>`;
+}
+function adjust(id,step){
+  const el=$(id);
+  const dec=(String(step).split('.')[1]||'').length;
+  let v=(parseFloat(el.value)||0)+step;
+  if(el.min!==''&&v<parseFloat(el.min)) v=parseFloat(el.min);
+  el.value=dec?v.toFixed(dec):v;
+  calculate();
+}
+
+// ═══════════════════════════════════════════════════════
+//  UI
+// ═══════════════════════════════════════════════════════
+function onSectionChange(){
+  const t = $('sec-type').value;
+  document.querySelectorAll('.dim-panel').forEach(p => p.classList.remove('active'));
+  const p = $('dim-'+t);
+  if(p) p.classList.add('active');
+  calculate();
+}
+
+function onMatChange(){
+  const v = $('mat-sel').value;
+  if(MATS[v]){
+    $('mat-E').value  = MATS[v].E;
+    $('mat-fy').value = MATS[v].fy;
+  }
+  calculate();
+}
+
+function setMethod(m){
+  method = m;
+  $('m-johnson').classList.toggle('on', m==='johnson');
+  $('m-tetmajer').classList.toggle('on', m==='tetmajer');
+  calculate();
+}
+
+// La famiglia dipende dal preset selezionato: con E e fy modificati a mano
+// resta quella del preset, che e' l'unica informazione disponibile.
+function currentFam(){
+  const v = $('mat-sel').value;
+  return (MATS[v] && MATS[v].fam) || 'nd';
+}
+
+// ═══════════════════════════════════════════════════════
+//  PROPRIETA' DI SEZIONE
+//  Derivate da trave_flessione.html, estese al calcolo di Iy e quindi
+//  di I_min: l'asta si inflette attorno all'asse di minore inerzia.
+// ═══════════════════════════════════════════════════════
+function v(id){ return parseFloat($(id)?.value)||0; }
+
+function getSectionProps(){
+  const type = $('sec-type').value;
+  let A=0, Ix=0, Iy=0, Imin=0, desc='', valid=true;
+
+  switch(type){
+    case 'tondo':{
+      const d=v('d-d'); if(d<=0){valid=false;break;}
+      A=PI*d*d/4; Ix=Iy=PI*d*d*d*d/64;
+      desc=`⌀${d} mm`; break;}
+    case 'rettangolare':{
+      const b=v('d-b'),h=v('d-h'); if(b<=0||h<=0){valid=false;break;}
+      A=b*h; Ix=b*h*h*h/12; Iy=h*b*b*b/12;
+      desc=`${b}×${h} mm`; break;}
+    case 'quadrata':{
+      const a=v('d-a'); if(a<=0){valid=false;break;}
+      A=a*a; Ix=Iy=a*a*a*a/12;
+      desc=`□${a} mm`; break;}
+    case 'tubo_tondo':{
+      const D=v('d-D'),t=v('d-t_td'),d=D-2*t;
+      if(D<=0||t<=0||d<=0){valid=false;break;}
+      A=PI*(D*D-d*d)/4; Ix=Iy=PI*(D*D*D*D-d*d*d*d)/64;
+      desc=`⌀${D}×${t} mm`; break;}
+    case 'tubo_rett':{
+      const B=v('d-Br'),H=v('d-Hr'),t=v('d-t_tr'),b=B-2*t,h=H-2*t;
+      if(B<=0||H<=0||t<=0||b<=0||h<=0){valid=false;break;}
+      A=B*H-b*h; Ix=(B*H*H*H-b*h*h*h)/12; Iy=(H*B*B*B-h*b*b*b)/12;
+      desc=`${B}×${H}×${t} mm`; break;}
+    case 'tubo_quad':{
+      const S=v('d-Aq'),t=v('d-t_tq'),s=S-2*t;
+      if(S<=0||t<=0||s<=0){valid=false;break;}
+      A=S*S-s*s; Ix=Iy=(S*S*S*S-s*s*s*s)/12;
+      desc=`□${S}×${t} mm`; break;}
+    case 'esagonale':{
+      const s=v('d-s'); if(s<=0){valid=false;break;}
+      const a=s/Math.sqrt(3);              // lato, da apertura di chiave s
+      A=3*Math.sqrt(3)/2*a*a;
+      // L'esagono regolare ha inerzia uguale attorno a qualunque asse
+      // baricentrico: non esiste un asse debole.
+      Ix=Iy=5*Math.sqrt(3)/16*a*a*a*a;
+      desc=`AF${s} mm`; break;}
+    case 'L':{
+      const b1=v('d-Lb1'),b2=v('d-Lb2'),t=v('d-Lt');
+      if(b1<=t||b2<=t||t<=0){valid=false;break;}
+      // Due rettangoli: l'ala orizzontale b1×t e il montante t×(b2−t).
+      const A1=b1*t, A2=t*(b2-t);
+      A=A1+A2;
+      const y1=t/2,      y2=t+(b2-t)/2;
+      const x1=b1/2,     x2=t/2;
+      const yc=(A1*y1+A2*y2)/A;
+      const xc=(A1*x1+A2*x2)/A;
+      Ix = b1*t*t*t/12 + A1*(yc-y1)*(yc-y1) + t*Math.pow(b2-t,3)/12 + A2*(yc-y2)*(yc-y2);
+      Iy = t*b1*b1*b1/12 + A1*(xc-x1)*(xc-x1) + (b2-t)*t*t*t/12 + A2*(xc-x2)*(xc-x2);
+      // La L non ha assi di simmetria: gli assi principali sono ruotati e
+      // l'inerzia minima si ottiene dal cerchio di Mohr, non da min(Ix,Iy).
+      const Ixy = A1*(x1-xc)*(y1-yc) + A2*(x2-xc)*(y2-yc);
+      const med = (Ix+Iy)/2, ray = Math.sqrt(Math.pow((Ix-Iy)/2,2)+Ixy*Ixy);
+      Imin = med - ray;
+      desc=`L${b1}×${b2}×${t} mm`; break;}
+    case 'T':{
+      const bf=v('d-Tbf'),tf=v('d-Ttf'),hw=v('d-Thw'),tw=v('d-Ttw');
+      if(bf<=0||tf<=0||hw<=0||tw<=0){valid=false;break;}
+      const Af=bf*tf, Aw=tw*hw;
+      A=Af+Aw;
+      const yf=hw+tf/2, yw=hw/2;
+      const yc=(Af*yf+Aw*yw)/A;
+      Ix=bf*tf*tf*tf/12+Af*(yf-yc)*(yf-yc)+tw*hw*hw*hw/12+Aw*(yw-yc)*(yw-yc);
+      Iy=tf*bf*bf*bf/12+hw*tw*tw*tw/12;
+      desc=`T${bf}×${hw}+${tf}/${tw} mm`; break;}
+    case 'H':{
+      const bf=v('d-Hbf'),H=v('d-HH'),tf=v('d-Htf'),tw=v('d-Htw');
+      if(bf<=0||H<=0||tf<=0||tw<=0){valid=false;break;}
+      const hw=H-2*tf;
+      if(hw<=0){valid=false;break;}
+      const Af=bf*tf, Aw=tw*hw;
+      A=2*Af+Aw;
+      Ix=2*(bf*tf*tf*tf/12+Af*(H/2-tf/2)*(H/2-tf/2))+tw*hw*hw*hw/12;
+      Iy=2*(tf*bf*bf*bf/12)+hw*tw*tw*tw/12;
+      desc=`H${bf}×${H}×${tf}/${tw} mm`; break;}
+    case 'U':{
+      const b=v('d-Ub'),H=v('d-UH'),tf=v('d-Utf'),tw=v('d-Utw');
+      if(b<=tw||H<=0||tf<=0||tw<=0){valid=false;break;}
+      const hw=H-2*tf, bf=b-tw;
+      if(hw<=0||bf<=0){valid=false;break;}
+      const Aweb=tw*H, Afl=bf*tf;
+      A=Aweb+2*Afl;
+      Ix=tw*H*H*H/12+2*(bf*tf*tf*tf/12+Afl*(H/2-tf/2)*(H/2-tf/2));
+      // Asse debole: baricentro spostato verso l'anima.
+      const xw=tw/2, xf=tw+bf/2;
+      const xc=(Aweb*xw+2*Afl*xf)/A;
+      Iy=H*tw*tw*tw/12+Aweb*(xc-xw)*(xc-xw)+2*(tf*bf*bf*bf/12+Afl*(xf-xc)*(xf-xc));
+      desc=`U${b}×${H}×${tf}/${tw} mm`; break;}
+  }
+
+  if(!valid) return {A:0,Ix:0,Iy:0,Imin:0,rho:0,desc:'—',valid:false,warnTors:false};
+  // Per la L l'inerzia minima e' gia' stata calcolata sugli assi principali.
+  if(!Imin) Imin = Math.min(Ix,Iy);
+  const rho = Math.sqrt(Imin/A);
+  return {A, Ix, Iy, Imin, rho, desc, valid:true, warnTors:OPEN_SECTIONS.includes(type)};
+}
+
+// ═══════════════════════════════════════════════════════
+//  TENSIONE CRITICA
+// ═══════════════════════════════════════════════════════
+// Snellezza di transizione tra campo elastico e campo inelastico.
+// Johnson: la parabola e' costruita per essere tangente alla curva di Eulero
+// in lambda = pi*sqrt(2E/fy), dove entrambe valgono fy/2.
+// Tetmajer: si assume il limite di proporzionalita' sigma_p = 0.8*fy e si
+// impone sigma_Eulero = sigma_p (per S235 da' i classici 105).
+function lambdaLim(E, fy, m){
+  if(!(E>0) || !(fy>0)) return NaN;
+  return m==='tetmajer' ? PI*Math.sqrt(E/(0.8*fy)) : PI*Math.sqrt(2*E/fy);
+}
+
+function sigmaEuler(lambda, E){
+  return PI*PI*E/(lambda*lambda);
+}
+
+// Restituisce {sig, campo} con campo = 'eulero' | 'johnson' | 'tetmajer'.
+function sigmaCrit(lambda, E, fy, m, fam){
+  if(!(lambda>0) || !(E>0) || !(fy>0)) return {sig:NaN, campo:'eulero'};
+  const lim = lambdaLim(E, fy, m);
+  if(lambda >= lim) return {sig: sigmaEuler(lambda,E), campo:'eulero'};
+  let sig;
+  if(m==='tetmajer' && TET[fam]){
+    sig = TET[fam].a - TET[fam].b*lambda;
+  } else {
+    sig = fy - Math.pow(fy/(2*PI),2)*lambda*lambda/E;
+  }
+  // In nessun caso la tensione critica puo' superare lo snervamento.
+  return {sig: Math.min(sig, fy), campo: (m==='tetmajer' && TET[fam]) ? 'tetmajer' : 'johnson'};
+}
+
+// ═══════════════════════════════════════════════════════
+//  SCHEMA SVG
+// ═══════════════════════════════════════════════════════
+// Deformate critiche (autofunzioni), parametro s ∈ [0,1] lungo l'asta.
+// fixpin: y = sin(as) − a·cos(as) − a·s + a, con a = 4.4934 (tan a = a).
+const SHAPES = {
+  pinpin:  s => Math.sin(PI*s),
+  fixfix:  s => 1-Math.cos(2*PI*s),
+  fixfree: s => 1-Math.cos(PI*s/2),
+  fixpin:  s => { const a=4.4934; return Math.sin(a*s)-a*Math.cos(a*s)-a*s+a; }
+};
+
+function drawSchema(mount, L, L0){
+  const W=420, Hs=250, yTop=34, yBot=214, xAx=150, amp=42;
+  const f = SHAPES[mount] || SHAPES.pinpin;
+
+  // Normalizzazione: l'ampiezza del modo e' arbitraria, si scala sul massimo.
+  let mx=0;
+  for(let i=0;i<=100;i++) mx=Math.max(mx, Math.abs(f(i/100)));
+  if(!(mx>0)) mx=1;
+
+  let pts='';
+  for(let i=0;i<=100;i++){
+    const s=i/100;
+    const x=xAx+amp*f(s)/mx;
+    const y=yBot-(yBot-yTop)*s;
+    pts += (i?' L':'M')+x.toFixed(1)+' '+y.toFixed(1);
+  }
+
+  // Vincoli: incastro = blocchetto tratteggiato, cerniera = triangolo.
+  const fixed = (y,dir) => `<rect x="${xAx-34}" y="${dir>0?y:y-9}" width="68" height="9" fill="rgba(154,157,171,.18)" stroke="#9a9dab" stroke-width="1"/>`;
+  const pin   = (y,dir) => `<polygon points="${xAx},${y} ${xAx-11},${y+dir*15} ${xAx+11},${y+dir*15}" fill="none" stroke="#9a9dab" stroke-width="1.3"/><line x1="${xAx-17}" y1="${y+dir*15}" x2="${xAx+17}" y2="${y+dir*15}" stroke="#9a9dab" stroke-width="1.3"/>`;
+
+  const botFix = mount!=='pinpin';
+  const topFix = mount==='fixfix';
+  const topFree= mount==='fixfree';
+
+  let sup = botFix ? fixed(yBot,1) : pin(yBot,1);
+  if(topFree){
+    sup += `<text x="${xAx+46}" y="${yTop+4}" fill="#7d8090" font-size="10" font-family="'DM Mono',monospace">libero</text>`;
+  } else {
+    sup += topFix ? fixed(yTop,-1) : pin(yTop,-1);
+  }
+
+  // Quota di L0 rispetto a L.
+  const xq = xAx+92;
+  const q0 = yBot-(yBot-yTop)*Math.min(1, L>0 ? (L0/L) : 1);
+
+  return `<svg viewBox="0 0 ${W} ${Hs}" xmlns="http://www.w3.org/2000/svg">
+    <line x1="${xAx}" y1="${yTop}" x2="${xAx}" y2="${yBot}" stroke="rgba(255,255,255,.13)" stroke-width="1" stroke-dasharray="3 4"/>
+    <path d="${pts}" fill="none" stroke="#4fc3f7" stroke-width="2.2" stroke-linecap="round"/>
+    ${sup}
+    <line x1="${xAx}" y1="${yTop-26}" x2="${xAx}" y2="${yTop-8}" stroke="#ef5350" stroke-width="2"/>
+    <polygon points="${xAx},${yTop-4} ${xAx-5},${yTop-13} ${xAx+5},${yTop-13}" fill="#ef5350"/>
+    <text x="${xAx+10}" y="${yTop-14}" fill="#ef5350" font-size="11" font-family="'DM Mono',monospace">F</text>
+    <line x1="${xAx-62}" y1="${yTop}" x2="${xAx-62}" y2="${yBot}" stroke="#7d8090" stroke-width="1"/>
+    <line x1="${xAx-67}" y1="${yTop}" x2="${xAx-57}" y2="${yTop}" stroke="#7d8090" stroke-width="1"/>
+    <line x1="${xAx-67}" y1="${yBot}" x2="${xAx-57}" y2="${yBot}" stroke="#7d8090" stroke-width="1"/>
+    <text x="${xAx-72}" y="${(yTop+yBot)/2}" fill="#9a9dab" font-size="10" text-anchor="end" font-family="'DM Mono',monospace">L = ${fi(L)}</text>
+    <line x1="${xq}" y1="${yBot}" x2="${xq}" y2="${q0}" stroke="#4fc3f7" stroke-width="1"/>
+    <line x1="${xq-5}" y1="${yBot}" x2="${xq+5}" y2="${yBot}" stroke="#4fc3f7" stroke-width="1"/>
+    <line x1="${xq-5}" y1="${q0}" x2="${xq+5}" y2="${q0}" stroke="#4fc3f7" stroke-width="1"/>
+    <text x="${xq+9}" y="${(yBot+q0)/2}" fill="#4fc3f7" font-size="10" font-family="'DM Mono',monospace">L₀ = ${fi(L0)}</text>
+    <text x="${xAx}" y="${Hs-6}" fill="#7d8090" font-size="10" text-anchor="middle" font-family="'DM Mono',monospace">${MOUNTS[mount].nome} · β = ${String(MOUNTS[mount].beta).replace('.',',')}</text>
+  </svg>`;
+}
+
+// ═══════════════════════════════════════════════════════
+//  CALCOLO
+// ═══════════════════════════════════════════════════════
+function calculate(){
+  const s      = getSectionProps();
+  const E      = parseFloat($('mat-E').value)||0;
+  const fy     = parseFloat($('mat-fy').value)||0;
+  const L      = parseFloat($('L').value)||0;
+  const F      = parseFloat($('F').value)||0;
+  const sfMin  = parseFloat($('sfmin').value)||1;
+  const mount  = $('mount').value;
+  const BETA   = MOUNTS[mount].beta;
+  const fam    = currentFam();
+
+  // Tetmajer non ha coefficienti tarati fuori dagli acciai da costruzione:
+  // in quel caso il pulsante e' disabilitato e si ricade su Johnson.
+  const tetOk = !!TET[fam];
+  $('m-tetmajer').disabled = !tetOk;
+  if(!tetOk && method==='tetmajer') setMethodSilent('johnson');
+  const m = method;
+
+  const L0     = BETA*L;
+  const lambda = s.valid && s.rho>0 ? L0/s.rho : NaN;
+  const limJ   = lambdaLim(E, fy, 'johnson');
+  const limT   = lambdaLim(E, fy, 'tetmajer');
+  const lim    = m==='tetmajer' ? limT : limJ;
+
+  const cr     = sigmaCrit(lambda, E, fy, m, fam);
+  const Pcr    = cr.sig*s.A;
+  const sigma  = s.A>0 ? F/s.A : NaN;
+  const SF     = F>0 ? Pcr/F : Infinity;
+  const SFres  = fy/sigma;
+  const Famm   = Pcr/sfMin;
+  // Lunghezza massima che soddisfa il CS richiesto in campo elastico.
+  const Lmax   = F>0 ? PI*Math.sqrt(E*s.Imin/(sfMin*F))/BETA : Infinity;
+
+  // ── Geometria
+  $('secDesc').textContent = s.desc;
+  $('geoGrid').innerHTML =
+    box('Area A', fi(s.A), 'mm²') +
+    box('I x', fi(s.Ix), 'mm⁴') +
+    box('I y', fi(s.Iy), 'mm⁴') +
+    box('I min · asse debole', fi(s.Imin), 'mm⁴') +
+    box('Raggio d\'inerzia ρ', fp(s.rho,2), 'mm') +
+    box('Tensione σ = F/A', fp(sigma,1), 'MPa');
+
+  // ── Schema
+  $('schema').innerHTML = drawSchema(mount, L, L0);
+
+  // ── Instabilità
+  const tozza = isFinite(lambda) && lambda<LAM_TOZZA;
+  let badgeCls, badgeTxt;
+  if(!s.valid || !isFinite(lambda)){ badgeCls='inel'; badgeTxt='dati incompleti'; }
+  else if(tozza)                   { badgeCls='tozza'; badgeTxt='asta tozza · compressione semplice'; }
+  else if(cr.campo==='eulero')     { badgeCls='eulero'; badgeTxt='Eulero · campo elastico'; }
+  else                             { badgeCls='inel'; badgeTxt=(cr.campo==='tetmajer'?'Tetmajer':'Johnson')+' · campo inelastico'; }
+  $('campoBadge').innerHTML = `<span class="campo ${badgeCls}">${badgeTxt}</span>`;
+
+  $('bucGrid').innerHTML =
+    box('Lungh. libera L₀', fi(L0), 'mm') +
+    box('Snellezza λ', fp(lambda,1), '') +
+    box('λ limite', fp(lim,1), '') +
+    box('Tensione critica σ_cr', fp(cr.sig,1), 'MPa') +
+    box('Carico critico P_cr', fp(Pcr/1000,2), 'kN') +
+    box(`Carico amm. (CS ${fp(sfMin,1)})`, fp(Famm/1000,2), 'kN');
+
+  // ── Verifiche
+  $('verGrid').innerHTML =
+    vrow(`CS a instabilità (rich. ≥ ${fp(sfMin,1)})`, fp(SF,2), '', SF/sfMin,
+         'Rapporto tra carico critico e carico applicato: P_cr / F.') +
+    vrow('CS a compressione (rich. ≥ 1,5)', fp(SFres,2), '', SFres/1.5,
+         'Verifica di sola resistenza: fy / (F/A). Se è più basso del CS a instabilità, è lo schiacciamento a comandare.') +
+    vrow('Snellezza λ (max consigliata 200)', fp(lambda,0), '', 200/lambda,
+         'Limite di buona pratica per le membrature compresse principali. Oltre 200 l\'asta è troppo sensibile alle imperfezioni.') +
+    vrow(`Lunghezza max con CS ${fp(sfMin,1)}`, fi(Lmax), 'mm', Lmax/L,
+         'Lunghezza dell\'asta che porterebbe il coefficiente di sicurezza esattamente al valore richiesto (formula di Eulero).');
+
+  // ── Avvisi
+  const hints=[];
+  if(!s.valid){
+    hints.push('<div class="info-box">Inserire le dimensioni della sezione per avviare il calcolo.</div>');
+  } else {
+    if(tozza) hints.push(`<div class="warn-box">Snellezza λ = ${fp(lambda,1)} molto bassa: l'asta è <b>tozza</b> e l'instabilità non è il meccanismo determinante. Fa fede la verifica a compressione semplice, σ = F/A = ${fp(sigma,1)} MPa.</div>`);
+    if($('sec-type').value==='L') hints.push('<div class="info-box">L\'angolare non ha assi di simmetria: I_x e I_y sono riferiti agli assi delle ali, mentre <b>I_min è calcolato sugli assi principali</b> (ruotati) ed è quindi minore di entrambi.</div>');
+    if(s.warnTors) hints.push('<div class="warn-box">Sezione <b>aperta a parete sottile</b>: oltre all\'inflessione può innescarsi l\'instabilità <b>flesso-torsionale</b>, che questo modulo non calcola. Il carico critico reale può essere sensibilmente più basso.</div>');
+    if(m==='tetmajer' && tetOk && lambda<60) hints.push(`<div class="warn-box">La retta di Tetmajer per ${TET[fam].nome} è ricavata sperimentalmente nel campo λ ≈ 60÷${fp(limT,0)}: sotto λ = 60 il valore è extrapolato ed è più prudente usare Johnson.</div>`);
+    if(!tetOk) hints.push('<div class="info-box">Tetmajer disponibile solo per gli acciai da costruzione: per alluminio e materiali personalizzati si usa la parabola di Johnson.</div>');
+    if(F<=0) hints.push('<div class="info-box">Con F = 0 i coefficienti di sicurezza sono infiniti: inserire il carico di compressione per ottenere le verifiche.</div>');
+  }
+  $('hint').innerHTML = hints.join('');
+
+  buildCurve(lambda, E, fy, m, fam, s.A);
+}
+
+// setMethod senza ricorsione su calculate(), per il fallback automatico.
+function setMethodSilent(m){
+  method = m;
+  $('m-johnson').classList.toggle('on', m==='johnson');
+  $('m-tetmajer').classList.toggle('on', m==='tetmajer');
+}
+
+// ═══════════════════════════════════════════════════════
+//  TABELLA σ_cr(λ)
+// ═══════════════════════════════════════════════════════
+function buildCurve(lambda, E, fy, m, fam, A){
+  const nome = (m==='tetmajer' && TET[fam]) ? 'Tetmajer' : 'Johnson';
+  $('curveTitle').textContent = `Eulero vs ${nome}`;
+
+  const lim = lambdaLim(E, fy, m);
+  let html = `<tr><th>λ</th><th>σ Eulero<br>MPa</th><th>σ ${nome}<br>MPa</th><th>σ_cr adottata<br>MPa</th><th>P_cr<br>kN</th></tr>`;
+
+  // La riga attiva e' quella del passo di tabella piu' vicino al lambda reale.
+  let best=null, bestD=Infinity;
+  for(let l=20;l<=200;l+=10){
+    const d=Math.abs(l-lambda);
+    if(d<bestD){bestD=d;best=l;}
+  }
+
+  for(let l=20;l<=200;l+=10){
+    const sE = sigmaEuler(l,E);
+    let sI;
+    if(m==='tetmajer' && TET[fam]) sI = TET[fam].a - TET[fam].b*l;
+    else                          sI = fy - Math.pow(fy/(2*PI),2)*l*l/E;
+    sI = Math.min(sI, fy);
+    const ad = sigmaCrit(l,E,fy,m,fam);
+    const act = (isFinite(lambda) && l===best) ? ' class="active-row"' : '';
+    const flag = l>=lim ? '' : ' ·';
+    html += `<tr${act}><td>${l}${flag}</td><td>${fp(sE,1)}</td><td>${fp(sI,1)}</td><td><b>${fp(ad.sig,1)}</b></td><td>${fp(ad.sig*A/1000,2)}</td></tr>`;
+  }
+  html += `<tr><td colspan="5" style="color:var(--dim);text-align:left;padding:5px 6px">λ_lim = ${fp(lim,1)} — le righe marcate con · ricadono nel campo inelastico, dove si adotta ${nome}.</td></tr>`;
+  $('curveTable').innerHTML = html;
+}
+
+// ═══════════════════════════════════════════════════════
+//  INIT
+// ═══════════════════════════════════════════════════════
+$('printBtn').addEventListener('click', () => window.print());
+onSectionChange();
+calculate();
+</script>
+
+</body>
+</html>
