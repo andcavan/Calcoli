@@ -584,7 +584,7 @@ function setMode(mode){
   ['manual','m1','m2','m3','m4'].forEach(m=>document.getElementById('btn-'+m).classList.toggle('on',m===mode));
   const cfg=MODE_DEF[mode]||{known:[],derived:[]};
   const sep=cfg.derived.length
-    ?`<div style="margin-top:9px;padding-top:8px;border-top:1px solid var(--border)"><div style="font-size:9px;color:var(--amber);letter-spacing:.12em;text-transform:uppercase;font-family:var(--cond);font-weight:600;margin-bottom:6px">Calcolato</div>${cfg.derived.map(d=>`<div class="field" style="margin-bottom:6px"><div class="fhdr"><span class="flabel" style="color:var(--amber)">${d.lbl}</span><span class="fval" id="${d.id}" style="color:var(--amber)">—</span></div></div>`).join('')}</div>`:'';
+    ?`<div style="margin-top:9px;padding-top:8px;border-top:1px solid var(--border)"><div style="font-size:9px;color:var(--amber);letter-spacing:.12em;text-transform:uppercase;font-family:var(--cond);font-weight:600;margin-bottom:6px">Calcolato</div>${cfg.derived.map(d=>`<div class="field" style="margin-bottom:6px"><div class="fhdr"><span class="flabel" style="color:var(--amber)" data-tip="Grandezza derivata, calcolata automaticamente dalle relazioni cinematiche del profilo di moto in base ai parametri noti della modalità selezionata. Non è modificabile direttamente." data-ttl="${d.lbl}">${d.lbl}</span><span class="fval" id="${d.id}" style="color:var(--amber)">—</span></div></div>`).join('')}</div>`:'';
   document.getElementById('mode-inputs').innerHTML=cfg.known.map(mkFldHTML).join('')+sep;
   bindArrows();recalc();
 }
