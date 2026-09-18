@@ -679,12 +679,12 @@ function calculate(){
     box('Cedevolezza d·C', (geomOk?(d*C).toExponential(3):'—'), ' mm/MPa', 'Denominatore della formula di Lamé: d·[(1/Em)·((1+qm²)/(1−qm²)+νm) + (1/Ea)·((1+qa²)/(1−qa²)−νa)].&#10;p = δ[mm] / (d·C): più i due componenti sono cedevoli, minore è la pressione ottenuta a parità di interferenza.');
 
   $('intGrid').innerHTML =
-    box('δmin nominale', fp(d1,1), 'µm', 'Interferenza diametrale minima di progetto, prima della detrazione per rugosità.&#10;' + (mode==='iso' ? 'Ricavata dagli scostamenti ISO 286: δmin = ei_albero − ES_foro.' : 'Valore inserito a mano (dato di disegno o misura).')) +
-    box('δmax nominale', fp(d2,1), 'µm', 'Interferenza diametrale massima di progetto, prima della detrazione per rugosità.&#10;' + (mode==='iso' ? 'Ricavata dagli scostamenti ISO 286: δmax = es_albero − EI_foro.' : 'Valore inserito a mano (dato di disegno o misura).')) +
+    box('Interf. min nominale', fp(d1,1), 'µm', 'Interferenza diametrale minima di progetto, prima della detrazione per rugosità.&#10;' + (mode==='iso' ? 'Ricavata dagli scostamenti ISO 286: δmin = ei_albero − ES_foro.' : 'Valore inserito a mano (dato di disegno o misura).')) +
+    box('Interf. max nominale', fp(d2,1), 'µm', 'Interferenza diametrale massima di progetto, prima della detrazione per rugosità.&#10;' + (mode==='iso' ? 'Ricavata dagli scostamenti ISO 286: δmax = es_albero − EI_foro.' : 'Valore inserito a mano (dato di disegno o misura).')) +
     box('Perdita rugosità', fp(loss,1), 'µm', 'Interferenza persa per spianamento delle creste delle asperità al montaggio (DIN 7190):&#10;Δδ = 0,8·(Rz_albero + Rz_mozzo).&#10;Si detrae sia da δmin sia da δmax.') +
-    box('δ efficace min', fp(emin,1), 'µm', 'δ_eff,min = δmin − 0,8·(Rz_a + Rz_m).&#10;È l\'interferenza realmente disponibile nel caso peggiore: da questa si calcola p_min e quindi la capacità di trasmissione.&#10;Deve essere > 0, altrimenti l\'accoppiamento può risultare con gioco.') +
-    box('δ efficace max', fp(emax,1), 'µm', 'δ_eff,max = δmax − 0,8·(Rz_a + Rz_m).&#10;È l\'interferenza del caso peggiore per la resistenza: da questa si calcolano p_max, le tensioni, la forza di piantaggio e la temperatura di montaggio.') +
-    box('δ_eff,min relativa', fp(d>0?emin/d:NaN,3), '‰', 'Interferenza efficace minima rapportata al diametro: δ_eff,min[µm]/d[mm] = ‰ del diametro.&#10;Ordine di grandezza usuale per i calettamenti in acciaio: 0,5 ÷ 1,5 ‰ del diametro.');
+    box('Interf. efficace min', fp(emin,1), 'µm', 'δ_eff,min = δmin − 0,8·(Rz_a + Rz_m).&#10;È l\'interferenza realmente disponibile nel caso peggiore: da questa si calcola p_min e quindi la capacità di trasmissione.&#10;Deve essere > 0, altrimenti l\'accoppiamento può risultare con gioco.') +
+    box('Interf. efficace max', fp(emax,1), 'µm', 'δ_eff,max = δmax − 0,8·(Rz_a + Rz_m).&#10;È l\'interferenza del caso peggiore per la resistenza: da questa si calcolano p_max, le tensioni, la forza di piantaggio e la temperatura di montaggio.') +
+    box('Interf. relativa min', fp(d>0?emin/d:NaN,3), '‰', 'Interferenza efficace minima rapportata al diametro: δ_eff,min[µm]/d[mm] = ‰ del diametro.&#10;Ordine di grandezza usuale per i calettamenti in acciaio: 0,5 ÷ 1,5 ‰ del diametro.');
 
   const pGrid =
     box('Pressione p_min', fp(pmin,2), 'MPa', 'Pressione di contatto nella condizione di interferenza minima (caso peggiore per l\'aderenza).&#10;p = δ_eff,min[mm] / (d·C), con C = (1/Em)·((1+qm²)/(1−qm²)+νm) + (1/Ea)·((1+qa²)/(1−qa²)−νa).&#10;Su questa si calcolano coppia e forza trasmissibili.') +
@@ -698,17 +698,17 @@ function calculate(){
     box('Forza periferica 2Mt/d', fp(Fper/1000,2), 'kN', 'Forza tangenziale sulla superficie di contatto prodotta dalla coppia richiesta: Ft = 2·Mt/d.&#10;Si compone vettorialmente con la forza assiale nella verifica dei carichi combinati.') +
     box('Carico combinato', fp(Fcomb/1000,2), 'kN', 'Risultante dei carichi richiesti sulla superficie di contatto: √((2·Mt/d)² + Fa²).&#10;Deve restare sotto µ·p_min·π·d·L moltiplicata per il coefficiente di sicurezza sull\'aderenza.') +
     box('Sfrutt. aderenza', fp(FaMax>0?Fcomb/FaMax*100:NaN,1), '%', 'Rapporto tra carico combinato richiesto e capacità di aderenza disponibile (senza coefficiente di sicurezza).&#10;100% = slittamento imminente.') +
-    box('µ minimo necessario', fp(pmin*Ac>0?Fcomb*csA/(pmin*Ac):NaN,3), '', 'Coefficiente di attrito minimo che garantirebbe il carico richiesto con il CS di aderenza imposto:&#10;µ_min = CS·√((2Mt/d)²+Fa²) / (p_min·π·d·L).&#10;Confrontarlo con il µ realisticamente ottenibile dalla coppia di materiali e dal tipo di montaggio.');
+    box('Attrito min. necessario', fp(pmin*Ac>0?Fcomb*csA/(pmin*Ac):NaN,3), '', 'Coefficiente di attrito minimo che garantirebbe il carico richiesto con il CS di aderenza imposto:&#10;µ_min = CS·√((2Mt/d)²+Fa²) / (p_min·π·d·L).&#10;Confrontarlo con il µ realisticamente ottenibile dalla coppia di materiali e dal tipo di montaggio.');
 
   $('stsGrid').innerHTML =
-    box('σ_t mozzo (foro)', fp(sigT_m,1), 'MPa', 'Tensione tangenziale di TRAZIONE al foro del mozzo, punto più sollecitato:&#10;σ_t = p_max·(1+qm²)/(1−qm²).&#10;È sempre maggiore della pressione di contatto: per qm = 0,5 vale già 1,67·p.') +
-    box('σ_r mozzo (foro)', fp(sigR_m,1), 'MPa', 'Tensione radiale al foro del mozzo: σ_r = −p_max (compressione, pari alla pressione di contatto).&#10;Sul diametro esterno si annulla.') +
-    box('σ_id mozzo (Tresca)', fp(sigId_m,1), 'MPa', 'Tensione ideale secondo Tresca (criterio conservativo):&#10;σ_id = σ_t − σ_r = 2·p_max/(1−qm²).&#10;Da confrontare con Rp0,2/CS. È la verifica quasi sempre determinante.') +
-    box('σ ammissibile mozzo', fp(ammM,1), 'MPa', 'Rp0,2 del mozzo diviso il coefficiente di sicurezza sulla tensione.&#10;σ_id,mozzo deve restare al di sotto di questo valore.') +
-    box('σ_t albero', fp(sigT_a,1), 'MPa', (qa>0
+    box('Tens. tangenziale mozzo', fp(sigT_m,1), 'MPa', 'Tensione tangenziale di TRAZIONE al foro del mozzo, punto più sollecitato:&#10;σ_t = p_max·(1+qm²)/(1−qm²).&#10;È sempre maggiore della pressione di contatto: per qm = 0,5 vale già 1,67·p.') +
+    box('Tens. radiale mozzo', fp(sigR_m,1), 'MPa', 'Tensione radiale al foro del mozzo: σ_r = −p_max (compressione, pari alla pressione di contatto).&#10;Sul diametro esterno si annulla.') +
+    box('Tens. ideale mozzo (Tresca)', fp(sigId_m,1), 'MPa', 'Tensione ideale secondo Tresca (criterio conservativo):&#10;σ_id = σ_t − σ_r = 2·p_max/(1−qm²).&#10;Da confrontare con Rp0,2/CS. È la verifica quasi sempre determinante.') +
+    box('Tens. ammissibile mozzo', fp(ammM,1), 'MPa', 'Rp0,2 del mozzo diviso il coefficiente di sicurezza sulla tensione.&#10;σ_id,mozzo deve restare al di sotto di questo valore.') +
+    box('Tens. tangenziale albero', fp(sigT_a,1), 'MPa', (qa>0
         ? 'Albero CAVO: tensione tangenziale di compressione al foro, σ_t = −2·p_max/(1−qa²).&#10;Un albero cavo sottile può cedere per instabilità o snervamento prima del mozzo.'
         : 'Albero PIENO: stato di compressione idrostatica uniforme, σ_t = σ_r = −p_max.&#10;Non è un punto critico: la tensione ideale è praticamente nulla.')) +
-    box('σ_id albero', fp(sigId_a,1), 'MPa', (qa>0
+    box('Tens. ideale albero', fp(sigId_a,1), 'MPa', (qa>0
         ? 'σ_id = 2·p_max/(1−qa²) per albero cavo. Da confrontare con Rp0,2/CS dell\'albero.'
         : 'Albero pieno: σ_id ≈ 0 perché lo stato è idrostatico (σ_t = σ_r = σ_z,locale = −p).&#10;La verifica di resistenza dell\'albero non è significativa.'));
 
