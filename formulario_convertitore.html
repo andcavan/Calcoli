@@ -146,6 +146,13 @@ body{min-height:100vh}
 .lg-body{flex:1;min-width:0}
 .lg-name{font-size:11.5px;color:var(--text);line-height:1.4}
 .lg-unit{font-size:10px;color:var(--dim);margin-top:2px}
+
+/* TOOLTIP */
+[data-tip]{position:relative;cursor:default}
+@keyframes tipIn{from{opacity:0}to{opacity:1}}
+[data-tip]:hover::after{content:attr(data-tip);position:absolute;bottom:calc(100% + 7px);left:0;background:#1a1e28;border:1px solid rgba(79,195,247,.25);color:#e2e8f4;font-size:10px;padding:7px 11px;border-radius:6px;white-space:pre-wrap;max-width:280px;min-width:180px;z-index:999;line-height:1.6;pointer-events:none;font-family:var(--mono);text-align:left;box-shadow:0 4px 20px rgba(0,0,0,.5);animation:tipIn .12s ease .6s both}
+[data-tip]:hover::before{content:'';position:absolute;bottom:calc(100% + 1px);left:20px;border:5px solid transparent;border-top-color:#1a1e28;z-index:1000;pointer-events:none;animation:tipIn .12s ease .6s both}
+[data-tip].tr:hover::after{left:auto;right:0}
 </style>
 </head>
 <body>
@@ -179,8 +186,10 @@ body{min-height:100vh}
     <div class="stitle" id="conv-catlbl">Categoria</div>
     <div class="catdesc" id="conv-catdesc"></div>
     <div class="conv-input-row">
-      <input type="number" class="numinput" id="conv-val" value="1" oninput="convRecalc()">
-      <select class="unitsel" id="conv-unit" onchange="convRecalc()"></select>
+      <input type="number" class="numinput" id="conv-val" value="1" oninput="convRecalc()"
+        data-tip="Valore numerico da convertire, espresso nell'unità selezionata a fianco. Aggiorna in tempo reale tutte le conversioni della categoria attiva.">
+      <select class="unitsel" id="conv-unit" onchange="convRecalc()"
+        data-tip="Unità di misura di partenza del valore inserito. Cambiandola si ricalcolano tutte le conversioni mantenendo invariata la grandezza fisica."></select>
     </div>
     <div class="results-grid" id="conv-results"></div>
     <div class="linkrow" id="conv-links"></div>
@@ -217,11 +226,11 @@ body{min-height:100vh}
       <div class="catdesc">Inserisci un angolo per ottenere seno, coseno, tangente, cotangente, secante e cosecante. Le funzioni non definite (asintoti, es. tan(90°), cot(0°)) sono segnalate come "non definito".</div>
       <div class="fields-grid">
         <div class="field">
-          <div class="flabel">Angolo</div>
+          <div class="flabel" data-tip="Ampiezza dell'angolo di cui calcolare i rapporti trigonometrici. Sono ammessi valori negativi o superiori a 360°: vengono gestiti tramite la periodicità delle funzioni.">Angolo</div>
           <input type="number" class="finput" id="tg-val" value="30" oninput="renderTrigCalc()">
         </div>
         <div class="field">
-          <div class="flabel">Unità</div>
+          <div class="flabel" data-tip="Unità di misura dell'angolo inserito nel campo a fianco: gradi sessagesimali (°), radianti (rad) oppure gradi centesimali/gon.">Unità</div>
           <select class="finput" id="tg-unit" onchange="renderTrigCalc()">
             <option value="deg">Gradi (°)</option>
             <option value="rad">Radianti (rad)</option>
@@ -238,7 +247,7 @@ body{min-height:100vh}
       <div class="catdesc">Inserisci il valore del rapporto trigonometrico per ottenere l'angolo corrispondente tramite la funzione inversa selezionata. Per arcoseno/arcocoseno il valore deve essere compreso tra −1 e 1.</div>
       <div class="fields-grid">
         <div class="field">
-          <div class="flabel">Funzione</div>
+          <div class="flabel" data-tip="Funzione trigonometrica inversa da applicare al valore del rapporto inserito a fianco, per ottenere l'angolo corrispondente (valore principale).">Funzione</div>
           <select class="finput" id="tg-inv-fn" onchange="renderTrigInv()">
             <option value="asin">arcoseno (asin)</option>
             <option value="acos">arcocoseno (acos)</option>
@@ -249,7 +258,7 @@ body{min-height:100vh}
           </select>
         </div>
         <div class="field">
-          <div class="flabel">Valore rapporto</div>
+          <div class="flabel" data-tip="Valore adimensionale del rapporto trigonometrico. Per arcoseno/arcocoseno deve essere compreso tra −1 e 1; per arcosecante/arcocosecante il valore assoluto deve essere ≥1.">Valore rapporto</div>
           <input type="number" class="finput" id="tg-inv-val" value="0.5" step="0.01" oninput="renderTrigInv()">
         </div>
       </div>
@@ -313,11 +322,11 @@ body{min-height:100vh}
       <div class="catdesc">Inserisci la serie di misure (separate da spazio, virgola o a capo) e i limiti di specifica USL/LSL. Vengono calcolati automaticamente media, deviazione standard campionaria e gli indici di capacità del processo.</div>
       <div class="fields-grid">
         <div class="field" style="grid-column:1/-1">
-          <div class="flabel">Serie di misure</div>
+          <div class="flabel" data-tip="Elenco dei valori misurati, separati da spazio, virgola o a capo. Sono necessari almeno 2 valori numerici per calcolare media e deviazione standard.">Serie di misure</div>
           <textarea class="finput" id="st-data" rows="3" style="height:auto;padding:8px;text-align:left;resize:vertical" oninput="renderStatCalc()">10.02, 9.98, 10.05, 9.95, 10.01, 10.03, 9.97, 10.00, 10.04, 9.96</textarea>
         </div>
-        <div class="field"><div class="flabel">Limite superiore USL</div><input type="number" class="finput" id="st-usl" value="10.10" oninput="renderStatCalc()"></div>
-        <div class="field"><div class="flabel">Limite inferiore LSL</div><input type="number" class="finput" id="st-lsl" value="9.90" oninput="renderStatCalc()"></div>
+        <div class="field"><div class="flabel" data-tip="Limite di specifica superiore (USL) della tolleranza, nella stessa unità di misura della serie di dati. Deve essere maggiore del limite inferiore LSL.">Limite superiore USL</div><input type="number" class="finput" id="st-usl" value="10.10" oninput="renderStatCalc()"></div>
+        <div class="field"><div class="flabel" data-tip="Limite di specifica inferiore (LSL) della tolleranza, nella stessa unità di misura della serie di dati. Deve essere minore del limite superiore USL.">Limite inferiore LSL</div><input type="number" class="finput" id="st-lsl" value="9.90" oninput="renderStatCalc()"></div>
       </div>
       <div id="st-warn"></div>
       <div class="results-grid2" id="st-out"></div>
@@ -331,7 +340,7 @@ body{min-height:100vh}
     <div class="panel">
       <div class="stitle">Sezioni composte — baricentro e momenti d'inerzia</div>
       <div class="catdesc">Costruisci una sezione trasversale complessa (a L, a T, a C, cava, ecc.) come somma di rettangoli. Per ogni rettangolo indica base b, altezza h e le coordinate (xc, yc) del suo centro rispetto a un'origine arbitraria comune. Il calcolatore applica il teorema del trasporto (Huygens-Steiner) per ottenere baricentro e momenti d'inerzia dell'intera sezione.</div>
-      <div class="sec-hdr"><span>Base b</span><span>Altezza h</span><span>Centro xc</span><span>Centro yc</span><span></span></div>
+      <div class="sec-hdr"><span data-tip="Base del rettangolo (dimensione lungo l'asse x), in qualsiasi unità coerente con gli altri rettangoli della sezione.">Base b</span><span data-tip="Altezza del rettangolo (dimensione lungo l'asse y), nella stessa unità di misura della base.">Altezza h</span><span data-tip="Coordinata x del centro del rettangolo, riferita a un'origine arbitraria comune a tutti i rettangoli della sezione.">Centro xc</span><span data-tip="Coordinata y del centro del rettangolo, riferita alla stessa origine comune agli altri rettangoli.">Centro yc</span><span></span></div>
       <div class="sec-table" id="sec-table"></div>
       <div class="actionrow">
         <button class="actionbtn" onclick="secAddRow()">+ Aggiungi rettangolo</button>
@@ -1142,18 +1151,24 @@ function renderTriInputs(){
   document.getElementById('tri-mode-note').textContent = TRI_MODES[TRI_MODE].note || '';
   if(TRI_MODE==='right'){
     lblEl.textContent = 'Triangolo rettangolo — dati noti';
-    let html = '<div class="field" style="grid-column:1/-1"><div class="flabel">Combinazione nota</div><select class="finput" style="text-align:left" id="right-known" onchange="setRightKnown(this.value)">'
+    let html = '<div class="field" style="grid-column:1/-1"><div class="flabel" data-tip="Seleziona quale coppia di grandezze del triangolo rettangolo è nota: il calcolatore ricava tutte le altre da questa coppia più l\'angolo retto.">Combinazione nota</div><select class="finput" style="text-align:left" id="right-known" onchange="setRightKnown(this.value)">'
       + Object.entries(RIGHT_KNOWN).map(([k,r])=>`<option value="${k}"${k===RIGHT_KNOWN_K?' selected':''}>${r.label}</option>`).join('') + '</select></div>';
-    html += RIGHT_KNOWN[RIGHT_KNOWN_K].fields.map(f=>`<div class="field"><div class="flabel">${f.l}</div><input type="number" class="finput" id="tf-${f.k}" value="${f.k==='A'?45:1}" oninput="solveTriAndRender()"></div>`).join('');
+    html += RIGHT_KNOWN[RIGHT_KNOWN_K].fields.map(f=>`<div class="field"><div class="flabel" data-tip="${triFieldTip(f)}">${f.l}</div><input type="number" class="finput" id="tf-${f.k}" value="${f.k==='A'?45:1}" oninput="solveTriAndRender()"></div>`).join('');
     wrap.innerHTML = html;
   } else {
     lblEl.textContent = TRI_MODES[TRI_MODE].label;
-    wrap.innerHTML = TRI_MODES[TRI_MODE].fields.map(f=>`<div class="field"><div class="flabel">${f.l}</div><input type="number" class="finput" id="tf-${f.k}" value="${/^[A-Z]$/.test(f.k)?60:1}" oninput="solveTriAndRender()"></div>`).join('');
+    wrap.innerHTML = TRI_MODES[TRI_MODE].fields.map(f=>`<div class="field"><div class="flabel" data-tip="${triFieldTip(f)}">${f.l}</div><input type="number" class="finput" id="tf-${f.k}" value="${/^[A-Z]$/.test(f.k)?60:1}" oninput="solveTriAndRender()"></div>`).join('');
   }
   solveTriAndRender();
 }
 function setRightKnown(k){ RIGHT_KNOWN_K=k; renderTriInputs(); }
 function triVal(k){ const el=document.getElementById('tf-'+k); return el?parseFloat(el.value):NaN; }
+function triFieldTip(f){
+  const isAngle = /^[A-Z]$/.test(f.k);
+  return isAngle
+    ? `Ampiezza dell'angolo al vertice ${f.k}, in gradi sessagesimali (°) — ${f.l}. Valore atteso tra 0° e 180° (0°–90° nel triangolo rettangolo).`
+    : `Lunghezza del lato ${f.k} — ${f.l}. Valore numerico positivo, unità di misura libera ma coerente con gli altri lati inseriti (i risultati saranno nella stessa unità).`;
+}
 
 function solveGeneralTriangle(mode, vals){
   const rad = Math.PI/180;
@@ -1385,12 +1400,17 @@ function mkGeoShapes(){
     `<button class="chip${k===GEO_SHAPE?' on':''}" onclick="setGeoShape('${k}')">${s.label}</button>`).join('');
 }
 function setGeoShape(k){ GEO_SHAPE=k; mkGeoShapes(); renderGeoInputs(); }
+function geoFieldTip(shape,f){
+  if(f.k==='n') return 'Numero di lati del poligono regolare (numero intero, minimo 3).';
+  if(f.k==='theta') return 'Angolo al centro del settore circolare, in gradi sessagesimali (°).';
+  return `${f.l} della figura «${shape.label}». Valore numerico positivo; unità di misura libera ma coerente tra tutti i campi (i risultati saranno nell'unità corrispondente, es. m → m², m³).`;
+}
 function renderGeoInputs(){
   const shape = SHAPES[GEO_SHAPE];
   document.getElementById('geo-shape-lbl').textContent = shape.label;
   document.getElementById('geo-shape-desc').textContent = shape.desc || '';
   document.getElementById('geo-inputs').innerHTML = shape.fields.map(f=>
-    `<div class="field"><div class="flabel">${f.l}</div><input type="number" class="finput" id="gf-${f.k}" value="${f.k==='n'?6:f.k==='theta'?90:1}" min="0" oninput="renderGeoResults()"></div>`).join('');
+    `<div class="field"><div class="flabel" data-tip="${geoFieldTip(shape,f)}">${f.l}</div><input type="number" class="finput" id="gf-${f.k}" value="${f.k==='n'?6:f.k==='theta'?90:1}" min="0" oninput="renderGeoResults()"></div>`).join('');
   renderGeoResults();
 }
 let LAST_GEO_RESULT=null;

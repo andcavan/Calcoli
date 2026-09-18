@@ -744,10 +744,27 @@ const MODE_INPUTS={
   },
 };
 
+// Tooltip texts for solve-mode input fields (vmax + SM known values)
+const VMAX_TIP="Velocità massima (di crociera) raggiunta dal corpo\nUnità: m/s\nRange tipico: 0.01 ÷ 50 m/s\nDetermina il tratto a velocità costante del profilo, tra le fasi di accelerazione e decelerazione";
+const SM_TIP={
+  m2_vc:"Velocità di crociera nota, vincolo del calcolo\nUnità: m/s\nCombinata con il tempo totale per derivare le durate di acc./cost./dec. e lo spostamento",
+  m2_ttot:"Tempo totale del ciclo (t_acc + t_cv + t_dec), vincolo del calcolo\nUnità: s\nCombinato con la velocità di crociera per ripartire le fasi mantenendo le proporzioni impostate",
+  m3_vmax:"Velocità massima nota, vincolo del calcolo\nUnità: m/s\nCombinata con il tempo totale per derivare le durate di acc./cost./dec. e lo spostamento",
+  m3_ttot:"Tempo totale del ciclo (t_acc + t_cv + t_dec), vincolo del calcolo\nUnità: s\nCombinato con la velocità massima per ripartire le fasi mantenendo le proporzioni impostate",
+  m4_ttot:"Tempo totale del ciclo, noto insieme allo spostamento\nUnità: s\nUsato per calcolare la velocità massima necessaria: v_max = spostamento / (t_tot × K)",
+  m4_spost:"Spostamento totale da percorrere nel tempo indicato\nUnità: m\nUsato con il tempo totale per calcolare la velocità massima necessaria, mantenendo le proporzioni t_acc:t_cv:t_dec impostate",
+};
+// Tooltip texts for the read-only "Calcolato" (derived) result fields
+const DERIVED_TIP={
+  'dr-ttot':"Tempo totale calcolato = t_acc + t_cv + t_dec\nUnità: s\nRisultato derivato da v_max e dalla forma del profilo (proporzioni delle tre fasi), sola lettura",
+  'dr-spost':"Spostamento totale calcolato, somma delle distanze delle tre fasi\nUnità: m\nFormula: s = v_max × (kA·t_acc + t_cv + kD·t_dec), con kA e kD coefficienti dei profili di acc./dec.",
+  'dr-vmax':"Velocità massima calcolata, necessaria a percorrere lo spostamento nel tempo totale indicato\nUnità: m/s\nFormula: v_max = spostamento / (t_tot × K), con K coefficiente di forma del profilo",
+};
+
 function mkFieldHTML(f){
   if(f.st){
     return `<div class="field known" id="fld-vmax">
-      <div class="fhdr"><span class="flabel">${f.lbl}</span><span style="font-size:10px;color:var(--dim)">m/s</span></div>
+      <div class="fhdr"><span class="flabel" data-tip="${VMAX_TIP}">${f.lbl}</span><span style="font-size:10px;color:var(--dim)">m/s</span></div>
       <div class="srow">
         <button class="arr" data-key="vmax" data-dir="-1">&#9660;</button>
         <input type="number" id="rv" class="numinput" value="${numFmt('vmax',ST.vmax)}" min="0.001" step="0.001" onchange="setVal('vmax',+this.value)" oninput="slid('vmax',+this.value)">
@@ -757,7 +774,7 @@ function mkFieldHTML(f){
   if(f.sm){
     const c=SMFLD[f.key];
     return `<div class="field known">
-      <div class="fhdr"><span class="flabel">${f.lbl}</span><span style="font-size:10px;color:var(--dim)">${c.unit||''}</span></div>
+      <div class="fhdr"><span class="flabel" data-tip="${SM_TIP[f.key]||''}">${f.lbl}</span><span style="font-size:10px;color:var(--dim)">${c.unit||''}</span></div>
       <div class="srow">
         <button class="arr" data-key="${f.key}" data-dir="-1">&#9660;</button>
         <input type="number" id="si-${f.key}" class="numinput" value="${SM[f.key]}" min="${c.min}" step="${c.step||0.01}" onchange="setSMVal('${f.key}',+this.value)" oninput="setSMVal('${f.key}',+this.value)">
@@ -782,7 +799,7 @@ function setMode(mode){
         ${cfg.derived.map(d=>`
           <div class="field" style="margin-bottom:6px">
             <div class="fhdr">
-              <span class="flabel" style="color:var(--amber)">${d.lbl}</span>
+              <span class="flabel" style="color:var(--amber)" data-tip="${DERIVED_TIP[d.id]||''}">${d.lbl}</span>
               <span class="fval" id="${d.id}" style="color:var(--amber)">—</span>
             </div>
           </div>`).join('')}

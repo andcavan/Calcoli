@@ -577,9 +577,9 @@ function sfLabel(cl) {
   return cl === 'ok' ? 'OK' : (cl === 'warn' ? 'LIMITE' : 'INSUFF.');
 }
 
-function box(label, value, unit) {
+function box(label, value, unit, tip) {
   return `<div class="result-box">
-    <div class="result-label">${label}</div>
+    <div class="result-label"${tip ? ` data-tip="${tip}"` : ''}>${label}</div>
     <div class="result-value">${value}<span class="result-unit">${unit || ''}</span></div>
   </div>`;
 }
@@ -944,15 +944,24 @@ function calculate() {
 
   // Caratteristiche del bullone (comuni)
   $('res-bolt').innerHTML =
-    box('Filettatura', th.label, '') +
-    box('Passo P', fp(th.p, 2), 'mm') +
-    box('Nocciolo d₃', fp(th.d3, 2), 'mm') +
-    box('Area resistente A<sub>s</sub>', fp(th.As, 1), 'mm²') +
-    box('Area nocciolo A₃', fp(th.A3, 1), 'mm²') +
-    box('Foro d₀', fp(th.dh, 1), 'mm') +
-    box('R<sub>m</sub>', it(inp.Rm), 'MPa') +
-    box('R<sub>p0,2</sub>', it(inp.Rp), 'MPa') +
-    box('F<sub>0,2</sub> = A<sub>s</sub>·R<sub>p0,2</sub>', kN(th.As * inp.Rp), 'kN');
+    box('Filettatura', th.label, '',
+      'Designazione normalizzata della filettatura selezionata (ISO 261/724)\nFissa diametro nominale d e passo P, da cui derivano tutte le altre grandezze geometriche') +
+    box('Passo P', fp(th.p, 2), 'mm',
+      'Passo della filettatura (ISO 724): distanza assiale tra filetti consecutivi\nEntra nella formula della coppia di serraggio M_A (termine 0,16·P) e nell\'angolo d\'elica') +
+    box('Nocciolo d₃', fp(th.d3, 2), 'mm',
+      'Diametro di nocciolo, a fondo filetto\nSezione più debole della vite: base per l\'area A₃ usata nel precarico ammissibile VDI') +
+    box('Area resistente A<sub>s</sub>', fp(th.As, 1), 'mm²',
+      'Area di calcolo della filettatura (ISO 898-1), media tra diametro medio e nocciolo\nUsata per le verifiche di trazione/taglio in esercizio: F₀,₂, F_t,Rd, F_v,Rd, τ_Q, σ_ab') +
+    box('Area nocciolo A₃', fp(th.A3, 1), 'mm²',
+      'Area a fondo filetto (VDI 2230), leggermente inferiore ad A_s\nUsata per il precarico ammissibile F_M,zul e per la sollecitazione composta σ_red a montaggio') +
+    box('Foro d₀', fp(th.dh, 1), 'mm',
+      'Diametro del foro passante nelle flange (ISO 273, serie media)\nDetermina l\'area di appoggio sotto testa A_p e quindi la pressione di contatto p_max') +
+    box('R<sub>m</sub>', it(inp.Rm), 'MPa',
+      'Resistenza a rottura a trazione della classe scelta (ISO 898-1)\nEs. classe 8.8 → 800 MPa (830 per d &gt; 16 mm)\nLimita il precarico ammissibile e tutte le resistenze di progetto EC3') +
+    box('R<sub>p0,2</sub>', it(inp.Rp), 'MPa',
+      'Resistenza allo snervamento (carico unitario di scostamento 0,2%)\nR_p0,2 ≈ 0,8·R_m (0,9 per la 10.9/12.9)\nÈ il limite superiore della sollecitazione composta σ_red durante il serraggio') +
+    box('F<sub>0,2</sub> = A<sub>s</sub>·R<sub>p0,2</sub>', kN(th.As * inp.Rp), 'kN',
+      'Forza assiale che porta la sezione resistente A_s a snervamento\nRiferimento di confronto: il precarico ammissibile F_M,zul ne è sempre una frazione, per lasciare margine alla torsione di serraggio');
 
   if (mode === 'VDI') renderVDI(inp);
   else                renderEC3(inp);
@@ -967,20 +976,32 @@ function renderVDI(inp) {
   $('ver-title').textContent  = 'Verifiche del giunto — VDI 2230';
 
   $('res-calc').innerHTML =
-    box('Precarico F<sub>M,zul</sub>', kN(r.FMzul), 'kN') +
-    box('Coppia serraggio M<sub>A</sub>', fp(r.MA, 1), 'N·m') +
-    box('Precarico min. F<sub>M,min</sub>', kN(r.FMminReale), 'kN') +
-    box('Cedevolezza vite δ<sub>S</sub>', (r.dS * 1e6).toFixed(3), 'µm/kN') +
-    box('Cedevolezza flange δ<sub>P</sub>', (r.dP * 1e6).toFixed(3), 'µm/kN') +
-    box('Fattore di carico Φ<sub>en</sub>', fp(r.Phien, 3), '');
+    box('Precarico F<sub>M,zul</sub>', kN(r.FMzul), 'kN',
+      'Precarico assiale ammissibile (VDI 2230 eq. R2/1)\nF_M,zul = ν·R_p0,2·A₀ / √(1+3k²)\nMassima forza di serraggio che la vite sopporta senza superare ν·R_p0,2 nello stato di sforzo composto (trazione + torsione)') +
+    box('Coppia serraggio M<sub>A</sub>', fp(r.MA, 1), 'N·m',
+      'Coppia da applicare alla chiave dinamometrica per raggiungere F_M,zul (VDI 2230 eq. R3/1)\nM_A = F_M,zul·[0,16·P + 0,58·μ_G·d₂ + μ_K·D_Km/2]\nDipende fortemente dall\'attrito: a parità di coppia, più attrito significa meno precarico') +
+    box('Precarico min. F<sub>M,min</sub>', kN(r.FMminReale), 'kN',
+      'Precarico minimo garantito, serrando a F_M,zul con il metodo di serraggio scelto\nF_M,min = F_M,zul / α_A\nÈ il valore da cui partono le verifiche di apertura del giunto e di scorrimento') +
+    box('Cedevolezza vite δ<sub>S</sub>', (r.dS * 1e6).toFixed(3), 'µm/kN',
+      'Cedevolezza assiale della vite (VDI 2230 §5.1.1): allungamento per unità di forza\nSomma i contributi di testa, gambo, filetto libero/ingaggiato e dado\nInsieme a δ_P determina il fattore di carico Φ_en') +
+    box('Cedevolezza flange δ<sub>P</sub>', (r.dP * 1e6).toFixed(3), 'µm/kN',
+      'Cedevolezza assiale delle flange serrate, modello a cono di pressione (VDI 2230 §5.1.2)\nAccorciamento per unità di forza\nPiù è piccola rispetto a δ_S, minore è la quota di carico esterno assorbita dalla vite') +
+    box('Fattore di carico Φ<sub>en</sub>', fp(r.Phien, 3), '',
+      'Fattore di carico con introduzione (VDI 2230 §5.2.2): Φ_en = n·δ_P/(δ_S+δ_P)\nFrazione del carico assiale esterno F_A che si somma al precarico nella vite\nIl resto, (1−Φ_en)·F_A, scarica le flange');
 
   $('res-calc2').innerHTML =
-    box('Carico sulla vite F<sub>SA</sub>', kN(r.FSA), 'kN') +
-    box('Scarico giunto F<sub>PA</sub>', kN(r.FPA), 'kN') +
-    box('Perdita assest. F<sub>Z</sub>', kN(r.FZ), 'kN') +
-    box('Clamp richiesto F<sub>Kerf</sub>', kN(r.FKerf), 'kN') +
-    box('Clamp residuo F<sub>KR</sub>', kN(r.FKR), 'kN') +
-    box('Forza max vite F<sub>S,max</sub>', kN(r.FSmax), 'kN');
+    box('Carico sulla vite F<sub>SA</sub>', kN(r.FSA), 'kN',
+      'Quota del carico assiale esterno che si scarica sulla vite: F_SA = Φ_en·F_A (per bullone)\nSi somma al precarico per dare la forza massima F_S,max = F_M,zul + F_SA') +
+    box('Scarico giunto F<sub>PA</sub>', kN(r.FPA), 'kN',
+      'Quota del carico assiale esterno che scarica le flange: F_PA = (1−Φ_en)·F_A (per bullone)\nRiduce direttamente la forza di serraggio residua disponibile in esercizio F_KR') +
+    box('Perdita assest. F<sub>Z</sub>', kN(r.FZ), 'kN',
+      'Perdita di precarico per assestamento plastico delle rugosità di contatto (VDI 2230 §5.4.2)\nF_Z = f_Z / (δ_S+δ_P), con f_Z assestamento totale [µm] da tab. 5.4/1\nVa sempre sottratta al precarico residuo in esercizio F_KR') +
+    box('Clamp richiesto F<sub>Kerf</sub>', kN(r.FKerf), 'kN',
+      'Forza di serraggio minima richiesta perché l\'attrito trasmetta il taglio esterno\nF_Kerf = F_Q / (μ_T·q_F)  — nullo se non c\'è taglio da trasmettere per attrito') +
+    box('Clamp residuo F<sub>KR</sub>', kN(r.FKR), 'kN',
+      'Forza di serraggio effettivamente residua in esercizio\nF_KR = F_M,min − F_PA − F_Z\nSe scende a 0 il giunto si apre (vedi verifica "Apertura del giunto" più sotto)') +
+    box('Forza max vite F<sub>S,max</sub>', kN(r.FSmax), 'kN',
+      'Forza assiale massima nella vite in esercizio: F_S,max = F_M,zul + F_SA\nUsata per calcolare la tensione σ_z e la pressione di contatto sotto testa p_max');
 
   // Con un dado normalizzato di classe adeguata l'avvitamento è garantito per costruzione
   // La lunghezza di avvitamento è la profondità del filetto impegnato (mEng),
@@ -1026,20 +1047,32 @@ function renderEC3(inp) {
   $('ver-title').textContent  = 'Verifiche del giunto — EN 1993-1-8 (categoria ' + inp.cat + ')';
 
   $('res-calc').innerHTML =
-    box('Taglio F<sub>v,Rd</sub>', kN(r.FvRd), 'kN') +
-    box('Rifollamento F<sub>b,Rd</sub>', kN(r.FbRd), 'kN') +
-    box('Trazione F<sub>t,Rd</sub>', kN(r.FtRd), 'kN') +
-    box('Punzonamento B<sub>p,Rd</sub>', kN(r.BpRd), 'kN') +
-    box('Precarico F<sub>p,C</sub>', kN(r.FpC), 'kN') +
-    box('Scorrimento F<sub>s,Rd</sub>', kN(r.FsRd), 'kN');
+    box('Taglio F<sub>v,Rd</sub>', kN(r.FvRd), 'kN',
+      'Resistenza di progetto a taglio per bullone (EN 1993-1-8 tab. 3.4)\nF_v,Rd = m·α_v·f_ub·A/γ_M2 (m = piani di taglio)\nDa confrontare con il taglio di progetto F_v,Ed nella verifica sottostante') +
+    box('Rifollamento F<sub>b,Rd</sub>', kN(r.FbRd), 'kN',
+      'Resistenza di progetto a rifollamento della lamiera intorno al foro (tab. 3.4)\nF_b,Rd = k₁·α_b·f_u·d·t/γ_M2\nDipende dalle distanze dai bordi e₁, e₂ e dallo spessore t della lamiera più sottile') +
+    box('Trazione F<sub>t,Rd</sub>', kN(r.FtRd), 'kN',
+      'Resistenza di progetto a trazione del bullone (tab. 3.4)\nF_t,Rd = k₂·f_ub·A_s/γ_M2, con k₂ = 0,9 per teste esagonali\nRilevante per le categorie D ed E (giunti a trazione)') +
+    box('Punzonamento B<sub>p,Rd</sub>', kN(r.BpRd), 'kN',
+      'Resistenza al punzonamento della lamiera sotto la testa o il dado (tab. 3.4)\nB_p,Rd = 0,6·π·d_m·t_p·f_u/γ_M2\nDiventa critica con lamiere sottili o teste di piccolo diametro') +
+    box('Precarico F<sub>p,C</sub>', kN(r.FpC), 'kN',
+      'Precarico di controllo per il serraggio dei giunti ad attrito (§3.6.1)\nF_p,C = 0,7·f_ub·A_s\nÈ un valore di riferimento normativo, non una forza applicata: entra nel calcolo di F_s,Rd') +
+    box('Scorrimento F<sub>s,Rd</sub>', kN(r.FsRd), 'kN',
+      'Resistenza di progetto allo scorrimento per superficie d\'attrito (§3.9.1)\nF_s,Rd = k_s·n_s·μ·(F_p,C − 0,8·F_t,Ed)/γ_M3\nRilevante solo per le categorie B e C (giunti ad attrito); la trazione concomitante lo riduce');
 
   $('res-calc2').innerHTML =
-    box('α<sub>v</sub>', fp(r.av, 2), '') +
-    box('α<sub>b</sub>', fp(r.ab, 3), '') +
-    box('k₁', fp(r.k1, 2), '') +
-    box('F<sub>v,Ed</sub> per bullone', kN(r.FvEd), 'kN') +
-    box('F<sub>t,Ed</sub> per bullone', kN(r.FtEd), 'kN') +
-    box('γ<sub>M2</sub> / γ<sub>M3</sub>', fp(EC3.gM2, 2) + ' / ' + fp(r.gM3, 2), '');
+    box('α<sub>v</sub>', fp(r.av, 2), '',
+      'Coefficiente di resistenza a taglio (tab. 3.4)\nDipende dalla classe del bullone e da dove cade il piano di taglio\nEs. 0,6 per classi 4.6/5.6/8.8 nel filetto, 0,5 per la 10.9 nel filetto, 0,6 nel gambo liscio') +
+    box('α<sub>b</sub>', fp(r.ab, 3), '',
+      'Coefficiente di rifollamento nella direzione del carico\nα_b = min(α_d ; f_ub/f_u ; 1,0)\nα_d dipende da e₁ (bullone di estremità) o p₁ (bullone interno)') +
+    box('k₁', fp(r.k1, 2), '',
+      'Coefficiente di rifollamento perpendicolare al carico\nk₁ = min(2,8·e₂/d₀ − 1,7 ; 2,5) per bulloni di estremità, min(1,4·p₂/d₀ − 1,7 ; 2,5) per bulloni interni\nDistanze e₂/p₂ ridotte abbassano F_b,Rd') +
+    box('F<sub>v,Ed</sub> per bullone', kN(r.FvEd), 'kN',
+      'Taglio di progetto sul singolo bullone: F_v,Ed = F_Q/n\nIl carico esterno totale è ripartito equamente sugli n bulloni del giunto') +
+    box('F<sub>t,Ed</sub> per bullone', kN(r.FtEd), 'kN',
+      'Trazione di progetto sul singolo bullone: F_t,Ed = F_A/n\nIl carico esterno totale è ripartito equamente sugli n bulloni del giunto') +
+    box('γ<sub>M2</sub> / γ<sub>M3</sub>', fp(EC3.gM2, 2) + ' / ' + fp(r.gM3, 2), '',
+      'Coefficienti parziali di sicurezza EN 1993-1-8\nγ_M2: resistenza dei bulloni a rottura (taglio, trazione, rifollamento, punzonamento)\nγ_M3 (o γ_M3,ser in cat. B): resistenza allo scorrimento per attrito');
 
   const rows = [];
   if (r.attrito) {
