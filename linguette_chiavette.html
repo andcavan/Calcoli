@@ -210,27 +210,27 @@ body{display:flex;flex-direction:column;align-items:center;min-height:100vh;padd
 
     <div class="results-grid">
       <div class="result-box">
-        <div class="result-label">Larghezza</div>
+        <div class="result-label" data-tip="Larghezza b della linguetta\nSelezionata automaticamente da DIN 6885 A in base al diametro dell'albero\nDetermina l'area resistente a taglio (b·l') e la larghezza delle sedi su albero e mozzo">Larghezza</div>
         <div class="result-value"><span id="result-width">-</span><span class="result-unit">mm</span></div>
       </div>
       <div class="result-box">
-        <div class="result-label">Altezza</div>
+        <div class="result-label" data-tip="Altezza h della sezione della linguetta\nSelezionata automaticamente da DIN 6885 A in base al diametro dell'albero\nInsieme alla larghezza b definisce la sezione nominale b×h">Altezza</div>
         <div class="result-value"><span id="result-height">-</span><span class="result-unit">mm</span></div>
       </div>
       <div class="result-box">
-        <div class="result-label">Lunghezza</div>
+        <div class="result-label" data-tip="Lunghezza l della linguetta effettivamente utilizzata nel calcolo\nAuto: prima lunghezza standard DIN 6885 A ≥ lunghezza minima necessaria\nModificabile dalla tendina o in manuale (campo Lunghezza Linguetta)">Lunghezza</div>
         <div class="result-value"><span id="result-length">-</span><span class="result-unit">mm</span></div>
       </div>
       <div class="result-box">
-        <div class="result-label">Spessore</div>
+        <div class="result-label" data-tip="Spessore s della linguetta secondo tabella DIN 6885 A\nIn questa norma coincide numericamente con la profondità della sede sull'albero (t₁)\nValore di riferimento costruttivo per il disegno, non impiegato nelle verifiche di resistenza">Spessore</div>
         <div class="result-value"><span id="result-thickness">-</span><span class="result-unit">mm</span></div>
       </div>
       <div class="result-box">
-        <div class="result-label">Profondità Albero</div>
+        <div class="result-label" data-tip="Profondità della cava (sede) sull'albero t₁\nTolleranza normalizzata H13\nUsata nel calcolo della pressione di contatto sul fianco dell'albero: σ_c = 2T/(t₁·l'·d)">Profondità Albero</div>
         <div class="result-value"><span id="result-t1">-</span><span class="result-unit">mm</span></div>
       </div>
       <div class="result-box">
-        <div class="result-label">Profondità Mozzo</div>
+        <div class="result-label" data-tip="Profondità della cava (sede) sul mozzo t₂\nTolleranza normalizzata h13\nUsata nel calcolo della pressione di contatto sul fianco del mozzo: σ_c = 2T/(t₂·l'·d)">Profondità Mozzo</div>
         <div class="result-value"><span id="result-t2">-</span><span class="result-unit">mm</span></div>
       </div>
     </div>

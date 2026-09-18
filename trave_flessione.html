@@ -97,6 +97,12 @@ canvas{display:block;width:100%;height:auto}
 .chip.ok{background:rgba(62,207,142,.12);border:1px solid rgba(62,207,142,.3);color:var(--green)}
 .chip.warn{background:rgba(255,140,66,.12);border:1px solid rgba(255,140,66,.3);color:var(--orange)}
 .chip.fail{background:rgba(246,109,109,.12);border:1px solid rgba(246,109,109,.35);color:var(--red)}
+
+[data-tip]{position:relative;cursor:default}
+@keyframes tipIn{from{opacity:0}to{opacity:1}}
+[data-tip]:hover::after{content:attr(data-tip);position:absolute;bottom:calc(100% + 7px);left:0;background:#1a1e28;border:1px solid rgba(79,195,247,.25);color:#e2e8f4;font-size:10px;padding:7px 11px;border-radius:6px;white-space:pre-wrap;max-width:280px;min-width:180px;z-index:999;line-height:1.6;pointer-events:none;font-family:var(--mono);text-align:left;box-shadow:0 4px 20px rgba(0,0,0,.5);animation:tipIn .12s ease .6s both}
+[data-tip]:hover::before{content:'';position:absolute;bottom:calc(100% + 1px);left:20px;border:5px solid transparent;border-top-color:#1a1e28;z-index:1000;pointer-events:none;animation:tipIn .12s ease .6s both}
+[data-tip].tr:hover::after{left:auto;right:0}
 </style>
 </head>
 <body>
@@ -119,7 +125,9 @@ canvas{display:block;width:100%;height:auto}
   <div class="section-block">
     <div class="stitle">Sezione</div>
     <div class="field">
-      <label>Tipo sezione</label>
+      <label data-tip="Forma della sezione trasversale della trave.
+Determina le formule di area A, momento d'inerzia I e modulo di resistenza W.
+Scegli il profilo che meglio rappresenta la sezione reale (piena, tubolare o profilato).">Tipo sezione</label>
       <select id="sec-type" onchange="onSectionChange()">
         <option value="tondo">Tondo (pieno)</option>
         <option value="rettangolare">Rettangolare</option>
@@ -136,100 +144,154 @@ canvas{display:block;width:100%;height:auto}
     </div>
 
     <div class="dim-panel active" id="dim-tondo">
-      <div class="field"><label>Diametro d <span style="color:var(--text3)">mm</span></label>
+      <div class="field"><label data-tip="Diametro della sezione piena circolare.
+Unità: mm
+Usato per calcolare A = πd²/4, I = πd⁴/64, W = πd³/32.">Diametro d <span style="color:var(--text3)">mm</span></label>
         <input type="number" id="d-d" placeholder="es. 50" min="0" step="1"></div>
     </div>
     <div class="dim-panel" id="dim-rettangolare">
       <div class="frow">
-        <div class="field"><label>Larghezza b <span style="color:var(--text3)">mm</span></label>
+        <div class="field"><label data-tip="Base della sezione rettangolare, parallela all'asse neutro di flessione.
+Unità: mm
+A = b·h; contribuisce all'area ma non all'inerzia principale I = b·h³/12.">Larghezza b <span style="color:var(--text3)">mm</span></label>
           <input type="number" id="d-b" placeholder="es. 60" min="0" step="1"></div>
-        <div class="field"><label>Altezza h <span style="color:var(--text3)">mm</span></label>
+        <div class="field"><label data-tip="Altezza della sezione rettangolare, nella direzione del carico (asse forte).
+Unità: mm
+I = b·h³/12, W = b·h²/6 — la rigidezza flessionale cresce con il cubo di h.">Altezza h <span style="color:var(--text3)">mm</span></label>
           <input type="number" id="d-h" placeholder="es. 100" min="0" step="1"></div>
       </div>
     </div>
     <div class="dim-panel" id="dim-quadrata">
-      <div class="field"><label>Lato a <span style="color:var(--text3)">mm</span></label>
+      <div class="field"><label data-tip="Lato della sezione piena quadrata.
+Unità: mm
+A = a², I = a⁴/12, W = a³/6.">Lato a <span style="color:var(--text3)">mm</span></label>
         <input type="number" id="d-a" placeholder="es. 80" min="0" step="1"></div>
     </div>
     <div class="dim-panel" id="dim-tubo_tondo">
       <div class="frow">
-        <div class="field"><label>Ø esterno D <span style="color:var(--text3)">mm</span></label>
+        <div class="field"><label data-tip="Diametro esterno del tubo circolare.
+Unità: mm
+Con lo spessore t definisce il diametro interno d = D − 2t.">Ø esterno D <span style="color:var(--text3)">mm</span></label>
           <input type="number" id="d-D" placeholder="es. 60" min="0" step="1"></div>
-        <div class="field"><label>Spessore t <span style="color:var(--text3)">mm</span></label>
+        <div class="field"><label data-tip="Spessore di parete del tubo circolare.
+Unità: mm
+Range tipico: 1 ÷ 10 mm. Deve essere minore di D/2 perché d = D − 2t sia positivo.">Spessore t <span style="color:var(--text3)">mm</span></label>
           <input type="number" id="d-t_td" placeholder="es. 4" min="0" step="0.5"></div>
       </div>
     </div>
     <div class="dim-panel" id="dim-tubo_rett">
       <div class="frow">
-        <div class="field"><label>B esterno <span style="color:var(--text3)">mm</span></label>
+        <div class="field"><label data-tip="Larghezza esterna del profilo tubolare rettangolare (lato orizzontale).
+Unità: mm
+Con lo spessore t definisce la larghezza interna b = B − 2t.">B esterno <span style="color:var(--text3)">mm</span></label>
           <input type="number" id="d-Br" placeholder="es. 80" min="0" step="1"></div>
-        <div class="field"><label>H esterno <span style="color:var(--text3)">mm</span></label>
+        <div class="field"><label data-tip="Altezza esterna del profilo tubolare rettangolare, nella direzione del carico (asse forte).
+Unità: mm
+Con lo spessore t definisce l'altezza interna h = H − 2t; governa I e W.">H esterno <span style="color:var(--text3)">mm</span></label>
           <input type="number" id="d-Hr" placeholder="es. 120" min="0" step="1"></div>
       </div>
-      <div class="field"><label>Spessore t <span style="color:var(--text3)">mm</span></label>
+      <div class="field"><label data-tip="Spessore di parete del profilo tubolare rettangolare, costante su tutti i lati.
+Unità: mm
+Deve essere minore della metà del lato minore (B o H).">Spessore t <span style="color:var(--text3)">mm</span></label>
         <input type="number" id="d-t_tr" placeholder="es. 5" min="0" step="0.5"></div>
     </div>
     <div class="dim-panel" id="dim-tubo_quad">
       <div class="frow">
-        <div class="field"><label>Lato est. A <span style="color:var(--text3)">mm</span></label>
+        <div class="field"><label data-tip="Lato esterno del profilo tubolare quadrato.
+Unità: mm
+Con lo spessore t definisce il lato interno s = A − 2t.">Lato est. A <span style="color:var(--text3)">mm</span></label>
           <input type="number" id="d-Aq" placeholder="es. 100" min="0" step="1"></div>
-        <div class="field"><label>Spessore t <span style="color:var(--text3)">mm</span></label>
+        <div class="field"><label data-tip="Spessore di parete del profilo tubolare quadrato, costante su tutti i lati.
+Unità: mm
+Deve essere minore della metà del lato esterno A.">Spessore t <span style="color:var(--text3)">mm</span></label>
           <input type="number" id="d-t_tq" placeholder="es. 5" min="0" step="0.5"></div>
       </div>
     </div>
     <div class="dim-panel" id="dim-esagonale">
-      <div class="field"><label>Travers. piatte AF <span style="color:var(--text3)">mm</span></label>
+      <div class="field"><label data-tip="Apertura di chiave del profilo esagonale (distanza tra due lati piatti opposti).
+Unità: mm
+Da AF si ricava il lato a = AF/√3, usato per calcolare A, I e W.">Travers. piatte AF <span style="color:var(--text3)">mm</span></label>
         <input type="number" id="d-s" placeholder="es. 41" min="0" step="1"></div>
     </div>
     <div class="dim-panel" id="dim-L">
       <div class="frow">
-        <div class="field"><label>Ala b1 <span style="color:var(--text3)">mm</span></label>
+        <div class="field"><label data-tip="Lunghezza della prima ala (verticale) dell'angolare a L.
+Unità: mm
+Deve essere maggiore dello spessore t.">Ala b1 <span style="color:var(--text3)">mm</span></label>
           <input type="number" id="d-Lb1" placeholder="es. 80" min="0" step="1"></div>
-        <div class="field"><label>Ala b2 <span style="color:var(--text3)">mm</span></label>
+        <div class="field"><label data-tip="Lunghezza della seconda ala (orizzontale) dell'angolare a L.
+Unità: mm
+Deve essere maggiore dello spessore t; contribuisce all'area resistente a taglio Av = b2·t.">Ala b2 <span style="color:var(--text3)">mm</span></label>
           <input type="number" id="d-Lb2" placeholder="es. 80" min="0" step="1"></div>
       </div>
-      <div class="field"><label>Spessore t <span style="color:var(--text3)">mm</span></label>
+      <div class="field"><label data-tip="Spessore costante delle due ali del profilo a L.
+Unità: mm
+Range tipico: 3 ÷ 15 mm.">Spessore t <span style="color:var(--text3)">mm</span></label>
         <input type="number" id="d-Lt" placeholder="es. 8" min="0" step="1"></div>
     </div>
     <div class="dim-panel" id="dim-T">
       <div class="frow">
-        <div class="field"><label>Ala bf <span style="color:var(--text3)">mm</span></label>
+        <div class="field"><label data-tip="Larghezza della flangia (ala superiore) del profilo a T.
+Unità: mm
+Contribuisce all'area di flangia Af = bf·tf e allo spostamento del baricentro yc.">Ala bf <span style="color:var(--text3)">mm</span></label>
           <input type="number" id="d-Tbf" placeholder="es. 120" min="0" step="1"></div>
-        <div class="field"><label>Sp. flangia tf <span style="color:var(--text3)">mm</span></label>
+        <div class="field"><label data-tip="Spessore della flangia del profilo a T.
+Unità: mm
+Con bf definisce l'area di flangia Af = bf·tf.">Sp. flangia tf <span style="color:var(--text3)">mm</span></label>
           <input type="number" id="d-Ttf" placeholder="es. 12" min="0" step="1"></div>
       </div>
       <div class="frow">
-        <div class="field"><label>Anima hw <span style="color:var(--text3)">mm</span></label>
+        <div class="field"><label data-tip="Altezza dell'anima (gambo verticale) del profilo a T, esclusa la flangia.
+Unità: mm
+Usata per l'area d'anima Aw = tw·hw e per l'area resistente a taglio Av = hw·tw.">Anima hw <span style="color:var(--text3)">mm</span></label>
           <input type="number" id="d-Thw" placeholder="es. 100" min="0" step="1"></div>
-        <div class="field"><label>Sp. anima tw <span style="color:var(--text3)">mm</span></label>
+        <div class="field"><label data-tip="Spessore dell'anima del profilo a T.
+Unità: mm
+Con hw definisce l'area d'anima Aw = tw·hw, il principale contributo alla resistenza a taglio.">Sp. anima tw <span style="color:var(--text3)">mm</span></label>
           <input type="number" id="d-Ttw" placeholder="es. 8" min="0" step="1"></div>
       </div>
     </div>
     <div class="dim-panel" id="dim-H">
       <div class="frow">
-        <div class="field"><label>Ala bf <span style="color:var(--text3)">mm</span></label>
+        <div class="field"><label data-tip="Larghezza delle ali (flange) del profilo H/I.
+Unità: mm
+Contribuisce all'area di ciascuna flangia Af = bf·tf e all'inerzia I.">Ala bf <span style="color:var(--text3)">mm</span></label>
           <input type="number" id="d-Hbf" placeholder="es. 200" min="0" step="1"></div>
-        <div class="field"><label>Altezza H <span style="color:var(--text3)">mm</span></label>
+        <div class="field"><label data-tip="Altezza totale del profilo H/I, dal bordo esterno di una flangia all'altra.
+Unità: mm
+Con lo spessore delle flange tf definisce l'altezza dell'anima hw = H − 2tf.">Altezza H <span style="color:var(--text3)">mm</span></label>
           <input type="number" id="d-HH" placeholder="es. 200" min="0" step="1"></div>
       </div>
       <div class="frow">
-        <div class="field"><label>Sp. flangia tf <span style="color:var(--text3)">mm</span></label>
+        <div class="field"><label data-tip="Spessore delle flange (ali superiore e inferiore) del profilo H/I.
+Unità: mm
+Influisce fortemente su I e W poiché è posizionato alla massima distanza dall'asse neutro.">Sp. flangia tf <span style="color:var(--text3)">mm</span></label>
           <input type="number" id="d-Htf" placeholder="es. 15" min="0" step="1"></div>
-        <div class="field"><label>Sp. anima tw <span style="color:var(--text3)">mm</span></label>
+        <div class="field"><label data-tip="Spessore dell'anima del profilo H/I.
+Unità: mm
+Definisce l'area resistente a taglio Av = H·tw secondo EN 1993-1-1.">Sp. anima tw <span style="color:var(--text3)">mm</span></label>
           <input type="number" id="d-Htw" placeholder="es. 9" min="0" step="1"></div>
       </div>
     </div>
     <div class="dim-panel" id="dim-U">
       <div class="frow">
-        <div class="field"><label>Largh. b <span style="color:var(--text3)">mm</span></label>
+        <div class="field"><label data-tip="Larghezza totale del profilo a U (C), dal dorso all'estremità delle ali.
+Unità: mm
+Deve essere maggiore dello spessore d'anima tw.">Largh. b <span style="color:var(--text3)">mm</span></label>
           <input type="number" id="d-Ub" placeholder="es. 80" min="0" step="1"></div>
-        <div class="field"><label>Altezza H <span style="color:var(--text3)">mm</span></label>
+        <div class="field"><label data-tip="Altezza totale del profilo a U.
+Unità: mm
+Con lo spessore delle flange tf definisce l'altezza dell'anima hw = H − 2tf.">Altezza H <span style="color:var(--text3)">mm</span></label>
           <input type="number" id="d-UH" placeholder="es. 180" min="0" step="1"></div>
       </div>
       <div class="frow">
-        <div class="field"><label>Sp. flangia tf <span style="color:var(--text3)">mm</span></label>
+        <div class="field"><label data-tip="Spessore delle flange (ali superiore e inferiore) del profilo a U.
+Unità: mm
+Influisce su I e W come nei profili H/I.">Sp. flangia tf <span style="color:var(--text3)">mm</span></label>
           <input type="number" id="d-Utf" placeholder="es. 11" min="0" step="1"></div>
-        <div class="field"><label>Sp. anima tw <span style="color:var(--text3)">mm</span></label>
+        <div class="field"><label data-tip="Spessore dell'anima (dorso) del profilo a U.
+Unità: mm
+Definisce l'area resistente a taglio Av = H·tw.">Sp. anima tw <span style="color:var(--text3)">mm</span></label>
           <input type="number" id="d-Utw" placeholder="es. 7" min="0" step="1"></div>
       </div>
     </div>
@@ -239,7 +301,8 @@ canvas{display:block;width:100%;height:auto}
   <div class="section-block">
     <div class="stitle">Materiale</div>
     <div class="field">
-      <label>Materiale</label>
+      <label data-tip="Materiale della trave.
+Imposta automaticamente modulo elastico E e tensione di snervamento fy nei campi sottostanti (modificabili scegliendo Personalizzato).">Materiale</label>
       <select id="mat-sel" onchange="onMatChange()">
         <option value="S235">Acciaio S235 — fy 235 MPa</option>
         <option value="S275">Acciaio S275 — fy 275 MPa</option>
@@ -251,9 +314,13 @@ canvas{display:block;width:100%;height:auto}
       </select>
     </div>
     <div class="frow">
-      <div class="field"><label>E <span style="color:var(--text3)">MPa</span></label>
+      <div class="field"><label data-tip="Modulo elastico (di Young) del materiale.
+Unità: MPa
+Acciaio ≈ 210000 MPa, alluminio ≈ 70000 MPa. Governa la rigidezza flessionale EI e quindi la freccia.">E <span style="color:var(--text3)">MPa</span></label>
         <input type="number" id="mat-E" value="210000" step="1000"></div>
-      <div class="field"><label>fy <span style="color:var(--text3)">MPa</span></label>
+      <div class="field"><label data-tip="Tensione di snervamento del materiale.
+Unità: MPa
+Usata per il coefficiente di sicurezza a flessione (CS = fy/σ_max) e per il limite a taglio fy/√3.">fy <span style="color:var(--text3)">MPa</span></label>
         <input type="number" id="mat-fy" value="355" step="1"></div>
     </div>
   </div>
@@ -261,10 +328,13 @@ canvas{display:block;width:100%;height:auto}
   <!-- GEOMETRIA TRAVE -->
   <div class="section-block">
     <div class="stitle">Geometria e Vincoli</div>
-    <div class="field"><label>Lunghezza L <span style="color:var(--text3)">mm</span></label>
+    <div class="field"><label data-tip="Lunghezza totale della trave tra i due vincoli.
+Unità: mm
+Range tipico: 100 ÷ 20000 mm. Base per la posizione dei carichi e per il limite di freccia L/300.">Lunghezza L <span style="color:var(--text3)">mm</span></label>
       <input type="number" id="beam-L" placeholder="es. 3000" min="1" step="10"></div>
     <div class="field">
-      <label>Tipo vincolo</label>
+      <label data-tip="Schema di vincolo agli estremi della trave.
+Appoggio-Appoggio e Mensola sono isostatici; Incastro-Appoggio e Incastro-Incastro sono iperstatici, risolti col metodo degli elementi finiti (FEM).">Tipo vincolo</label>
       <select id="bc-type">
         <option value="ss">Appoggio — Appoggio (trave appoggiata)</option>
         <option value="cant">Incastro — Libero (mensola)</option>
@@ -392,9 +462,13 @@ function addPointLoad(){
   div.className = 'load-row';
   div.id = 'pl-'+id;
   div.innerHTML = `
-    <div class="field"><label>Posiz. x [mm]</label>
+    <div class="field"><label data-tip="Posizione del carico concentrato lungo l'asse della trave, misurata dal vincolo di sinistra (x=0).
+Unità: mm
+Deve essere compresa tra 0 e L.">Posiz. x [mm]</label>
       <input type="number" id="pl-x-${id}" placeholder="x" min="0" step="1" oninput="autoCalc()"></div>
-    <div class="field"><label>Forza F [N]</label>
+    <div class="field"><label data-tip="Intensità della forza concentrata applicata.
+Unità: N
+Positivo = carico verso il basso, negativo = verso l'alto.">Forza F [N]</label>
       <input type="number" id="pl-f-${id}" placeholder="F" step="1" oninput="autoCalc()"></div>
     <button class="rm-btn" onclick="removeLoad('pl-${id}')">×</button>`;
   document.getElementById('pt-loads-list').appendChild(div);
@@ -406,11 +480,16 @@ function addDistLoad(){
   div.className = 'load-row';
   div.id = 'dl-'+id;
   div.innerHTML = `
-    <div class="field"><label>Da x₁ [mm]</label>
+    <div class="field"><label data-tip="Ascissa iniziale del tratto di carico distribuito, misurata dal vincolo di sinistra (x=0).
+Unità: mm">Da x₁ [mm]</label>
       <input type="number" id="dl-x1-${id}" placeholder="x₁" min="0" step="1" oninput="autoCalc()"></div>
-    <div class="field"><label>A x₂ [mm]</label>
+    <div class="field"><label data-tip="Ascissa finale del tratto di carico distribuito.
+Unità: mm
+Deve essere maggiore di x₁.">A x₂ [mm]</label>
       <input type="number" id="dl-x2-${id}" placeholder="x₂" min="0" step="1" oninput="autoCalc()"></div>
-    <div class="field"><label>q [N/mm]</label>
+    <div class="field"><label data-tip="Intensità del carico distribuito per unità di lunghezza, costante nel tratto x₁–x₂.
+Unità: N/mm
+Positivo = verso il basso, negativo = verso l'alto.">q [N/mm]</label>
       <input type="number" id="dl-q-${id}" placeholder="q" step="0.01" oninput="autoCalc()"></div>
     <button class="rm-btn" onclick="removeLoad('dl-${id}')">×</button>`;
   document.getElementById('dist-loads-list').appendChild(div);
@@ -936,18 +1015,18 @@ function autoCalc(){
 
   // Section props
   document.getElementById('sec-props').innerHTML=
-    rcCard('Area A',fmt(A,1),'mm²','accent')+
-    rcCard('Inerzia I',A>0?(I>=1e6?fmt(I/1e4,1)+' cm⁴':fmt(I,0)+' mm⁴'):'—','','accent')+
+    rcCard('Area A',fmt(A,1),'mm²','accent','Area della sezione trasversale')+
+    rcCard('Inerzia I',A>0?(I>=1e6?fmt(I/1e4,1)+' cm⁴':fmt(I,0)+' mm⁴'):'—','','accent','Rigidezza flessionale EI e freccia dipendono da I')+
     rcCard('Modulo W',W>=1e3?fmt(W/1e3,2)+' cm³':fmt(W,1)+' mm³','','accent',desc)+
-    rcCard('Area taglio A<sub>v</sub>',fmt(Av,1),'mm²','accent');
+    rcCard('Area taglio A<sub>v</sub>',fmt(Av,1),'mm²','accent','Area efficace per la verifica a taglio: τ_max = V_max / A_v');
 
   // Reactions
   const bcLabel={'ss':'Appoggio–Appoggio','cant':'Mensola','fp':'Incastro–Appoggio','ff':'Incastro–Incastro'};
-  let rxHtml=rcCard('Reazione A',fmtN(RA),'','green')+rcCard('Reazione B',fmtN(RB),'','green');
+  let rxHtml=rcCard('Reazione A',fmtN(RA),'','green','Reazione verticale nel vincolo di sinistra (x = 0)')+rcCard('Reazione B',fmtN(RB),'','green','Reazione verticale nel vincolo di destra (x = L)');
   if(bcType==='cant'||bcType==='fp'||bcType==='ff')
-    rxHtml+=rcCard('Momento A',fmtM(MA),'','gold');
+    rxHtml+=rcCard('Momento A',fmtM(MA),'','gold','Momento di incastro nel vincolo di sinistra');
   if(bcType==='ff')
-    rxHtml+=rcCard('Momento B',fmtM(MB),'','gold');
+    rxHtml+=rcCard('Momento B',fmtM(MB),'','gold','Momento di incastro nel vincolo di destra');
   document.getElementById('reactions').innerHTML=rxHtml;
 
   // Status
@@ -964,8 +1043,8 @@ function autoCalc(){
   const L_300=L/300, L_500=L/500;
   const deflOk=dmax<=L_300;
   document.getElementById('max-vals').innerHTML=
-    rcCard('M<sub>max</sub>',fmtM(Mmax),'','gold')+
-    rcCard('V<sub>max</sub>',fmtN(Vmax),'')+
+    rcCard('M<sub>max</sub>',fmtM(Mmax),'','gold','Momento flettente massimo lungo la trave, punto critico per la verifica a resistenza (σ_max = M_max / W)')+
+    rcCard('V<sub>max</sub>',fmtN(Vmax),'','','Taglio massimo lungo la trave, usato per la verifica a taglio (τ_max = V_max / A_v)')+
     rcCard('τ<sub>max</sub>',fmt(tau_max,1),'MPa',
            (isFinite(CS_tau)&&CS_tau<1)?'red':(CS_tau<1.5?'orange':'green'),
            `A_v = ${fmt(Av,0)} mm² · limite fy/√3 = ${fmt(tau_lim,0)} MPa`)+

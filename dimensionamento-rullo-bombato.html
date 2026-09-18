@@ -138,7 +138,7 @@ footer{margin-top:34px;font-size:10px;color:var(--dim);letter-spacing:.04em;text
   </div>
 
   <div class="field">
-    <div class="fhdr"><span class="flabel">Forma della bombatura</span></div>
+    <div class="fhdr"><span class="flabel" data-tip="Modello geometrico usato per calcolare il profilo del rullo. 'Raggio continuo' genera un arco unico (vera schiena d'asino); 'Tronco-conica' genera un tratto centrale piatto più due coni. Non cambia la bombatura h, solo come questa è distribuita lungo la faccia.">Forma della bombatura</span></div>
     <div class="seg seg-2">
       <button class="seg-btn on" id="seg-radius" onclick="setShape('radius')" data-tip="Un unico arco continuo da bordo a bordo, tipico dei rulli torniti al banco o rettificati: la vera 'schiena d'asino'.">Raggio continuo</button>
       <button class="seg-btn" id="seg-taper" onclick="setShape('taper')" data-tip="Tratto centrale piatto (b/2) con due coni alle estremità: più semplice da realizzare al tornio, standard sui tamburi di nastri leggeri.">Tronco-conica</button>
@@ -222,11 +222,11 @@ footer{margin-top:34px;font-size:10px;color:var(--dim);letter-spacing:.04em;text
 
   <div class="frow2 hidden" id="shaftTubeFields">
     <div class="field">
-      <div class="fhdr"><span class="flabel">Diametro esterno  da</span><span class="funit">mm</span></div>
+      <div class="fhdr"><span class="flabel" data-tip="Diametro esterno dell'albero tubolare nella sezione più sollecitata (centro campata). Insieme al diametro interno definisce il momento d'inerzia della sezione cava: I = π(da⁴−di⁴)/64.">Diametro esterno  da</span><span class="funit">mm</span></div>
       <input type="number" id="dOut" class="numinput" value="60" min="1" step="1" oninput="recalcAll()">
     </div>
     <div class="field">
-      <div class="fhdr"><span class="flabel">Diametro interno  di</span><span class="funit">mm</span></div>
+      <div class="fhdr"><span class="flabel" data-tip="Diametro del foro passante dell'albero tubolare. Deve essere minore del diametro esterno da; più è grande (parete sottile), minore è la rigidezza flessionale a parità di da.">Diametro interno  di</span><span class="funit">mm</span></div>
       <input type="number" id="dIn" class="numinput" value="50" min="0" step="1" oninput="recalcAll()">
     </div>
   </div>
@@ -571,22 +571,22 @@ footer{margin-top:34px;font-size:10px;color:var(--dim);letter-spacing:.04em;text
     const box = $('readouts');
     const De = Dc - 2*h;
     let items = [
-      {k:'Larghezza rullo b', v: fmt(b,1)+' mm'},
-      {k:'Diametro al centro', v: fmt(Dc,1)+' mm'},
-      {k:'Diametro ai bordi', v: fmt(De,2)+' mm'},
-      {k:'Bombatura h', v: fmt(h,2)+' mm', accent:true},
+      {k:'Larghezza rullo b', v: fmt(b,1)+' mm', tip:'Larghezza effettiva della faccia del rullo, usata per disegnare il profilo. In AUTO vale b₀ × 1.1; se impostata a mano, sostituisce quel valore in tutti i calcoli successivi.'},
+      {k:'Diametro al centro', v: fmt(Dc,1)+' mm', tip:'Coincide con il valore D inserito: il diametro massimo del rullo, nel punto più alto della bombatura (il ventre).'},
+      {k:'Diametro ai bordi', v: fmt(De,2)+' mm', tip:'Diametro minimo alle due estremità della faccia: De = D − 2h. È il diametro effettivamente a contatto col nastro quando questo è spostato tutto su un lato.'},
+      {k:'Bombatura h', v: fmt(h,2)+' mm', accent:true, tip:'Differenza di raggio tra centro e bordo del rullo effettivamente usata nel calcolo (valore di tabella o inserito a mano). Guida l\'intera geometria del profilo qui sotto.'},
     ];
     if(shape==='radius'){
-      items.push({k:'Raggio di bombatura R', v: fmt(R,0)+' mm', accent:true});
+      items.push({k:'Raggio di bombatura R', v: fmt(R,0)+' mm', accent:true, tip:'Raggio dell\'arco unico che genera il profilo a raggio continuo: R = (h² + (b/2)²) / (2h). Valori di R molto grandi corrispondono a bombature dolci, R piccoli a bombature marcate.'});
     } else {
-      items.push({k:'Tratto cilindrico bc', v: fmt(bc,1)+' mm'});
+      items.push({k:'Tratto cilindrico bc', v: fmt(bc,1)+' mm', tip:'Lunghezza del tratto centrale a diametro costante nella forma tronco-conica, convenzionalmente pari a b/2. I due coni laterali assorbono l\'intera bombatura h.'});
     }
-    items.push({k:'h come % di b₀', v: fmt(pct,2)+' %'});
+    items.push({k:'h come % di b₀', v: fmt(pct,2)+' %', tip:'Bombatura h espressa come percentuale della larghezza utile nastro b₀. La forcella pratica raccomandata è 0.3–2%: fuori da questo intervallo rivedere D, struttura nastro o il valore di h.'});
     box.innerHTML='';
     items.forEach(it=>{
       const d = document.createElement('div');
       d.className = 'result-box' + (it.accent? ' accent':'');
-      d.innerHTML = `<div class="result-label">${it.k}</div><div class="result-value">${it.v}</div>`;
+      d.innerHTML = `<div class="result-label" data-tip="${it.tip}">${it.k}</div><div class="result-value">${it.v}</div>`;
       box.appendChild(d);
     });
   }
@@ -679,9 +679,9 @@ footer{margin-top:34px;font-size:10px;color:var(--dim);letter-spacing:.04em;text
     const limit = 0.5*h;
     const ok = yTr <= limit;
     grid.innerHTML = `
-      <div class="verify-item"><span class="verify-label">Forza attiva FR</span><span class="verify-value">${fmt(FR,1)}<span class="verify-unit">N</span></span></div>
-      <div class="verify-item"><span class="verify-label">Freccia stimata y</span><span class="verify-value">${fmt(yTr,3)}<span class="verify-unit">mm</span></span><span class="verify-status ${ok?'ok':'warn'}">${ok?'OK':'ALTA'}</span></div>
-      <div class="verify-item"><span class="verify-label">Limite (0.5 × h)</span><span class="verify-value">${fmt(limit,3)}<span class="verify-unit">mm</span></span></div>
+      <div class="verify-item"><span class="verify-label" data-tip="Carico radiale complessivo applicato all'albero: inserito direttamente (FR manuale) oppure calcolato da tensione nastro, massa rullo e angolo di avvolgimento.">Forza attiva FR</span><span class="verify-value">${fmt(FR,1)}<span class="verify-unit">N</span></span></div>
+      <div class="verify-item"><span class="verify-label" data-tip="Inflessione elastica dell'albero a centro campata sotto il carico FR, calcolata con la formula della trave su due appoggi: y = FR·l³ / (48·E·I). Cresce con il cubo dell'interasse cuscinetti.">Freccia stimata y</span><span class="verify-value">${fmt(yTr,3)}<span class="verify-unit">mm</span></span><span class="verify-status ${ok?'ok':'warn'}">${ok?'OK':'ALTA'}</span></div>
+      <div class="verify-item"><span class="verify-label" data-tip="Soglia di accettabilità adottata: metà della bombatura h. Se la freccia dell'albero supera questo valore, la flessione vanifica in gran parte l'effetto centrante della bombatura.">Limite (0.5 × h)</span><span class="verify-value">${fmt(limit,3)}<span class="verify-unit">mm</span></span></div>
     `;
     grid.innerHTML += ok
       ? '<div class="info-box">Entro il limite consigliato: l\'albero è sufficientemente rigido per la bombatura scelta.</div>'

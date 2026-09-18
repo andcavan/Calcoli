@@ -164,7 +164,7 @@ canvas{display:block;max-width:100%}
         </div>
       </div>
       <div class="field">
-        <label>Tipo terminali</label>
+        <label data-tip="Geometria delle spire terminali\nDetermina spire totali n_tot, lunghezza a blocco L_c e passo attivo p\nChiuse: le spire terminali sono accostate alle attive (miglior appoggio)\nRettificate: estremità piane, appoggio ortogonale al filo migliore">Tipo terminali</label>
         <select id="c-ends">
           <option value="cg">Chiuse e rettificate (closed &amp; ground)</option>
           <option value="cn">Chiuse non rettificate</option>
@@ -186,7 +186,7 @@ canvas{display:block;max-width:100%}
     <div class="section">
       <div class="section-title">Materiale</div>
       <div class="field">
-        <label>Materiale</label>
+        <label data-tip="Materiale del filo — selezionandolo si imposta automaticamente G\nInfluenza rigidità k, tensioni ammissibili e resistenza a fatica\nAcciai da molle per uso generale: SH/DH, VD (Cr-V) per fatica elevata\nInox per ambienti corrosivi, leghe di rame per bassa conducibilità/non magnetiche">Materiale</label>
         <select id="c-mat" onchange="updateMat('c')">
           <option value="sh">Acciaio SH/DH – EN 10270-1 (G=81500 MPa)</option>
           <option value="vd">Cr-V acciaio VD/VDSiCr – EN 10270-2 (G=81500 MPa)</option>
@@ -212,7 +212,7 @@ canvas{display:block;max-width:100%}
     <div class="section">
       <div class="section-title">Condizioni di lavoro</div>
       <div class="field">
-        <label>Freccia/forza nota tramite</label>
+        <label data-tip="Sceglie il dato noto per le due condizioni di lavoro\nFrecce → la calcolatrice ricava le forze con F = k·f\nForze → la calcolatrice ricava le frecce con f = F/k">Freccia/forza nota tramite</label>
         <select id="c-input-mode" onchange="toggleInputMode('c')">
           <option value="f">Frecce di lavoro f₁, f₂ (mm)</option>
           <option value="F">Forze di lavoro F₁, F₂ (N)</option>
@@ -253,26 +253,26 @@ canvas{display:block;max-width:100%}
       <div class="section-title">Geometria filo e avvolgimento</div>
       <div class="field-row">
         <div class="field">
-          <label>Diametro filo d <span class="unit">mm</span></label>
+          <label data-tip="Diametro del filo (sezione circolare)\nUnità: mm\nRange tipico: 0.3 ÷ 10 mm\nRapporto d'indice C = D/d (tipico 4÷12)">Diametro filo d <span class="unit">mm</span></label>
           <input type="number" id="t-d" placeholder="es. 2.0" step="0.1" min="0">
         </div>
         <div class="field">
-          <label>Diametro medio D <span class="unit">mm</span></label>
+          <label data-tip="Diametro medio della molla (linea di centro del filo)\nUnità: mm\nD_medio = D_esterno - d = D_interno + d\nRange tipico: 5 ÷ 100 mm">Diametro medio D <span class="unit">mm</span></label>
           <input type="number" id="t-D" placeholder="es. 20" step="0.5" min="0">
         </div>
       </div>
       <div class="field-row">
         <div class="field">
-          <label>Lunghezza libera L₀ <span class="unit">mm</span></label>
+          <label data-tip="Lunghezza del corpo della molla a riposo, occhielli esclusi\nUnità: mm\nCon avvolgimento a spire accostate: L₀ ≈ d × n\nLa lunghezza totale con i ganci si ottiene sommando i due Lhook">Lunghezza libera L₀ <span class="unit">mm</span></label>
           <input type="number" id="t-L0" placeholder="es. 80" step="0.5" min="0">
         </div>
         <div class="field">
-          <label>Spire attive n</label>
+          <label data-tip="Numero di spire attive del corpo (spire a contatto, elasticamente deformate)\nAdimensionale\nDetermina rigidità k e lunghezza del corpo Lbody = d × n\nRange tipico: 5 ÷ 40 spire">Spire attive n</label>
           <input type="number" id="t-n" placeholder="es. 10" step="0.5" min="0">
         </div>
       </div>
       <div class="field">
-        <label>Tipo gancio</label>
+        <label data-tip="Forma dell'occhiello/gancio alle estremità — incide sulla lunghezza totale e sulla tensione flessionale/torsionale localizzata nel gancio (punto spesso critico a fatica)\nSemicircolare: gancio corto, concentrazione di tensione moderata\nCompleto: gancio più lungo, minor concentrazione\nGambe estese: nessun raggio di curvatura, montaggio con perni">Tipo gancio</label>
         <select id="t-hook">
           <option value="half">Occhiello semicircolare (half loop)</option>
           <option value="full">Occhiello completo (full loop)</option>
@@ -284,7 +284,7 @@ canvas{display:block;max-width:100%}
     <div class="section">
       <div class="section-title">Materiale</div>
       <div class="field">
-        <label>Materiale</label>
+        <label data-tip="Materiale del filo — selezionandolo si imposta automaticamente G\nInfluenza rigidità k, tensione iniziale ottenibile e resistenza a fatica del gancio">Materiale</label>
         <select id="t-mat" onchange="updateMat('t')">
           <option value="sh">Acciaio SH/DH – EN 10270-1 (G=81500 MPa)</option>
           <option value="vd">Cr-V acciaio VD/VDSiCr – EN 10270-2 (G=81500 MPa)</option>
@@ -297,11 +297,11 @@ canvas{display:block;max-width:100%}
       </div>
       <div class="field-row">
         <div class="field">
-          <label>G <span class="unit">MPa</span></label>
+          <label data-tip="Modulo di rigidità a taglio (modulo di scorrimento)\nUnità: MPa\nAcciaio SH/VD: 81500 MPa, Inox: 73000 MPa\nBronzo fosforoso: 40000 MPa, Ottone: 37000 MPa">G <span class="unit">MPa</span></label>
           <input type="number" id="t-G" value="81500" step="100">
         </div>
         <div class="field">
-          <label>Rm (stima) <span class="unit">MPa</span></label>
+          <label data-tip="Resistenza a trazione nominale del filo — usata per calcolare la tensione ammissibile\nUnità: MPa\nVaria con diametro e materiale (UNI EN 13906)\nAcciaio SH ø2mm: ~1900 MPa, ø5mm: ~1600 MPa">Rm (stima) <span class="unit">MPa</span></label>
           <input type="number" id="t-Rm" placeholder="es. 1700" step="10">
         </div>
       </div>
@@ -310,11 +310,11 @@ canvas{display:block;max-width:100%}
     <div class="section">
       <div class="section-title">Condizioni di lavoro</div>
       <div class="field">
-        <label>Tensione iniziale τ₀ <span class="unit">MPa</span></label>
+        <label data-tip="Tensione tangenziale di avvolgimento a spire accostate (pretensione di fabbricazione)\nUnità: MPa\nGenera la forza iniziale Fi che la molla oppone prima di iniziare ad allungarsi\n0 = molla senza pretensione (si allunga da forza nulla)">Tensione iniziale τ₀ <span class="unit">MPa</span></label>
         <input type="number" id="t-tau0" placeholder="es. 20 (0 = no pretensione)" step="1" min="0" value="0">
       </div>
       <div class="field">
-        <label>Freccia/forza nota tramite</label>
+        <label data-tip="Sceglie il dato noto per le due condizioni di lavoro\nFrecce → la calcolatrice ricava le forze con F = Fi + k·f\nForze → la calcolatrice ricava le frecce con f = (F-Fi)/k">Freccia/forza nota tramite</label>
         <select id="t-input-mode" onchange="toggleInputMode('t')">
           <option value="f">Frecce di lavoro f₁, f₂ (mm)</option>
           <option value="F">Forze di lavoro F₁, F₂ (N)</option>
@@ -323,11 +323,11 @@ canvas{display:block;max-width:100%}
       <div id="t-f-inputs">
         <div class="field-row">
           <div class="field">
-            <label>Freccia f₁ <span class="unit">mm</span></label>
+            <label data-tip="Allungamento di lavoro minimo (posizione di precarico)\nUnità: mm\nF₁ = Fi + k×f₁\nDeve essere ≥ 0 e < allungamento massimo f₂">Freccia f₁ <span class="unit">mm</span></label>
             <input type="number" id="t-f1" placeholder="es. 10" step="0.5" min="0">
           </div>
           <div class="field">
-            <label>Freccia f₂ <span class="unit">mm</span></label>
+            <label data-tip="Allungamento di lavoro massimo\nUnità: mm\nF₂ = Fi + k×f₂, determina la tensione massima τ₂\nEscursione utile: Δf = f₂ - f₁">Freccia f₂ <span class="unit">mm</span></label>
             <input type="number" id="t-f2" placeholder="es. 25" step="0.5" min="0">
           </div>
         </div>
@@ -335,11 +335,11 @@ canvas{display:block;max-width:100%}
       <div id="t-F-inputs" style="display:none">
         <div class="field-row">
           <div class="field">
-            <label>Forza F₁ <span class="unit">N</span></label>
+            <label data-tip="Forza di lavoro minima (posizione di precarico)\nUnità: N\nSe F₁ ≤ Fi la molla non si è ancora allungata (f₁ = 0)\nF₁ ≥ 0">Forza F₁ <span class="unit">N</span></label>
             <input type="number" id="t-F1" placeholder="es. 50" step="1" min="0">
           </div>
           <div class="field">
-            <label>Forza F₂ <span class="unit">N</span></label>
+            <label data-tip="Forza di lavoro massima\nUnità: N\nDetermina la tensione massima τ₂\nVerifica: τ₂ ≤ τ_ammissibile (0.45·Rm)">Forza F₂ <span class="unit">N</span></label>
             <input type="number" id="t-F2" placeholder="es. 120" step="1" min="0">
           </div>
         </div>
@@ -355,17 +355,17 @@ canvas{display:block;max-width:100%}
       <div class="section-title">Geometria filo e avvolgimento</div>
       <div class="field-row">
         <div class="field">
-          <label>Diametro filo d <span class="unit">mm</span></label>
+          <label data-tip="Diametro del filo (sezione circolare)\nUnità: mm\nRange tipico: 0.3 ÷ 10 mm\nRapporto d'indice C = D/d (tipico 4÷16, meglio 6÷12)">Diametro filo d <span class="unit">mm</span></label>
           <input type="number" id="to-d" placeholder="es. 2.0" step="0.1" min="0">
         </div>
         <div class="field">
-          <label>Diametro medio D <span class="unit">mm</span></label>
+          <label data-tip="Diametro medio della molla (linea di centro del filo)\nUnità: mm\nD_medio = D_esterno - d = D_interno + d\nRange tipico: 5 ÷ 100 mm">Diametro medio D <span class="unit">mm</span></label>
           <input type="number" id="to-D" placeholder="es. 20" step="0.5" min="0">
         </div>
       </div>
       <div class="field-row">
         <div class="field">
-          <label>Spire attive n</label>
+          <label data-tip="Numero di spire attive (elasticamente deformate in torsione)\nAdimensionale\nDetermina la rigidità angolare k_φ = E·d⁴/(64·D·n)\nRange tipico: 3 ÷ 30 spire">Spire attive n</label>
           <input type="number" id="to-n" placeholder="es. 8" step="0.5" min="0">
         </div>
         <div class="field">
@@ -374,7 +374,7 @@ canvas{display:block;max-width:100%}
         </div>
       </div>
       <div class="field">
-        <label>Tipo avvolgimento</label>
+        <label data-tip="Senso di avvolgimento delle spire\nIl carico deve chiudere la molla (agire nel verso dell'avvolgimento) per rientrare nel calcolo EN 13906-3\nDestrorso: si chiude ruotando in senso orario guardando la molla frontalmente">Tipo avvolgimento</label>
         <select id="to-wind">
           <option value="right">Destrorso (right-hand)</option>
           <option value="left">Sinistrorso (left-hand)</option>
@@ -385,7 +385,7 @@ canvas{display:block;max-width:100%}
     <div class="section">
       <div class="section-title">Materiale</div>
       <div class="field">
-        <label>Materiale</label>
+        <label data-tip="Materiale del filo — selezionandolo si imposta automaticamente E (modulo elastico a flessione)\nInfluenza rigidità angolare k_φ e tensione flessionale ammissibile">Materiale</label>
         <select id="to-mat" onchange="updateMat('to')">
           <option value="sh">Acciaio SH/DH – EN 10270-1 (E=206000 MPa)</option>
           <option value="vd">Cr-V acciaio VD – EN 10270-2 (E=206000 MPa)</option>
@@ -396,11 +396,11 @@ canvas{display:block;max-width:100%}
       </div>
       <div class="field-row">
         <div class="field">
-          <label>E <span class="unit">MPa</span></label>
+          <label data-tip="Modulo di elasticità normale (flessionale)\nUnità: MPa\nAcciaio SH/VD/Cr-Si: 206000 MPa, Inox: 193000 MPa\nDeterminante per k_φ = E·d⁴/(64·D·n), diverso dal modulo G usato per compressione/trazione">E <span class="unit">MPa</span></label>
           <input type="number" id="to-E" value="206000" step="100">
         </div>
         <div class="field">
-          <label>Rm (stima) <span class="unit">MPa</span></label>
+          <label data-tip="Resistenza a trazione nominale del filo — usata per calcolare la tensione ammissibile a flessione\nUnità: MPa\nVaria con diametro e materiale (UNI EN 13906)\nAcciaio SH ø2mm: ~1900 MPa, ø5mm: ~1600 MPa">Rm (stima) <span class="unit">MPa</span></label>
           <input type="number" id="to-Rm" placeholder="es. 1700" step="10">
         </div>
       </div>
@@ -409,7 +409,7 @@ canvas{display:block;max-width:100%}
     <div class="section">
       <div class="section-title">Condizioni di lavoro</div>
       <div class="field">
-        <label>Angolo/forza noti tramite</label>
+        <label data-tip="Sceglie il dato noto per le due condizioni di lavoro\nAngoli → la calcolatrice ricava le forze al braccio con F = M/L, M = k_φ·φ\nForze → la calcolatrice ricava gli angoli con φ = M/k_φ, M = F·L">Angolo/forza noti tramite</label>
         <select id="to-input-mode" onchange="toggleInputMode('to')">
           <option value="f">Angoli di lavoro &phi;₁, &phi;₂ (&deg;)</option>
           <option value="F">Forze di lavoro F₁, F₂ (N)</option>
@@ -673,18 +673,22 @@ function calcComp(){
       <div class="result-card accent">
         <div class="rc-label">Rigidità k</div>
         <div class="rc-value accent">${fmt(k,3)}<span class="rc-unit">N/mm</span></div>
+        <div class="rc-note">Forza necessaria per 1 mm di freccia</div>
       </div>
       <div class="result-card">
         <div class="rc-label">Indice molla c = D/d</div>
         <div class="rc-value">${fmt(c,2)}</div>
+        <div class="rc-note">Range consigliato 4÷16 (avvolgibilità e tolleranze)</div>
       </div>
       <div class="result-card">
         <div class="rc-label">Fattore Wahl K<sub>w</sub></div>
         <div class="rc-value">${fmt(Kw,3)}</div>
+        <div class="rc-note">Correzione per curvatura spira (usata per τ<sub>k</sub>)</div>
       </div>
       <div class="result-card">
         <div class="rc-label">Passo attivo p</div>
         <div class="rc-value">${fmt(p,2)}<span class="rc-unit">mm</span></div>
+        <div class="rc-note">Distanza tra spire attive a riposo</div>
       </div>
       <div class="result-card">
         <div class="rc-label">Spire totali n<sub>tot</sub></div>
@@ -694,6 +698,7 @@ function calcComp(){
       <div class="result-card gold">
         <div class="rc-label">Lunghezza a blocco L<sub>c</sub></div>
         <div class="rc-value gold">${fmt(Lc,2)}<span class="rc-unit">mm</span></div>
+        <div class="rc-note">Lunghezza minima, spire a contatto</div>
       </div>
     </div>
   </div>
@@ -856,14 +861,17 @@ function calcTraz(){
       <div class="result-card accent">
         <div class="rc-label">Rigidità k</div>
         <div class="rc-value accent">${fmt(k,3)}<span class="rc-unit">N/mm</span></div>
+        <div class="rc-note">Forza aggiuntiva per 1 mm di allungamento oltre Fi</div>
       </div>
       <div class="result-card">
         <div class="rc-label">Indice molla c = D/d</div>
         <div class="rc-value">${fmt(c,2)}</div>
+        <div class="rc-note">Range consigliato 4÷16 (avvolgibilità e tolleranze)</div>
       </div>
       <div class="result-card">
         <div class="rc-label">Fattore Wahl K<sub>w</sub></div>
         <div class="rc-value">${fmt(Kw,3)}</div>
+        <div class="rc-note">Correzione per curvatura spira, applicata a τ₁/τ₂</div>
       </div>
       <div class="result-card">
         <div class="rc-label">Forza iniziale F<sub>i</sub> (tensione iniziale)</div>
@@ -1032,10 +1040,12 @@ function calcTors(){
       <div class="result-card">
         <div class="rc-label">Indice molla c = D/d</div>
         <div class="rc-value">${fmt(c,2)}</div>
+        <div class="rc-note">Range consigliato 3÷12 per molle di torsione</div>
       </div>
       <div class="result-card">
         <div class="rc-label">Fattore fibra int. K<sub>i</sub></div>
         <div class="rc-value">${fmt(Ki,3)}</div>
+        <div class="rc-note">Correzione sulla fibra interna, più sollecitata a flessione</div>
       </div>
       <div class="result-card">
         <div class="rc-label">Braccio di leva L</div>

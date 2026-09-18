@@ -402,22 +402,22 @@
     </div>
     <div class="result-grid">
       <div class="result-card accent">
-        <span class="rc-label">Forza totale</span>
+        <span class="rc-label" data-tip="Forza di presa totale richiesta, somma su tutte le ganasce\nF_totale = (Fi × k_s × k_geo) / μs\ndove Fi = m×(g+a) è la forza da trattenere, k_s il fattore di sicurezza, k_geo il fattore geometrico (1,0 sull'attrito, 0,3 in appoggio)\nNon è la forza di una singola ganascia, ma il totale che l'attrito distribuito su tutte le superfici di contatto deve generare">Forza totale</span>
         <span class="rc-value" id="r-ftotal"></span>
         <span class="rc-sub" id="r-ftotal-kgf"></span>
       </div>
       <div class="result-card">
-        <span class="rc-label">Forza per ganascia</span>
+        <span class="rc-label" data-tip="Forza che ciascuna singola ganascia deve esercitare sull'oggetto\nF_ganascia = F_totale / n (n = numero ganasce)\nÈ il valore da confrontare con la forza di presa dichiarata dal costruttore della pinza per ogni ganascia, alla pressione di esercizio scelta">Forza per ganascia</span>
         <span class="rc-value" id="r-fjaw"></span>
         <span class="rc-sub" id="r-fjaw-kgf"></span>
       </div>
       <div class="result-card">
-        <span class="rc-label">Pressione</span>
+        <span class="rc-label" data-tip="Pressione di contatto ganascia-oggetto\nP = F_ganascia / A (area di contatto per ganascia)\nDa verificare contro la pressione ammissibile della superficie più debole (materiali teneri, plastica, superfici verniciate) per evitare ammaccature o deformazioni permanenti">Pressione</span>
         <span class="rc-value" id="r-pmpa"></span>
         <span class="rc-sub" id="r-pbar"></span>
       </div>
       <div class="result-card">
-        <span class="rc-label">Pressione</span>
+        <span class="rc-label" data-tip="Stessa pressione di contatto (P = F_ganascia / A), espressa in Pa e psi\nUtile per confrontare con schede tecniche in unità anglosassoni (psi) o con sensori/trasduttori di pressione tarati in Pa">Pressione</span>
         <span class="rc-value" id="r-ppa"></span>
         <span class="rc-sub" id="r-ppsi"></span>
       </div>

@@ -81,7 +81,7 @@ footer{margin-top:34px;font-size:10px;color:var(--dim);letter-spacing:.04em;text
       <select id="prof" class="select-field" onchange="onProfChange()"></select>
     </div>
     <div class="field">
-      <div class="fhdr"><span class="flabel">Passo p</span><span class="funit">mm</span></div>
+      <div class="fhdr"><span class="flabel" data-tip="Passo circolare della dentatura, associato al profilo selezionato.\nUnità: mm\nCampo di sola lettura: viene impostato automaticamente in base al profilo scelto (es. HTD 8M → p = 8 mm).">Passo p</span><span class="funit">mm</span></div>
       <input id="passo" class="numinput" readonly>
     </div>
   </div>
@@ -97,7 +97,7 @@ footer{margin-top:34px;font-size:10px;color:var(--dim);letter-spacing:.04em;text
   </div>
 
   <div class="field" id="fieldP">
-    <div class="fhdr"><span class="flabel">Potenza da trasmettere P</span><span class="funit">kW</span></div>
+    <div class="fhdr"><span class="flabel" data-tip="Potenza nominale da trasmettere, misurata all'albero motore.\nUnità: kW\nEntra nel fattore di servizio: P_d = P · K_s, potenza di progetto usata per il dimensionamento.">Potenza da trasmettere P</span><span class="funit">kW</span></div>
     <div class="srow">
       <div class="arr" onclick="adjust('P',-0.25)">−</div>
       <input id="P" class="numinput" type="number" value="5.5" min="0.01" step="0.25" oninput="calculate()">
@@ -106,7 +106,7 @@ footer{margin-top:34px;font-size:10px;color:var(--dim);letter-spacing:.04em;text
   </div>
 
   <div class="field hidden" id="fieldM">
-    <div class="fhdr"><span class="flabel">Coppia motrice M₁</span><span class="funit">Nm</span></div>
+    <div class="fhdr"><span class="flabel" data-tip="Coppia motrice nota, in alternativa alla potenza diretta.\nUnità: Nm\nConversione in potenza: P = M₁ · n₁ / 9550 [kW]">Coppia motrice M₁</span><span class="funit">Nm</span></div>
     <div class="srow">
       <div class="arr" onclick="adjust('Min',-1)">−</div>
       <input id="Min" class="numinput" type="number" value="36" min="0.1" step="1" oninput="calculate()">
@@ -115,7 +115,7 @@ footer{margin-top:34px;font-size:10px;color:var(--dim);letter-spacing:.04em;text
   </div>
 
   <div class="field">
-    <div class="fhdr"><span class="flabel">Giri puleggia motrice n₁</span><span class="funit">rpm</span></div>
+    <div class="fhdr"><span class="flabel" data-tip="Velocità di rotazione della puleggia motrice (piccola, z₁).\nUnità: giri/min (rpm)\nDetermina la velocità periferica della cinghia: v = π·d₁·n₁/60000 [m/s]">Giri puleggia motrice n₁</span><span class="funit">rpm</span></div>
     <div class="srow">
       <div class="arr" onclick="adjust('n1',-50)">−</div>
       <input id="n1" class="numinput" type="number" value="1450" min="1" step="50" oninput="calculate()">
@@ -133,7 +133,7 @@ footer{margin-top:34px;font-size:10px;color:var(--dim);letter-spacing:.04em;text
       </div>
     </div>
     <div class="field">
-      <div class="fhdr"><span class="flabel">Denti z₂</span></div>
+      <div class="fhdr"><span class="flabel" data-tip="N° denti puleggia condotta (grande).\nDetermina il rapporto di trasmissione i = z₂/z₁ e la velocità in uscita n₂ = n₁/i.">Denti z₂</span></div>
       <div class="srow">
         <div class="arr" onclick="adjust('z2',-1)">−</div>
         <input id="z2" class="numinput" type="number" value="48" min="6" step="1" oninput="calculate()">
@@ -143,7 +143,7 @@ footer{margin-top:34px;font-size:10px;color:var(--dim);letter-spacing:.04em;text
   </div>
 
   <div class="field">
-    <div class="fhdr"><span class="flabel">Interasse desiderato C</span><span class="funit">mm</span></div>
+    <div class="fhdr"><span class="flabel" data-tip="Interasse teorico desiderato tra gli assi delle due pulegge.\nUnità: mm\nUsato per calcolare la lunghezza primitiva teorica L_th, da cui si sceglie la L_p standard più vicina; l'interasse effettivo C_eff (mostrato nei risultati) viene poi ricalcolato con quella lunghezza standard.">Interasse desiderato C</span><span class="funit">mm</span></div>
     <div class="srow">
       <div class="arr" onclick="adjust('C',-5)">−</div>
       <input id="C" class="numinput" type="number" value="400" min="1" step="5" oninput="calculate()">
@@ -162,7 +162,7 @@ footer{margin-top:34px;font-size:10px;color:var(--dim);letter-spacing:.04em;text
     <select id="car" class="select-field" onchange="calculate()"></select>
   </div>
   <div class="field">
-    <div class="fhdr"><span class="flabel">Ore di funzionamento</span></div>
+    <div class="fhdr"><span class="flabel" data-tip="Ore di funzionamento giornaliere del sistema.\nContribuisce al fattore di servizio: K_s = K_motore + K_carico + K_ore.\nPiù ore di esercizio continuo → K_ore maggiore → K_s più cautelativo.">Ore di funzionamento</span></div>
     <select id="ore" class="select-field" onchange="calculate()"></select>
   </div>
 
@@ -236,9 +236,9 @@ const $ = id => document.getElementById(id);
 const fp = (v,n=1) => isFinite(v) ? v.toFixed(n) : '—';
 const PI = Math.PI;
 
-function box(label,value,unit){
+function box(label,value,unit,tip){
   return `<div class="result-box">
-    <div class="result-label">${label}</div>
+    <div class="result-label"${tip?` data-tip="${tip}"`:''}>${label}</div>
     <div class="result-value">${value}<span class="result-unit">${unit||''}</span></div>
   </div>`;
 }
@@ -396,7 +396,8 @@ function calculate(){
     box('Ø primitivo d₂',fp(r.dp2,1),'mm') +
     box('Velocità cinghia v',fp(r.v,2),'m/s') +
     box('Potenza P',fp(r.P,2),'kW') +
-    box('Pot. progetto P_d',fp(r.Pd,2),'kW') +
+    box('Pot. progetto P_d',fp(r.Pd,2),'kW',
+        'Potenza di progetto, maggiorata rispetto alla potenza nominale P per tener conto degli urti di avviamento e di carico.\nP_d = P · K_s\nÈ il valore che la cinghia selezionata deve poter trasmettere (vedi verifica potenza).') +
     box('Coppia motrice M₁',fp(r.M1,1),'Nm') +
     box('Coppia uscita M₂',fp(r.M2,1),'Nm') +
     box('Forza perif. F_u',fp(r.Fu,0),'N');
@@ -411,8 +412,10 @@ function calculate(){
     box('Denti in presa z_m',isFinite(r.zm)?r.zm:'—','') +
     box('Larghezza rich.',fp(r.bReq,1),'mm') +
     box('Larghezza scelta',fp(r.bSel,1),'mm') +
-    box('Coppia trasm. M_adm',fp(r.Madm,1),'Nm') +
-    box('Carico albero F_a',fp(r.Falb,0),'N');
+    box('Coppia trasm. M_adm',fp(r.Madm,1),'Nm',
+        'Coppia massima trasmissibile all\'albero motore dalla cinghia selezionata (larghezza b, K_z denti in presa).\nM_adm = F_u,spec · b · K_z · d₁/2\nDeve risultare ≥ della coppia di progetto (vedi sezione Verifiche): un margine ampio indica un sovradimensionamento, un margine scarso una condizione al limite.') +
+    box('Carico albero F_a',fp(r.Falb,0),'N',
+        'Carico radiale statico stimato sugli alberi per effetto del tiro della cinghia.\nF_a ≈ 1.3 · F_u (maggiorazione empirica del tiro utile per tener conto del pretensionamento)\nDa confrontare con la capacità di carico radiale dei cuscinetti scelti.');
 
   // Verifiche
   $('verGrid').innerHTML =
