@@ -104,7 +104,7 @@ footer{margin-top:34px;font-size:10px;color:var(--dim);letter-spacing:.04em;text
 
   <div class="dim-panel active" id="dim-tondo">
     <div class="field">
-      <div class="fhdr"><span class="flabel">Diametro d</span><span class="funit">mm</span></div>
+      <div class="fhdr"><span class="flabel" data-tip="Diametro della sezione circolare piena. A = π·d²/4, I = π·d⁴/64 uguale su ogni asse: sezione isotropa, nessun asse debole.">Diametro d</span><span class="funit">mm</span></div>
       <input type="number" id="d-d" class="numinput" value="20" min="0" step="1" oninput="calculate()">
     </div>
   </div>
@@ -112,11 +112,11 @@ footer{margin-top:34px;font-size:10px;color:var(--dim);letter-spacing:.04em;text
   <div class="dim-panel" id="dim-rettangolare">
     <div class="frow2">
       <div class="field">
-        <div class="fhdr"><span class="flabel">Base b</span><span class="funit">mm</span></div>
+        <div class="fhdr"><span class="flabel" data-tip="Base della sezione rettangolare, nel piano dell'asse x. Iy = h·b³/12: se b < h è la base a governare l'asse debole e quindi l'instabilità.">Base b</span><span class="funit">mm</span></div>
         <input type="number" id="d-b" class="numinput" value="20" min="0" step="1" oninput="calculate()">
       </div>
       <div class="field">
-        <div class="fhdr"><span class="flabel">Altezza h</span><span class="funit">mm</span></div>
+        <div class="fhdr"><span class="flabel" data-tip="Altezza della sezione rettangolare, nel piano dell'asse x. Ix = b·h³/12. L'asta si inflette sempre attorno all'asse di minore inerzia tra Ix e Iy.">Altezza h</span><span class="funit">mm</span></div>
         <input type="number" id="d-h" class="numinput" value="60" min="0" step="1" oninput="calculate()">
       </div>
     </div>
@@ -124,7 +124,7 @@ footer{margin-top:34px;font-size:10px;color:var(--dim);letter-spacing:.04em;text
 
   <div class="dim-panel" id="dim-quadrata">
     <div class="field">
-      <div class="fhdr"><span class="flabel">Lato a</span><span class="funit">mm</span></div>
+      <div class="fhdr"><span class="flabel" data-tip="Lato della sezione quadrata piena. A = a², Ix = Iy = a⁴/12: uguale su ogni asse, nessun asse debole.">Lato a</span><span class="funit">mm</span></div>
       <input type="number" id="d-a" class="numinput" value="40" min="0" step="1" oninput="calculate()">
     </div>
   </div>
@@ -132,11 +132,11 @@ footer{margin-top:34px;font-size:10px;color:var(--dim);letter-spacing:.04em;text
   <div class="dim-panel" id="dim-tubo_tondo">
     <div class="frow2">
       <div class="field">
-        <div class="fhdr"><span class="flabel">Ø esterno D</span><span class="funit">mm</span></div>
+        <div class="fhdr"><span class="flabel" data-tip="Diametro esterno del tubo circolare. Il diametro interno si ricava come d = D − 2·t.">Ø esterno D</span><span class="funit">mm</span></div>
         <input type="number" id="d-D" class="numinput" value="60" min="0" step="1" oninput="calculate()">
       </div>
       <div class="field">
-        <div class="fhdr"><span class="flabel">Spessore t</span><span class="funit">mm</span></div>
+        <div class="fhdr"><span class="flabel" data-tip="Spessore di parete del tubo circolare. A = π·(D²−d²)/4 con d = D−2t: deve risultare d > 0, cioè t < D/2.">Spessore t</span><span class="funit">mm</span></div>
         <input type="number" id="d-t_td" class="numinput" value="4" min="0" step="0.5" oninput="calculate()">
       </div>
     </div>
@@ -145,16 +145,16 @@ footer{margin-top:34px;font-size:10px;color:var(--dim);letter-spacing:.04em;text
   <div class="dim-panel" id="dim-tubo_rett">
     <div class="frow2">
       <div class="field">
-        <div class="fhdr"><span class="flabel">B esterno</span><span class="funit">mm</span></div>
+        <div class="fhdr"><span class="flabel" data-tip="Larghezza esterna del tubo rettangolare, nel piano dell'asse x. Concorre a Iy = (H·B³−h·b³)/12, con b = B−2t e h = H−2t.">B esterno</span><span class="funit">mm</span></div>
         <input type="number" id="d-Br" class="numinput" value="80" min="0" step="1" oninput="calculate()">
       </div>
       <div class="field">
-        <div class="fhdr"><span class="flabel">H esterno</span><span class="funit">mm</span></div>
+        <div class="fhdr"><span class="flabel" data-tip="Altezza esterna del tubo rettangolare, nel piano dell'asse x. Concorre a Ix = (B·H³−b·h³)/12, con b = B−2t e h = H−2t.">H esterno</span><span class="funit">mm</span></div>
         <input type="number" id="d-Hr" class="numinput" value="120" min="0" step="1" oninput="calculate()">
       </div>
     </div>
     <div class="field">
-      <div class="fhdr"><span class="flabel">Spessore t</span><span class="funit">mm</span></div>
+      <div class="fhdr"><span class="flabel" data-tip="Spessore di parete, costante sui quattro lati. Le dimensioni interne diventano b = B−2t e h = H−2t: devono restare positive.">Spessore t</span><span class="funit">mm</span></div>
       <input type="number" id="d-t_tr" class="numinput" value="5" min="0" step="0.5" oninput="calculate()">
     </div>
   </div>
@@ -162,11 +162,11 @@ footer{margin-top:34px;font-size:10px;color:var(--dim);letter-spacing:.04em;text
   <div class="dim-panel" id="dim-tubo_quad">
     <div class="frow2">
       <div class="field">
-        <div class="fhdr"><span class="flabel">Lato est. A</span><span class="funit">mm</span></div>
+        <div class="fhdr"><span class="flabel" data-tip="Lato esterno del tubo a sezione quadrata. Il lato interno si ricava come s = A − 2·t.">Lato est. A</span><span class="funit">mm</span></div>
         <input type="number" id="d-Aq" class="numinput" value="100" min="0" step="1" oninput="calculate()">
       </div>
       <div class="field">
-        <div class="fhdr"><span class="flabel">Spessore t</span><span class="funit">mm</span></div>
+        <div class="fhdr"><span class="flabel" data-tip="Spessore di parete, costante sui quattro lati. A = A²−s² con s = A−2t: sezione isotropa, Ix = Iy.">Spessore t</span><span class="funit">mm</span></div>
         <input type="number" id="d-t_tq" class="numinput" value="5" min="0" step="0.5" oninput="calculate()">
       </div>
     </div>
@@ -182,16 +182,16 @@ footer{margin-top:34px;font-size:10px;color:var(--dim);letter-spacing:.04em;text
   <div class="dim-panel" id="dim-L">
     <div class="frow2">
       <div class="field">
-        <div class="fhdr"><span class="flabel">Ala b₁</span><span class="funit">mm</span></div>
+        <div class="fhdr"><span class="flabel" data-tip="Lunghezza dell'ala orizzontale dell'angolare. L'angolare non ha assi di simmetria: I_min è calcolato sugli assi principali (ruotati), non su Ix o Iy diretti.">Ala b₁</span><span class="funit">mm</span></div>
         <input type="number" id="d-Lb1" class="numinput" value="80" min="0" step="1" oninput="calculate()">
       </div>
       <div class="field">
-        <div class="fhdr"><span class="flabel">Ala b₂</span><span class="funit">mm</span></div>
+        <div class="fhdr"><span class="flabel" data-tip="Lunghezza dell'ala verticale (montante) dell'angolare. Insieme a b₁ e t definisce area e baricentro, da cui gli assi principali d'inerzia.">Ala b₂</span><span class="funit">mm</span></div>
         <input type="number" id="d-Lb2" class="numinput" value="80" min="0" step="1" oninput="calculate()">
       </div>
     </div>
     <div class="field">
-      <div class="fhdr"><span class="flabel">Spessore t</span><span class="funit">mm</span></div>
+      <div class="fhdr"><span class="flabel" data-tip="Spessore costante delle due ali dell'angolare. Deve essere minore di entrambe le ali (t < b₁, t < b₂) perché la sezione sia valida.">Spessore t</span><span class="funit">mm</span></div>
       <input type="number" id="d-Lt" class="numinput" value="8" min="0" step="1" oninput="calculate()">
     </div>
   </div>
@@ -199,21 +199,21 @@ footer{margin-top:34px;font-size:10px;color:var(--dim);letter-spacing:.04em;text
   <div class="dim-panel" id="dim-T">
     <div class="frow2">
       <div class="field">
-        <div class="fhdr"><span class="flabel">Ala b_f</span><span class="funit">mm</span></div>
+        <div class="fhdr"><span class="flabel" data-tip="Larghezza della flangia del profilo a T. Concorre a Iy = t_f·b_f³/12 + h_w·t_w³/12, tipicamente l'asse debole del profilo.">Ala b_f</span><span class="funit">mm</span></div>
         <input type="number" id="d-Tbf" class="numinput" value="120" min="0" step="1" oninput="calculate()">
       </div>
       <div class="field">
-        <div class="fhdr"><span class="flabel">Sp. flangia t_f</span><span class="funit">mm</span></div>
+        <div class="fhdr"><span class="flabel" data-tip="Spessore della flangia (piattabanda) del profilo a T. Insieme a b_f determina l'area della flangia e la posizione del baricentro rispetto all'anima.">Sp. flangia t_f</span><span class="funit">mm</span></div>
         <input type="number" id="d-Ttf" class="numinput" value="12" min="0" step="1" oninput="calculate()">
       </div>
     </div>
     <div class="frow2">
       <div class="field">
-        <div class="fhdr"><span class="flabel">Anima h_w</span><span class="funit">mm</span></div>
+        <div class="fhdr"><span class="flabel" data-tip="Altezza dell'anima del profilo a T, esclusa la flangia. Contribuisce soprattutto a Ix, l'inerzia nel piano dell'anima.">Anima h_w</span><span class="funit">mm</span></div>
         <input type="number" id="d-Thw" class="numinput" value="100" min="0" step="1" oninput="calculate()">
       </div>
       <div class="field">
-        <div class="fhdr"><span class="flabel">Sp. anima t_w</span><span class="funit">mm</span></div>
+        <div class="fhdr"><span class="flabel" data-tip="Spessore dell'anima del profilo a T. Sezione aperta a parete sottile: soggetta anche a instabilità flesso-torsionale, non calcolata da questo modulo.">Sp. anima t_w</span><span class="funit">mm</span></div>
         <input type="number" id="d-Ttw" class="numinput" value="8" min="0" step="1" oninput="calculate()">
       </div>
     </div>
@@ -222,21 +222,21 @@ footer{margin-top:34px;font-size:10px;color:var(--dim);letter-spacing:.04em;text
   <div class="dim-panel" id="dim-H">
     <div class="frow2">
       <div class="field">
-        <div class="fhdr"><span class="flabel">Ala b_f</span><span class="funit">mm</span></div>
+        <div class="fhdr"><span class="flabel" data-tip="Larghezza delle due flange del profilo H/I. Iy = 2·(t_f·b_f³/12) + h_w·t_w³/12: per un profilo H l'asse debole è quello parallelo alle flange.">Ala b_f</span><span class="funit">mm</span></div>
         <input type="number" id="d-Hbf" class="numinput" value="100" min="0" step="1" oninput="calculate()">
       </div>
       <div class="field">
-        <div class="fhdr"><span class="flabel">Altezza H</span><span class="funit">mm</span></div>
+        <div class="fhdr"><span class="flabel" data-tip="Altezza totale del profilo, flange comprese. L'altezza dell'anima si ricava come h_w = H − 2·t_f.">Altezza H</span><span class="funit">mm</span></div>
         <input type="number" id="d-HH" class="numinput" value="200" min="0" step="1" oninput="calculate()">
       </div>
     </div>
     <div class="frow2">
       <div class="field">
-        <div class="fhdr"><span class="flabel">Sp. flangia t_f</span><span class="funit">mm</span></div>
+        <div class="fhdr"><span class="flabel" data-tip="Spessore di ciascuna delle due flange. Influisce fortemente su Ix, l'inerzia nel piano forte del profilo.">Sp. flangia t_f</span><span class="funit">mm</span></div>
         <input type="number" id="d-Htf" class="numinput" value="15" min="0" step="1" oninput="calculate()">
       </div>
       <div class="field">
-        <div class="fhdr"><span class="flabel">Sp. anima t_w</span><span class="funit">mm</span></div>
+        <div class="fhdr"><span class="flabel" data-tip="Spessore dell'anima verticale. Contribuisce poco a Iy: l'asse debole del profilo H resta comunque quello parallelo alle flange.">Sp. anima t_w</span><span class="funit">mm</span></div>
         <input type="number" id="d-Htw" class="numinput" value="9" min="0" step="1" oninput="calculate()">
       </div>
     </div>
@@ -245,21 +245,21 @@ footer{margin-top:34px;font-size:10px;color:var(--dim);letter-spacing:.04em;text
   <div class="dim-panel" id="dim-U">
     <div class="frow2">
       <div class="field">
-        <div class="fhdr"><span class="flabel">Largh. b</span><span class="funit">mm</span></div>
+        <div class="fhdr"><span class="flabel" data-tip="Larghezza totale del profilo a U, ali comprese. La larghezza delle ali si ricava come b_f = b − t_w.">Largh. b</span><span class="funit">mm</span></div>
         <input type="number" id="d-Ub" class="numinput" value="80" min="0" step="1" oninput="calculate()">
       </div>
       <div class="field">
-        <div class="fhdr"><span class="flabel">Altezza H</span><span class="funit">mm</span></div>
+        <div class="fhdr"><span class="flabel" data-tip="Altezza totale del profilo a U. Nel calcolo di Ix l'anima corre per l'intera altezza H.">Altezza H</span><span class="funit">mm</span></div>
         <input type="number" id="d-UH" class="numinput" value="180" min="0" step="1" oninput="calculate()">
       </div>
     </div>
     <div class="frow2">
       <div class="field">
-        <div class="fhdr"><span class="flabel">Sp. flangia t_f</span><span class="funit">mm</span></div>
+        <div class="fhdr"><span class="flabel" data-tip="Spessore di ciascuna delle due ali del profilo a U. Con b_f = b−t_w determina il contributo delle ali a Iy.">Sp. flangia t_f</span><span class="funit">mm</span></div>
         <input type="number" id="d-Utf" class="numinput" value="11" min="0" step="1" oninput="calculate()">
       </div>
       <div class="field">
-        <div class="fhdr"><span class="flabel">Sp. anima t_w</span><span class="funit">mm</span></div>
+        <div class="fhdr"><span class="flabel" data-tip="Spessore dell'anima verticale del profilo a U. Sezione aperta e non simmetrica: il baricentro è spostato verso l'anima, da cui il termine di trasporto in Iy.">Sp. anima t_w</span><span class="funit">mm</span></div>
         <input type="number" id="d-Utw" class="numinput" value="7" min="0" step="1" oninput="calculate()">
       </div>
     </div>
@@ -268,7 +268,7 @@ footer{margin-top:34px;font-size:10px;color:var(--dim);letter-spacing:.04em;text
   <div class="stitle">Materiale</div>
 
   <div class="field">
-    <div class="fhdr"><span class="flabel">Materiale</span></div>
+    <div class="fhdr"><span class="flabel" data-tip="Preset di modulo elastico E e snervamento fy per materiali tipici. 'Personalizzato' consente di impostarli manualmente. La famiglia (dolce/duro/nd) determina anche i coefficienti di Tetmajer, se applicabile.">Materiale</span></div>
     <select id="mat-sel" class="select-field" onchange="onMatChange()">
       <option value="S235" selected>Acciaio S235 — fy 235 MPa</option>
       <option value="S275">Acciaio S275 — fy 275 MPa</option>
@@ -294,7 +294,7 @@ footer{margin-top:34px;font-size:10px;color:var(--dim);letter-spacing:.04em;text
   <div class="stitle">Geometria e vincoli</div>
 
   <div class="field">
-    <div class="fhdr"><span class="flabel">Lunghezza asta L</span><span class="funit">mm</span></div>
+    <div class="fhdr"><span class="flabel" data-tip="Lunghezza libera reale dell'asta tra i due vincoli. Non coincide con la lunghezza libera d'inflessione L₀ = β·L, che dipende anche dal tipo di vincolo scelto.">Lunghezza asta L</span><span class="funit">mm</span></div>
     <div class="srow">
       <div class="arr" onclick="adjust('L',-50)">−</div>
       <input id="L" class="numinput" type="number" value="1000" min="1" step="50" oninput="calculate()">
@@ -315,7 +315,7 @@ footer{margin-top:34px;font-size:10px;color:var(--dim);letter-spacing:.04em;text
   <div class="stitle">Carico</div>
 
   <div class="field">
-    <div class="fhdr"><span class="flabel">Forza di compressione F</span><span class="funit">N</span></div>
+    <div class="fhdr"><span class="flabel" data-tip="Carico assiale di compressione, applicato centrato sull'asse baricentrico dell'asta. Determina sia la tensione semplice σ = F/A sia il coefficiente di sicurezza a instabilità SF = P_cr/F.">Forza di compressione F</span><span class="funit">N</span></div>
     <div class="srow">
       <div class="arr" onclick="adjust('F',-500)">−</div>
       <input id="F" class="numinput" type="number" value="5000" min="0" step="500" oninput="calculate()">
@@ -442,9 +442,9 @@ const fp = (v,n=1) => isFinite(v) ? v.toFixed(n) : '—';
 const fi = v => isFinite(v) ? String(Math.round(v)).replace(/\B(?=(\d{3})+(?!\d))/g,' ') : '—';
 const PI = Math.PI;
 
-function box(label,value,unit){
+function box(label,value,unit,tip){
   return `<div class="result-box">
-    <div class="result-label">${label}</div>
+    <div class="result-label"${tip?` data-tip="${tip}"`:''}>${label}</div>
     <div class="result-value">${value}<span class="result-unit">${unit||''}</span></div>
   </div>`;
 }
@@ -756,12 +756,12 @@ function calculate(){
   // ── Geometria
   $('secDesc').textContent = s.desc;
   $('geoGrid').innerHTML =
-    box('Area A', fi(s.A), 'mm²') +
-    box('I x', fi(s.Ix), 'mm⁴') +
-    box('I y', fi(s.Iy), 'mm⁴') +
-    box('I min · asse debole', fi(s.Imin), 'mm⁴') +
-    box('Raggio d\'inerzia ρ', fp(s.rho,2), 'mm') +
-    box('Tensione σ = F/A', fp(sigma,1), 'MPa');
+    box('Area A', fi(s.A), 'mm²', 'Area della sezione trasversale. Usata per la tensione semplice σ = F/A e per il carico critico P_cr = σ_cr·A.') +
+    box('I x', fi(s.Ix), 'mm⁴', 'Momento d\'inerzia rispetto all\'asse x. Serve solo da confronto: l\'instabilità avviene sempre attorno all\'asse di minore inerzia, I_min.') +
+    box('I y', fi(s.Iy), 'mm⁴', 'Momento d\'inerzia rispetto all\'asse y. Come I_x, serve solo da confronto: il calcolo usa sempre I_min.') +
+    box('I min · asse debole', fi(s.Imin), 'mm⁴', 'Il minore tra i momenti d\'inerzia principali della sezione (per la L, calcolato sugli assi principali ruotati). È il valore che governa l\'instabilità: l\'asta si inflette sempre attorno a questo asse.') +
+    box('Raggio d\'inerzia ρ', fp(s.rho,2), 'mm', 'ρ = √(I_min/A): raggio d\'inerzia minimo della sezione. Compare al denominatore della snellezza, λ = L₀/ρ.') +
+    box('Tensione σ = F/A', fp(sigma,1), 'MPa', 'Tensione normale semplice dovuta al solo carico assiale, senza effetti di instabilità. Confrontata con fy nella verifica di resistenza a compressione (CS = fy/σ).');
 
   // ── Schema
   $('schema').innerHTML = drawSchema(mount, L, L0);
@@ -776,12 +776,12 @@ function calculate(){
   $('campoBadge').innerHTML = `<span class="campo ${badgeCls}">${badgeTxt}</span>`;
 
   $('bucGrid').innerHTML =
-    box('Lungh. libera L₀', fi(L0), 'mm') +
-    box('Snellezza λ', fp(lambda,1), '') +
-    box('λ limite', fp(lim,1), '') +
-    box('Tensione critica σ_cr', fp(cr.sig,1), 'MPa') +
-    box('Carico critico P_cr', fp(Pcr/1000,2), 'kN') +
-    box(`Carico amm. (CS ${fp(sfMin,1)})`, fp(Famm/1000,2), 'kN');
+    box('Lungh. libera L₀', fi(L0), 'mm', 'Lunghezza libera d\'inflessione, L₀ = β·L: distanza tra i punti di flesso della deformata critica. Dipende dal vincolo scelto, non solo dalla lunghezza reale L.') +
+    box('Snellezza λ', fp(lambda,1), '', 'λ = L₀/ρ: rapporto tra lunghezza libera d\'inflessione e raggio d\'inerzia minimo. Decide il campo di calcolo: λ ≥ λ limite → Eulero, altrimenti Johnson/Tetmajer.') +
+    box('λ limite', fp(lim,1), '', 'Snellezza di transizione tra campo elastico e campo inelastico. Johnson: λ_lim = π·√(2E/fy) (tangenza con la parabola di Eulero). Tetmajer: λ_lim = π·√(E/0,8·fy) (limite di proporzionalità 0,8·fy).') +
+    box('Tensione critica σ_cr', fp(cr.sig,1), 'MPa', 'Tensione assiale che innesca l\'instabilità. Calcolata con Eulero se λ ≥ λ limite, altrimenti con la formula inelastica scelta (Johnson o Tetmajer); non può comunque superare fy.') +
+    box('Carico critico P_cr', fp(Pcr/1000,2), 'kN', 'Carico assiale critico, P_cr = σ_cr·A: il carico teorico di instabilità. Il coefficiente di sicurezza reale è SF = P_cr/F.') +
+    box(`Carico amm. (CS ${fp(sfMin,1)})`, fp(Famm/1000,2), 'kN', 'Carico massimo applicabile rispettando il coefficiente di sicurezza richiesto: F_amm = P_cr/CS. Va confrontato con il carico F effettivamente applicato.');
 
   // ── Verifiche
   $('verGrid').innerHTML =
