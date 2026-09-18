@@ -1,0 +1,807 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Accoppiamenti per Interferenza - Calettamento Forzato</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@300;400;500&family=Barlow+Condensed:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="theme.css">
+<style>
+
+html{background:var(--bg);color:var(--text);font-family:var(--mono);font-size:13px;min-height:100vh}
+body{display:flex;flex-direction:column;align-items:center;min-height:100vh;padding:20px}
+
+.header{border-bottom:1px solid var(--border);padding:11px 20px;display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:20px;width:100%;max-width:1240px}
+
+.container{max-width:1240px;width:100%;display:grid;grid-template-columns:350px 1fr;gap:20px}
+@media(max-width:900px){.container{grid-template-columns:1fr}}
+
+.panel{background:var(--bg2);border:1px solid var(--border2);border-radius:8px;padding:15px;display:flex;flex-direction:column;gap:6px}
+.rpanel{display:flex;flex-direction:column;gap:14px}
+
+.stitle{font-family:var(--cond);font-size:10px;font-weight:600;letter-spacing:.17em;color:var(--muted);text-transform:uppercase;margin:8px 0 4px;display:flex;align-items:center;gap:6px}
+.stitle:first-child{margin-top:0}
+
+.field{margin-bottom:6px}
+.flabel{color:var(--muted);font-size:11px;letter-spacing:.03em}
+.funit{font-size:10px;color:var(--dim)}
+.frow2{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.frow4{display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:6px}
+
+/* Blocchi modalita' interferenza: ne e' visibile uno solo alla volta */
+.mode-panel{display:none}
+.mode-panel.active{display:block}
+
+.schematic-wrap{background:var(--bg1);border:1px solid var(--border);border-radius:6px;padding:10px;display:flex;justify-content:center}
+.schematic-wrap svg{width:100%;max-width:460px;height:auto}
+
+/* Barra di utilizzo nelle verifiche */
+.util{width:70px;height:5px;background:var(--bg3);border-radius:3px;overflow:hidden;flex-shrink:0}
+.util span{display:block;height:100%;border-radius:3px}
+.util span.ok{background:var(--up)}
+.util span.warn{background:var(--amber)}
+.util span.err{background:var(--dn)}
+
+.back-btn{background:transparent;cursor:pointer}
+
+[data-tip]:hover::after{max-width:300px;min-width:170px}
+
+/* Gli avvisi possono essere piu' di uno: vanno distanziati tra loro */
+#hint{display:flex;flex-direction:column;gap:8px}
+#hint:empty{display:none}
+
+.fbox{font-size:10.5px;color:var(--muted);line-height:1.9;background:var(--bg1);border:1px solid var(--border);border-radius:6px;padding:10px 12px}
+.fbox b{color:var(--acc);font-weight:500}
+.fbox .fk{color:var(--amber)}
+.fbox hr{border:none;border-top:1px solid var(--border);margin:7px 0}
+
+footer{margin-top:34px;font-size:10px;color:var(--dim);letter-spacing:.04em;text-align:center;line-height:1.8;max-width:900px}
+
+@media print{.back-btn{display:none !important}body{padding:0}}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <a href="index.html" class="back-btn">← Ritorna</a>
+  <h1><span class="dot"></span>Accoppiamenti per Interferenza</h1>
+  <div class="sub">Calettamento forzato · Lamé · Aderenza · Montaggio</div>
+  <span class="norm-badge">DIN 7190 · ISO 286</span>
+  <button class="back-btn" id="printBtn">🖶 Stampa</button>
+</div>
+
+<div class="container">
+
+<!-- ═══════════════ PANNELLO INPUT ═══════════════ -->
+<div class="panel">
+
+  <div class="stitle">Geometria</div>
+
+  <div class="frow2">
+    <div class="field">
+      <div class="fhdr"><span class="flabel" data-tip="Diametro nominale della superficie di accoppiamento albero-mozzo (mm).&#10;È il diametro su cui agisce la pressione di contatto: entra al quadrato nella coppia trasmissibile (Mt = µ·p·π·d²·L/2).&#10;Campo tipico: 10 ÷ 500 mm.">Diametro d</span><span class="funit">mm</span></div>
+      <div class="srow">
+        <div class="arr" onclick="adjust('d',-5)">−</div>
+        <input type="number" id="d" class="numinput" value="60" min="1" step="5" oninput="onGeom()">
+        <div class="arr" onclick="adjust('d',5)">+</div>
+      </div>
+    </div>
+    <div class="field">
+      <div class="fhdr"><span class="flabel" data-tip="Diametro esterno del mozzo (mm).&#10;Definisce lo spessore della parete: qm = d/De.&#10;Più il mozzo è sottile (qm→1) più cede sotto pressione e più alte sono le tensioni tangenziali al foro.&#10;Valore di buona pratica: De ≈ 2÷3 · d  (qm ≈ 0,33÷0,50).">Ø esterno mozzo De</span><span class="funit">mm</span></div>
+      <div class="srow">
+        <div class="arr" onclick="adjust('De',-5)">−</div>
+        <input type="number" id="De" class="numinput" value="120" min="1" step="5" oninput="calculate()">
+        <div class="arr" onclick="adjust('De',5)">+</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="frow2">
+    <div class="field">
+      <div class="fhdr"><span class="flabel" data-tip="Diametro del foro interno dell'albero (mm).&#10;Inserire 0 per albero pieno.&#10;Un albero cavo cede di più sotto la pressione esterna: a parità di interferenza la pressione di contatto cala, ma nasce una tensione tangenziale di compressione al foro.&#10;qa = di/d.">Ø interno albero di</span><span class="funit">mm</span></div>
+      <div class="srow">
+        <div class="arr" onclick="adjust('di',-5)">−</div>
+        <input type="number" id="di" class="numinput" value="0" min="0" step="5" oninput="calculate()">
+        <div class="arr" onclick="adjust('di',5)">+</div>
+      </div>
+    </div>
+    <div class="field">
+      <div class="fhdr"><span class="flabel" data-tip="Lunghezza del tratto effettivamente accoppiato (mm).&#10;L'area di contatto è π·d·L: la capacità di trasmissione cresce linearmente con L.&#10;Rapporto consigliato L/d ≈ 0,8 ÷ 1,5. Oltre L/d ≈ 2 la parte eccedente contribuisce poco, per il decadimento della pressione verso il centro.">Lunghezza L</span><span class="funit">mm</span></div>
+      <div class="srow">
+        <div class="arr" onclick="adjust('L',-5)">−</div>
+        <input type="number" id="L" class="numinput" value="80" min="1" step="5" oninput="calculate()">
+        <div class="arr" onclick="adjust('L',5)">+</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="stitle">Interferenza diametrale</div>
+
+  <div class="field">
+    <div class="fhdr"><span class="flabel" data-tip="Modalità di definizione dell'interferenza.&#10;DIRETTA: si inseriscono a mano δmin e δmax (dati di disegno o misure reali).&#10;DA ACCOPPIAMENTO ISO: δmin e δmax sono ricavati dagli scostamenti ISO 286 della coppia foro/albero scelta, in funzione del diametro nominale.">Modalità</span></div>
+    <div class="seg seg-2">
+      <button class="seg-btn on" id="m-diretta" onclick="setMode('diretta')">Diretta δmin/δmax</button>
+      <button class="seg-btn" id="m-iso" onclick="setMode('iso')">Da accopp. ISO</button>
+    </div>
+  </div>
+
+  <div class="mode-panel active" id="mp-diretta">
+    <div class="frow2">
+      <div class="field">
+        <div class="fhdr"><span class="flabel" data-tip="Interferenza diametrale MINIMA teorica (µm), prima della detrazione per rugosità.&#10;δmin = d_albero,min − D_foro,max.&#10;È la condizione più sfavorevole per l'ADERENZA: da δmin si ricava p_min e quindi la coppia e la forza trasmissibili.&#10;Ordine di grandezza: 0,5 ÷ 1,5 ‰ del diametro.">Interferenza δmin</span><span class="funit">µm</span></div>
+        <div class="srow">
+          <div class="arr" onclick="adjust('dmin',-5)">−</div>
+          <input type="number" id="dmin" class="numinput" value="40" min="0" step="5" oninput="calculate()">
+          <div class="arr" onclick="adjust('dmin',5)">+</div>
+        </div>
+      </div>
+      <div class="field">
+        <div class="fhdr"><span class="flabel" data-tip="Interferenza diametrale MASSIMA teorica (µm), prima della detrazione per rugosità.&#10;δmax = d_albero,max − D_foro,min.&#10;È la condizione più sfavorevole per la RESISTENZA: da δmax si ricavano p_max, le tensioni nel mozzo, la forza di piantaggio e la temperatura di montaggio.">Interferenza δmax</span><span class="funit">µm</span></div>
+        <div class="srow">
+          <div class="arr" onclick="adjust('dmax',-5)">−</div>
+          <input type="number" id="dmax" class="numinput" value="80" min="0" step="5" oninput="calculate()">
+          <div class="arr" onclick="adjust('dmax',5)">+</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="mode-panel" id="mp-iso">
+    <div class="field">
+      <div class="fhdr"><span class="flabel" data-tip="Accoppiamento ISO 286 in sistema foro-base (H).&#10;δmax = es_albero − EI_foro, δmin = ei_albero − ES_foro.&#10;H7/p6 — forzato leggero, smontabile, centraggio di ruote e boccole.&#10;H7/r6 — forzato medio.&#10;H7/s6 — forzato, tipico dei calettamenti di corone e ruote dentate.&#10;H7/u6 — forzato pesante, montaggio quasi sempre a caldo.&#10;H8/u8 — forzato pesante con tolleranze larghe (fusioni, fabbricazione economica).&#10;Tabelle valide per d = 1 ÷ 500 mm.">Accoppiamento ISO</span></div>
+      <select id="fit" class="select-field" onchange="calculate()">
+        <option value="H7/p6" selected>H7/p6 — forzato leggero</option>
+        <option value="H7/r6">H7/r6 — forzato medio</option>
+        <option value="H7/s6">H7/s6 — forzato</option>
+        <option value="H7/u6">H7/u6 — forzato pesante</option>
+        <option value="H8/u8">H8/u8 — forzato pesante (tolleranze larghe)</option>
+      </select>
+    </div>
+    <div class="frow2">
+      <div class="field">
+        <div class="fhdr"><span class="flabel" data-tip="Interferenza minima ricavata dagli scostamenti ISO 286-2:&#10;δmin = ei (albero) − ES (foro).&#10;Se risulta ≤ 0 l'accoppiamento non garantisce interferenza in tutte le condizioni (caso tipico di H7/p6 sui piccoli diametri): il calettamento non è affidabile con la sola forzatura.">δmin da ISO</span><span class="funit">µm</span></div>
+        <input type="number" id="dminIso" class="numinput" value="" readonly>
+      </div>
+      <div class="field">
+        <div class="fhdr"><span class="flabel" data-tip="Interferenza massima ricavata dagli scostamenti ISO 286-2:&#10;δmax = es (albero) − EI (foro).&#10;Con foro H, EI = 0, quindi δmax coincide con lo scostamento superiore dell'albero.">δmax da ISO</span><span class="funit">µm</span></div>
+        <input type="number" id="dmaxIso" class="numinput" value="" readonly>
+      </div>
+    </div>
+    <div class="note" style="margin-bottom:6px">Scostamenti da ISO 286-1/2, sistema foro-base. Per esplorare qualsiasi altra coppia di tolleranze, analisi termica e diagrammi delle zone: <a href="accoppiamenti_iso.html" style="color:var(--acc)">scheda Accoppiamenti ISO →</a></div>
+  </div>
+
+  <div class="frow2">
+    <div class="field">
+      <div class="fhdr"><span class="flabel" data-tip="Rugosità Rz della superficie dell'albero (µm).&#10;Al montaggio le creste delle asperità vengono spianate e una parte dell'interferenza va perduta.&#10;Valori tipici: rettificato Rz 4÷6,3 · tornito fine Rz 6,3÷16 · tornito Rz 16÷25.">Rz albero</span><span class="funit">µm</span></div>
+      <div class="srow">
+        <div class="arr" onclick="adjust('rza',-1)">−</div>
+        <input type="number" id="rza" class="numinput" value="6.3" min="0" step="1" oninput="calculate()">
+        <div class="arr" onclick="adjust('rza',1)">+</div>
+      </div>
+    </div>
+    <div class="field">
+      <div class="fhdr"><span class="flabel" data-tip="Rugosità Rz della superficie del foro del mozzo (µm).&#10;Perdita di interferenza per spianamento delle asperità (DIN 7190):&#10;δ_eff = δ − 0,8·(Rz_albero + Rz_mozzo).&#10;La detrazione si applica sia a δmin sia a δmax.">Rz mozzo</span><span class="funit">µm</span></div>
+      <div class="srow">
+        <div class="arr" onclick="adjust('rzm',-1)">−</div>
+        <input type="number" id="rzm" class="numinput" value="6.3" min="0" step="1" oninput="calculate()">
+        <div class="arr" onclick="adjust('rzm',1)">+</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="stitle">Materiale albero</div>
+
+  <div class="field">
+    <div class="fhdr"><span class="flabel" data-tip="Preset di modulo elastico E, coefficiente di Poisson ν, dilatazione termica α e snervamento Rp0,2 per l'albero.&#10;Selezionare 'Personalizzato' per impostare valori propri: i quattro campi restano comunque editabili.">Materiale</span></div>
+    <select id="mat-a" class="select-field" onchange="onMat('a')">
+      <option value="acciaio" selected>Acciaio — E 206000 · Rp0,2 400</option>
+      <option value="ghisa">Ghisa — E 110000 · Rp0,2 250</option>
+      <option value="alluminio">Alluminio — E 70000 · Rp0,2 250</option>
+      <option value="bronzo">Bronzo — E 100000 · Rp0,2 200</option>
+      <option value="custom">Personalizzato</option>
+    </select>
+  </div>
+
+  <div class="frow4">
+    <div class="field">
+      <div class="fhdr"><span class="flabel" data-tip="Modulo elastico dell'albero (MPa).&#10;Compare al denominatore della cedevolezza: (1/Ea)·[(1+qa²)/(1−qa²) − νa].&#10;Più E è basso più l'albero cede e più bassa risulta la pressione di contatto a parità di interferenza.">E</span></div>
+      <input type="number" id="Ea" class="numinput" value="206000" min="1" step="1000" oninput="onCustom('a')">
+    </div>
+    <div class="field">
+      <div class="fhdr"><span class="flabel" data-tip="Coefficiente di Poisson dell'albero.&#10;Per l'albero (cilindro compresso esternamente) entra con segno meno: (1+qa²)/(1−qa²) − νa.&#10;Acciaio 0,30 · ghisa 0,25 · alluminio 0,33 · bronzo 0,34.">ν</span></div>
+      <input type="number" id="na" class="numinput" value="0.30" min="0" max="0.5" step="0.01" oninput="onCustom('a')">
+    </div>
+    <div class="field">
+      <div class="fhdr"><span class="flabel" data-tip="Coefficiente di dilatazione termica lineare dell'albero (1/°C ·10⁻⁶).&#10;Usato per il montaggio per raffreddamento dell'albero: ΔT = (δ_eff,max + gioco)/(αa·d).">α ·10⁻⁶</span></div>
+      <input type="number" id="aa" class="numinput" value="11.5" min="0" step="0.5" oninput="onCustom('a')">
+    </div>
+    <div class="field">
+      <div class="fhdr"><span class="flabel" data-tip="Carico unitario di scostamento dallo 0,2% dell'albero (MPa).&#10;Limite di riferimento per la verifica di resistenza: σ_id,albero ≤ Rp0,2/CS.&#10;Significativo solo per albero CAVO: l'albero pieno è in compressione idrostatica e non è mai critico.">Rp0,2</span></div>
+      <input type="number" id="Rpa" class="numinput" value="400" min="1" step="10" oninput="onCustom('a')">
+    </div>
+  </div>
+
+  <div class="stitle">Materiale mozzo</div>
+
+  <div class="field">
+    <div class="fhdr"><span class="flabel" data-tip="Preset di E, ν, α e Rp0,2 per il mozzo.&#10;Il mozzo è quasi sempre il componente critico: è sollecitato a trazione tangenziale al foro (cilindro in pressione interna).&#10;Per la ghisa, materiale fragile, confrontare piuttosto con la resistenza a trazione Rm divisa per un coefficiente più alto (3÷4).">Materiale</span></div>
+    <select id="mat-m" class="select-field" onchange="onMat('m')">
+      <option value="acciaio" selected>Acciaio — E 206000 · Rp0,2 400</option>
+      <option value="ghisa">Ghisa — E 110000 · Rp0,2 250</option>
+      <option value="alluminio">Alluminio — E 70000 · Rp0,2 250</option>
+      <option value="bronzo">Bronzo — E 100000 · Rp0,2 200</option>
+      <option value="custom">Personalizzato</option>
+    </select>
+  </div>
+
+  <div class="frow4">
+    <div class="field">
+      <div class="fhdr"><span class="flabel" data-tip="Modulo elastico del mozzo (MPa).&#10;Entra nella cedevolezza come (1/Em)·[(1+qm²)/(1−qm²) + νm].&#10;Un mozzo in alluminio su albero d'acciaio dà pressioni molto più basse a parità di interferenza.">E</span></div>
+      <input type="number" id="Em" class="numinput" value="206000" min="1" step="1000" oninput="onCustom('m')">
+    </div>
+    <div class="field">
+      <div class="fhdr"><span class="flabel" data-tip="Coefficiente di Poisson del mozzo.&#10;Per il mozzo (cilindro in pressione interna) entra con segno più: (1+qm²)/(1−qm²) + νm.">ν</span></div>
+      <input type="number" id="nm" class="numinput" value="0.30" min="0" max="0.5" step="0.01" oninput="onCustom('m')">
+    </div>
+    <div class="field">
+      <div class="fhdr"><span class="flabel" data-tip="Coefficiente di dilatazione termica lineare del mozzo (1/°C ·10⁻⁶).&#10;Governa il montaggio a caldo: ΔT = (δ_eff,max + gioco)/(αm·d).&#10;Acciaio 11,5 · ghisa 10,5 · alluminio 23 · bronzo 18 (·10⁻⁶ 1/°C).">α ·10⁻⁶</span></div>
+      <input type="number" id="am" class="numinput" value="11.5" min="0" step="0.5" oninput="onCustom('m')">
+    </div>
+    <div class="field">
+      <div class="fhdr"><span class="flabel" data-tip="Carico unitario di scostamento dallo 0,2% del mozzo (MPa).&#10;Verifica: σ_id,mozzo = 2·p_max/(1−qm²) ≤ Rp0,2/CS.&#10;È la verifica quasi sempre determinante del calettamento.">Rp0,2</span></div>
+      <input type="number" id="Rpm" class="numinput" value="400" min="1" step="10" oninput="onCustom('m')">
+    </div>
+  </div>
+
+  <div class="stitle">Attrito e carichi</div>
+
+  <div class="frow2">
+    <div class="field">
+      <div class="fhdr"><span class="flabel" data-tip="Coefficiente di attrito di ADERENZA in esercizio (adimensionale).&#10;Acciaio/acciaio a secco, piantaggio a freddo: 0,08 ÷ 0,12.&#10;Montaggio a caldo (superfici pulite e ossidate dal riscaldamento): 0,14 ÷ 0,20.&#10;Acciaio/ghisa 0,10÷0,12 · acciaio/lega leggera 0,10÷0,15.&#10;Superfici oliate: valori più bassi (0,05÷0,08).">Attrito µ</span></div>
+      <div class="srow">
+        <div class="arr" onclick="adjust('mu',-0.01)">−</div>
+        <input type="number" id="mu" class="numinput" value="0.12" min="0.01" step="0.01" oninput="calculate()">
+        <div class="arr" onclick="adjust('mu',0.01)">+</div>
+      </div>
+    </div>
+    <div class="field">
+      <div class="fhdr"><span class="flabel" data-tip="Coefficiente di attrito allo SCORRIMENTO durante il piantaggio a freddo.&#10;Serve solo a stimare la forza di pressatura e si assume più alto di quello di esercizio (asperità che si incidono a freddo, assenza di rodaggio): 0,15 ÷ 0,25 per acciaio/acciaio a secco.&#10;Non va usato per la verifica di aderenza.">µ piantaggio</span></div>
+      <div class="srow">
+        <div class="arr" onclick="adjust('mup',-0.01)">−</div>
+        <input type="number" id="mup" class="numinput" value="0.15" min="0.01" step="0.01" oninput="calculate()">
+        <div class="arr" onclick="adjust('mup',0.01)">+</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="frow2">
+    <div class="field">
+      <div class="fhdr"><span class="flabel" data-tip="Coppia da trasmettere per solo attrito (N·m).&#10;Va confrontata con Mt_max = µ·p_min·π·d²·L/2.&#10;Inserire 0 se il calettamento trasmette solo carico assiale.&#10;Per carichi alternati o urti, maggiorare con il coefficiente di sicurezza sull'aderenza.">Coppia Mt</span><span class="funit">N·m</span></div>
+      <div class="srow">
+        <div class="arr" onclick="adjust('Mt',-50)">−</div>
+        <input type="number" id="Mt" class="numinput" value="600" min="0" step="50" oninput="calculate()">
+        <div class="arr" onclick="adjust('Mt',50)">+</div>
+      </div>
+    </div>
+    <div class="field">
+      <div class="fhdr"><span class="flabel" data-tip="Forza assiale da trasmettere per solo attrito (N).&#10;Va confrontata con Fa_max = µ·p_min·π·d·L.&#10;Inserire 0 se il calettamento trasmette solo coppia.&#10;Se coppia e forza agiscono insieme si usa la verifica combinata.">Forza assiale Fa</span><span class="funit">N</span></div>
+      <div class="srow">
+        <div class="arr" onclick="adjust('Fa',-500)">−</div>
+        <input type="number" id="Fa" class="numinput" value="0" min="0" step="500" oninput="calculate()">
+        <div class="arr" onclick="adjust('Fa',500)">+</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="frow2">
+    <div class="field">
+      <div class="fhdr"><span class="flabel" data-tip="Coefficiente di sicurezza richiesto sull'ADERENZA.&#10;Copre l'incertezza sul coefficiente di attrito (molto dispersivo) e gli extra-carichi dinamici.&#10;1,3÷1,5 carico costante · 1,5÷2 carico alternato · 2÷3 urti e avviamenti frequenti.">CS aderenza</span></div>
+      <div class="srow">
+        <div class="arr" onclick="adjust('csA',-0.1)">−</div>
+        <input type="number" id="csA" class="numinput" value="1.5" min="1" step="0.1" oninput="calculate()">
+        <div class="arr" onclick="adjust('csA',0.1)">+</div>
+      </div>
+    </div>
+    <div class="field">
+      <div class="fhdr"><span class="flabel" data-tip="Coefficiente di sicurezza richiesto sulla TENSIONE del mozzo (e dell'albero cavo) rispetto a Rp0,2.&#10;1,2÷1,5 per acciai tenaci con interferenza controllata.&#10;Per materiali fragili (ghisa) usare 3÷4 rispetto a Rm, non a Rp0,2.">CS tensione</span></div>
+      <div class="srow">
+        <div class="arr" onclick="adjust('csT',-0.1)">−</div>
+        <input type="number" id="csT" class="numinput" value="1.5" min="1" step="0.1" oninput="calculate()">
+        <div class="arr" onclick="adjust('csT',0.1)">+</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="stitle">Montaggio a caldo / a freddo</div>
+
+  <div class="frow2">
+    <div class="field">
+      <div class="fhdr"><span class="flabel" data-tip="Temperatura ambiente di riferimento al montaggio (°C).&#10;La temperatura del mozzo da raggiungere è T_amb + ΔT; quella dell'albero da raffreddare è T_amb − ΔT.">T ambiente</span><span class="funit">°C</span></div>
+      <div class="srow">
+        <div class="arr" onclick="adjust('Tamb',-5)">−</div>
+        <input type="number" id="Tamb" class="numinput" value="20" min="-50" step="5" oninput="calculate()">
+        <div class="arr" onclick="adjust('Tamb',5)">+</div>
+      </div>
+    </div>
+    <div class="field">
+      <div class="fhdr"><span class="flabel" data-tip="Gioco di montaggio (mm): dilatazione aggiuntiva oltre l'interferenza, necessaria per infilare i pezzi senza grippaggio durante il trasferimento.&#10;Valore suggerito 0,001·d (aggiornato automaticamente con il diametro finché non lo si modifica a mano).&#10;ΔT = (δ_eff,max + gioco)/(α·d).">Gioco montaggio</span><span class="funit">mm</span></div>
+      <div class="srow">
+        <div class="arr" onclick="adjust('gap',-0.01)">−</div>
+        <input type="number" id="gap" class="numinput" value="0.06" min="0" step="0.01" oninput="onGapEdit()">
+        <div class="arr" onclick="adjust('gap',0.01)">+</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="note">
+    Modello di <b>Lamé</b> per cilindri a parete spessa, in campo elastico e con pressione uniforme
+    sulla superficie di contatto. Non considera i picchi di pressione agli spigoli del mozzo,
+    la flessione dell'albero né gli effetti della forza centrifuga alle alte velocità periferiche.
+  </div>
+
+</div>
+
+<!-- ═══════════════ PANNELLO RISULTATI ═══════════════ -->
+<div class="rpanel">
+
+  <div id="hint"></div>
+
+  <div class="result-section">
+    <div class="result-section-title">Geometria e rapporti — <span id="geoDesc"></span></div>
+    <div class="results-grid-3" id="geoGrid"></div>
+  </div>
+
+  <div class="schematic-wrap"><div id="schema"></div></div>
+
+  <div class="result-section">
+    <div class="result-section-title">Interferenza efficace e pressione di contatto</div>
+    <div class="results-grid-3" id="intGrid"></div>
+  </div>
+
+  <div class="result-section">
+    <div class="result-section-title">Capacità di trasmissione (con p_min)</div>
+    <div class="results-grid-3" id="capGrid"></div>
+  </div>
+
+  <div class="result-section">
+    <div class="result-section-title">Tensioni (con p_max)</div>
+    <div class="results-grid-3" id="stsGrid"></div>
+  </div>
+
+  <div class="result-section">
+    <div class="result-section-title">Montaggio</div>
+    <div class="results-grid-3" id="mntGrid"></div>
+  </div>
+
+  <div class="result-section">
+    <div class="result-section-title">Verifiche</div>
+    <div class="verification-grid" id="verGrid"></div>
+  </div>
+
+  <div class="result-section">
+    <div class="result-section-title">Formule utilizzate</div>
+    <div class="fbox">
+      <b>Rapporti geometrici</b> — qa = di/d (albero, 0 se pieno) · qm = d/De (mozzo)
+      <hr>
+      <b>Interferenza efficace</b> (DIN 7190) — δ_eff = δ − 0,8·(Rz_albero + Rz_mozzo) &nbsp;[µm]
+      <hr>
+      <b>Pressione di contatto</b> (Lamé, δ in mm) —<br>
+      &nbsp;&nbsp;p = δ / { d · [ <span class="fk">(1/Em)·((1+qm²)/(1−qm²) + νm)</span> + <span class="fk">(1/Ea)·((1+qa²)/(1−qa²) − νa)</span> ] }<br>
+      &nbsp;&nbsp;albero pieno (qa = 0) → il secondo termine diventa (1 − νa)/Ea<br>
+      &nbsp;&nbsp;p_min da δ_eff,min (aderenza) · p_max da δ_eff,max (resistenza)
+      <hr>
+      <b>Capacità di trasmissione</b> (con p_min) —<br>
+      &nbsp;&nbsp;Fa_max = µ·p_min·π·d·L &nbsp;[N] &nbsp;·&nbsp; Mt_max = µ·p_min·π·d²·L/2 &nbsp;[N·mm]<br>
+      &nbsp;&nbsp;carichi combinati: √( (2·Mt/d)² + Fa² ) ≤ µ·p_min·π·d·L
+      <hr>
+      <b>Tensioni nel mozzo</b> (pressione interna, punto critico al foro) —<br>
+      &nbsp;&nbsp;σ_t = +p_max·(1+qm²)/(1−qm²) &nbsp;·&nbsp; σ_r = −p_max<br>
+      &nbsp;&nbsp;σ_id (Tresca) = σ_t − σ_r = 2·p_max/(1−qm²)
+      <hr>
+      <b>Tensioni nell'albero</b> —<br>
+      &nbsp;&nbsp;pieno: σ_t = σ_r = −p_max (compressione idrostatica) → σ_id ≈ 0<br>
+      &nbsp;&nbsp;cavo: σ_t al foro = −2·p_max/(1−qa²) → σ_id = 2·p_max/(1−qa²)
+      <hr>
+      <b>Montaggio</b> —<br>
+      &nbsp;&nbsp;piantaggio a freddo: F_press = µ_press·p_max·π·d·L &nbsp;[N]<br>
+      &nbsp;&nbsp;riscaldamento mozzo: ΔT = (δ_eff,max + gioco)/(α_mozzo·d) → T = T_amb + ΔT<br>
+      &nbsp;&nbsp;raffreddamento albero: ΔT = (δ_eff,max + gioco)/(α_albero·d) → T = T_amb − ΔT
+    </div>
+  </div>
+
+</div>
+</div>
+
+<footer>
+  Andrea Cavani · Moduli calcolo HTML<br>
+  Riferimenti: <b>ISO 286-1/2</b> (sistema di tolleranze e scostamenti) · <b>DIN 7190</b> (calettamenti forzati,
+  pressione di contatto e perdita di interferenza per rugosità) · teoria dei <b>cilindri a parete spessa di Lamé</b>.<br>
+  Verifica di massima in campo elastico. Non copre plasticizzazione locale, fatica del mozzo, fretting corrosion,
+  effetti centrifughi e concentrazioni di tensione agli spigoli: per applicazioni critiche fare riferimento a
+  DIN 7190 e a un'analisi agli elementi finiti.
+</footer>
+
+<script>
+// ═══════════════════════════════════════════════════════
+//  MATERIALI  (E [MPa], ν, α [1/°C], Rp0,2 [MPa])
+// ═══════════════════════════════════════════════════════
+const MATS = {
+  acciaio  : {E:206000, nu:0.30, al:11.5e-6, Rp:400, n:'Acciaio'},
+  ghisa    : {E:110000, nu:0.25, al:10.5e-6, Rp:250, n:'Ghisa'},
+  alluminio: {E: 70000, nu:0.33, al:23.0e-6, Rp:250, n:'Alluminio'},
+  bronzo   : {E:100000, nu:0.34, al:18.0e-6, Rp:200, n:'Bronzo'}
+};
+
+// ═══════════════════════════════════════════════════════
+//  ISO 286 — SCAGLIONI, GRADI IT E SCOSTAMENTI FONDAMENTALI
+//  (stesse tabelle usate in accoppiamenti_iso.html)
+// ═══════════════════════════════════════════════════════
+const RANGES = [3,6,10,18,30,50,80,120,180,250,315,400,500];
+const IT_TAB = {
+  6: [6,8,9,11,13,16,19,22,25,29,32,36,40],
+  7: [10,12,15,18,21,25,30,35,40,46,52,57,63],
+  8: [14,18,22,27,33,39,46,54,63,72,81,89,97]
+};
+// Posizione p: scaglioni "grossi" (gli stessi degli IT)
+const P_TAB = [6,12,15,18,22,26,32,37,43,50,56,62,68];
+// Posizioni r, s, u: scaglioni fini ISO 286-1 (limiti superiori, mm)
+const FINE_LIM = [3,6,10,14,18,24,30,40,50,65,80,100,120,140,160,180,
+                  200,225,250,280,315,355,400,450,500];
+const FINE_DEV = {
+  r: [ 10, 15, 19, 23, 23, 28, 28, 34, 34, 41, 43, 51, 54, 63, 65, 68,
+       77, 80, 84, 94, 98,108,114,126,132],
+  s: [ 14, 19, 23, 28, 28, 35, 35, 43, 43, 53, 59, 71, 79, 92,100,108,
+      122,130,140,158,170,190,208,232,252],
+  u: [ 18, 23, 28, 33, 33, 41, 48, 60, 70, 87,102,124,144,170,190,210,
+      236,258,284,315,350,390,435,490,540]
+};
+function rangeIdx(D){ for(let i=0;i<RANGES.length;i++) if(D<=RANGES[i]) return i; return RANGES.length-1; }
+function fineIdx(D){  for(let i=0;i<FINE_LIM.length;i++) if(D<=FINE_LIM[i]) return i; return FINE_LIM.length-1; }
+
+// Scostamento fondamentale INFERIORE ei dell'albero per le posizioni di interferenza
+function shaftEi(letter, D){
+  if(letter==='p') return P_TAB[rangeIdx(D)];
+  return FINE_DEV[letter][fineIdx(D)];
+}
+
+// Interferenze δmin/δmax (µm) per un accoppiamento foro-base "H<gh>/<lettera><gs>"
+function isoFit(code, D){
+  const m = code.match(/^H(\d)\/([a-z])(\d)$/);
+  if(!m) return null;
+  const gh = +m[1], letter = m[2], gs = +m[3];
+  const ri = rangeIdx(D);
+  const ITh = IT_TAB[gh][ri], ITs = IT_TAB[gs][ri];
+  const EI = 0, ES = ITh;                 // foro H: EI = 0
+  const ei = shaftEi(letter, D), es = ei + ITs;
+  return {dmax: es - EI, dmin: ei - ES, ei, es, EI, ES, ITh, ITs};
+}
+
+// ═══════════════════════════════════════════════════════
+//  HELPER
+// ═══════════════════════════════════════════════════════
+const $  = id => document.getElementById(id);
+const PI = Math.PI;
+const fp = (v,n=1) => isFinite(v) ? v.toFixed(n) : '—';
+// Separatore delle migliaia a spazio: il punto italiano sarebbe ambiguo
+// accanto ai decimali prodotti da toFixed.
+const fi = v => isFinite(v) ? String(Math.round(v)).replace(/\B(?=(\d{3})+(?!\d))/g,' ') : '—';
+const num = id => { const v = parseFloat($(id).value); return isFinite(v) ? v : 0; };
+
+function box(label,value,unit,tip){
+  return `<div class="result-box">
+    <div class="result-label"${tip?` data-tip="${tip}"`:''}>${label}</div>
+    <div class="result-value">${value}<span class="result-unit">${unit||''}</span></div>
+  </div>`;
+}
+function sfClass(sf){
+  // Un rapporto infinito (denominatore nullo: carico assente) e' il caso
+  // PIU' favorevole, non un errore: solo NaN o valori negativi sono anomali.
+  if(isNaN(sf) || sf<0) return 'err';
+  if(!isFinite(sf))     return 'ok';
+  if(sf>=1.1) return 'ok';
+  if(sf>=1.0) return 'warn';
+  return 'err';
+}
+function sfLabel(cl){ return cl==='ok'?'OK':(cl==='warn'?'LIMITE':'INSUFF.'); }
+function vrow(label,value,unit,sf,tip,forceCls){
+  const cl = forceCls || sfClass(sf);
+  const pct = Math.min(100, isFinite(sf)&&sf>0 ? 100/sf : 100);
+  return `<div class="verify-item">
+    <span class="verify-label"${tip?` data-tip="${tip}"`:''}>${label}</span>
+    <span class="util"><span class="${cl}" style="width:${pct}%"></span></span>
+    <span class="verify-value">${value}<span class="verify-unit">${unit||''}</span></span>
+    <span class="verify-status ${cl}">${sfLabel(cl)}</span>
+  </div>`;
+}
+function adjust(id,step){
+  const el = $(id);
+  const dec = (String(step).split('.')[1]||'').length;
+  let v = (parseFloat(el.value)||0) + step;
+  if(el.min!=='' && v < parseFloat(el.min)) v = parseFloat(el.min);
+  el.value = dec ? v.toFixed(dec) : v;
+  if(id==='gap') onGapEdit();
+  else if(id==='d') onGeom();
+  else calculate();
+}
+
+// ═══════════════════════════════════════════════════════
+//  UI
+// ═══════════════════════════════════════════════════════
+let mode = 'diretta';        // 'diretta' | 'iso'
+let gapAuto = true;          // il gioco di montaggio segue 0.001·d finche' non e' toccato a mano
+
+function setMode(m){
+  mode = m;
+  $('m-diretta').classList.toggle('on', m==='diretta');
+  $('m-iso').classList.toggle('on', m==='iso');
+  $('mp-diretta').classList.toggle('active', m==='diretta');
+  $('mp-iso').classList.toggle('active', m==='iso');
+  calculate();
+}
+function onMat(w){
+  const sel = $(w==='a'?'mat-a':'mat-m').value;
+  const M = MATS[sel];
+  if(M){
+    $(w==='a'?'Ea':'Em').value  = M.E;
+    $(w==='a'?'na':'nm').value  = M.nu;
+    $(w==='a'?'aa':'am').value  = (M.al*1e6).toFixed(1);
+    $(w==='a'?'Rpa':'Rpm').value = M.Rp;
+  }
+  calculate();
+}
+// Modificare a mano una costante del materiale porta il preset su "Personalizzato":
+// lasciare il nome di un materiale con valori diversi dai suoi sarebbe fuorviante.
+function onCustom(w){
+  $(w==='a'?'mat-a':'mat-m').value = 'custom';
+  calculate();
+}
+function onGapEdit(){ gapAuto = false; calculate(); }
+function onGeom(){
+  if(gapAuto) $('gap').value = (0.001*Math.max(0,num('d'))).toFixed(3);
+  calculate();
+}
+
+// ═══════════════════════════════════════════════════════
+//  SCHEMA
+// ═══════════════════════════════════════════════════════
+function drawSchema(d, De, di, L){
+  const W=440, H=170, cy=H/2;
+  const scale = Math.min(60/(De/2), 1e9);        // mezzo mozzo -> max 60 px
+  const rm = (De/2)*scale, ra = (d/2)*scale, ri = (di/2)*scale;
+  const x0 = 120, len = Math.max(30, Math.min(200, L*scale*1.2));
+  return `<svg viewBox="0 0 ${W} ${H}" xmlns="http://www.w3.org/2000/svg">
+  <defs><marker id="ar" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto">
+    <path d="M0,0 L6,3 L0,6 z" fill="#9a9dab"/></marker></defs>
+  <!-- albero -->
+  <rect x="30" y="${cy-ra}" width="${x0+len+40-30}" height="${2*ra}" fill="rgba(79,195,247,.16)" stroke="#4fc3f7" stroke-width="1.2"/>
+  ${di>0?`<rect x="30" y="${cy-ri}" width="${x0+len+40-30}" height="${2*ri}" fill="#0e0f11" stroke="#4fc3f7" stroke-width="1" stroke-dasharray="3 2"/>`:''}
+  <!-- mozzo -->
+  <rect x="${x0}" y="${cy-rm}" width="${len}" height="${rm-ra}" fill="rgba(255,167,38,.14)" stroke="#ffa726" stroke-width="1.2"/>
+  <rect x="${x0}" y="${cy+ra}" width="${len}" height="${rm-ra}" fill="rgba(255,167,38,.14)" stroke="#ffa726" stroke-width="1.2"/>
+  <!-- asse -->
+  <line x1="20" y1="${cy}" x2="${W-20}" y2="${cy}" stroke="#7d8090" stroke-width=".7" stroke-dasharray="8 3 2 3"/>
+  <!-- superficie di contatto -->
+  <line x1="${x0}" y1="${cy-ra}" x2="${x0+len}" y2="${cy-ra}" stroke="#ef5350" stroke-width="2"/>
+  <line x1="${x0}" y1="${cy+ra}" x2="${x0+len}" y2="${cy+ra}" stroke="#ef5350" stroke-width="2"/>
+  <!-- quote -->
+  <line x1="${x0}" y1="${cy-rm-14}" x2="${x0+len}" y2="${cy-rm-14}" stroke="#9a9dab" stroke-width=".8" marker-start="url(#ar)" marker-end="url(#ar)"/>
+  <text x="${x0+len/2}" y="${cy-rm-19}" fill="#9a9dab" font-family="DM Mono, monospace" font-size="10" text-anchor="middle">L = ${fp(L,0)} mm</text>
+  <text x="${x0+len+50}" y="${cy-ra/2}" fill="#4fc3f7" font-family="DM Mono, monospace" font-size="10">⌀d = ${fp(d,1)}</text>
+  <text x="${x0+len+50}" y="${cy-rm+12}" fill="#ffa726" font-family="DM Mono, monospace" font-size="10">⌀De = ${fp(De,1)}</text>
+  ${di>0?`<text x="${x0+len+50}" y="${cy+14}" fill="#9a9dab" font-family="DM Mono, monospace" font-size="10">⌀di = ${fp(di,1)}</text>`:''}
+  <text x="34" y="${cy-ra-7}" fill="#4fc3f7" font-family="Barlow Condensed, sans-serif" font-size="12" letter-spacing="1">ALBERO</text>
+  <text x="${x0+4}" y="${cy-rm-2}" fill="#ffa726" font-family="Barlow Condensed, sans-serif" font-size="12" letter-spacing="1">MOZZO</text>
+</svg>`;
+}
+
+// ═══════════════════════════════════════════════════════
+//  CALCOLO
+// ═══════════════════════════════════════════════════════
+function calculate(){
+  const d = num('d'), De = num('De'), di = num('di'), L = num('L');
+  const rza = num('rza'), rzm = num('rzm');
+  const Ea = num('Ea'), na = num('na'), aa = num('aa')*1e-6, Rpa = num('Rpa');
+  const Em = num('Em'), nm = num('nm'), am = num('am')*1e-6, Rpm = num('Rpm');
+  const mu = num('mu'), mup = num('mup');
+  const MtReq = num('Mt'), FaReq = num('Fa');
+  const csA = num('csA'), csT = num('csT');
+  const Tamb = num('Tamb'), gap = num('gap');
+
+  // ── Interferenza nominale (µm)
+  let d1, d2, fitInfo = null;
+  if(mode==='iso'){
+    fitInfo = isoFit($('fit').value, d);
+    d1 = fitInfo ? fitInfo.dmin : 0;
+    d2 = fitInfo ? fitInfo.dmax : 0;
+    $('dminIso').value = fitInfo ? d1 : '';
+    $('dmaxIso').value = fitInfo ? d2 : '';
+  } else {
+    d1 = num('dmin'); d2 = num('dmax');
+  }
+  if(d2 < d1){ const t=d1; d1=d2; d2=t; }   // ordine robusto anche con input invertiti
+
+  // ── Validita' geometrica
+  const geomOk = d>0 && De>d && L>0 && di<d && di>=0;
+
+  // ── Perdita per spianamento delle asperita' (DIN 7190)
+  const loss   = 0.8*(rza+rzm);             // µm
+  const emin   = d1 - loss, emax = d2 - loss;   // µm
+
+  // ── Rapporti geometrici
+  const qa = d>0 ? di/d : 0;
+  const qm = De>0 ? d/De : 0;
+
+  // ── Cedevolezza (Lamé): p = δ[mm] / (d·C)
+  const Km = (1+qm*qm)/(1-qm*qm) + nm;
+  const Ka = qa>0 ? (1+qa*qa)/(1-qa*qa) - na : 1 - na;
+  const C  = Km/Em + Ka/Ea;                 // 1/MPa
+  const pOf = dmu => (geomOk && C>0 && dmu>0) ? (dmu/1000)/(d*C) : 0;
+  const pmin = pOf(emin), pmax = pOf(emax);
+
+  // ── Capacita' di trasmissione (condizione peggiore: p_min)
+  const Ac     = PI*d*L;                    // area di contatto, mm²
+  const FaMax  = mu*pmin*Ac;                // N
+  const MtMaxN = mu*pmin*PI*d*d*L/2;        // N·mm
+  const MtMax  = MtMaxN/1000;               // N·m
+  // Carico combinato: risultante tra forza periferica (2·Mt/d) e forza assiale
+  const Fper   = d>0 ? 2*MtReq*1000/d : 0;  // N
+  const Fcomb  = Math.sqrt(Fper*Fper + FaReq*FaReq);
+  const both   = MtReq>0 && FaReq>0;
+
+  // ── Tensioni (condizione peggiore: p_max)
+  const sigT_m  = pmax*(1+qm*qm)/(1-qm*qm);         // trazione al foro del mozzo
+  const sigR_m  = -pmax;
+  const sigId_m = (1-qm*qm)>0 ? 2*pmax/(1-qm*qm) : Infinity;
+  const sigT_a  = qa>0 ? -2*pmax/(1-qa*qa) : -pmax; // albero cavo: compressione al foro
+  const sigId_a = qa>0 ? 2*pmax/(1-qa*qa) : 0;      // albero pieno: idrostatico, σ_id ≈ 0
+  const ammM    = csT>0 ? Rpm/csT : 0;
+  const ammA    = csT>0 ? Rpa/csT : 0;
+
+  // ── Montaggio
+  const Fpress = mup*pmax*Ac;                       // N
+  const dTot   = emax/1000 + gap;                   // mm: dilatazione richiesta
+  const dT_m   = (am>0 && d>0) ? dTot/(am*d) : NaN; // riscaldamento mozzo
+  const dT_a   = (aa>0 && d>0) ? dTot/(aa*d) : NaN; // raffreddamento albero
+  const Tm     = Tamb + dT_m;
+  const Ta     = Tamb - dT_a;
+
+  // ══════════════ RENDER ══════════════
+  $('geoDesc').textContent = (di>0?'albero cavo':'albero pieno') + ' · ' +
+                             (qm>0?('qm = '+fp(qm,3)):'—');
+
+  $('geoGrid').innerHTML =
+    box('Rapporto mozzo qm', fp(qm,3), '', 'qm = d/De: rapporto tra diametro di accoppiamento e diametro esterno del mozzo.&#10;Governa sia la rigidezza del mozzo sia la tensione al foro, σ_id = 2·p/(1−qm²).&#10;Campo consigliato 0,2 ÷ 0,7: sopra 0,7 il mozzo è troppo sottile, sotto 0,2 l\'aumento di spessore non porta più benefici.') +
+    box('Rapporto albero qa', fp(qa,3), '', 'qa = di/d: 0 per albero pieno.&#10;Un albero cavo cede di più sotto la pressione esterna, quindi a parità di interferenza la pressione di contatto (e la coppia trasmissibile) diminuisce.') +
+    box('Spessore mozzo', fp((De-d)/2,2), 'mm', 'Spessore radiale della parete del mozzo, (De − d)/2.&#10;Un mozzo sottile si dilata molto e "perde" interferenza: la pressione di contatto scende e le tensioni tangenziali salgono.') +
+    box('Rapporto L/d', fp(d>0?L/d:NaN,2), '', 'Rapporto tra lunghezza accoppiata e diametro.&#10;Consigliato 0,8 ÷ 1,5. Oltre 2 la pressione non è più uniforme: la parte centrale è poco caricata e l\'aumento di L rende poco.') +
+    box('Area di contatto', fi(Ac), 'mm²', 'Superficie cilindrica di contatto, A = π·d·L.&#10;La forza di attrito disponibile è µ·p·A: è questa area a fissare la capacità di trasmissione.') +
+    box('Cedevolezza d·C', (geomOk?(d*C).toExponential(3):'—'), ' mm/MPa', 'Denominatore della formula di Lamé: d·[(1/Em)·((1+qm²)/(1−qm²)+νm) + (1/Ea)·((1+qa²)/(1−qa²)−νa)].&#10;p = δ[mm] / (d·C): più i due componenti sono cedevoli, minore è la pressione ottenuta a parità di interferenza.');
+
+  $('intGrid').innerHTML =
+    box('δmin nominale', fp(d1,1), 'µm', 'Interferenza diametrale minima di progetto, prima della detrazione per rugosità.&#10;' + (mode==='iso' ? 'Ricavata dagli scostamenti ISO 286: δmin = ei_albero − ES_foro.' : 'Valore inserito a mano (dato di disegno o misura).')) +
+    box('δmax nominale', fp(d2,1), 'µm', 'Interferenza diametrale massima di progetto, prima della detrazione per rugosità.&#10;' + (mode==='iso' ? 'Ricavata dagli scostamenti ISO 286: δmax = es_albero − EI_foro.' : 'Valore inserito a mano (dato di disegno o misura).')) +
+    box('Perdita rugosità', fp(loss,1), 'µm', 'Interferenza persa per spianamento delle creste delle asperità al montaggio (DIN 7190):&#10;Δδ = 0,8·(Rz_albero + Rz_mozzo).&#10;Si detrae sia da δmin sia da δmax.') +
+    box('δ efficace min', fp(emin,1), 'µm', 'δ_eff,min = δmin − 0,8·(Rz_a + Rz_m).&#10;È l\'interferenza realmente disponibile nel caso peggiore: da questa si calcola p_min e quindi la capacità di trasmissione.&#10;Deve essere > 0, altrimenti l\'accoppiamento può risultare con gioco.') +
+    box('δ efficace max', fp(emax,1), 'µm', 'δ_eff,max = δmax − 0,8·(Rz_a + Rz_m).&#10;È l\'interferenza del caso peggiore per la resistenza: da questa si calcolano p_max, le tensioni, la forza di piantaggio e la temperatura di montaggio.') +
+    box('δ_eff,min relativa', fp(d>0?emin/d:NaN,3), '‰', 'Interferenza efficace minima rapportata al diametro: δ_eff,min[µm]/d[mm] = ‰ del diametro.&#10;Ordine di grandezza usuale per i calettamenti in acciaio: 0,5 ÷ 1,5 ‰ del diametro.');
+
+  const pGrid =
+    box('Pressione p_min', fp(pmin,2), 'MPa', 'Pressione di contatto nella condizione di interferenza minima (caso peggiore per l\'aderenza).&#10;p = δ_eff,min[mm] / (d·C), con C = (1/Em)·((1+qm²)/(1−qm²)+νm) + (1/Ea)·((1+qa²)/(1−qa²)−νa).&#10;Su questa si calcolano coppia e forza trasmissibili.') +
+    box('Pressione p_max', fp(pmax,2), 'MPa', 'Pressione di contatto nella condizione di interferenza massima (caso peggiore per la resistenza).&#10;p = δ_eff,max[mm] / (d·C).&#10;Su questa si calcolano le tensioni nel mozzo, la forza di piantaggio e la temperatura di montaggio.') +
+    box('Forza radiale totale', fp(pmax*Ac/1000,1), 'kN', 'Risultante della pressione sulla superficie di contatto nel caso peggiore, p_max·π·d·L.&#10;Valore di riferimento per dimensionare attrezzatura e presse di montaggio.');
+  $('intGrid').innerHTML += pGrid;
+
+  $('capGrid').innerHTML =
+    box('Coppia trasmissibile', fp(MtMax,1), 'N·m', 'Mt_max = µ·p_min·π·d²·L/2, espressa in N·m.&#10;È la coppia limite di aderenza: superata, il mozzo slitta sull\'albero.&#10;Va confrontata con la coppia richiesta moltiplicata per il coefficiente di sicurezza.') +
+    box('Forza assiale trasm.', fp(FaMax/1000,2), 'kN', 'Fa_max = µ·p_min·π·d·L.&#10;Forza assiale limite prima dello slittamento; coincide anche con la forza necessaria a estrarre il pezzo nella condizione di interferenza minima.') +
+    box('Forza periferica 2Mt/d', fp(Fper/1000,2), 'kN', 'Forza tangenziale sulla superficie di contatto prodotta dalla coppia richiesta: Ft = 2·Mt/d.&#10;Si compone vettorialmente con la forza assiale nella verifica dei carichi combinati.') +
+    box('Carico combinato', fp(Fcomb/1000,2), 'kN', 'Risultante dei carichi richiesti sulla superficie di contatto: √((2·Mt/d)² + Fa²).&#10;Deve restare sotto µ·p_min·π·d·L moltiplicata per il coefficiente di sicurezza sull\'aderenza.') +
+    box('Sfrutt. aderenza', fp(FaMax>0?Fcomb/FaMax*100:NaN,1), '%', 'Rapporto tra carico combinato richiesto e capacità di aderenza disponibile (senza coefficiente di sicurezza).&#10;100% = slittamento imminente.') +
+    box('µ minimo necessario', fp(pmin*Ac>0?Fcomb*csA/(pmin*Ac):NaN,3), '', 'Coefficiente di attrito minimo che garantirebbe il carico richiesto con il CS di aderenza imposto:&#10;µ_min = CS·√((2Mt/d)²+Fa²) / (p_min·π·d·L).&#10;Confrontarlo con il µ realisticamente ottenibile dalla coppia di materiali e dal tipo di montaggio.');
+
+  $('stsGrid').innerHTML =
+    box('σ_t mozzo (foro)', fp(sigT_m,1), 'MPa', 'Tensione tangenziale di TRAZIONE al foro del mozzo, punto più sollecitato:&#10;σ_t = p_max·(1+qm²)/(1−qm²).&#10;È sempre maggiore della pressione di contatto: per qm = 0,5 vale già 1,67·p.') +
+    box('σ_r mozzo (foro)', fp(sigR_m,1), 'MPa', 'Tensione radiale al foro del mozzo: σ_r = −p_max (compressione, pari alla pressione di contatto).&#10;Sul diametro esterno si annulla.') +
+    box('σ_id mozzo (Tresca)', fp(sigId_m,1), 'MPa', 'Tensione ideale secondo Tresca (criterio conservativo):&#10;σ_id = σ_t − σ_r = 2·p_max/(1−qm²).&#10;Da confrontare con Rp0,2/CS. È la verifica quasi sempre determinante.') +
+    box('σ ammissibile mozzo', fp(ammM,1), 'MPa', 'Rp0,2 del mozzo diviso il coefficiente di sicurezza sulla tensione.&#10;σ_id,mozzo deve restare al di sotto di questo valore.') +
+    box('σ_t albero', fp(sigT_a,1), 'MPa', (qa>0
+        ? 'Albero CAVO: tensione tangenziale di compressione al foro, σ_t = −2·p_max/(1−qa²).&#10;Un albero cavo sottile può cedere per instabilità o snervamento prima del mozzo.'
+        : 'Albero PIENO: stato di compressione idrostatica uniforme, σ_t = σ_r = −p_max.&#10;Non è un punto critico: la tensione ideale è praticamente nulla.')) +
+    box('σ_id albero', fp(sigId_a,1), 'MPa', (qa>0
+        ? 'σ_id = 2·p_max/(1−qa²) per albero cavo. Da confrontare con Rp0,2/CS dell\'albero.'
+        : 'Albero pieno: σ_id ≈ 0 perché lo stato è idrostatico (σ_t = σ_r = σ_z,locale = −p).&#10;La verifica di resistenza dell\'albero non è significativa.'));
+
+  const hot  = isFinite(Tm) && Tm>300;
+  $('mntGrid').innerHTML =
+    box('Forza di piantaggio', fp(Fpress/1000,1), 'kN', 'Forza assiale necessaria al montaggio a freddo per pressa:&#10;F_press = µ_press·p_max·π·d·L.&#10;Si usa p_max (caso peggiore) e un attrito di scorrimento più alto di quello di esercizio.') +
+    box('Dilatazione richiesta', fp(dTot*1000,1), 'µm', 'Allargamento diametrale necessario per infilare i pezzi: δ_eff,max + gioco di montaggio.&#10;Il gioco serve perché durante il trasferimento parte della dilatazione è già persa per raffreddamento.') +
+    box('ΔT riscald. mozzo', fp(dT_m,0), '°C', 'Salto termico da imprimere al mozzo: ΔT = (δ_eff,max + gioco)/(α_mozzo·d).&#10;Metodi: forno, bagno d\'olio (max ~120 °C), riscaldatore a induzione.') +
+    box('T mozzo', fp(Tm,0), '°C', 'Temperatura assoluta a cui portare il mozzo: T_amb + ΔT.&#10;Oltre ~300 °C si rischia di alterare bonifica o tempra degli acciai da costruzione; oltre 200÷250 °C le leghe di alluminio perdono caratteristiche.') +
+    box('ΔT raffredd. albero', fp(dT_a,0), '°C', 'Alternativa: contrarre l\'albero invece di dilatare il mozzo.&#10;ΔT = (δ_eff,max + gioco)/(α_albero·d).&#10;Mezzi: ghiaccio secco −78 °C, azoto liquido −196 °C.') +
+    box('T albero', fp(Ta,0), '°C', 'Temperatura assoluta a cui portare l\'albero raffreddandolo: T_amb − ΔT.&#10;Se scende sotto −196 °C il raffreddamento da solo non basta: occorre combinarlo con il riscaldamento del mozzo o ridurre l\'interferenza.');
+
+  // ── Verifiche
+  let ver = '';
+  ver += vrow(`Interferenza efficace minima > 0`, fp(emin,1), 'µm',
+        emin>0 ? 2 : 0.5,
+        'δ_eff,min = δmin − 0,8·(Rz_a + Rz_m) deve essere positiva.&#10;Se la rugosità azzera l\'interferenza minima l\'accoppiamento può risultare con gioco: la trasmissione per attrito non è garantita.',
+        emin>0 ? 'ok' : 'err');
+
+  ver += vrow(`Coppia trasmissibile (rich. ${fp(MtReq,0)} N·m × CS ${fp(csA,1)})`, fp(MtMax,1), 'N·m',
+        MtReq>0 ? MtMax/(MtReq*csA) : Infinity,
+        'Mt_max = µ·p_min·π·d²·L/2 deve superare la coppia richiesta moltiplicata per il coefficiente di sicurezza sull\'aderenza.');
+
+  ver += vrow(`Forza assiale trasm. (rich. ${fi(FaReq)} N × CS ${fp(csA,1)})`, fp(FaMax/1000,2), 'kN',
+        FaReq>0 ? FaMax/(FaReq*csA) : Infinity,
+        'Fa_max = µ·p_min·π·d·L deve superare la forza assiale richiesta moltiplicata per il coefficiente di sicurezza sull\'aderenza.');
+
+  if(both){
+    ver += vrow(`Carico combinato √((2Mt/d)²+Fa²) × CS ${fp(csA,1)}`, fp(Fcomb*csA/1000,2), 'kN',
+        Fcomb>0 ? FaMax/(Fcomb*csA) : Infinity,
+        'Con coppia e forza assiale simultanee le due componenti si compongono vettorialmente sulla superficie di contatto:&#10;√((2·Mt/d)² + Fa²) ≤ µ·p_min·π·d·L / CS.&#10;Verificare le due grandezze separatamente sarebbe in favore del pericolo.');
+  }
+
+  ver += vrow(`σ_id mozzo ≤ Rp0,2/CS (${fp(ammM,0)} MPa)`, fp(sigId_m,1), 'MPa',
+        sigId_m>0 ? ammM/sigId_m : Infinity,
+        'Tensione ideale di Tresca al foro del mozzo: σ_id = 2·p_max/(1−qm²), calcolata con la pressione massima.&#10;È la verifica di resistenza quasi sempre determinante del calettamento.');
+
+  if(qa>0){
+    ver += vrow(`σ_id albero cavo ≤ Rp0,2/CS (${fp(ammA,0)} MPa)`, fp(sigId_a,1), 'MPa',
+        sigId_a>0 ? ammA/sigId_a : Infinity,
+        'Albero cavo: σ_id = 2·p_max/(1−qa²) al foro interno.&#10;Per albero pieno la verifica non compare perché lo stato è idrostatico e non critico.');
+  }
+
+  const qmCls = (qm>0.7 || qm<0.2) ? 'warn' : 'ok';
+  ver += vrow('Rapporto mozzo qm = d/De (0,2 ÷ 0,7)', fp(qm,3), '', qmCls==='ok'?2:1.0,
+        'Sotto 0,2 il mozzo è molto spesso: oltre questo spessore la pressione non cresce più in modo apprezzabile, è materiale sprecato.&#10;Sopra 0,7 il mozzo è sottile: cede molto (poca pressione) e la tensione tangenziale al foro si impenna.', qmCls);
+
+  ver += vrow('T mozzo montaggio a caldo (≤ 300 °C)', fp(Tm,0), '°C',
+        isFinite(Tm) ? (Tm>0 ? 300/Tm : Infinity) : NaN,
+        'Oltre ~300 °C il riscaldamento può alterare il trattamento termico degli acciai bonificati o temprati.&#10;In tal caso: ridurre l\'interferenza, aumentare De, oppure combinare riscaldamento del mozzo e raffreddamento dell\'albero.');
+
+  $('verGrid').innerHTML = ver;
+
+  // ── Schema
+  $('schema').innerHTML = geomOk ? drawSchema(d,De,di,L) : '';
+
+  // ── Avvisi
+  const hints = [];
+  if(!geomOk){
+    hints.push('<div class="warn-box">Geometria non valida: servono <b>d &gt; 0</b>, <b>De &gt; d</b>, <b>L &gt; 0</b> e <b>di &lt; d</b>. I risultati non sono calcolati.</div>');
+  } else {
+    if(emin<=0){
+      hints.push(`<div class="warn-box">⛔ <b>Interferenza efficace minima nulla o negativa</b> (δ_eff,min = ${fp(emin,1)} µm).
+        La perdita per rugosità (${fp(loss,1)} µm) annulla l'interferenza minima: nel caso peggiore l'accoppiamento
+        può risultare <b>con gioco</b> e non trasmette nulla per attrito. Aumentare δmin, ridurre la rugosità
+        (rettifica, Rz ≤ 4 µm) o scegliere un accoppiamento ISO più forzato.</div>`);
+    }
+    if(mode==='iso' && (d<1 || d>500)){
+      hints.push('<div class="warn-box">Il diametro è fuori dal campo delle tabelle ISO 286 implementate (1 ÷ 500 mm): i valori di δmin/δmax mostrati non sono attendibili. Usare la modalità <b>diretta</b>.</div>');
+    }
+    if(mode==='iso' && fitInfo && fitInfo.dmin<=0){
+      hints.push(`<div class="warn-box">L'accoppiamento <b>${$('fit').value}</b> a ⌀${fp(d,0)} mm ha δmin = ${fp(fitInfo.dmin,0)} µm:
+        <b>non garantisce interferenza</b> in tutte le combinazioni di tolleranza (accoppiamento di transizione).
+        Per una trasmissione per attrito affidabile scegliere s6 o u6.</div>`);
+    }
+    if(qm>0.7) hints.push(`<div class="warn-box">qm = d/De = ${fp(qm,3)} &gt; 0,7: <b>mozzo sottile</b>. La tensione tangenziale al foro sale rapidamente (σ_id = 2p/(1−qm²)) e il mozzo cede molto, riducendo la pressione utile. Aumentare De.</div>`);
+    if(qm<0.2 && qm>0) hints.push(`<div class="info-box">qm = d/De = ${fp(qm,3)} &lt; 0,2: <b>mozzo molto spesso</b>, assimilabile a un semispazio. Un ulteriore aumento di De non porta praticamente alcun beneficio: resa marginale.</div>`);
+    if(hot) hints.push(`<div class="warn-box">Temperatura di montaggio del mozzo <b>${fp(Tm,0)} °C</b>: oltre ~300 °C si rischia di <b>alterare il trattamento termico</b> (rinvenimento di acciai bonificati/temprati) e di ossidare le superfici. Valutare il raffreddamento dell'albero (${fp(Ta,0)} °C) o la combinazione dei due.</div>`);
+    if(isFinite(Ta) && Ta < -196) hints.push(`<div class="warn-box">Il solo raffreddamento dell'albero richiederebbe <b>${fp(Ta,0)} °C</b>, sotto la temperatura dell'azoto liquido (−196 °C): non è praticabile da solo.</div>`);
+    if(d>0 && L/d>2) hints.push(`<div class="info-box">L/d = ${fp(L/d,2)} &gt; 2: la pressione di contatto non è uniforme sulla lunghezza e la zona centrale resta scarica. La capacità calcolata è <b>ottimistica</b>: considerare una lunghezza efficace ridotta.</div>`);
+    if(d>0 && L/d<0.5 && L>0) hints.push(`<div class="info-box">L/d = ${fp(L/d,2)} &lt; 0,5: accoppiamento corto, sensibile al disassamento e ai momenti ribaltanti. Verificare la stabilità del montaggio.</div>`);
+    if(mu>0.2) hints.push('<div class="warn-box">Coefficiente di attrito µ &gt; 0,20: valore ottimistico anche per montaggio a caldo con superfici pulite. Valori realistici: 0,08÷0,12 a freddo, 0,14÷0,20 a caldo.</div>');
+    if(MtReq<=0 && FaReq<=0) hints.push('<div class="info-box">Nessun carico richiesto: le verifiche di aderenza risultano automaticamente soddisfatte. Inserire la coppia Mt e/o la forza assiale Fa per ottenere i coefficienti di sicurezza reali.</div>');
+  }
+  $('hint').innerHTML = hints.join('');
+}
+
+$('printBtn').addEventListener('click', ()=>window.print());
+document.querySelectorAll('input,select').forEach(el=>{
+  el.addEventListener('change', ()=>{ if(el.id!=='gap') calculate(); });
+});
+
+onGeom();
+</script>
+</body>
+</html>

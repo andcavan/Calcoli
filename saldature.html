@@ -1,0 +1,988 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Giunti Saldati - EN 1993-1-8</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@300;400;500&family=Barlow+Condensed:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="theme.css">
+<style>
+
+html{background:var(--bg);color:var(--text);font-family:var(--mono);font-size:13px;min-height:100vh}
+body{display:flex;flex-direction:column;align-items:center;min-height:100vh;padding:20px}
+
+.header{border-bottom:1px solid var(--border);padding:11px 20px;display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:20px;width:100%;max-width:1180px}
+
+.container{max-width:1180px;width:100%;display:grid;grid-template-columns:340px 1fr;gap:20px}
+@media(max-width:900px){.container{grid-template-columns:1fr}}
+
+.panel{background:var(--bg2);border:1px solid var(--border2);border-radius:8px;padding:15px;display:flex;flex-direction:column;gap:12px}
+.rpanel{display:flex;flex-direction:column;gap:14px}
+
+.stitle{font-family:var(--cond);font-size:10px;font-weight:600;letter-spacing:.17em;color:var(--muted);text-transform:uppercase;margin-bottom:4px;display:flex;align-items:center;gap:6px}
+
+.field{margin-bottom:6px}
+
+.flabel{color:var(--muted);font-size:11px;letter-spacing:.03em}
+.funit{font-size:10px;color:var(--dim)}
+.frow2{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.frow3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px}
+
+/* Segmented control a 3 vie: il tema ne definisce 2 e 4 */
+.seg-3{grid-template-columns:1fr 1fr 1fr}
+.seg-btn small{display:block;font-size:8.5px;font-weight:400;letter-spacing:.01em;font-family:var(--mono);text-transform:none;color:var(--dim);margin-top:1px}
+.seg-btn.on small{color:rgba(79,195,247,.75)}
+
+/* Schemi: e' visibile solo quello della modalita' scelta */
+.schematic-wrap{background:var(--bg1);border:1px solid var(--border);border-radius:6px;padding:10px;display:flex;justify-content:center}
+.schematic-wrap svg{width:100%;max-width:440px;height:auto}
+
+/* Barra di utilizzo */
+.util{width:70px;height:5px;background:var(--bg3);border-radius:3px;overflow:hidden;flex-shrink:0}
+.util span{display:block;height:100%;border-radius:3px}
+.util span.ok{background:var(--up)}
+.util span.warn{background:var(--amber)}
+.util span.err{background:var(--dn)}
+
+/* Elenco formule */
+.formula-row{display:flex;align-items:baseline;gap:8px;padding:5px 0;border-bottom:1px solid var(--border);font-size:11px}
+.formula-row:last-child{border-bottom:none}
+.formula-name{color:var(--muted);min-width:170px;flex-shrink:0}
+.formula-expr{color:var(--acc);font-size:12px;font-weight:500}
+
+.norms{font-size:10px;color:var(--muted);line-height:1.8}
+.norms b{color:var(--acc);font-weight:500}
+
+#hint{display:flex;flex-direction:column;gap:8px}
+#hint:empty{display:none}
+
+footer{margin-top:34px;font-size:10px;color:var(--dim);letter-spacing:.04em;text-align:center;line-height:1.8}
+
+@media print{.back-btn{display:none !important}body{padding:0}}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <a href="index.html" class="back-btn">← Ritorna</a>
+  <h1><span class="dot"></span>Giunti Saldati</h1>
+  <div class="sub">Cordoni d'angolo · Testa · Metodo direzionale · Metodo semplificato</div>
+  <span class="norm-badge">EN 1993-1-8 · EN ISO 5817 · EN 1090</span>
+  <button class="back-btn" id="printBtn">🖶 Stampa</button>
+</div>
+
+<div class="container">
+
+<!-- ═══ PANNELLO INPUT ═══ -->
+<div class="panel">
+
+  <div class="stitle">Modalità di calcolo</div>
+  <div class="seg seg-3">
+    <button class="seg-btn on" id="seg-m1" onclick="setMode(1)">Angolo<small>carico generico</small></button>
+    <button class="seg-btn" id="seg-m2" onclick="setMode(2)">Mensola<small>taglio + flessione</small></button>
+    <button class="seg-btn" id="seg-m3" onclick="setMode(3)">Testa<small>piena / parziale</small></button>
+  </div>
+
+  <div class="stitle">Materiale base e coefficienti</div>
+
+  <div class="field">
+    <div class="fhdr"><span class="flabel" data-tip="Acciaio da carpenteria del materiale base (EN 10025).
+Fornisce f_y (snervamento), f_u (rottura) e il fattore di correlazione β_w della EN 1993-1-8 tab. 4.1, che penalizza la saldatura sugli acciai più resistenti.
+I valori riportati valgono per spessori t ≤ 40 mm: oltre tale spessore f_y e f_u vanno ridotti secondo la EN 10025.">Acciaio base</span></div>
+    <select id="mat" class="select-field" onchange="calculate()"></select>
+  </div>
+
+  <div class="frow2">
+    <div class="field">
+      <div class="fhdr">
+        <span class="flabel" data-tip="Coefficiente parziale di sicurezza per la resistenza a rottura di sezioni e collegamenti (EN 1993-1-8 §2.2).
+Unità: adimensionale. Valore raccomandato: 1,25 (NTC e Appendice Nazionale italiana: γ_M2 = 1,25).
+Compare a denominatore in tutte le resistenze del cordone: f_u/(β_w·γ_M2), 0,9·f_u/γ_M2 e f_vw,d.">γ_M2</span>
+        <span class="funit">—</span>
+      </div>
+      <div class="srow">
+        <button class="arr" onclick="adjust('gM2',-0.05)">▼</button>
+        <input type="number" id="gM2" class="numinput" value="1.25" min="1" max="2" step="0.05" oninput="calculate()">
+        <button class="arr" onclick="adjust('gM2',0.05)">▲</button>
+      </div>
+    </div>
+    <div class="field">
+      <div class="fhdr">
+        <span class="flabel" data-tip="Coefficiente parziale di sicurezza per la resistenza delle sezioni allo snervamento (EN 1993-1-1 §6.1).
+Unità: adimensionale. Valore raccomandato: 1,00 (NTC: γ_M0 = 1,05).
+Si usa SOLO per la saldatura di testa a piena penetrazione, la cui resistenza è quella del metallo base: f_y/γ_M0.">γ_M0</span>
+        <span class="funit">—</span>
+      </div>
+      <div class="srow">
+        <button class="arr" onclick="adjust('gM0',-0.05)">▼</button>
+        <input type="number" id="gM0" class="numinput" value="1.00" min="1" max="2" step="0.05" oninput="calculate()">
+        <button class="arr" onclick="adjust('gM0',0.05)">▲</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ─── MODALITÀ 1 — CORDONE D'ANGOLO ─── -->
+  <div id="grp-m1">
+    <div class="stitle">Geometria dei cordoni</div>
+
+    <div class="frow3">
+      <div class="field">
+        <div class="fhdr">
+          <span class="flabel" data-tip="Altezza di gola a: altezza del triangolo isoscele inscritto nella sezione del cordone, misurata fino alla radice.
+Unità: mm. Range tipico: 3…12 mm (minimo di norma 3 mm).
+È il parametro dimensionante: l'area di gola vale A_w = n·a·L e tutte le tensioni scalano con 1/a.">Gola a</span>
+          <span class="funit">mm</span>
+        </div>
+        <div class="srow">
+          <button class="arr" onclick="adjust('a1',-0.5)">▼</button>
+          <input type="number" id="a1" class="numinput" value="5" min="0" step="0.5" oninput="calculate()">
+          <button class="arr" onclick="adjust('a1',0.5)">▲</button>
+        </div>
+      </div>
+      <div class="field">
+        <div class="fhdr">
+          <span class="flabel" data-tip="Lunghezza efficace del singolo cordone, al netto dei crateri di estremità.
+Unità: mm. Deve risultare L ≥ max(30 mm; 6·a), altrimenti il cordone non è computabile (EN 1993-1-8 §4.5.1).
+Entra in A_w = n·a·L.">Lunghezza L</span>
+          <span class="funit">mm</span>
+        </div>
+        <div class="srow">
+          <button class="arr" onclick="adjust('L1',-10)">▼</button>
+          <input type="number" id="L1" class="numinput" value="200" min="0" step="10" oninput="calculate()">
+          <button class="arr" onclick="adjust('L1',10)">▲</button>
+        </div>
+      </div>
+      <div class="field">
+        <div class="fhdr">
+          <span class="flabel" data-tip="Numero di cordoni uguali che compongono il giunto (es. 2 per una saldatura su entrambi i lati).
+Unità: adimensionale. Range tipico: 1…4.
+Le azioni inserite sotto sono TOTALI e si ripartiscono sull'area complessiva A_w = n·a·L.">Numero n</span>
+          <span class="funit">—</span>
+        </div>
+        <div class="srow">
+          <button class="arr" onclick="adjust('n1',-1)">▼</button>
+          <input type="number" id="n1" class="numinput" value="2" min="1" max="8" step="1" oninput="calculate()">
+          <button class="arr" onclick="adjust('n1',1)">▲</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="stitle">Azioni di progetto (totali sul giunto)</div>
+
+    <div class="field">
+      <div class="fhdr">
+        <span class="flabel" data-tip="Forza trasversale F⊥: perpendicolare all'asse del cordone e giacente nel piano della lamiera saldata.
+Unità: kN (valore di progetto, già amplificato dai coefficienti di carico).
+Si scompone sulla gola ruotata di 45° generando componenti uguali σ⊥ = τ⊥ = F⊥/(A_w·√2).">Forza trasversale F⊥</span>
+        <span class="funit">kN</span>
+      </div>
+      <div class="srow">
+        <button class="arr" onclick="adjust('Fp',-5)">▼</button>
+        <input type="number" id="Fp" class="numinput" value="80" step="5" oninput="calculate()">
+        <button class="arr" onclick="adjust('Fp',5)">▲</button>
+      </div>
+    </div>
+
+    <div class="field">
+      <div class="fhdr">
+        <span class="flabel" data-tip="Forza longitudinale F∥: parallela all'asse del cordone.
+Unità: kN (valore di progetto).
+Genera solo scorrimento lungo la gola: τ∥ = F∥/A_w. È la componente meno penalizzante, perché non produce σ⊥.">Forza longitudinale F∥</span>
+        <span class="funit">kN</span>
+      </div>
+      <div class="srow">
+        <button class="arr" onclick="adjust('Fl',-5)">▼</button>
+        <input type="number" id="Fl" class="numinput" value="0" step="5" oninput="calculate()">
+        <button class="arr" onclick="adjust('Fl',5)">▲</button>
+      </div>
+    </div>
+
+    <div class="field">
+      <div class="fhdr">
+        <span class="flabel" data-tip="Forza normale al piano della lamiera F_n: tende a strappare il cordone dalla radice.
+Unità: kN (valore di progetto).
+Trattata in modo semplificato e conservativo come σ⊥ addizionale = F_n/A_w, sommata alla σ⊥ prodotta da F⊥.">Forza normale al piano F_n</span>
+        <span class="funit">kN</span>
+      </div>
+      <div class="srow">
+        <button class="arr" onclick="adjust('Fn',-5)">▼</button>
+        <input type="number" id="Fn" class="numinput" value="0" step="5" oninput="calculate()">
+        <button class="arr" onclick="adjust('Fn',5)">▲</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ─── MODALITÀ 2 — MENSOLA SALDATA ─── -->
+  <div id="grp-m2" class="hidden">
+    <div class="stitle">Geometria dei cordoni</div>
+
+    <div class="frow2">
+      <div class="field">
+        <div class="fhdr">
+          <span class="flabel" data-tip="Altezza di gola dei due cordoni verticali che collegano la mensola alla piastra.
+Unità: mm. Range tipico: 4…10 mm (minimo di norma 3 mm).
+Entra sia nell'area A_w = 2·a·L sia nel modulo resistente W_w = a·L²/3.">Gola a</span>
+          <span class="funit">mm</span>
+        </div>
+        <div class="srow">
+          <button class="arr" onclick="adjust('a2',-0.5)">▼</button>
+          <input type="number" id="a2" class="numinput" value="6" min="0" step="0.5" oninput="calculate()">
+          <button class="arr" onclick="adjust('a2',0.5)">▲</button>
+        </div>
+      </div>
+      <div class="field">
+        <div class="fhdr">
+          <span class="flabel" data-tip="Altezza (lunghezza verticale) di ciascuno dei due cordoni.
+Unità: mm. Deve risultare L ≥ max(30 mm; 6·a).
+Compare al quadrato nel modulo resistente W_w = a·L²/3: raddoppiare L riduce di quattro volte la tensione di flessione.">Altezza cordoni L</span>
+          <span class="funit">mm</span>
+        </div>
+        <div class="srow">
+          <button class="arr" onclick="adjust('L2',-10)">▼</button>
+          <input type="number" id="L2" class="numinput" value="200" min="0" step="10" oninput="calculate()">
+          <button class="arr" onclick="adjust('L2',10)">▲</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="stitle">Azioni di progetto</div>
+
+    <div class="frow2">
+      <div class="field">
+        <div class="fhdr">
+          <span class="flabel" data-tip="Carico verticale di progetto applicato all'estremità della mensola.
+Unità: kN.
+Produce contemporaneamente il taglio τ∥ = F/A_w (parallelo all'asse dei cordoni) e il momento M = F·e.">Carico F</span>
+          <span class="funit">kN</span>
+        </div>
+        <div class="srow">
+          <button class="arr" onclick="adjust('F2',-5)">▼</button>
+          <input type="number" id="F2" class="numinput" value="30" step="5" oninput="calculate()">
+          <button class="arr" onclick="adjust('F2',5)">▲</button>
+        </div>
+      </div>
+      <div class="field">
+        <div class="fhdr">
+          <span class="flabel" data-tip="Eccentricità: distanza orizzontale fra il punto di applicazione di F e il piano della saldatura.
+Unità: mm. Range tipico: 50…500 mm.
+Genera il momento flettente M = F·e che carica i cordoni in flessione attorno all'asse orizzontale.">Eccentricità e</span>
+          <span class="funit">mm</span>
+        </div>
+        <div class="srow">
+          <button class="arr" onclick="adjust('ecc',-10)">▼</button>
+          <input type="number" id="ecc" class="numinput" value="150" min="0" step="10" oninput="calculate()">
+          <button class="arr" onclick="adjust('ecc',10)">▲</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ─── MODALITÀ 3 — SALDATURA DI TESTA ─── -->
+  <div id="grp-m3" class="hidden">
+    <div class="stitle">Tipo di giunto di testa</div>
+
+    <div class="field">
+      <div class="fhdr"><span class="flabel" data-tip="Piena penetrazione: il cordone ripristina l'intera sezione; la resistenza di progetto è quella del METALLO BASE e non va verificata la saldatura (EN 1993-1-8 §4.7.1), purché il materiale d'apporto sia almeno equivalente.
+Parziale penetrazione: la saldatura si verifica come un cordone d'angolo con altezza di gola pari alla penetrazione efficace a_eff (§4.7.2).">Penetrazione</span></div>
+      <div class="seg seg-2">
+        <button class="seg-btn on" id="seg-full" onclick="setPen('full')">Piena</button>
+        <button class="seg-btn" id="seg-part" onclick="setPen('part')">Parziale</button>
+      </div>
+    </div>
+
+    <div class="stitle">Geometria</div>
+
+    <div class="frow2">
+      <div class="field">
+        <div class="fhdr">
+          <span class="flabel" data-tip="Spessore della lamiera saldata di testa.
+Unità: mm. Range tipico: 5…40 mm.
+A piena penetrazione è lo spessore resistente: A = b·t e W = b·t²/6.">Spessore t</span>
+          <span class="funit">mm</span>
+        </div>
+        <div class="srow">
+          <button class="arr" onclick="adjust('t3',-1)">▼</button>
+          <input type="number" id="t3" class="numinput" value="12" min="0" step="1" oninput="calculate()">
+          <button class="arr" onclick="adjust('t3',1)">▲</button>
+        </div>
+      </div>
+      <div class="field">
+        <div class="fhdr">
+          <span class="flabel" data-tip="Larghezza del giunto, cioè la lunghezza del cordone di testa misurata trasversalmente allo spessore.
+Unità: mm. Range tipico: 50…500 mm.
+Entra linearmente sia nell'area sia nel modulo resistente.">Larghezza b</span>
+          <span class="funit">mm</span>
+        </div>
+        <div class="srow">
+          <button class="arr" onclick="adjust('b3',-10)">▼</button>
+          <input type="number" id="b3" class="numinput" value="200" min="0" step="10" oninput="calculate()">
+          <button class="arr" onclick="adjust('b3',10)">▲</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="field hidden" id="fld-aeff">
+      <div class="fhdr">
+        <span class="flabel" data-tip="Gola efficace della saldatura a parziale penetrazione: profondità di penetrazione effettivamente garantita dal procedimento, sempre ≤ t.
+Unità: mm. In assenza di qualifica di procedimento si assume a_eff = c_nom − 2 mm (EN 1993-1-8 §4.7.2).
+Sostituisce t nel calcolo di area e modulo resistente e va verificata con le formule del cordone d'angolo.">Gola efficace a_eff</span>
+        <span class="funit">mm</span>
+      </div>
+      <div class="srow">
+        <button class="arr" onclick="adjust('aeff',-0.5)">▼</button>
+        <input type="number" id="aeff" class="numinput" value="6" min="0" step="0.5" oninput="calculate()">
+        <button class="arr" onclick="adjust('aeff',0.5)">▲</button>
+      </div>
+    </div>
+
+    <div class="stitle">Azioni di progetto</div>
+
+    <div class="frow3">
+      <div class="field">
+        <div class="fhdr">
+          <span class="flabel" data-tip="Sforzo normale di progetto, perpendicolare alla sezione saldata (positivo = trazione).
+Unità: kN.
+Produce σ_N = N/(b·t), sommata alla tensione di flessione.">Normale N</span>
+          <span class="funit">kN</span>
+        </div>
+        <div class="srow">
+          <button class="arr" onclick="adjust('N3',-10)">▼</button>
+          <input type="number" id="N3" class="numinput" value="150" step="10" oninput="calculate()">
+          <button class="arr" onclick="adjust('N3',10)">▲</button>
+        </div>
+      </div>
+      <div class="field">
+        <div class="fhdr">
+          <span class="flabel" data-tip="Momento flettente di progetto agente sul giunto.
+Unità: kNm (1 kNm = 10⁶ N·mm).
+Produce σ_M = M/W con W = b·t²/6, sommata in valore assoluto a σ_N.">Momento M</span>
+          <span class="funit">kNm</span>
+        </div>
+        <div class="srow">
+          <button class="arr" onclick="adjust('M3',-1)">▼</button>
+          <input type="number" id="M3" class="numinput" value="8" step="1" oninput="calculate()">
+          <button class="arr" onclick="adjust('M3',1)">▲</button>
+        </div>
+      </div>
+      <div class="field">
+        <div class="fhdr">
+          <span class="flabel" data-tip="Taglio di progetto agente nel piano della sezione saldata.
+Unità: kN.
+Produce τ = V/(b·t), verificata con il criterio di Von Mises insieme a σ.">Taglio V</span>
+          <span class="funit">kN</span>
+        </div>
+        <div class="srow">
+          <button class="arr" onclick="adjust('V3',-10)">▼</button>
+          <input type="number" id="V3" class="numinput" value="50" step="10" oninput="calculate()">
+          <button class="arr" onclick="adjust('V3',10)">▲</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="stitle">Spessori collegati (opzionali)</div>
+
+  <div class="frow2">
+    <div class="field">
+      <div class="fhdr">
+        <span class="flabel" data-tip="Spessore del più sottile fra i pezzi collegati.
+Unità: mm. Lascia 0 per disattivare il controllo.
+Serve al controllo di buona pratica a ≤ 0,7·t_min, che evita di saldare più della sezione disponibile e di bruciare la lamiera sottile.">t_min collegato</span>
+        <span class="funit">mm</span>
+      </div>
+      <div class="srow">
+        <button class="arr" onclick="adjust('tmin',-1)">▼</button>
+        <input type="number" id="tmin" class="numinput" value="10" min="0" step="1" oninput="calculate()">
+        <button class="arr" onclick="adjust('tmin',1)">▲</button>
+      </div>
+    </div>
+    <div class="field">
+      <div class="fhdr">
+        <span class="flabel" data-tip="Spessore del più grosso fra i pezzi collegati.
+Unità: mm. Lascia 0 per disattivare l'indicazione.
+Serve alla regola pratica di gola minima a_min ≈ √(t_max) − 0,5 mm, che limita il raffreddamento troppo rapido del cordone su lamiere spesse.">t_max collegato</span>
+        <span class="funit">mm</span>
+      </div>
+      <div class="srow">
+        <button class="arr" onclick="adjust('tmax',-1)">▼</button>
+        <input type="number" id="tmax" class="numinput" value="12" min="0" step="1" oninput="calculate()">
+        <button class="arr" onclick="adjust('tmax',1)">▲</button>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- ═══ PANNELLO RISULTATI ═══ -->
+<div class="rpanel">
+
+  <div class="panel">
+    <div class="stitle" id="geo-title">Geometria resistente</div>
+    <div class="results-grid-3" id="res-geo"></div>
+    <div class="schematic-wrap"><svg id="schema" viewBox="0 0 440 190"></svg></div>
+    <div class="note" id="geo-note"></div>
+  </div>
+
+  <div class="panel">
+    <div class="stitle" id="ten-title">Componenti di tensione</div>
+    <div class="results-grid-3" id="res-ten"></div>
+  </div>
+
+  <div class="panel">
+    <div class="stitle" id="rd-title">Resistenze di progetto</div>
+    <div class="results-grid-3" id="res-rd"></div>
+  </div>
+
+  <div class="result-section">
+    <div class="result-section-title" id="ver-title">Verifiche di resistenza</div>
+    <div class="verification-grid" id="res-ver"></div>
+    <div id="hint" style="margin-top:10px"></div>
+  </div>
+
+  <div class="result-section">
+    <div class="result-section-title">Dimensionamento inverso</div>
+    <div class="results-grid" id="res-dim"></div>
+    <div class="note" id="dim-note" style="margin-top:8px"></div>
+  </div>
+
+  <div class="panel">
+    <div class="stitle">Controlli geometrici e di buona pratica</div>
+    <div class="verification-grid" id="res-geoch"></div>
+  </div>
+
+  <div class="result-section">
+    <div class="result-section-title" id="frm-title">Formule utilizzate</div>
+    <div id="res-frm"></div>
+  </div>
+
+  <div class="panel">
+    <div class="stitle">Normative di riferimento</div>
+    <div class="norms">
+      <b>EN 1993-1-8 §4.5.3.2</b> — metodo direzionale per i cordoni d'angolo: √(σ⊥² + 3(τ⊥² + τ∥²)) ≤ f<sub>u</sub>/(β<sub>w</sub>·γ<sub>M2</sub>) <i>e</i> σ⊥ ≤ 0,9·f<sub>u</sub>/γ<sub>M2</sub>.<br>
+      <b>EN 1993-1-8 §4.5.3.3</b> — metodo semplificato: resistenza a taglio della gola f<sub>vw,d</sub> = f<sub>u</sub>/(√3·β<sub>w</sub>·γ<sub>M2</sub>), indipendente dalla direzione della forza.<br>
+      <b>EN 1993-1-8 tab. 4.1</b> — fattore di correlazione β<sub>w</sub>: 0,80 (S235) · 0,85 (S275) · 0,90 (S355) · 1,00 (S420 e S460).<br>
+      <b>EN 1993-1-8 §4.5.1 / §4.5.2</b> — gola minima a ≥ 3 mm e lunghezza efficace L ≥ max(30 mm; 6·a); i cordoni più corti non sono computabili.<br>
+      <b>EN 1993-1-8 §4.7.1 / §4.7.2</b> — saldature di testa: a piena penetrazione la resistenza è quella del metallo base; a parziale penetrazione si applicano le regole dei cordoni d'angolo con gola a<sub>eff</sub>.<br>
+      <b>EN 1993-1-1 §6.2</b> — verifica del metallo base: σ ≤ f<sub>y</sub>/γ<sub>M0</sub>, τ ≤ f<sub>y</sub>/(√3·γ<sub>M0</sub>), √(σ²+3τ²) ≤ f<sub>y</sub>/γ<sub>M0</sub>.<br>
+      <b>EN ISO 5817</b> — livelli di qualità B / C / D per le imperfezioni dei giunti saldati per fusione; il livello va prescritto in funzione della classe di conseguenza.<br>
+      <b>EN 1090-2</b> — esecuzione di strutture in acciaio: classi di esecuzione EXC1÷EXC4, qualifica dei procedimenti (EN ISO 15614) e dei saldatori (EN ISO 9606-1), controlli non distruttivi.
+    </div>
+    <div class="info-box">
+      Il calcolo assume cordoni <b>a sezione costante</b>, carico <b>statico</b> e ripartizione <b>uniforme</b> delle tensioni sulla gola. Per giunti soggetti a carichi ciclici va condotta la verifica a fatica secondo la <b>EN 1993-1-9</b> (dettagli costruttivi e classi Δσ<sub>C</sub>), che è in genere più severa della verifica statica.
+    </div>
+  </div>
+
+</div>
+</div>
+
+<footer>
+  Andrea Cavani · Moduli calcolo HTML<br>
+  Strumento di pre-dimensionamento: i risultati vanno confermati dalla verifica del progettista e dalle prescrizioni di esecuzione.
+</footer>
+
+<script>
+// ═══════════════════════════════════════════════════════
+//  DATI — EN 10025 + EN 1993-1-8 tab. 4.1
+//  fy, fu in MPa (spessori t ≤ 40 mm), bw = fattore di correlazione
+// ═══════════════════════════════════════════════════════
+const MAT = {
+  S235: {fy:235, fu:360, bw:0.80},
+  S275: {fy:275, fu:430, bw:0.85},
+  S355: {fy:355, fu:510, bw:0.90},
+  S420: {fy:420, fu:520, bw:1.00},
+  S460: {fy:460, fu:540, bw:1.00}
+};
+
+const SQ2 = Math.SQRT2;
+const SQ3 = Math.sqrt(3);
+
+// ═══════════════════════════════════════════════════════
+//  STATO
+// ═══════════════════════════════════════════════════════
+let mode = 1;        // 1 = cordone d'angolo · 2 = mensola · 3 = testa
+let pen  = 'full';   // 'full' = piena penetrazione · 'part' = parziale
+
+// ═══════════════════════════════════════════════════════
+//  HELPER
+// ═══════════════════════════════════════════════════════
+const $  = id => document.getElementById(id);
+const fp = (v,n=1) => isFinite(v) ? v.toFixed(n) : '—';
+const num = id => parseFloat($(id).value) || 0;
+// Separatore delle migliaia a spazio: il punto italiano sarebbe ambiguo
+// accanto ai decimali prodotti da toFixed.
+const fi = v => isFinite(v) ? String(Math.round(v)).replace(/\B(?=(\d{3})+(?!\d))/g,' ') : '—';
+
+// Stato in funzione del coefficiente di sfruttamento u = sollecitazione/resistenza
+function uClass(u){
+  if(isNaN(u)) return 'err';
+  if(u <= 1.00) return 'ok';
+  if(u <= 1.05) return 'warn';
+  return 'err';
+}
+function uLabel(cl){ return cl==='ok' ? 'OK' : (cl==='warn' ? 'LIMITE' : 'INSUFF.'); }
+
+function box(label,value,unit,tip){
+  return `<div class="result-box">
+    <div class="result-label"${tip?` data-tip="${tip}"`:''}>${label}</div>
+    <div class="result-value">${value}<span class="result-unit">${unit||''}</span></div>
+  </div>`;
+}
+
+// Riga di verifica basata sullo sfruttamento (u = 1 → 100 %)
+function urow(label,u,tip){
+  const cl = uClass(u);
+  const pct = Math.min(100, isFinite(u) && u>0 ? u*100 : 0);
+  return `<div class="verify-item">
+    <span class="verify-label"${tip?` data-tip="${tip}"`:''}>${label}</span>
+    <span class="util"><span class="${cl}" style="width:${pct}%"></span></span>
+    <span class="verify-value">${isFinite(u)?fp(u*100,1):'—'}<span class="verify-unit">%</span></span>
+    <span class="verify-status ${cl}">${uLabel(cl)}</span>
+  </div>`;
+}
+
+// Riga di controllo booleano (geometria, buona pratica)
+function crow(label,value,unit,ok,tip,neutro){
+  const cl = neutro ? 'warn' : (ok ? 'ok' : 'err');
+  const txt = neutro ? 'INFO' : (ok ? 'OK' : 'NO');
+  return `<div class="verify-item">
+    <span class="verify-label"${tip?` data-tip="${tip}"`:''}>${label}</span>
+    <span class="verify-value">${value}<span class="verify-unit">${unit||''}</span></span>
+    <span class="verify-status ${cl}">${txt}</span>
+  </div>`;
+}
+
+function frow(name,expr){
+  return `<div class="formula-row"><span class="formula-name">${name}</span><span class="formula-expr">${expr}</span></div>`;
+}
+
+function adjust(id,step){
+  const el=$(id);
+  const dec=(String(step).split('.')[1]||'').length;
+  let v=(parseFloat(el.value)||0)+step;
+  if(el.min!=='' && v<parseFloat(el.min)) v=parseFloat(el.min);
+  if(el.max!=='' && v>parseFloat(el.max)) v=parseFloat(el.max);
+  el.value = dec ? v.toFixed(dec) : v;
+  calculate();
+}
+
+// ═══════════════════════════════════════════════════════
+//  SELETTORI
+// ═══════════════════════════════════════════════════════
+function setMode(m){
+  mode = m;
+  [1,2,3].forEach(i=>{
+    $('seg-m'+i).classList.toggle('on', i===m);
+    $('grp-m'+i).classList.toggle('hidden', i!==m);
+  });
+  calculate();
+}
+
+function setPen(p){
+  pen = p;
+  $('seg-full').classList.toggle('on', p==='full');
+  $('seg-part').classList.toggle('on', p==='part');
+  $('fld-aeff').classList.toggle('hidden', p!=='part');
+  calculate();
+}
+
+function fillMat(){
+  $('mat').innerHTML = Object.keys(MAT).map(k=>{
+    const m = MAT[k];
+    return `<option value="${k}"${k==='S355'?' selected':''}>${k} — f_y ${m.fy} · f_u ${m.fu} · β_w ${m.bw.toFixed(2).replace('.',',')}</option>`;
+  }).join('');
+}
+
+// ═══════════════════════════════════════════════════════
+//  NUCLEO DI CALCOLO
+//  Tutte le tensioni sono in MPa, le forze inserite in kN.
+// ═══════════════════════════════════════════════════════
+
+// Resistenze di progetto del cordone d'angolo
+function resistenze(m,gM2,gM0){
+  return {
+    fRes : m.fu/(m.bw*gM2),      // limite del criterio direzionale
+    fPerp: 0.9*m.fu/gM2,         // limite sulla sola σ⊥
+    fvwd : m.fu/(SQ3*m.bw*gM2),  // resistenza a taglio della gola (metodo semplificato)
+    fyd  : m.fy/gM0,             // metallo base — normale
+    tyd  : m.fy/(SQ3*gM0)        // metallo base — taglio
+  };
+}
+
+// MODALITÀ 1 — cordone d'angolo con azioni generiche, per una data gola a
+function stressM1(a){
+  const L = num('L1'), n = num('n1');
+  const Aw = n*a*L;
+  if(Aw<=0) return {Aw:0, sPerp:NaN, tPerp:NaN, tPar:NaN};
+  const sT = num('Fp')*1000/(Aw*SQ2);   // da F⊥, scomposta sulla gola a 45°
+  return {
+    Aw   : Aw,
+    sPerp: sT + num('Fn')*1000/Aw,      // Fn sommata in modo conservativo
+    tPerp: sT,
+    tPar : num('Fl')*1000/Aw
+  };
+}
+
+// MODALITÀ 2 — mensola: due cordoni verticali, taglio + flessione
+function stressM2(a){
+  const L = num('L2');
+  const Aw = 2*a*L;
+  const Ww = a*L*L/3;                   // 2·a·L²/6
+  if(Aw<=0 || Ww<=0) return {Aw:0, Ww:0, M:0, sFl:NaN, sPerp:NaN, tPerp:NaN, tPar:NaN};
+  const M   = num('F2')*1000*num('ecc');
+  const sFl = M/Ww;                     // tensione di flessione sulla sezione dei cordoni
+  const s45 = sFl/SQ2;                  // scomposta sulla gola a 45°
+  return {Aw:Aw, Ww:Ww, M:M, sFl:sFl, sPerp:s45, tPerp:s45, tPar:num('F2')*1000/Aw};
+}
+
+// MODALITÀ 3 — saldatura di testa. Lo spessore resistente e' t (piena
+// penetrazione) oppure a_eff (parziale). Per la parziale la gola giace nel
+// piano della sezione: σ⊥ agisce direttamente, senza scomposizione a 45°.
+function stressM3(sp){
+  const b = num('b3');
+  const A = b*sp;
+  const W = b*sp*sp/6;
+  if(A<=0 || W<=0) return {A:0, W:0, sig:NaN, tau:NaN, sPerp:NaN, tPerp:0, tPar:NaN};
+  const sig = num('N3')*1000/A + Math.abs(num('M3'))*1e6/W;
+  const tau = num('V3')*1000/A;
+  return {A:A, W:W, sig:sig, tau:tau, sPerp:sig, tPerp:0, tPar:tau};
+}
+
+// Sfruttamenti del cordone d'angolo (metodo direzionale + semplificato)
+function utilCordone(st,R){
+  const sp = Math.abs(st.sPerp), tp = Math.abs(st.tPerp), tl = Math.abs(st.tPar);
+  const sEq  = Math.sqrt(sp*sp + 3*(tp*tp + tl*tl));
+  const tRes = Math.sqrt(sp*sp + tp*tp + tl*tl);
+  return {
+    sEq:sEq, tRes:tRes,
+    uDirA: sEq/R.fRes,
+    uDirB: sp/R.fPerp,
+    uSem : tRes/R.fvwd,
+    uDir : Math.max(sEq/R.fRes, sp/R.fPerp)
+  };
+}
+
+// Gola minima necessaria per il metodo direzionale.
+// Nelle modalita' 1 e 2 tutte le tensioni scalano con 1/a: basta valutare lo
+// sfruttamento con a = 1 mm e leggerlo direttamente come gola richiesta.
+// Nella saldatura a parziale penetrazione la flessione scala con 1/a², quindi
+// si risolve per bisezione.
+function golaRichiesta(R){
+  let aReq;
+  if(mode===1 || mode===2){
+    const st = mode===1 ? stressM1(1) : stressM2(1);
+    aReq = utilCordone(st,R).uDir;
+  } else {
+    const f = a => utilCordone(stressM3(a),R).uDir;
+    if(!isFinite(f(200)) || f(200) > 1) return NaN;
+    let lo = 1e-4, hi = 200;
+    for(let i=0;i<80;i++){
+      const mid = (lo+hi)/2;
+      if(f(mid) > 1) lo = mid; else hi = mid;
+    }
+    aReq = hi;
+  }
+  if(!isFinite(aReq)) return NaN;
+  return Math.ceil(aReq/0.5)*0.5;   // arrotondamento per eccesso a 0,5 mm
+}
+
+// ═══════════════════════════════════════════════════════
+//  RENDER
+// ═══════════════════════════════════════════════════════
+function calculate(){
+  const m   = MAT[$('mat').value] || MAT.S355;
+  const gM2 = num('gM2') || 1.25;
+  const gM0 = num('gM0') || 1.00;
+  const R   = resistenze(m,gM2,gM0);
+
+  const aCorr = mode===1 ? num('a1') : (mode===2 ? num('a2') : (pen==='part' ? num('aeff') : num('t3')));
+  const Lcorr = mode===1 ? num('L1') : (mode===2 ? num('L2') : num('b3'));
+
+  let st, U;
+  if(mode===1){ st = stressM1(num('a1')); U = utilCordone(st,R); }
+  else if(mode===2){ st = stressM2(num('a2')); U = utilCordone(st,R); }
+  else {
+    const sp = pen==='part' ? num('aeff') : num('t3');
+    st = stressM3(sp);
+    U  = utilCordone(st,R);
+  }
+
+  renderGeo(st,m);
+  renderTensioni(st,U);
+  renderResistenze(m,R,gM2,gM0);
+  renderVerifiche(st,U,R);
+  renderDimensionamento(R,aCorr);
+  renderControlli(aCorr,Lcorr);
+  renderFormule();
+  renderSchema();
+}
+
+function renderGeo(st,m){
+  let h = '', nota = '';
+  if(mode===1){
+    $('geo-title').textContent = 'Geometria di gola — cordone d\'angolo';
+    h += box('Area di gola A_w', fi(st.Aw), 'mm²', 'Area complessiva della sezione di gola, sulla quale si ripartiscono tutte le azioni.\nA_w = n·a·L = ' + fp(num('n1'),0) + ' · ' + fp(num('a1'),1) + ' · ' + fp(num('L1'),0) + ' mm².\nÈ il denominatore di ogni componente di tensione: raddoppiando A_w le tensioni si dimezzano.');
+    h += box('Gola a', fp(num('a1'),1), 'mm', 'Altezza di gola adottata.\nMinimo di norma 3 mm (EN 1993-1-8 §4.5.1); confrontala con la gola richiesta calcolata più sotto.');
+    h += box('Lungh. totale n·L', fi(num('n1')*num('L1')), 'mm', 'Sviluppo totale saldato, somma delle lunghezze efficaci degli n cordoni.\nn·L = ' + fp(num('n1'),0) + ' · ' + fp(num('L1'),0) + ' mm. Indica la quantità di saldatura da depositare.');
+    nota = 'La forza normale al piano F_n è trattata in modo semplificato e conservativo come σ⊥ addizionale = F_n/A_w, senza scomposizione a 45°: in un giunto reale a T la sua ripartizione dipende dalla rigidezza flessionale della lamiera.';
+  } else if(mode===2){
+    $('geo-title').textContent = 'Geometria di gola — mensola saldata';
+    h += box('Area di gola A_w', fi(st.Aw), 'mm²', 'Area dei due cordoni verticali: A_w = 2·a·L.\nResiste al taglio: τ∥ = F/A_w.');
+    h += box('Modulo resistente W_w', fi(st.Ww), 'mm³', 'Modulo resistente del gruppo di cordoni rispetto all\'asse orizzontale baricentrico.\nW_w = 2·a·L²/6 = a·L²/3.\nDa esso la tensione di flessione σ_fl = M/W_w.');
+    h += box('Momento M', fp(st.M/1e6,2), 'kNm', 'Momento flettente trasmesso alla saldatura dall\'eccentricità del carico.\nM = F·e = ' + fp(num('F2'),1) + ' kN · ' + fp(num('ecc'),0) + ' mm.');
+    nota = 'Il modello assume che il taglio sia assorbito uniformemente dai due cordoni e che il momento sia equilibrato dalla sola flessione dei cordoni verticali (distribuzione lineare delle tensioni). È l\'ipotesi classica, adeguata quando la piastra è rigida rispetto ai cordoni.';
+  } else {
+    const piena = pen==='full';
+    $('geo-title').textContent = 'Geometria resistente — saldatura di testa';
+    h += box('Area resistente A', fi(st.A), 'mm²', 'Area della sezione resistente del giunto di testa.\nA = b·' + (piena?'t':'a_eff') + '.\n' + (piena ? 'A piena penetrazione la sezione resistente coincide con quella della lamiera.' : 'A parziale penetrazione conta solo la gola efficace a_eff, non lo spessore nominale.'));
+    h += box('Modulo resistente W', fi(st.W), 'mm³', 'Modulo resistente elastico della sezione saldata.\nW = b·' + (piena?'t':'a_eff') + '²/6.\nDa esso la tensione di flessione σ_M = M/W.');
+    h += box('Tipo di giunto', piena?'Piena':'Parziale', piena?'penetraz.':'a_eff '+fp(num('aeff'),1)+' mm', piena
+      ? 'Piena penetrazione: se il materiale d\'apporto ha caratteristiche non inferiori al metallo base, la resistenza di progetto del giunto è quella del metallo base (EN 1993-1-8 §4.7.1) e si verifica la sola sezione con γ_M0.'
+      : 'Parziale penetrazione: il giunto si verifica come un cordone d\'angolo con gola pari ad a_eff (EN 1993-1-8 §4.7.2), quindi con f_u, β_w e γ_M2.');
+    nota = piena
+      ? 'La piena penetrazione richiede procedimento qualificato e controlli non distruttivi adeguati (EN 1090-2, livello di qualità EN ISO 5817 da prescrivere): senza di essi l\'ipotesi di ripristino completo della sezione non è garantita.'
+      : 'Per la parziale penetrazione la gola giace nel piano della sezione: σ⊥ agisce direttamente sulla gola, senza la scomposizione a 45° tipica dei cordoni d\'angolo, mentre il taglio V genera τ∥.';
+  }
+  $('res-geo').innerHTML = h;
+  $('geo-note').textContent = nota;
+}
+
+function renderTensioni(st,U){
+  const piena = (mode===3 && pen==='full');
+  let h = '';
+  if(piena){
+    $('ten-title').textContent = 'Tensioni sul metallo base';
+    h += box('σ normale', fp(st.sig,1), 'MPa', 'Tensione normale totale sulla sezione: σ = N/(b·t) + M/(b·t²/6).\nSomma del contributo assiale e di quello flessionale, presi in valore assoluto (fibra più sollecitata).\nSoglia: σ ≤ f_y/γ_M0.');
+    h += box('τ taglio', fp(st.tau,1), 'MPa', 'Tensione tangenziale media sulla sezione: τ = V/(b·t).\nSoglia: τ ≤ f_y/(√3·γ_M0), criterio di Von Mises a taglio puro.');
+    h += box('σ_id Von Mises', fp(Math.sqrt(st.sig*st.sig+3*st.tau*st.tau),1), 'MPa', 'Tensione ideale di Von Mises: σ_id = √(σ² + 3τ²).\nCombina normale e taglio in un unico valore confrontabile con f_y/γ_M0.');
+  } else {
+    $('ten-title').textContent = 'Componenti di tensione sulla sezione di gola';
+    h += box('σ⊥', fp(st.sPerp,1), 'MPa', 'Tensione normale PERPENDICOLARE al piano della gola.\n' + (mode===3
+        ? 'Per la parziale penetrazione σ⊥ = N/A + M/W agisce direttamente sulla gola.'
+        : 'Nasce dalla scomposizione a 45° della forza trasversale: σ⊥ = F⊥/(A_w·√2)' + (mode===1?', più l\'eventuale contributo F_n/A_w.':'.')) + '\nÈ la componente più penalizzante: ha una verifica dedicata, σ⊥ ≤ 0,9·f_u/γ_M2.');
+    h += box('τ⊥', fp(st.tPerp,1), 'MPa', 'Tensione tangenziale nel piano della gola, PERPENDICOLARE all\'asse del cordone.\n' + (mode===3
+        ? 'Nulla per la saldatura di testa: la gola non è ruotata di 45°.'
+        : 'Per la scomposizione a 45° vale τ⊥ = σ⊥ prodotta dalla forza trasversale.') + '\nEntra con coefficiente 3 nel criterio direzionale.');
+    h += box('τ∥', fp(st.tPar,1), 'MPa', 'Tensione tangenziale nel piano della gola, PARALLELA all\'asse del cordone.\n' + (mode===1 ? 'τ∥ = F∥/A_w.' : (mode===2 ? 'Prodotta dal taglio: τ∥ = F/A_w.' : 'Prodotta dal taglio: τ∥ = V/A.')) + '\nEntra con coefficiente 3 nel criterio direzionale ma non nella verifica su σ⊥.');
+    h += box('σ_eq direzionale', fp(U.sEq,1), 'MPa', 'Tensione equivalente del metodo direzionale (EN 1993-1-8 §4.5.3.2):\nσ_eq = √(σ⊥² + 3·(τ⊥² + τ∥²)).\nSoglia: σ_eq ≤ f_u/(β_w·γ_M2).');
+    h += box('τ_res semplificato', fp(U.tRes,1), 'MPa', 'Risultante vettoriale delle tensioni sulla gola (EN 1993-1-8 §4.5.3.3):\nτ_res = √(σ⊥² + τ⊥² + τ∥²) = F_tot/A_w.\nSoglia: τ_res ≤ f_vw,d = f_u/(√3·β_w·γ_M2).');
+    if(mode===2) h += box('σ flessione', fp(st.sFl,1), 'MPa', 'Tensione di flessione sulla sezione dei cordoni, PRIMA della scomposizione sulla gola.\nσ_fl = M/W_w; sulla gola inclinata a 45° si scompone in σ⊥ = τ⊥ = σ_fl/√2.');
+  }
+  $('res-ten').innerHTML = h;
+}
+
+function renderResistenze(m,R,gM2,gM0){
+  const piena = (mode===3 && pen==='full');
+  let h = '';
+  if(piena){
+    $('rd-title').textContent = 'Resistenze di progetto — metallo base';
+    h += box('f_y/γ_M0', fp(R.fyd,1), 'MPa', 'Resistenza di progetto a tensione normale del metallo base.\nf_y/γ_M0 = ' + m.fy + '/' + fp(gM0,2) + ' MPa.\nLimite per σ e per la tensione ideale di Von Mises.');
+    h += box('f_y/(√3·γ_M0)', fp(R.tyd,1), 'MPa', 'Resistenza di progetto a taglio del metallo base.\nf_y/(√3·γ_M0): il fattore √3 deriva dal criterio di Von Mises applicato a taglio puro.');
+    h += box('f_u materiale', fp(m.fu,0), 'MPa', 'Resistenza a rottura del materiale base (EN 10025, spessori ≤ 40 mm).\nNon governa la piena penetrazione, ma è il riferimento per il materiale d\'apporto, che deve avere caratteristiche non inferiori.');
+  } else {
+    $('rd-title').textContent = 'Resistenze di progetto — sezione di gola';
+    h += box('f_u/(β_w·γ_M2)', fp(R.fRes,1), 'MPa', 'Limite del metodo direzionale (EN 1993-1-8 §4.5.3.2).\nf_u/(β_w·γ_M2) = ' + m.fu + '/(' + m.bw.toFixed(2) + '·' + fp(gM2,2) + ') MPa.\nSi confronta con σ_eq = √(σ⊥²+3(τ⊥²+τ∥²)).');
+    h += box('0,9·f_u/γ_M2', fp(R.fPerp,1), 'MPa', 'Limite della seconda condizione del metodo direzionale, indipendente da β_w.\n0,9·f_u/γ_M2: evita la rottura per strappo perpendicolare alla gola, che non gode del beneficio del fattore di correlazione.\nSi confronta con la sola σ⊥.');
+    h += box('f_vw,d', fp(R.fvwd,1), 'MPa', 'Resistenza a taglio di progetto della gola, metodo semplificato (EN 1993-1-8 §4.5.3.3).\nf_vw,d = f_u/(√3·β_w·γ_M2).\nSi confronta con la risultante τ_res, qualunque sia la direzione della forza: è sempre a favore di sicurezza rispetto al direzionale.');
+    h += box('β_w', m.bw.toFixed(2).replace('.',','), '—', 'Fattore di correlazione della saldatura (EN 1993-1-8 tab. 4.1), funzione dell\'acciaio base.\n0,80 (S235) · 0,85 (S275) · 0,90 (S355) · 1,00 (S420/S460).\nPiù alto è β_w, più bassa è la resistenza di progetto della gola: sugli acciai alto-resistenziali la saldatura non segue proporzionalmente il materiale base.');
+    h += box('f_u base', fp(m.fu,0), 'MPa', 'Resistenza a rottura nominale del materiale base collegato (EN 10025, spessori ≤ 40 mm).\nLa EN 1993-1-8 riferisce la resistenza del cordone a f_u del materiale BASE, non a quello d\'apporto.');
+    h += box('f_y base', fp(m.fy,0), 'MPa', 'Tensione di snervamento nominale del materiale base.\nNon entra nella verifica del cordone d\'angolo, ma limita la resistenza delle lamiere collegate, da verificare separatamente.');
+  }
+  $('res-rd').innerHTML = h;
+}
+
+function renderVerifiche(st,U,R){
+  const piena = (mode===3 && pen==='full');
+  let h = '', hint = '';
+  if(piena){
+    $('ver-title').textContent = 'Verifiche — metallo base (piena penetrazione)';
+    const uS = Math.abs(st.sig)/R.fyd;
+    const uT = Math.abs(st.tau)/R.tyd;
+    const sId = Math.sqrt(st.sig*st.sig + 3*st.tau*st.tau);
+    const uV = sId/R.fyd;
+    h += urow('Tensione normale  σ ≤ f_y/γ_M0', uS, 'Verifica della fibra più sollecitata a tensione normale.\nσ = ' + fp(st.sig,1) + ' MPa contro f_y/γ_M0 = ' + fp(R.fyd,1) + ' MPa.\nSfruttamento = σ/(f_y/γ_M0); OK fino al 100 %.');
+    h += urow('Taglio  τ ≤ f_y/(√3·γ_M0)', uT, 'Verifica a taglio del metallo base.\nτ = ' + fp(st.tau,1) + ' MPa contro f_y/(√3·γ_M0) = ' + fp(R.tyd,1) + ' MPa.\nOK fino al 100 %.');
+    h += urow('Von Mises  √(σ²+3τ²) ≤ f_y/γ_M0', uV, 'Verifica combinata normale + taglio secondo il criterio di Von Mises.\nσ_id = ' + fp(sId,1) + ' MPa contro f_y/γ_M0 = ' + fp(R.fyd,1) + ' MPa.\nÈ la verifica governante quando σ e τ sono entrambe significative.');
+    hint = '<div class="info-box">Con materiale d\'apporto di caratteristiche non inferiori al metallo base, la <b>saldatura di testa a piena penetrazione</b> non richiede una verifica propria (EN 1993-1-8 §4.7.1): si verifica la sezione del pezzo. Restano indispensabili la qualifica del procedimento e il livello di qualità prescritto secondo EN ISO 5817.</div>';
+  } else {
+    $('ver-title').textContent = mode===3 ? 'Verifiche — gola efficace (parziale penetrazione)' : 'Verifiche di resistenza della gola';
+    h += urow('Direzionale (a)  σ_eq ≤ f_u/(β_w·γ_M2)', U.uDirA, 'Prima condizione del metodo direzionale (EN 1993-1-8 §4.5.3.2).\n√(σ⊥² + 3(τ⊥² + τ∥²)) = ' + fp(U.sEq,1) + ' MPa contro ' + fp(R.fRes,1) + ' MPa.\nDevono essere soddisfatte ENTRAMBE le condizioni (a) e (b).');
+    h += urow('Direzionale (b)  σ⊥ ≤ 0,9·f_u/γ_M2', U.uDirB, 'Seconda condizione del metodo direzionale: limita la sola componente perpendicolare alla gola.\nσ⊥ = ' + fp(Math.abs(st.sPerp),1) + ' MPa contro 0,9·f_u/γ_M2 = ' + fp(R.fPerp,1) + ' MPa.\nGoverna nei giunti tesi con forte componente trasversale.');
+    h += urow('Semplificato  τ_res ≤ f_vw,d', U.uSem, 'Metodo semplificato (EN 1993-1-8 §4.5.3.3): la risultante delle tensioni sulla gola si confronta con la resistenza a taglio, senza distinguere la direzione.\nτ_res = ' + fp(U.tRes,1) + ' MPa contro f_vw,d = ' + fp(R.fvwd,1) + ' MPa.\nÈ sempre più cautelativo del direzionale: se questo risulta verificato e quello no, si può adottare il direzionale.');
+    const uMax = Math.max(U.uDirA,U.uDirB);
+    if(uMax>1.05) hint += '<div class="warn-box">Verifica <b>non soddisfatta</b> con il metodo direzionale (sfruttamento ' + fp(uMax*100,1) + ' %): aumenta la gola almeno al valore richiesto indicato qui sotto, oppure allunga i cordoni.</div>';
+    else if(uMax>1.00) hint += '<div class="warn-box">Sfruttamento al <b>limite</b> (' + fp(uMax*100,1) + ' %): la verifica è superata di poco. Verifica le ipotesi di carico prima di accettare il dimensionamento.</div>';
+    if(U.uSem>1.0 && uMax<=1.0) hint += '<div class="info-box">Il metodo <b>semplificato</b> non risulta verificato mentre il <b>direzionale</b> sì: entrambi sono ammessi dalla norma, il direzionale è quello più accurato e può essere adottato.</div>';
+  }
+  $('res-ver').innerHTML = h;
+  $('hint').innerHTML = hint;
+}
+
+function renderDimensionamento(R,aCorr){
+  if(mode===3 && pen==='full'){
+    $('res-dim').innerHTML = box('Gola richiesta a_req','n.a.','', 'Non applicabile: a piena penetrazione non esiste una gola da dimensionare, perché la sezione resistente coincide con quella della lamiera.\nPer ridurre lo sfruttamento occorre agire su spessore t o larghezza b.')
+      + box('Sfruttamento massimo','—','', 'Vedi le verifiche sul metallo base.');
+    $('dim-note').textContent = 'A piena penetrazione il dimensionamento riguarda lo spessore della lamiera, non la saldatura.';
+    return;
+  }
+  const aReq = golaRichiesta(R);
+  const ok = isFinite(aReq) && aReq<=aCorr;
+  const aRacc = Math.max(aReq||0, 3);
+  $('res-dim').innerHTML =
+    box('Gola richiesta a_req', isFinite(aReq)?fp(aReq,1):'—', 'mm', 'Altezza di gola minima che porta lo sfruttamento del metodo direzionale esattamente al 100 %, arrotondata per eccesso a 0,5 mm.\nNelle modalità a cordone d\'angolo tutte le tensioni scalano con 1/a: lo sfruttamento calcolato con a = 1 mm è già la gola richiesta in mm.\nNon tiene conto dei minimi costruttivi.')
+    + box('Gola da adottare', fp(aRacc,1), 'mm', 'Valore da adottare: massimo fra la gola richiesta dal calcolo e il minimo di norma di 3 mm (EN 1993-1-8 §4.5.1).\nVa poi confrontato con i controlli di buona pratica (a ≤ 0,7·t_min e a_min ≈ √t_max − 0,5 mm).')
+    + box('Gola adottata', fp(aCorr,1), 'mm', 'Altezza di gola attualmente inserita nei dati di input.\nDeve risultare ≥ della gola da adottare perché il giunto sia verificato con margine.')
+    + box('Margine', isFinite(aReq)&&aReq>0 ? fp((aCorr/aReq-1)*100,0) : '—', '%', 'Riserva della gola adottata rispetto a quella strettamente richiesta dal calcolo.\n(a/a_req − 1)·100. Un margine negativo significa gola insufficiente.');
+  $('dim-note').textContent = isFinite(aReq)
+    ? (ok ? 'La gola adottata (' + fp(aCorr,1) + ' mm) è sufficiente: il calcolo richiede almeno ' + fp(aReq,1) + ' mm.'
+          : 'La gola adottata (' + fp(aCorr,1) + ' mm) è insufficiente: il calcolo richiede almeno ' + fp(aReq,1) + ' mm.')
+    : 'Gola richiesta non determinabile con i dati inseriti (geometria o azioni nulle).';
+}
+
+function renderControlli(a,L){
+  let h = '';
+  const tmin = num('tmin'), tmax = num('tmax');
+  const piena = (mode===3 && pen==='full');
+
+  if(piena){
+    h += crow('Spessore t','' + fp(a,1),'mm', a>0, 'A piena penetrazione non si applicano i minimi di gola: la sezione resistente è quella della lamiera.', true);
+  } else {
+    h += crow('Gola minima  a ≥ 3 mm', fp(a,1), 'mm', a>=3, 'EN 1993-1-8 §4.5.1: cordoni con gola inferiore a 3 mm non sono ammessi dalla norma, perché il bagno di fusione non è affidabile e il cordone è troppo sensibile al raffreddamento rapido.\nStato OK se a ≥ 3 mm.');
+    const Lmin = Math.max(30, 6*a);
+    h += crow('Lungh. efficace  L ≥ max(30; 6·a)', fp(L,0) + ' / ' + fp(Lmin,0), 'mm', L>=Lmin, 'EN 1993-1-8 §4.5.1: un cordone più corto di 30 mm o di 6 volte la gola non è computabile, perché gli effetti di innesco e cratere occupano l\'intera lunghezza.\nLimite attuale: max(30 mm; 6·' + fp(a,1) + ') = ' + fp(Lmin,0) + ' mm.');
+  }
+
+  if(tmin>0){
+    const lim = 0.7*tmin;
+    h += crow('Buona pratica  a ≤ 0,7·t_min', fp(a,1) + ' / ' + fp(lim,1), 'mm', a<=lim, 'Regola di buona pratica: una gola superiore a 0,7 volte lo spessore più sottile collegato non è sfruttabile, perché la rottura si sposterebbe nella lamiera anziché nel cordone, e comporta apporto termico eccessivo.\nLimite: 0,7 · ' + fp(tmin,1) + ' = ' + fp(lim,1) + ' mm.');
+  } else {
+    h += crow('Buona pratica  a ≤ 0,7·t_min', 'n.d.', '', true, 'Controllo disattivato: inserisci lo spessore minimo collegato t_min nel pannello di input per attivarlo.', true);
+  }
+
+  if(tmax>0){
+    const aMin = Math.sqrt(tmax) - 0.5;
+    h += crow('Indicazione  a_min ≈ √t_max − 0,5', fp(a,1) + ' / ' + fp(aMin,1), 'mm', true, 'Regola pratica di officina per evitare un raffreddamento troppo rapido del cordone su lamiere spesse: a_min ≈ √(t_max) − 0,5 mm.\nCon t_max = ' + fp(tmax,1) + ' mm risulta a_min ≈ ' + fp(aMin,1) + ' mm.\nÈ un\'indicazione, NON una verifica di norma: non blocca il calcolo.', true);
+  } else {
+    h += crow('Indicazione  a_min ≈ √t_max − 0,5', 'n.d.', '', true, 'Indicazione disattivata: inserisci lo spessore massimo collegato t_max nel pannello di input per visualizzarla.', true);
+  }
+
+  $('res-geoch').innerHTML = h;
+}
+
+function renderFormule(){
+  let h = '';
+  if(mode===1){
+    $('frm-title').textContent = 'Formule utilizzate — cordone d\'angolo (EN 1993-1-8 §4.5)';
+    h += frow('Area di gola','A_w = n · a · L');
+    h += frow('Forza trasversale','σ⊥ = τ⊥ = F⊥ / (A_w · √2)');
+    h += frow('Forza longitudinale','τ∥ = F∥ / A_w');
+    h += frow('Forza normale al piano','Δσ⊥ = F_n / A_w  (semplificazione conservativa)');
+  } else if(mode===2){
+    $('frm-title').textContent = 'Formule utilizzate — mensola saldata (EN 1993-1-8 §4.5)';
+    h += frow('Area di gola','A_w = 2 · a · L');
+    h += frow('Modulo resistente','W_w = 2·a·L²/6 = a·L²/3');
+    h += frow('Momento','M = F · e');
+    h += frow('Flessione sulla gola','σ⊥ = τ⊥ = (M/W_w) / √2');
+    h += frow('Taglio','τ∥ = F / A_w');
+  } else if(pen==='full'){
+    $('frm-title').textContent = 'Formule utilizzate — testa a piena penetrazione (EN 1993-1-8 §4.7.1)';
+    h += frow('Tensione normale','σ = N/(b·t) + M/(b·t²/6)');
+    h += frow('Taglio','τ = V/(b·t)');
+    h += frow('Verifica normale','σ ≤ f_y/γ_M0');
+    h += frow('Verifica taglio','τ ≤ f_y/(√3·γ_M0)');
+    h += frow('Verifica combinata','√(σ² + 3τ²) ≤ f_y/γ_M0');
+    $('res-frm').innerHTML = h;
+    return;
+  } else {
+    $('frm-title').textContent = 'Formule utilizzate — testa a parziale penetrazione (EN 1993-1-8 §4.7.2)';
+    h += frow('Area efficace','A = b · a_eff');
+    h += frow('Modulo resistente','W = b · a_eff² / 6');
+    h += frow('Normale sulla gola','σ⊥ = N/A + M/W');
+    h += frow('Taglio sulla gola','τ∥ = V/A');
+  }
+  h += frow('Direzionale (a)','√(σ⊥² + 3(τ⊥² + τ∥²)) ≤ f_u/(β_w·γ_M2)');
+  h += frow('Direzionale (b)','σ⊥ ≤ 0,9·f_u/γ_M2');
+  h += frow('Semplificato','τ_res = √(σ⊥² + τ⊥² + τ∥²) ≤ f_vw,d');
+  h += frow('Resistenza a taglio gola','f_vw,d = f_u/(√3·β_w·γ_M2)');
+  h += frow('Gola richiesta','a_req = a · u_dir  (le tensioni scalano con 1/a)');
+  $('res-frm').innerHTML = h;
+}
+
+// ═══════════════════════════════════════════════════════
+//  SCHEMA — disegno qualitativo della modalita' attiva
+// ═══════════════════════════════════════════════════════
+function renderSchema(){
+  const G='#9a9dab', D='#7d8090', A='#4fc3f7', R='#ef5350', W='#b39ddb';
+  const defs = `<defs><marker id="ar" markerWidth="8" markerHeight="8" refX="7" refY="3" orient="auto">
+      <path d="M0,0 L7,3 L0,6 z" fill="${R}"/></marker></defs>`;
+  let s = defs;
+
+  if(mode===1 || mode===2){
+    // Sezione di un cordone d'angolo a T con gola inclinata a 45°
+    s += `<rect x="40" y="120" width="180" height="26" fill="#23252d" stroke="${G}" stroke-width="1"/>`;
+    s += `<rect x="118" y="40" width="24" height="80" fill="#23252d" stroke="${G}" stroke-width="1"/>`;
+    // cordoni sui due lati
+    s += `<path d="M118,120 L118,78 L76,120 z" fill="rgba(179,157,219,.22)" stroke="${W}" stroke-width="1.2"/>`;
+    s += `<path d="M142,120 L142,78 L184,120 z" fill="rgba(179,157,219,.22)" stroke="${W}" stroke-width="1.2"/>`;
+    // gola a 45°
+    s += `<line x1="118" y1="78" x2="76" y2="120" stroke="${A}" stroke-width="1" stroke-dasharray="3 2"/>`;
+    s += `<line x1="97" y1="99" x2="118" y2="120" stroke="${A}" stroke-width="1.6"/>`;
+    s += `<text x="60" y="96" fill="${A}" font-size="10" font-family="DM Mono">a</text>`;
+    s += `<text x="150" y="112" fill="${W}" font-size="9" font-family="DM Mono">45°</text>`;
+    if(mode===1){
+      s += `<line x1="130" y1="36" x2="130" y2="10" stroke="${R}" stroke-width="1.6" marker-end="url(#ar)"/>`;
+      s += `<text x="138" y="22" fill="${R}" font-size="9" font-family="DM Mono">F⊥ / F_n</text>`;
+      s += `<circle cx="205" cy="60" r="9" fill="none" stroke="${R}" stroke-width="1.2"/><circle cx="205" cy="60" r="2.5" fill="${R}"/>`;
+      s += `<text x="220" y="64" fill="${R}" font-size="9" font-family="DM Mono">F∥ (uscente)</text>`;
+      s += `<text x="12" y="172" fill="${D}" font-size="9" font-family="DM Mono">Sezione del giunto a T — gola a inclinata di 45°, n cordoni di lunghezza L</text>`;
+    } else {
+      s += `<rect x="250" y="40" width="20" height="110" fill="#23252d" stroke="${G}" stroke-width="1"/>`;
+      s += `<rect x="270" y="72" width="120" height="22" fill="#23252d" stroke="${G}" stroke-width="1"/>`;
+      s += `<path d="M270,72 L270,54 L286,72 z" fill="rgba(179,157,219,.22)" stroke="${W}" stroke-width="1.1"/>`;
+      s += `<path d="M270,94 L270,112 L286,94 z" fill="rgba(179,157,219,.22)" stroke="${W}" stroke-width="1.1"/>`;
+      s += `<line x1="390" y1="83" x2="390" y2="128" stroke="${R}" stroke-width="1.6" marker-end="url(#ar)"/>`;
+      s += `<text x="366" y="142" fill="${R}" font-size="9" font-family="DM Mono">F</text>`;
+      s += `<line x1="270" y1="30" x2="390" y2="30" stroke="${D}" stroke-width=".8"/>`;
+      s += `<text x="318" y="25" fill="${D}" font-size="9" font-family="DM Mono">e</text>`;
+      s += `<line x1="240" y1="40" x2="240" y2="150" stroke="${A}" stroke-width=".8"/>`;
+      s += `<text x="222" y="98" fill="${A}" font-size="9" font-family="DM Mono">L</text>`;
+      s += `<text x="12" y="172" fill="${D}" font-size="9" font-family="DM Mono">Mensola su due cordoni verticali — M = F·e, taglio ripartito su A_w = 2·a·L</text>`;
+    }
+  } else {
+    const piena = pen==='full';
+    s += `<rect x="60" y="80" width="150" height="30" fill="#23252d" stroke="${G}" stroke-width="1"/>`;
+    s += `<rect x="230" y="80" width="150" height="30" fill="#23252d" stroke="${G}" stroke-width="1"/>`;
+    if(piena){
+      s += `<path d="M210,80 L230,80 L230,110 L210,110 z" fill="rgba(179,157,219,.25)" stroke="${W}" stroke-width="1.2"/>`;
+      s += `<path d="M206,78 Q220,72 234,78" fill="none" stroke="${W}" stroke-width="1.2"/>`;
+      s += `<text x="196" y="64" fill="${W}" font-size="9" font-family="DM Mono">piena penetrazione (t)</text>`;
+    } else {
+      s += `<path d="M210,80 L230,80 L230,98 L210,98 z" fill="rgba(179,157,219,.25)" stroke="${W}" stroke-width="1.2"/>`;
+      s += `<line x1="210" y1="98" x2="230" y2="98" stroke="${A}" stroke-width="1.4" stroke-dasharray="3 2"/>`;
+      s += `<text x="188" y="64" fill="${W}" font-size="9" font-family="DM Mono">parziale — gola a_eff</text>`;
+    }
+    s += `<line x1="46" y1="95" x2="46" y2="95" stroke="${D}"/>`;
+    s += `<line x1="380" y1="95" x2="416" y2="95" stroke="${R}" stroke-width="1.6" marker-end="url(#ar)"/>`;
+    s += `<text x="384" y="88" fill="${R}" font-size="9" font-family="DM Mono">N</text>`;
+    s += `<line x1="60" y1="130" x2="60" y2="150" stroke="${A}" stroke-width=".8"/>`;
+    s += `<text x="66" y="146" fill="${A}" font-size="9" font-family="DM Mono">t = spessore · b = larghezza (in profondità)</text>`;
+    s += `<text x="12" y="172" fill="${D}" font-size="9" font-family="DM Mono">Giunto di testa — sezione longitudinale</text>`;
+  }
+  $('schema').innerHTML = s;
+}
+
+// ═══════════════════════════════════════════════════════
+//  INIT
+// ═══════════════════════════════════════════════════════
+window.addEventListener('DOMContentLoaded', () => {
+  fillMat();
+  $('printBtn').addEventListener('click', () => window.print());
+  document.querySelectorAll('input,select').forEach(el => {
+    el.addEventListener('change', calculate);
+  });
+  setMode(1);
+});
+</script>
+
+</body>
+</html>

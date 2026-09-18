@@ -1,0 +1,886 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Alberi di Trasmissione - Dimensionamento e Verifica</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@300;400;500&family=Barlow+Condensed:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="theme.css">
+<style>
+
+html{background:var(--bg);color:var(--text);font-family:var(--mono);font-size:13px;min-height:100vh}
+body{display:flex;flex-direction:column;align-items:center;min-height:100vh;padding:20px}
+
+.header{border-bottom:1px solid var(--border);padding:11px 20px;display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:20px;width:100%;max-width:1180px}
+
+.container{max-width:1180px;width:100%;display:grid;grid-template-columns:340px 1fr;gap:20px}
+@media(max-width:900px){.container{grid-template-columns:1fr}}
+
+.panel{background:var(--bg2);border:1px solid var(--border2);border-radius:8px;padding:15px;display:flex;flex-direction:column;gap:12px}
+.rpanel{display:flex;flex-direction:column;gap:14px}
+
+.stitle{font-family:var(--cond);font-size:10px;font-weight:600;letter-spacing:.17em;color:var(--muted);text-transform:uppercase;margin-bottom:4px;display:flex;align-items:center;gap:6px}
+
+.field{margin-bottom:6px}
+.flabel{color:var(--muted);font-size:11px;letter-spacing:.03em}
+.funit{font-size:10px;color:var(--dim)}
+.frow2{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.frow3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px}
+
+/* Barra di utilizzo nelle righe di verifica */
+.util{width:70px;height:5px;background:var(--bg3);border-radius:3px;overflow:hidden;flex-shrink:0}
+.util span{display:block;height:100%;border-radius:3px}
+.util span.ok{background:var(--up)}
+.util span.warn{background:var(--amber)}
+.util span.err{background:var(--dn)}
+
+/* Elenco delle formule adottate */
+.formula-row{display:flex;align-items:baseline;gap:8px;padding:6px 0;border-bottom:1px solid var(--border);font-size:11px}
+.formula-row:last-child{border-bottom:none}
+.formula-name{color:var(--muted);min-width:190px;flex-shrink:0}
+.formula-expr{color:var(--acc);font-size:12px;font-weight:500}
+@media(max-width:600px){.formula-row{flex-direction:column;gap:2px}.formula-name{min-width:0}}
+
+.schematic-wrap{background:var(--bg1);border:1px solid var(--border);border-radius:6px;padding:10px;display:flex;justify-content:center}
+.schematic-wrap svg{width:100%;max-width:440px;height:auto}
+
+/* Badge del criterio determinante nel dimensionamento */
+.crit{font-family:var(--cond);font-size:10px;font-weight:700;letter-spacing:.09em;text-transform:uppercase;padding:2px 9px;border-radius:4px;white-space:nowrap}
+.crit.fat{background:rgba(255,167,38,.12);color:var(--amber);border:1px solid rgba(255,167,38,.35)}
+.crit.sta{background:rgba(79,195,247,.12);color:var(--acc);border:1px solid rgba(79,195,247,.35)}
+.crit.nd{background:rgba(179,157,219,.14);color:var(--violet);border:1px solid rgba(179,157,219,.35)}
+
+.back-btn{background:transparent;cursor:pointer}
+
+.hidden{display:none !important}
+
+/* Gli avvisi possono essere piu' di uno: vanno distanziati tra loro */
+#hint{display:flex;flex-direction:column;gap:8px}
+#hint:empty{display:none}
+
+footer{margin-top:34px;font-size:10px;color:var(--dim);letter-spacing:.04em;text-align:center;line-height:1.8;max-width:900px}
+
+@media print{.back-btn{display:none !important}body{padding:0}}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <a href="index.html" class="back-btn">← Ritorna</a>
+  <h1><span class="dot"></span>Alberi di Trasmissione</h1>
+  <div class="sub">Flesso-torsione · von Mises · Fatica Goodman · Gough-Pollard</div>
+  <span class="norm-badge">UNI 7670 · DIN 743 (rif.)</span>
+  <button class="back-btn" id="printBtn">🖶 Stampa</button>
+</div>
+
+<div class="container">
+
+<!-- ═══ PANNELLO INPUT ═══ -->
+<div class="panel">
+
+  <div class="stitle">Geometria dell'albero</div>
+
+  <div class="field">
+    <div class="fhdr"><span class="flabel" data-tip="Albero pieno oppure cavo. L'albero cavo perde poca resistenza (il materiale al centro è poco sollecitato a flessione e torsione) ma molto peso: a parità di diametro esterno un foro di 0,5·d toglie circa il 6% dei moduli di resistenza e il 25% dell'area.">Tipo di sezione</span></div>
+    <div class="seg seg-2">
+      <button class="seg-btn on" id="s-piena" onclick="setSection('piena')">Piena</button>
+      <button class="seg-btn" id="s-cava" onclick="setSection('cava')">Cava</button>
+    </div>
+  </div>
+
+  <div class="field">
+    <div class="fhdr"><span class="flabel" data-tip="Diametro esterno dell'albero nella sezione verificata. È il parametro dominante: i moduli di resistenza crescono con d³, quindi le tensioni calano con 1/d³. Campo tipico 10÷200 mm.">Diametro esterno d</span><span class="funit">mm</span></div>
+    <div class="srow">
+      <div class="arr" onclick="adjust('d',-1)">−</div>
+      <input id="d" class="numinput" type="number" value="40" min="0" step="1" oninput="calculate()">
+      <div class="arr" onclick="adjust('d',1)">+</div>
+    </div>
+  </div>
+
+  <div class="field hidden" id="f-di">
+    <div class="fhdr"><span class="flabel" data-tip="Diametro del foro passante dell'albero cavo. Deve essere minore di d. Il rapporto di/d è mantenuto costante durante la ricerca del diametro minimo di progetto. Valori usuali 0,4÷0,7·d.">Diametro interno di</span><span class="funit">mm</span></div>
+    <div class="srow">
+      <div class="arr" onclick="adjust('di',-1)">−</div>
+      <input id="di" class="numinput" type="number" value="20" min="0" step="1" oninput="calculate()">
+      <div class="arr" onclick="adjust('di',1)">+</div>
+    </div>
+  </div>
+
+  <div class="stitle">Carichi nella sezione</div>
+
+  <div class="field">
+    <div class="fhdr"><span class="flabel" data-tip="Momento flettente risultante nella sezione verificata, Mf = √(Mx²+My²). Genera la tensione normale σ_f = Mf/W. Va calcolato sullo schema di trave con le reazioni dei cuscinetti: normalmente è massimo in corrispondenza di una ruota o di una puleggia.">Momento flettente Mf</span><span class="funit">Nm</span></div>
+    <div class="srow">
+      <div class="arr" onclick="adjust('Mf',-10)">−</div>
+      <input id="Mf" class="numinput" type="number" value="250" min="0" step="10" oninput="calculate()">
+      <div class="arr" onclick="adjust('Mf',10)">+</div>
+    </div>
+  </div>
+
+  <div class="field">
+    <div class="fhdr"><span class="flabel" data-tip="Il momento torcente si può inserire direttamente oppure ricavare dalla potenza trasmessa e dalla velocità di rotazione con Mt = 9550·P/n (costante 9550 = 30000/π, valida per P in kW, n in giri/min, Mt in Nm).">Momento torcente — sorgente</span></div>
+    <div class="seg seg-2">
+      <button class="seg-btn on" id="t-diretto" onclick="setTorqueMode('diretto')">Diretto</button>
+      <button class="seg-btn" id="t-potenza" onclick="setTorqueMode('potenza')">Da potenza</button>
+    </div>
+  </div>
+
+  <div class="field">
+    <div class="fhdr"><span class="flabel" data-tip="Momento torcente trasmesso dall'albero nella sezione verificata. Genera la tensione tangenziale τ_t = Mt/Wt. In modalità «Da potenza» il campo è di sola lettura e vale 9550·P/n.">Momento torcente Mt</span><span class="funit">Nm</span></div>
+    <div class="srow">
+      <div class="arr" onclick="adjust('Mt',-10)">−</div>
+      <input id="Mt" class="numinput" type="number" value="400" min="0" step="10" oninput="calculate()">
+      <div class="arr" onclick="adjust('Mt',10)">+</div>
+    </div>
+  </div>
+
+  <div class="frow2 hidden" id="f-pot">
+    <div class="field">
+      <div class="fhdr"><span class="flabel" data-tip="Potenza meccanica trasmessa dall'albero nella sezione verificata, al netto dei rendimenti a monte. Entra in Mt = 9550·P/n.">Potenza P</span><span class="funit">kW</span></div>
+      <input id="P" class="numinput" type="number" value="15" min="0" step="0.5" oninput="calculate()">
+    </div>
+    <div class="field">
+      <div class="fhdr"><span class="flabel" data-tip="Velocità di rotazione dell'albero. A parità di potenza il momento torcente è inversamente proporzionale a n: dimezzare i giri raddoppia la coppia e quindi τ_t.">Velocità n</span><span class="funit">rpm</span></div>
+      <input id="n" class="numinput" type="number" value="1450" min="0" step="10" oninput="calculate()">
+    </div>
+  </div>
+
+  <div class="frow2">
+    <div class="field">
+      <div class="fhdr"><span class="flabel" data-tip="Forza assiale sull'albero (opzionale): spinta di ruote elicoidali o coniche, precarico di cuscinetti obliqui. Genera σ_a = Fa/A, sommata a σ_f. Negativa se di compressione. Lasciare 0 se assente.">Forza assiale Fa</span><span class="funit">N</span></div>
+      <input id="Fa" class="numinput" type="number" value="0" step="100" oninput="calculate()">
+    </div>
+    <div class="field">
+      <div class="fhdr"><span class="flabel" data-tip="Forza di taglio nella sezione (opzionale). Genera τ_T = (4/3)·T/A per sezione piena, 2·T/A per sezione cava (valori massimi sull'asse neutro). Negli alberi normali è trascurabile rispetto alla torsione; conta solo per alberi molto corti e tozzi.">Forza di taglio T</span><span class="funit">N</span></div>
+      <input id="T" class="numinput" type="number" value="0" min="0" step="100" oninput="calculate()">
+    </div>
+  </div>
+
+  <div class="stitle">Natura della sollecitazione</div>
+
+  <div class="field">
+    <div class="fhdr"><span class="flabel" data-tip="Albero rotante sotto carico fisso: ogni fibra passa alternativamente da trazione a compressione ad ogni giro, quindi la flessione è alterna simmetrica (σ_amp = σ_f, σ_med = 0). Flessione fissa: albero fermo o carico rotante solidale, la flessione è un carico statico medio.">Flessione</span></div>
+    <select id="bend" class="select-field" onchange="calculate()">
+      <option value="rot" selected>Rotante — alterno simmetrico</option>
+      <option value="fis">Fissa — costante</option>
+    </select>
+  </div>
+
+  <div class="field">
+    <div class="fhdr"><span class="flabel" data-tip="Costante: coppia sempre nello stesso verso e di ampiezza stabile (τ_amp = 0, τ_med = τ). Pulsante 0→max: avviamenti/arresti ripetuti (τ_amp = τ_med = τ/2). Alterna: inversioni di moto (τ_amp = τ, τ_med = 0), il caso più gravoso a fatica.">Torsione</span></div>
+    <select id="tor" class="select-field" onchange="calculate()">
+      <option value="cost" selected>Costante — unidirezionale</option>
+      <option value="puls">Pulsante — da 0 a max</option>
+      <option value="alt">Alterna — inversione di moto</option>
+    </select>
+  </div>
+
+  <div class="stitle">Materiale</div>
+
+  <div class="field">
+    <div class="fhdr"><span class="flabel" data-tip="Preset con valori indicativi di Rm, Re e σ_D per acciai da costruzione di macchine. I tre campi restano editabili: per il progetto definitivo usare i dati del certificato del materiale allo spessore reale.">Materiale</span></div>
+    <select id="mat" class="select-field" onchange="onMatChange()">
+      <option value="C40">C40 bonificato — Rm 650</option>
+      <option value="C45" selected>C45 bonificato — Rm 700</option>
+      <option value="39NiCrMo3">39NiCrMo3 bonificato — Rm 900</option>
+      <option value="42CrMo4">42CrMo4 bonificato — Rm 1000</option>
+      <option value="18NiCrMo5">18NiCrMo5 cementato — Rm 1100</option>
+      <option value="S355">S355 — Rm 510</option>
+      <option value="custom">Personalizzato</option>
+    </select>
+  </div>
+
+  <div class="frow3">
+    <div class="field">
+      <div class="fhdr"><span class="flabel" data-tip="Carico unitario di rottura a trazione. Entra nel criterio di Goodman come intercetta sull'asse delle tensioni medie: 1/CS = σ_amp/σ_D* + σ_med/Rm.">Rm</span><span class="funit">MPa</span></div>
+      <input id="Rm" class="numinput" type="number" value="700" min="1" step="10" oninput="onMatEdit()">
+    </div>
+    <div class="field">
+      <div class="fhdr"><span class="flabel" data-tip="Tensione di snervamento. È il termine di confronto della verifica statica: CS_statico = Re/σ_id, con σ_id tensione ideale di von Mises.">Re</span><span class="funit">MPa</span></div>
+      <input id="Re" class="numinput" type="number" value="460" min="1" step="10" oninput="onMatEdit()">
+    </div>
+    <div class="field">
+      <div class="fhdr"><span class="flabel" data-tip="Limite di fatica a flessione alterna del provino lucido (σ_D ≈ 0,4÷0,5·Rm per gli acciai). Va corretto con i fattori ka, kb, kc e Kf per ottenere il limite del pezzo reale σ_D*.">σ_D</span><span class="funit">MPa</span></div>
+      <input id="sigD" class="numinput" type="number" value="300" min="1" step="10" oninput="onMatEdit()">
+    </div>
+  </div>
+
+  <div class="stitle">Fattori di fatica</div>
+
+  <div class="field">
+    <div class="fhdr"><span class="flabel" data-tip="Finitura della superficie dell'albero. La fatica nasce in superficie: la rugosità e i microintagli di lavorazione riducono il limite di fatica secondo ka = a·Rm^b (coefficienti sperimentali di Marin). Più il materiale è resistente, più risente della finitura grossolana.">Finitura superficiale</span></div>
+    <select id="fin" class="select-field" onchange="calculate()">
+      <option value="rett">Rettificato</option>
+      <option value="macc" selected>Lavorato di macchina</option>
+      <option value="lam">Laminato a caldo</option>
+      <option value="forg">Grezzo di forgia</option>
+    </select>
+  </div>
+
+  <div class="frow3">
+    <div class="field">
+      <div class="fhdr"><span class="flabel" data-tip="Fattore teorico di concentrazione delle tensioni dovuto all'intaglio geometrico (spallamento, gola, cava per linguetta, foro). 1,0 = albero liscio; 1,4÷1,8 raccordo di spallamento; 2,0÷2,5 gola per anello elastico o cava per linguetta.">Kt</span></div>
+      <input id="Kt" class="numinput" type="number" value="1.0" min="1" step="0.1" oninput="calculate()">
+    </div>
+    <div class="field">
+      <div class="fhdr"><span class="flabel" data-tip="Sensibilità all'intaglio del materiale, da 0 (insensibile) a 1 (pienamente sensibile). Kf = 1 + q·(Kt−1). Acciai bonificati ad alta resistenza q ≈ 0,85÷0,95; acciai dolci e ghise q ≈ 0,5÷0,8.">q intaglio</span></div>
+      <input id="q" class="numinput" type="number" value="0.8" min="0" max="1" step="0.05" oninput="calculate()">
+    </div>
+    <div class="field">
+      <div class="fhdr"><span class="flabel" data-tip="Fattore riassuntivo degli altri effetti: temperatura, affidabilità richiesta, corrosione, trattamenti superficiali. 1,0 = condizioni di riferimento; 0,7÷0,9 per affidabilità elevata o ambiente aggressivo; &gt;1 per pallinatura o rullatura.">kc altri</span></div>
+      <input id="kc" class="numinput" type="number" value="1.0" min="0.1" step="0.05" oninput="calculate()">
+    </div>
+  </div>
+
+  <div class="field">
+    <div class="fhdr"><span class="flabel" data-tip="Coefficiente di sicurezza richiesto, applicato sia alla verifica statica sia a quella a fatica e usato come vincolo nella ricerca del diametro minimo. Costruzione di macchine: 1,5÷2 con carichi ben noti, 2÷3 con carichi incerti o urti.">CS richiesto</span></div>
+    <div class="srow">
+      <div class="arr" onclick="adjust('CSreq',-0.25)">−</div>
+      <input id="CSreq" class="numinput" type="number" value="2" min="1" step="0.25" oninput="calculate()">
+      <div class="arr" onclick="adjust('CSreq',0.25)">+</div>
+    </div>
+  </div>
+
+  <div class="stitle">Rigidezza torsionale (opzionale)</div>
+
+  <div class="frow2">
+    <div class="field">
+      <div class="fhdr"><span class="flabel" data-tip="Lunghezza del tratto di albero sottoposto alla coppia Mt, tra la sezione di ingresso e quella di uscita del momento. Lasciare 0 per escludere il calcolo di rigidezza.">Lunghezza L</span><span class="funit">mm</span></div>
+      <input id="L" class="numinput" type="number" value="500" min="0" step="10" oninput="calculate()">
+    </div>
+    <div class="field">
+      <div class="fhdr"><span class="flabel" data-tip="Modulo di elasticità tangenziale. Acciaio ≈ 80000 MPa (81000 secondo alcune fonti), ghisa ≈ 44000, alluminio ≈ 27000. Entra in θ = Mt·L/(G·Ip).">Modulo G</span><span class="funit">MPa</span></div>
+      <input id="G" class="numinput" type="number" value="80000" min="0" step="1000" oninput="calculate()">
+    </div>
+  </div>
+
+  <div class="note">
+    <b>Verifica statica</b>: von Mises su σ_tot e τ_tot, confronto con Re.<br>
+    <b>Verifica a fatica</b>: limite del provino σ_D corretto con ka (finitura), kb (dimensione), kc (altri effetti) e Kf (intaglio); criterio di <b>Goodman</b> separato per flessione e torsione, combinati con <b>Gough-Pollard</b>.<br>
+    Le tensioni sono riferite alla singola sezione: il momento flettente va ricavato a parte dallo schema di trave.
+  </div>
+
+</div>
+
+<!-- ═══ PANNELLO RISULTATI ═══ -->
+<div class="rpanel">
+
+  <div id="hint"></div>
+
+  <div class="result-section">
+    <div class="result-section-title">Proprietà di sezione — <span id="secDesc"></span></div>
+    <div class="results-grid-3" id="geoGrid"></div>
+  </div>
+
+  <div class="schematic-wrap"><div id="schema"></div></div>
+
+  <div class="result-section">
+    <div class="result-section-title">Tensioni nella sezione</div>
+    <div class="results-grid-3" id="sigGrid"></div>
+  </div>
+
+  <div class="result-section">
+    <div class="result-section-title">Fattori e limite di fatica</div>
+    <div class="results-grid-3" id="fatGrid"></div>
+  </div>
+
+  <div class="result-section">
+    <div class="result-section-title">Verifiche</div>
+    <div class="verification-grid" id="verGrid"></div>
+  </div>
+
+  <div class="result-section">
+    <div class="result-section-title">Dimensionamento — <span id="critBadge"></span></div>
+    <div class="results-grid-3" id="dimGrid"></div>
+    <div class="note" id="dimNote" style="margin-top:10px"></div>
+  </div>
+
+  <div class="result-section" id="rigSection">
+    <div class="result-section-title">Rigidezza torsionale</div>
+    <div class="results-grid-3" id="rigGrid"></div>
+    <div class="note" style="margin-top:10px">
+      Riferimento pratico di buona costruzione: <b>θ ≤ 0,25 °/m</b> per alberi di trasmissione generici.
+      Per alberi di macchine utensili o assi interpolati si scende a 0,10÷0,15 °/m; per alberi di servizio
+      poco sollecitati si tollera fino a 0,5 °/m.
+    </div>
+  </div>
+
+  <div class="result-section">
+    <div class="result-section-title">Formule utilizzate</div>
+    <div id="formulaBox"></div>
+  </div>
+
+  <div class="result-section">
+    <div class="result-section-title">Riferimenti normativi</div>
+    <div class="note" style="border-left-color:rgba(79,195,247,.4)">
+      <b>UNI 7670</b> — Verifica a fatica degli organi meccanici: definizione di limite di fatica, fattori
+      correttivi e coefficienti di sicurezza.<br>
+      <b>DIN 743</b> (parti 1÷4) — Calcolo della capacità di carico di alberi e assi: metodo di riferimento
+      per gli effetti d'intaglio, i fattori dimensionali e la verifica combinata statica/fatica.<br>
+      <b>von Mises</b> (energia di distorsione) — tensione ideale σ_id = √(σ² + 3·τ²) per la verifica statica.<br>
+      <b>Goodman</b> — retta di interazione ampiezza/media nel diagramma di Haigh (σ_amp/σ_D* + σ_med/Rm = 1).<br>
+      <b>Gough-Pollard</b> — ellisse di combinazione fra flessione e torsione alternate.<br>
+      Complementari: DIN 743-2 (fattori di forma e intaglio), UNI 8830 / ISO 1122 per la terminologia,
+      UNI 6604 per le cave da linguetta (che introducono un intaglio con Kt ≈ 2,0÷2,5).
+    </div>
+  </div>
+
+</div>
+</div>
+
+<footer>
+  Andrea Cavani · Moduli calcolo HTML<br>
+  Verifica di massima di una singola sezione di albero soggetta a flesso-torsione. Non copre le velocità
+  critiche flessionali e torsionali, la verifica dei collegamenti (linguette, calettamenti, profili
+  scanalati), la freccia flessionale né i carichi variabili a blocchi (Miner). I preset di materiale sono
+  valori indicativi: per il progetto definitivo usare i dati del fornitore e, per l'intaglio, DIN 743-2.
+</footer>
+
+<script>
+// ═══════════════════════════════════════════════════════
+//  STATO
+// ═══════════════════════════════════════════════════════
+let section    = 'piena';    // 'piena' | 'cava'
+let torqueMode = 'diretto';  // 'diretto' = Mt inserito | 'potenza' = Mt da P e n
+
+// ═══════════════════════════════════════════════════════
+//  DATI
+// ═══════════════════════════════════════════════════════
+// Valori indicativi di acciai da costruzione di macchine allo stato
+// bonificato (o cementato). sigD = limite di fatica a flessione alterna
+// del provino lucido non intagliato.
+const MATS = {
+  C40:        {Rm:650,  Re:430, sigD:275},
+  C45:        {Rm:700,  Re:460, sigD:300},
+  '39NiCrMo3':{Rm:900,  Re:750, sigD:400},
+  '42CrMo4':  {Rm:1000, Re:800, sigD:450},
+  '18NiCrMo5':{Rm:1100, Re:850, sigD:480},
+  S355:       {Rm:510,  Re:355, sigD:230}
+};
+
+// Fattore di finitura superficiale ka = a * Rm^b (coefficienti di Marin,
+// Rm in MPa). Il fattore non puo' comunque superare 1.
+const FIN = {
+  rett:{a:1.58, b:-0.085, nome:'rettificato'},
+  macc:{a:4.51, b:-0.265, nome:'lavorato di macchina'},
+  lam: {a:57.7, b:-0.718, nome:'laminato a caldo'},
+  forg:{a:272,  b:-0.995, nome:'grezzo di forgia'}
+};
+
+const BEND_NAME = {rot:'rotante (alterno simmetrico)', fis:'fissa (costante)'};
+const TOR_NAME  = {cost:'costante', puls:'pulsante 0→max', alt:'alterna'};
+
+// Costante coppia-potenza: 30000/pi = 9549,3 ~ 9550 (P in kW, n in rpm).
+const K_POT = 9550;
+
+// Limite pratico di rotazione torsionale per alberi di trasmissione.
+const THETA_LIM = 0.25;      // °/m
+
+// Estremi della ricerca numerica del diametro minimo di progetto.
+const D_MIN_SCAN = 1, D_MAX_SCAN = 2000;
+
+// ═══════════════════════════════════════════════════════
+//  HELPER
+// ═══════════════════════════════════════════════════════
+const $  = id => document.getElementById(id);
+const PI = Math.PI;
+const fp = (v,n=1) => isFinite(v) ? v.toFixed(n) : '—';
+// Separatore delle migliaia a spazio: il punto italiano sarebbe ambiguo
+// accanto ai decimali prodotti da toFixed (251 327 mm⁴ vs 40.00 mm).
+const fi = v => isFinite(v) ? String(Math.round(v)).replace(/\B(?=(\d{3})+(?!\d))/g,' ') : '—';
+// I coefficienti di sicurezza infiniti (sezione scarica) sono il caso piu'
+// favorevole, non un errore: vanno mostrati come tali.
+const fcs = v => !isFinite(v) ? '∞' : (v>99 ? '>99' : v.toFixed(2));
+const val = id => { const e=$(id); return e ? (parseFloat(e.value)||0) : 0; };
+
+function box(label,value,unit,tip){
+  return `<div class="result-box">
+    <div class="result-label"${tip?` data-tip="${tip}"`:''}>${label}</div>
+    <div class="result-value">${value}<span class="result-unit">${unit||''}</span></div>
+  </div>`;
+}
+function sfClass(sf){
+  if(isNaN(sf) || sf<0) return 'err';
+  if(!isFinite(sf))     return 'ok';
+  if(sf>=1)   return 'ok';
+  if(sf>=0.5) return 'warn';   // CS compreso fra 1 e CS richiesto
+  return 'err';
+}
+function sfLabel(cl){ return cl==='ok'?'OK':(cl==='warn'?'LIMITE':'INSUFF.'); }
+
+// Classificazione specifica dei coefficienti di sicurezza:
+// ok se CS >= CS richiesto, warn se 1 <= CS < richiesto, err se CS < 1.
+function csClass(cs, req){
+  if(isNaN(cs) || cs<0) return 'err';
+  if(!isFinite(cs))     return 'ok';
+  if(cs>=req) return 'ok';
+  if(cs>=1)   return 'warn';
+  return 'err';
+}
+// cl = null per le righe puramente informative: niente barra, niente badge.
+function vrow(label,value,unit,cl,pct,tip){
+  return `<div class="verify-item">
+    <span class="verify-label"${tip?` data-tip="${tip}"`:''}>${label}</span>
+    ${cl?`<span class="util"><span class="${cl}" style="width:${Math.max(0,Math.min(100,pct))}%"></span></span>`:''}
+    <span class="verify-value">${value}<span class="verify-unit">${unit||''}</span></span>
+    ${cl?`<span class="verify-status ${cl}">${sfLabel(cl)}</span>`:''}
+  </div>`;
+}
+function adjust(id,step){
+  const el=$(id);
+  const dec=(String(step).split('.')[1]||'').length;
+  let v=(parseFloat(el.value)||0)+step;
+  if(el.min!==''&&v<parseFloat(el.min)) v=parseFloat(el.min);
+  el.value=dec?v.toFixed(dec):v;
+  calculate();
+}
+
+// ═══════════════════════════════════════════════════════
+//  UI
+// ═══════════════════════════════════════════════════════
+function setSection(s){
+  section = s;
+  $('s-piena').classList.toggle('on', s==='piena');
+  $('s-cava').classList.toggle('on', s==='cava');
+  $('f-di').classList.toggle('hidden', s!=='cava');
+  calculate();
+}
+
+function setTorqueMode(m){
+  torqueMode = m;
+  $('t-diretto').classList.toggle('on', m==='diretto');
+  $('t-potenza').classList.toggle('on', m==='potenza');
+  $('f-pot').classList.toggle('hidden', m!=='potenza');
+  // In modalita' "da potenza" il campo Mt diventa un risultato, non un input.
+  $('Mt').readOnly = (m==='potenza');
+  calculate();
+}
+
+function onMatChange(){
+  const v = $('mat').value;
+  if(MATS[v]){
+    $('Rm').value   = MATS[v].Rm;
+    $('Re').value   = MATS[v].Re;
+    $('sigD').value = MATS[v].sigD;
+  }
+  calculate();
+}
+
+// Modificare a mano uno dei tre valori significa che il materiale non e'
+// piu' quello del preset: la select passa a "personalizzato".
+function onMatEdit(){
+  const v = $('mat').value;
+  if(v!=='custom'){
+    const m = MATS[v];
+    if(!m || val('Rm')!==m.Rm || val('Re')!==m.Re || val('sigD')!==m.sigD) $('mat').value='custom';
+  }
+  calculate();
+}
+
+// ═══════════════════════════════════════════════════════
+//  PROPRIETA' DI SEZIONE
+//  Le formule della sezione cava con di = 0 degenerano esattamente in
+//  quelle della sezione piena: una sola implementazione per entrambe.
+// ═══════════════════════════════════════════════════════
+function sectionProps(d, di){
+  if(!(d>0)) return null;
+  if(!(di>=0) || di>=d) return null;
+  const d2=d*d, d4=d2*d2, i2=di*di, i4=i2*i2;
+  return {
+    A : PI*(d2-i2)/4,
+    W : PI*(d4-i4)/(32*d),
+    Wt: PI*(d4-i4)/(16*d),
+    I : PI*(d4-i4)/64,
+    Ip: PI*(d4-i4)/32
+  };
+}
+
+// Fattore dimensionale kb (effetto scala sul limite di fatica): il volume
+// di materiale sollecitato cresce con il diametro e con esso la
+// probabilita' di trovare un difetto critico.
+function kbFactor(d){
+  if(d<=2.79) return 1;
+  if(d<=51)   return 1.24*Math.pow(d,-0.107);
+  if(d<=254)  return 1.51*Math.pow(d,-0.157);
+  return 1.51*Math.pow(254,-0.157);   // oltre 254 mm si congela il valore
+}
+
+// ═══════════════════════════════════════════════════════
+//  ANALISI DI UNA SEZIONE
+//  Restituisce tensioni, fattori di fatica e coefficienti di sicurezza
+//  per un dato diametro: usata sia per la sezione reale sia, iterata,
+//  per la ricerca del diametro minimo di progetto.
+// ═══════════════════════════════════════════════════════
+function analyze(d, di, p){
+  const s = sectionProps(d, di);
+  if(!s) return null;
+
+  // I momenti sono in Nm, le sezioni in mm: servono N·mm.
+  const sigF = p.Mf*1000/s.W;
+  const tauT = p.Mt*1000/s.Wt;
+  const sigA = p.Fa/s.A;
+  // Taglio massimo sull'asse neutro: 4/3 per la sezione circolare piena,
+  // ~2 per il tubo a parete sottile (valore cautelativo per ogni di).
+  const tauS = p.T!==0 ? (p.hollow?2:4/3)*p.T/s.A : 0;
+
+  const sigTot = sigF + sigA;
+  const tauTot = tauT + tauS;
+
+  // ── Verifica statica (von Mises)
+  const sigId = Math.sqrt(sigTot*sigTot + 3*tauTot*tauTot);
+  const CSst  = sigId>0 ? p.Re/sigId : Infinity;
+
+  // ── Fattori correttivi del limite di fatica
+  const ka = Math.min(1, p.fa*Math.pow(p.Rm, p.fb));
+  const kb = kbFactor(d);
+  const Kf = 1 + p.q*(p.Kt-1);
+  const sigDs = ka*kb*p.kc*p.sigD/Kf;
+  const tauDs = 0.577*sigDs;
+
+  // ── Scomposizione in componente alternata e componente media
+  let sigAmp, sigMed;
+  if(p.bend==='rot'){ sigAmp = sigF; sigMed = sigA; }   // l'assiale resta media
+  else              { sigAmp = 0;    sigMed = sigF + sigA; }
+
+  let tauAmp, tauMed;
+  if(p.tor==='cost')      { tauAmp = 0;          tauMed = tauTot; }
+  else if(p.tor==='puls') { tauAmp = tauTot/2;   tauMed = tauTot/2; }
+  else                    { tauAmp = tauTot;     tauMed = 0; }
+
+  // ── Goodman, separatamente per flessione e torsione.
+  // Una tensione media di compressione non viene messa a credito: il
+  // contributo negativo e' azzerato (trattamento cautelativo usuale).
+  let invS = (sigDs>0 ? sigAmp/sigDs : (sigAmp>0?Infinity:0)) + (p.Rm>0 ? sigMed/p.Rm : 0);
+  let invT = (tauDs>0 ? tauAmp/tauDs : (tauAmp>0?Infinity:0)) + (p.Rm>0 ? tauMed/(0.577*p.Rm) : 0);
+  if(!(invS>0)) invS = 0;
+  if(!(invT>0)) invT = 0;
+
+  const CSsig = invS>0 ? 1/invS : Infinity;
+  const CStau = invT>0 ? 1/invT : Infinity;
+
+  // ── Gough-Pollard: combinazione ellittica dei due contributi.
+  const inv   = Math.sqrt(invS*invS + invT*invT);
+  const CSfat = inv>0 ? 1/inv : Infinity;
+
+  return {...s, d, di, sigF, tauT, sigA, tauS, sigTot, tauTot, sigId, CSst,
+          ka, kb, Kf, sigDs, tauDs, sigAmp, sigMed, tauAmp, tauMed,
+          CSsig, CStau, CSfat};
+}
+
+// ═══════════════════════════════════════════════════════
+//  DIMENSIONAMENTO INVERSO
+//  Scansione crescente su d (passo 1 mm, che coincide con
+//  l'arrotondamento per eccesso richiesto): il primo diametro che
+//  soddisfa il criterio e' il minimo necessario. Per la sezione cava il
+//  rapporto di/d resta costante, cosi' l'albero resta proporzionato.
+// ═══════════════════════════════════════════════════════
+function minDiameter(p, req, ratio){
+  let dSt=null, dFa=null;
+  for(let d=D_MIN_SCAN; d<=D_MAX_SCAN; d++){
+    const r = analyze(d, ratio*d, p);
+    if(!r) continue;
+    if(dSt===null && r.CSst >=req) dSt=d;
+    if(dFa===null && r.CSfat>=req) dFa=d;
+    if(dSt!==null && dFa!==null) break;
+  }
+  return {dSt, dFa};
+}
+
+// ═══════════════════════════════════════════════════════
+//  SCHEMA SVG
+//  Albero su due appoggi con le sollecitazioni applicate: serve a
+//  chiarire quali grandezze si riferiscono alla sezione verificata.
+// ═══════════════════════════════════════════════════════
+function drawSchema(hollow, d, di, Mf, Mt, Fa, T){
+  const W=440, H=170, xA=60, xB=380, yC=86;
+  // L'altezza a video e' solo indicativa: serve a distinguere pieno/cavo.
+  const hh = 30, hi = hollow && d>0 ? hh*Math.min(0.85, di/d) : 0;
+
+  const sup = x => `<polygon points="${x},${yC+hh/2+2} ${x-11},${yC+hh/2+18} ${x+11},${yC+hh/2+18}" fill="none" stroke="#9a9dab" stroke-width="1.3"/>
+    <line x1="${x-17}" y1="${yC+hh/2+18}" x2="${x+17}" y2="${yC+hh/2+18}" stroke="#9a9dab" stroke-width="1.3"/>`;
+
+  const xM = (xA+xB)/2;
+  let load='';
+  // Momento flettente: freccia verticale nella sezione di mezzeria.
+  if(Mf>0){
+    load += `<line x1="${xM}" y1="${yC-54}" x2="${xM}" y2="${yC-hh/2-4}" stroke="#ef5350" stroke-width="2"/>
+      <polygon points="${xM},${yC-hh/2} ${xM-5},${yC-hh/2-10} ${xM+5},${yC-hh/2-10}" fill="#ef5350"/>
+      <text x="${xM+9}" y="${yC-44}" fill="#ef5350" font-size="11" font-family="'DM Mono',monospace">Mf = ${fi(Mf)} Nm</text>`;
+  }
+  // Momento torcente: doppia freccia sull'asse.
+  if(Mt>0){
+    load += `<path d="M ${xA+34} ${yC+hh/2+30} A 26 26 0 0 1 ${xA+70} ${yC+hh/2+30}" fill="none" stroke="#4fc3f7" stroke-width="2"/>
+      <polygon points="${xA+70},${yC+hh/2+30} ${xA+62},${yC+hh/2+25} ${xA+63},${yC+hh/2+35}" fill="#4fc3f7"/>
+      <text x="${xA+80}" y="${yC+hh/2+32}" fill="#4fc3f7" font-size="11" font-family="'DM Mono',monospace">Mt = ${fi(Mt)} Nm</text>`;
+  }
+  if(Fa!==0){
+    const dir = Fa>0?1:-1;
+    load += `<line x1="${xB+14}" y1="${yC}" x2="${xB+52}" y2="${yC}" stroke="#66bb6a" stroke-width="2"/>
+      <polygon points="${xB+(dir>0?56:10)},${yC} ${xB+(dir>0?46:20)},${yC-5} ${xB+(dir>0?46:20)},${yC+5}" fill="#66bb6a"/>
+      <text x="${xB-6}" y="${yC-14}" fill="#66bb6a" font-size="10" text-anchor="end" font-family="'DM Mono',monospace">Fa = ${fi(Fa)} N</text>`;
+  }
+
+  return `<svg viewBox="0 0 ${W} ${H}" xmlns="http://www.w3.org/2000/svg">
+    <rect x="${xA-14}" y="${yC-hh/2}" width="${xB-xA+28}" height="${hh}" fill="rgba(79,195,247,.08)" stroke="#4fc3f7" stroke-width="1.4" rx="2"/>
+    ${hi>0?`<rect x="${xA-14}" y="${yC-hi/2}" width="${xB-xA+28}" height="${hi}" fill="#0e0f11" stroke="rgba(79,195,247,.5)" stroke-width="1" stroke-dasharray="4 3"/>`:''}
+    <line x1="${xA-30}" y1="${yC}" x2="${xB+8}" y2="${yC}" stroke="rgba(255,255,255,.18)" stroke-width="1" stroke-dasharray="6 4"/>
+    ${sup(xA)}${sup(xB)}
+    ${load}
+    <line x1="${xM}" y1="${yC-hh/2-2}" x2="${xM}" y2="${yC+hh/2+2}" stroke="#ffa726" stroke-width="1.6"/>
+    <text x="${xM}" y="${H-8}" fill="#7d8090" font-size="10" text-anchor="middle" font-family="'DM Mono',monospace">sezione verificata — ${hollow?`⌀${fp(d,0)}/⌀${fp(di,0)} cava`:`⌀${fp(d,0)} piena`}</text>
+  </svg>`;
+}
+
+// ═══════════════════════════════════════════════════════
+//  CALCOLO
+// ═══════════════════════════════════════════════════════
+function calculate(){
+  const d      = val('d');
+  const hollow = section==='cava';
+  const di     = hollow ? val('di') : 0;
+  const Mf     = val('Mf');
+  const Fa     = val('Fa');
+  const T      = val('T');
+  const Re     = val('Re');
+  const Rm     = val('Rm');
+  const sigD   = val('sigD');
+  const Kt     = val('Kt');
+  const q      = val('q');
+  const kc     = val('kc');
+  const req    = val('CSreq')||1;
+  const L      = val('L');
+  const G      = val('G');
+  const fin    = FIN[$('fin').value] || FIN.macc;
+
+  // Momento torcente: inserito oppure ricavato da potenza e giri.
+  let Mt;
+  if(torqueMode==='potenza'){
+    const P=val('P'), n=val('n');
+    Mt = n>0 ? K_POT*P/n : 0;
+    $('Mt').value = Mt ? Mt.toFixed(1) : 0;
+  } else {
+    Mt = val('Mt');
+  }
+
+  const p = {Mf, Mt, Fa, T, hollow, Re, Rm, sigD, Kt, q, kc,
+             fa:fin.a, fb:fin.b, bend:$('bend').value, tor:$('tor').value};
+
+  const r = analyze(d, di, p);
+  const ok = !!r;
+
+  // ── Proprietà di sezione
+  $('secDesc').textContent = ok ? (hollow ? `⌀${fp(d,0)} / ⌀${fp(di,0)} mm (cava)` : `⌀${fp(d,0)} mm (piena)`) : '—';
+  $('geoGrid').innerHTML =
+    box('Area A', ok?fi(r.A):'—', 'mm²',
+      'Area resistente della sezione. Piena: A = π·d²/4. Cava: A = π·(d²−di²)/4. Serve per le tensioni da forza assiale e da taglio.') +
+    box('Modulo flessione W', ok?fi(r.W):'—', 'mm³',
+      'Modulo di resistenza a flessione. Piena: W = π·d³/32. Cava: W = π·(d⁴−di⁴)/(32·d). Da qui σ_f = Mf/W.') +
+    box('Modulo torsione Wt', ok?fi(r.Wt):'—', 'mm³',
+      'Modulo di resistenza a torsione, doppio di W per la sezione circolare. Piena: Wt = π·d³/16. Cava: Wt = π·(d⁴−di⁴)/(16·d). Da qui τ_t = Mt/Wt.') +
+    box('Inerzia I', ok?fi(r.I):'—', 'mm⁴',
+      'Momento d\'inerzia assiale. Piena: I = π·d⁴/64. Cava: I = π·(d⁴−di⁴)/64. Governa la freccia flessionale e le velocità critiche.') +
+    box('Inerzia polare Ip', ok?fi(r.Ip):'—', 'mm⁴',
+      'Momento d\'inerzia polare, doppio di I. Piena: Ip = π·d⁴/32. Cava: Ip = π·(d⁴−di⁴)/32. Entra nella rotazione torsionale θ = Mt·L/(G·Ip).') +
+    box('Rapporto di/d', ok?fp(hollow&&d>0?di/d:0,3):'—', '',
+      'Rapporto di foratura. A parità di diametro esterno un rapporto 0,5 riduce i moduli di resistenza solo del 6% ma l\'area (e quindi la massa) del 25%.');
+
+  $('schema').innerHTML = drawSchema(hollow, d, di, Mf, Mt, Fa, T);
+
+  // ── Tensioni
+  let sigHtml =
+    box('Tensione flessione σ_f', ok?fp(r.sigF,2):'—', 'MPa',
+      'Tensione normale di flessione sulla fibra più esterna: σ_f = Mf·1000/W (Mf in Nm convertito in N·mm).') +
+    box('Tensione torsione τ_t', ok?fp(r.tauT,2):'—', 'MPa',
+      'Tensione tangenziale di torsione sulla superficie esterna: τ_t = Mt·1000/Wt (Mt in Nm convertito in N·mm).');
+  if(Fa!==0) sigHtml += box('Tensione assiale σ_a', ok?fp(r.sigA,2):'—', 'MPa',
+      'Tensione normale dovuta alla forza assiale: σ_a = Fa/A. Si somma algebricamente a σ_f nella tensione normale totale.');
+  if(T!==0) sigHtml += box('Tensione taglio τ_T', ok?fp(r.tauS,2):'—', 'MPa',
+      'Tensione tangenziale massima da taglio sull\'asse neutro: τ_T = (4/3)·T/A per la sezione piena, 2·T/A per la cava. Si somma a τ_t.');
+  sigHtml +=
+    box('Normale totale σ_tot', ok?fp(r.sigTot,2):'—', 'MPa',
+      'Tensione normale totale: σ_tot = σ_f + σ_a.') +
+    box('Tangenziale totale τ_tot', ok?fp(r.tauTot,2):'—', 'MPa',
+      'Tensione tangenziale totale: τ_tot = τ_t + τ_T.') +
+    box('Tensione ideale σ_id', ok?fp(r.sigId,2):'—', 'MPa',
+      'Tensione ideale monoassiale equivalente allo stato di flesso-torsione: σ_id = √(σ_tot² + 3·τ_tot²). È il valore confrontato con Re nella verifica statica.');
+  $('sigGrid').innerHTML = sigHtml;
+
+  // ── Fattori di fatica
+  $('fatGrid').innerHTML =
+    box('ka finitura', ok?fp(r.ka,3):'—', '',
+      `Fattore di finitura superficiale, ka = a·Rm^b con a = ${String(fin.a).replace('.',',')} e b = ${String(fin.b).replace('.',',')} (${fin.nome}). Limitato a 1. La fatica nasce in superficie: più il materiale è resistente, più risente della rugosità.`) +
+    box('kb dimensionale', ok?fp(r.kb,3):'—', '',
+      'Fattore di scala: kb = 1 per d ≤ 2,79 mm; 1,24·d^(−0,107) fino a 51 mm; 1,51·d^(−0,157) fino a 254 mm; costante oltre. Un pezzo grande ha più volume sollecitato e più probabilità di contenere un difetto.') +
+    box('Kf intaglio', ok?fp(r.Kf,3):'—', '',
+      'Fattore d\'intaglio a fatica: Kf = 1 + q·(Kt−1). È sempre minore o uguale a Kt perché il materiale non è pienamente sensibile all\'intaglio. Divide il limite di fatica.') +
+    box('kc altri fattori', ok?fp(kc,3):'—', '',
+      'Fattore riassuntivo di temperatura, affidabilità, ambiente e trattamenti superficiali, inserito dall\'utente. Moltiplica direttamente il limite di fatica.') +
+    box('Limite fatica σ_D*', ok?fp(r.sigDs,1):'—', 'MPa',
+      'Limite di fatica a flessione alterna del pezzo reale: σ_D* = ka·kb·kc·σ_D / Kf. È il valore di riferimento del criterio di Goodman per la flessione.') +
+    box('Limite torsione τ_D*', ok?fp(r.tauDs,1):'—', 'MPa',
+      'Limite di fatica a torsione alterna: τ_D* = 0,577·σ_D*, secondo il rapporto di von Mises fra resistenza a taglio e resistenza normale.');
+
+  // ── Verifiche
+  if(ok){
+    const clSt = csClass(r.CSst, req), clFa = csClass(r.CSfat, req);
+    const pSt  = isFinite(r.CSst)  && r.CSst>0  ? 100*req/r.CSst  : 0;
+    const pFa  = isFinite(r.CSfat) && r.CSfat>0 ? 100*req/r.CSfat : 0;
+    $('verGrid').innerHTML =
+      vrow(`CS statico — von Mises (rich. ≥ ${fp(req,2)})`, fcs(r.CSst), '', clSt, pSt,
+        'Verifica allo snervamento: CS_statico = Re / σ_id. Copre il carico di picco, non la durata.') +
+      vrow(`CS a fatica — Gough-Pollard (rich. ≥ ${fp(req,2)})`, fcs(r.CSfat), '', clFa, pFa,
+        'Coefficiente di sicurezza a vita infinita, combinazione ellittica dei contributi di flessione e torsione: CS = 1/√((1/CS_σ)² + (1/CS_τ)²).') +
+      vrow('· CS parziale flessione (Goodman σ)', fcs(r.CSsig), '', csClass(r.CSsig,req),
+        isFinite(r.CSsig)&&r.CSsig>0?100*req/r.CSsig:0,
+        'Contributo della sola flessione: 1/CS_σ = σ_amp/σ_D* + σ_med/Rm, con σ_amp e σ_med dipendenti dal tipo di flessione scelto.') +
+      vrow('· CS parziale torsione (Goodman τ)', fcs(r.CStau), '', csClass(r.CStau,req),
+        isFinite(r.CStau)&&r.CStau>0?100*req/r.CStau:0,
+        'Contributo della sola torsione: 1/CS_τ = τ_amp/τ_D* + τ_med/(0,577·Rm), con τ_amp e τ_med dipendenti dal tipo di torsione scelto.') +
+      vrow('σ ideale vs Re', `${fp(r.sigId,1)} / ${fp(Re,0)}`, 'MPa', csClass(r.CSst,req), pSt,
+        'Confronto diretto fra la tensione ideale di von Mises e lo snervamento del materiale.') +
+      vrow('Ampiezze di calcolo σ_amp / τ_amp', `${fp(r.sigAmp,1)} / ${fp(r.tauAmp,1)}`, 'MPa',
+        null, 0,
+        `Componenti alternate usate nel criterio di Goodman, derivate dal tipo di sollecitazione: flessione ${BEND_NAME[$('bend').value]}, torsione ${TOR_NAME[$('tor').value]}.`) +
+      vrow('Medie di calcolo σ_med / τ_med', `${fp(r.sigMed,1)} / ${fp(r.tauMed,1)}`, 'MPa',
+        null, 0,
+        'Componenti medie usate nel criterio di Goodman. Una media di compressione non viene messa a credito: il contributo negativo è azzerato in modo cautelativo.');
+  } else {
+    $('verGrid').innerHTML = '<div class="verify-item"><span class="verify-label">Dati di sezione non validi</span><span class="verify-status err">—</span></div>';
+  }
+
+  // ── Dimensionamento inverso
+  const loaded = (Mf!==0 || Mt!==0 || Fa!==0 || T!==0);
+  const ratio  = hollow && d>0 ? di/d : 0;
+  let dSt=null, dFa=null, dMin=null, crit='nd';
+  if(loaded && Re>0 && Rm>0 && sigD>0){
+    const res = minDiameter(p, req, ratio);
+    dSt = res.dSt; dFa = res.dFa;
+    if(dSt!==null && dFa!==null){
+      dMin = Math.max(dSt, dFa);
+      crit = dFa>dSt ? 'fat' : (dSt>dFa ? 'sta' : 'fat');
+    }
+  }
+
+  const critTxt = crit==='fat' ? 'determinante: fatica'
+                : crit==='sta' ? 'determinante: statica'
+                : 'nessun carico';
+  $('critBadge').innerHTML = `<span class="crit ${crit}">${critTxt}</span>`;
+
+  $('dimGrid').innerHTML =
+    box('Ø minimo di progetto', dMin!==null?fi(dMin):'—', 'mm',
+      `Minimo diametro esterno intero che soddisfa contemporaneamente CS_statico ≥ ${fp(req,2)} e CS_fatica ≥ ${fp(req,2)}, trovato per scansione numerica su d mantenendo costante il rapporto di/d. Arrotondato per eccesso al mm.`) +
+    box('Ø minimo per statica', dSt!==null?fi(dSt):'—', 'mm',
+      'Diametro minimo che porta il solo coefficiente di sicurezza statico (von Mises su Re) al valore richiesto.') +
+    box('Ø minimo per fatica', dFa!==null?fi(dFa):'—', 'mm',
+      'Diametro minimo che porta il solo coefficiente di sicurezza a fatica (Goodman + Gough-Pollard) al valore richiesto. Negli alberi rotanti è quasi sempre questo a comandare.') +
+    box('Ø adottato', d>0?fi(d):'—', 'mm',
+      'Diametro esterno attualmente inserito nel pannello di sinistra, da confrontare con il minimo di progetto.') +
+    box('Margine sul Ø', (dMin!==null&&d>0)?fp(d-dMin,0):'—', 'mm',
+      'Differenza fra diametro adottato e diametro minimo necessario. Positivo = albero sovradimensionato rispetto al CS richiesto; negativo = da aumentare.') +
+    box('Riserva di materiale', (dMin!==null&&d>0)?fp(100*(d/dMin-1),1):'—', '%',
+      'Sovradimensionamento percentuale del diametro rispetto al minimo. Essendo le tensioni proporzionali a 1/d³, un +10% di diametro vale circa +33% di capacità di carico.');
+
+  let dimNote;
+  if(!loaded){
+    dimNote = 'Nessun carico inserito: il dimensionamento inverso richiede almeno un momento o una forza diversi da zero.';
+  } else if(dMin===null){
+    dimNote = `Nessun diametro fino a ${D_MAX_SCAN} mm soddisfa entrambi i criteri con CS = ${fp(req,2)}: rivedere i carichi, il materiale o il coefficiente richiesto.`;
+  } else {
+    const gov = crit==='fat' ? 'la <b>verifica a fatica</b>' : 'la <b>verifica statica</b>';
+    dimNote = `Con i carichi e il materiale impostati il criterio determinante è ${gov}: `
+      + `statica ${fi(dSt)} mm, fatica ${fi(dFa)} mm → si adotta <b>⌀ ${fi(dMin)} mm</b>. `
+      + (d>=dMin
+          ? `Il diametro inserito (⌀ ${fi(d)} mm) è adeguato.`
+          : `Il diametro inserito (⌀ ${fi(d)} mm) è <b>insufficiente</b>: va portato almeno a ⌀ ${fi(dMin)} mm.`)
+      + ' Il valore non tiene conto degli intagli locali non dichiarati in Kt (cave, gole, fori) né dei diametri normalizzati dei cuscinetti: arrotondare alla misura commerciale superiore.';
+  }
+  $('dimNote').innerHTML = dimNote;
+
+  // ── Rigidezza torsionale
+  const rigOn = ok && L>0 && G>0 && Mt!==0;
+  $('rigSection').classList.toggle('hidden', !(ok && L>0 && G>0));
+  if(ok && L>0 && G>0){
+    const theta    = Mt*1000*L/(G*r.Ip);        // rad
+    const thetaDeg = theta*180/PI;              // gradi sul tratto L
+    const thetaM   = thetaDeg/(L/1000);         // gradi per metro
+    const clT      = Math.abs(thetaM)<=THETA_LIM ? 'ok' : (Math.abs(thetaM)<=2*THETA_LIM ? 'warn' : 'err');
+    $('rigGrid').innerHTML =
+      box('Rotazione θ', rigOn?fp(thetaDeg,4):'0.0000', '°',
+        'Angolo di torsione del tratto L: θ = Mt·1000·L/(G·Ip) in radianti, convertito in gradi con ·180/π.') +
+      box('θ in radianti', rigOn?theta.toExponential(3):'0', 'rad',
+        'Stesso angolo in radianti, come esce direttamente dalla formula θ = Mt·L/(G·Ip) con Mt in N·mm, L in mm, G in MPa, Ip in mm⁴.') +
+      box('Rotazione specifica', rigOn?fp(thetaM,4):'0.0000', '°/m',
+        'Rotazione riferita al metro di lunghezza: θ/(L/1000). È il parametro da confrontare con il limite pratico di 0,25 °/m.') +
+      box('Limite di riferimento', fp(THETA_LIM,2), '°/m',
+        'Valore indicativo di buona pratica per alberi di trasmissione generici. Non è un limite normativo: dipende dall\'applicazione.') +
+      box('Rigidezza torsionale', rigOn&&thetaDeg!==0?fp(Math.abs(Mt/thetaDeg),1):'—', 'Nm/°',
+        'Coppia necessaria a produrre un grado di rotazione sul tratto L: Mt/θ. Utile per valutare la risposta dinamica e il posizionamento.') +
+      `<div class="result-box"><div class="result-label" data-tip="Esito del confronto fra rotazione specifica calcolata e limite pratico di 0,25 °/m: verde entro il limite, ambra fino al doppio, rosso oltre.">Esito rigidezza</div>
+        <div class="result-value"><span class="verify-status ${clT}" style="margin-left:0;font-size:11px">${clT==='ok'?'ENTRO LIMITE':(clT==='warn'?'AL LIMITE':'ECCESSIVA')}</span></div></div>`;
+  }
+
+  // ── Formule
+  $('formulaBox').innerHTML = buildFormulas(hollow);
+
+  // ── Avvisi
+  const hints=[];
+  if(!(d>0)){
+    hints.push('<div class="info-box">Inserire il diametro dell\'albero per avviare il calcolo.</div>');
+  } else if(hollow && !(di<d)){
+    hints.push('<div class="warn-box">Il diametro interno deve essere <b>minore</b> del diametro esterno: sezione non valida.</div>');
+  } else if(ok){
+    if(r.CSst<1)  hints.push(`<div class="warn-box">Verifica statica <b>non soddisfatta</b>: σ_id = ${fp(r.sigId,1)} MPa supera lo snervamento Re = ${fp(Re,0)} MPa (CS = ${fcs(r.CSst)}). L'albero si deformerebbe plasticamente già al primo carico.</div>`);
+    else if(r.CSst<req) hints.push(`<div class="warn-box">CS statico = ${fcs(r.CSst)} inferiore al valore richiesto di ${fp(req,2)}: la sezione regge ma senza il margine voluto.</div>`);
+    if(r.CSfat<1) hints.push(`<div class="warn-box">Verifica a fatica <b>non soddisfatta</b> (CS = ${fcs(r.CSfat)}): con queste tensioni l'albero ha vita limitata. Aumentare il diametro, migliorare la finitura o ridurre l'intaglio.</div>`);
+    else if(r.CSfat<req) hints.push(`<div class="warn-box">CS a fatica = ${fcs(r.CSfat)} inferiore al valore richiesto di ${fp(req,2)}: negli alberi rotanti è quasi sempre la fatica a comandare il dimensionamento.</div>`);
+    if(Kt<=1.001) hints.push('<div class="info-box">Kt = 1: il calcolo vale per l\'albero <b>liscio</b>. Spallamenti, gole per anelli elastici, cave per linguetta e fori trasversali introducono Kt ≈ 1,4÷2,5 e riducono in proporzione il limite di fatica (rif. DIN 743-2).</div>');
+    if($('bend').value==='fis' && $('tor').value==='cost' && Mf>0)
+      hints.push('<div class="info-box">Flessione fissa e torsione costante: la sollecitazione risulta interamente statica e la verifica a fatica si riduce al confronto delle tensioni medie con Rm. Se l\'albero ruota sotto un carico fisso, selezionare invece «rotante».</div>');
+    if(d>254) hints.push('<div class="info-box">Diametro oltre 254 mm: il fattore dimensionale kb è congelato al valore di 254 mm, estremo superiore di validità della correlazione sperimentale.</div>');
+    if(r.ka>=1) hints.push('<div class="info-box">Il fattore di finitura risulta ≥ 1 ed è stato limitato a 1: la correlazione ka = a·Rm^b non può migliorare il limite di fatica del provino lucido.</div>');
+    if(T!==0) hints.push('<div class="info-box">Il taglio è stato incluso nelle tensioni tangenziali. Attenzione: τ_t è massima in superficie mentre τ_T è massima sull\'asse neutro, quindi la loro somma è una semplificazione <b>cautelativa</b>, non lo stato reale in un singolo punto.</div>');
+  }
+  $('hint').innerHTML = hints.join('');
+}
+
+// ═══════════════════════════════════════════════════════
+//  FORMULARIO
+// ═══════════════════════════════════════════════════════
+function buildFormulas(hollow){
+  const rows = [
+    ['Area', hollow?'A = π·(d²−di²)/4':'A = π·d²/4'],
+    ['Modulo a flessione', hollow?'W = π·(d⁴−di⁴)/(32·d)':'W = π·d³/32'],
+    ['Modulo a torsione', hollow?'Wt = π·(d⁴−di⁴)/(16·d)':'Wt = π·d³/16'],
+    ['Inerzia polare', hollow?'Ip = π·(d⁴−di⁴)/32':'Ip = π·d⁴/32'],
+    ['Coppia da potenza', 'Mt = 9550·P/n &nbsp;[Nm, kW, rpm]'],
+    ['Tensione di flessione', 'σ_f = Mf·1000 / W'],
+    ['Tensione di torsione', 'τ_t = Mt·1000 / Wt'],
+    ['Tensione assiale', 'σ_a = Fa / A'],
+    ['Tensione di taglio', hollow?'τ_T = 2·T / A':'τ_T = (4/3)·T / A'],
+    ['Tensione ideale (von Mises)', 'σ_id = √(σ_tot² + 3·τ_tot²)'],
+    ['Sicurezza statica', 'CS_st = Re / σ_id'],
+    ['Fattore di finitura', 'ka = a·Rm^b &nbsp;(≤ 1)'],
+    ['Fattore dimensionale', 'kb = 1,24·d^(−0,107) &nbsp;[2,79 &lt; d ≤ 51 mm]'],
+    ['', 'kb = 1,51·d^(−0,157) &nbsp;[51 &lt; d ≤ 254 mm]'],
+    ['Fattore d\'intaglio', 'Kf = 1 + q·(Kt − 1)'],
+    ['Limite di fatica corretto', 'σ_D* = ka·kb·kc·σ_D / Kf &nbsp;;&nbsp; τ_D* = 0,577·σ_D*'],
+    ['Goodman — flessione', '1/CS_σ = σ_amp/σ_D* + σ_med/Rm'],
+    ['Goodman — torsione', '1/CS_τ = τ_amp/τ_D* + τ_med/(0,577·Rm)'],
+    ['Gough-Pollard', 'CS_fat = 1 / √((1/CS_σ)² + (1/CS_τ)²)'],
+    ['Rotazione torsionale', 'θ = Mt·1000·L / (G·Ip) &nbsp;[rad] → ·180/π']
+  ];
+  return rows.map(([n,e]) => `<div class="formula-row"><span class="formula-name">${n}</span><span class="formula-expr">${e}</span></div>`).join('');
+}
+
+// ═══════════════════════════════════════════════════════
+//  INIT
+// ═══════════════════════════════════════════════════════
+$('printBtn').addEventListener('click', () => window.print());
+setSection('piena');
+setTorqueMode('diretto');
+calculate();
+</script>
+
+</body>
+</html>
