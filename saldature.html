@@ -331,7 +331,7 @@ Sostituisce t nel calcolo di area e modulo resistente e va verificata con le for
       </div>
       <div class="srow">
         <button class="arr" onclick="adjust('aeff',-0.5)">▼</button>
-        <input type="number" id="aeff" class="numinput" value="6" min="0" step="0.5" oninput="calculate()">
+        <input type="number" id="aeff" class="numinput" value="8" min="0" step="0.5" oninput="calculate()">
         <button class="arr" onclick="adjust('aeff',0.5)">▲</button>
       </div>
     </div>
@@ -360,9 +360,9 @@ Produce σ_M = M/W con W = b·t²/6, sommata in valore assoluto a σ_N.">Momento
           <span class="funit">kNm</span>
         </div>
         <div class="srow">
-          <button class="arr" onclick="adjust('M3',-1)">▼</button>
-          <input type="number" id="M3" class="numinput" value="8" step="1" oninput="calculate()">
-          <button class="arr" onclick="adjust('M3',1)">▲</button>
+          <button class="arr" onclick="adjust('M3',-0.5)">▼</button>
+          <input type="number" id="M3" class="numinput" value="0.5" step="0.5" oninput="calculate()">
+          <button class="arr" onclick="adjust('M3',0.5)">▲</button>
         </div>
       </div>
       <div class="field">
@@ -961,12 +961,20 @@ function renderSchema(){
       s += `<line x1="210" y1="98" x2="230" y2="98" stroke="${A}" stroke-width="1.4" stroke-dasharray="3 2"/>`;
       s += `<text x="188" y="64" fill="${W}" font-size="9" font-family="DM Mono">parziale — gola a_eff</text>`;
     }
-    s += `<line x1="46" y1="95" x2="46" y2="95" stroke="${D}"/>`;
-    s += `<line x1="380" y1="95" x2="416" y2="95" stroke="${R}" stroke-width="1.6" marker-end="url(#ar)"/>`;
-    s += `<text x="384" y="88" fill="${R}" font-size="9" font-family="DM Mono">N</text>`;
-    s += `<line x1="60" y1="130" x2="60" y2="150" stroke="${A}" stroke-width=".8"/>`;
-    s += `<text x="66" y="146" fill="${A}" font-size="9" font-family="DM Mono">t = spessore · b = larghezza (in profondità)</text>`;
-    s += `<text x="12" y="172" fill="${D}" font-size="9" font-family="DM Mono">Giunto di testa — sezione longitudinale</text>`;
+    // Azioni: N assiale, V di taglio, M flettente
+    s += `<line x1="380" y1="95" x2="418" y2="95" stroke="${R}" stroke-width="1.6" marker-end="url(#ar)"/>`;
+    s += `<text x="386" y="88" fill="${R}" font-size="9" font-family="DM Mono">N</text>`;
+    s += `<line x1="400" y1="118" x2="400" y2="150" stroke="${R}" stroke-width="1.4" marker-end="url(#ar)"/>`;
+    s += `<text x="384" y="140" fill="${R}" font-size="9" font-family="DM Mono">V</text>`;
+    s += `<path d="M40,72 A22,22 0 0 0 40,118" fill="none" stroke="${R}" stroke-width="1.4" marker-end="url(#ar)"/>`;
+    s += `<text x="20" y="99" fill="${R}" font-size="9" font-family="DM Mono">M</text>`;
+    // Quota dello spessore t
+    s += `<line x1="96" y1="80" x2="96" y2="110" stroke="${A}" stroke-width=".8"/>`;
+    s += `<line x1="92" y1="80" x2="100" y2="80" stroke="${A}" stroke-width=".8"/>`;
+    s += `<line x1="92" y1="110" x2="100" y2="110" stroke="${A}" stroke-width=".8"/>`;
+    s += `<text x="104" y="98" fill="${A}" font-size="9" font-family="DM Mono">t</text>`;
+    s += `<text x="12" y="158" fill="${D}" font-size="9" font-family="DM Mono">Giunto di testa — sezione longitudinale (b = larghezza, in profondità)</text>`;
+    s += `<text x="12" y="172" fill="${D}" font-size="9" font-family="DM Mono">A = b·${piena?'t':'a_eff'} · W = b·${piena?'t':'a_eff'}²/6</text>`;
   }
   $('schema').innerHTML = s;
 }
