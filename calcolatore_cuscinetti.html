@@ -386,22 +386,30 @@ td.desc{color:var(--text2);font-size:11px}
       <!-- KPI -->
       <div class="kpi-grid">
         <div class="kpi-card blue" data-tip="<strong>Durata L₁₀ [M giri]</strong><br>Durata base 90% con (C/P)^p">
-          <div class="kpi-label">Durata L₁₀</div>
+          <div class="kpi-label" style="display:flex;align-items:center;gap:5px">Durata L₁₀
+            <span class="info-btn" data-tip="<strong>Durata nominale L₁₀ [milioni di giri]</strong><br>L₁₀ = (C/P)^p, affidabilità 90%. C è il carico dinamico di catalogo, P il carico equivalente dinamico; p=3 per cuscinetti a sfere, p=10/3 per cuscinetti a rulli. È la durata raggiunta o superata dal 90% di un lotto di cuscinetti identici nelle stesse condizioni.">?</span>
+          </div>
           <div class="kpi-value" id="kpi-l10">—</div>
           <div class="kpi-unit">milioni di giri</div>
         </div>
         <div class="kpi-card gold" data-tip="<strong>Durata modificata Lₙₘₕ [ore]</strong><br>Con fattori affidabilità e lubrificazione">
-          <div class="kpi-label">Durata Lₙₘₕ</div>
+          <div class="kpi-label" style="display:flex;align-items:center;gap:5px">Durata Lₙₘₕ
+            <span class="info-btn" data-tip="<strong>Durata modificata Lₙₘₕ [ore]</strong><br>Lₙₘₕ = a₁·a₂₃·L₁₀h, dove L₁₀h = L₁₀·10⁶/(60·n). Durata corretta per l'affidabilità richiesta (a₁) e le condizioni reali di lubrificazione (a₂₃, legato a κ): è il valore di riferimento per verificare se il cuscinetto scelto soddisfa la vita di progetto.">?</span>
+          </div>
           <div class="kpi-value" id="kpi-lnmh">—</div>
           <div class="kpi-unit">ore</div>
         </div>
         <div class="kpi-card green" data-tip="<strong>Sicurezza statica s₀</strong><br>C₀/P₀ ≥ 2 consigliato">
-          <div class="kpi-label">Sicurezza s₀</div>
+          <div class="kpi-label" style="display:flex;align-items:center;gap:5px">Sicurezza s₀
+            <span class="info-btn" data-tip="<strong>Sicurezza statica s₀ [-]</strong><br>s₀ = C₀/P₀, con P₀ = X₀·Fr + Y₀·Fa (ISO 76). Verifica le deformazioni permanenti localizzate sotto carico statico, a velocità molto bassa o a cuscinetto fermo. Minimo 1, consigliato ≥ 2 in presenza di urti o carichi variabili.">?</span>
+          </div>
           <div class="kpi-value" id="kpi-s0">—</div>
           <div class="kpi-unit">[-] (min. 2.0)</div>
         </div>
         <div class="kpi-card orange" data-tip="<strong>Kappa κ</strong><br>Qualità lubrificazione: 1-4 ottimale">
-          <div class="kpi-label">Kappa κ</div>
+          <div class="kpi-label" style="display:flex;align-items:center;gap:5px">Kappa κ
+            <span class="info-btn" data-tip="<strong>Kappa κ (rapporto di viscosità) [-]</strong><br>κ = ν₁/ν_rif, dove ν_rif è la viscosità minima richiesta secondo ISO 281 in funzione di n e del diametro medio dm. κ&lt;0.4 lubrificazione insufficiente (usura), 0.4-1 al limite, 1-4 ottimale, &gt;4 eccesso di viscosità (più attrito e calore).">?</span>
+          </div>
           <div class="kpi-value" id="kpi-kappa">—</div>
           <div class="kpi-unit">[-]</div>
         </div>
@@ -852,7 +860,10 @@ function calculate() {
   else if (s0 >= 1 && kappa >= 0.4 && Lnmh >= 10000) { status='⚠ Margini ridotti'; sClass='warn'; }
   else { status='✗ Revisione necessaria'; sClass='err'; }
   document.getElementById('status-wrap').innerHTML =
-    `<span class="status-badge ${sClass}"><span class="dot dot-${sClass}"></span>${status}</span>`;
+    `<span style="display:inline-flex;align-items:center;gap:8px">`
+    + `<span class="status-badge ${sClass}"><span class="dot dot-${sClass}"></span>${status}</span>`
+    + `<span class="info-btn" data-tip="<strong>Verifica idoneità del cuscinetto</strong><br>Confronta durata, sicurezza statica e lubrificazione con le soglie di progetto:<br>✓ Idoneo — s₀≥2, κ≥1, Lₙₘₕ≥20000 h.<br>⚠ Margini ridotti — s₀≥1, κ≥0.4, Lₙₘₕ≥10000 h.<br>✗ Revisione necessaria — sotto una o più soglie minime.<br>Valori attuali: s₀=${s0.toFixed(2)}, κ=${kappa.toFixed(2)}, Lₙₘₕ=${Math.round(Lnmh).toLocaleString('it-IT')} h.">?</span>`
+    + `</span>`;
 
   // ── Speed warning ──
   const sw = document.getElementById('speed-warning');
@@ -885,32 +896,54 @@ function calculate() {
   }
 
   const rows = [
-    ['Carico equiv. dinamico','P', P.toFixed(3),'kN', `X·Fr + Y·Fa${b.type!=='thrust'?' (≥ Fr)':''} · ${xyNota}`],
-    ['Carico equiv. statico','P₀', P0.toFixed(3),'kN', `X₀·Fr + Y₀·Fa${b.type!=='thrust'?' (≥ Fr)':''} — X₀=${X0}, Y₀=${Y0} (ISO 76)`],
-    ['Carico radiale','Fr', Fr.toFixed(3),'kN', isBallThrust && Fr>0 ? '⚠ Deve essere 0 per 511/512' : ''],
-    ['Carico assiale','Fa', Fa.toFixed(3),'kN', b.type==='thrust' && !isBallThrust ? `Vincolo Fr/Fa ≤ 0.55 (attuale ${(Fr/Math.max(Fa,0.001)).toFixed(3)})` : ''],
+    ['Carico equiv. dinamico','P', P.toFixed(3),'kN', `X·Fr + Y·Fa${b.type!=='thrust'?' (≥ Fr)':''} · ${xyNota}`,
+      'Carico equivalente dinamico P [kN]. P = X·Fr + Y·Fa (minimo P ≥ Fr per i non reggispinta). È il carico costante che produrrebbe la stessa durata del carico combinato reale; entra nella formula L₁₀ = (C/P)^p.'],
+    ['Carico equiv. statico','P₀', P0.toFixed(3),'kN', `X₀·Fr + Y₀·Fa${b.type!=='thrust'?' (≥ Fr)':''} — X₀=${X0}, Y₀=${Y0} (ISO 76)`,
+      'Carico equivalente statico P₀ [kN]. P₀ = X₀·Fr + Y₀·Fa secondo ISO 76 (minimo P₀ ≥ Fr). Usato per la sicurezza statica s₀ = C₀/P₀, verifica delle deformazioni permanenti a carico fermo o a bassissima velocità.'],
+    ['Carico radiale','Fr', Fr.toFixed(3),'kN', isBallThrust && Fr>0 ? '⚠ Deve essere 0 per 511/512' : '',
+      'Carico radiale applicato Fr [kN], impostato nella scheda Carichi (forzato a 0 per i reggispinta puri serie 511/512, che non sopportano carico radiale). Componente perpendicolare all\'asse usata nel calcolo di P e P₀.'],
+    ['Carico assiale','Fa', Fa.toFixed(3),'kN', b.type==='thrust' && !isBallThrust ? `Vincolo Fr/Fa ≤ 0.55 (attuale ${(Fr/Math.max(Fa,0.001)).toFixed(3)})` : '',
+      'Carico assiale applicato Fa [kN], impostato nella scheda Carichi (forzato a 0 per rullini, CARB e cuscinetti a rulli cilindrici serie NU, che non trasmettono spinta assiale). Componente parallela all\'asse usata nel calcolo di P e P₀.'],
 
-    ['Durata nominale L₁₀','L₁₀', L10.toFixed(2),'M giri','(C/P)^p · affidabilità 90%'],
-    ['Durata L₁₀h','L₁₀h', Math.round(L10h).toLocaleString('it-IT'),'ore','Senza fattori correttivi'],
-    ['Fattore affidabilità','a₁', a1.toFixed(2),'[-]',''],
-    ['Fattore mat./lubr.','a₂₃', a23.toFixed(2),'[-]',''],
-    ['Durata modificata','Lₙₘₕ', Math.round(Lnmh).toLocaleString('it-IT'),'ore','a₁·a₂₃·L₁₀h'],
-    ['Durata stimata','—', years.toFixed(1),'anni',`${h_day}h/g · ${d_year}g/anno`],
-    ['Sicurezza statica','s₀', s0.toFixed(2),'[-]', s0>=2?'✓ Adeguata':s0>=1?'⚠ Limite':'✗ Insufficiente'],
-    ['Viscosità di rif.','ν_rif', visc_ref.toFixed(1),'mm²/s','ISO 281'],
-    ['Kappa lubrificazione','κ', kappa.toFixed(2),'[-]', kappaDesc(kappa)],
-    ['Velocità rotazione','n', n.toLocaleString('it-IT'),'rpm',''],
-    ['Vel. limite grasso','n_lim_gr', b.n_gr.toLocaleString('it-IT'),'rpm', n>b.n_gr?'⚠ SUPERATA':'✓ OK'],
-    ['Vel. limite olio','n_lim_oi', b.n_oi.toLocaleString('it-IT'),'rpm', n>b.n_oi?'⚠ SUPERATA':'✓ OK'],
-    ['Fattore radiale','X', X.toFixed(3),'[-]', xyNota],
-    ['Fattore assiale','Y', Y.toFixed(3),'[-]', auto.e>0 ? `e = ${auto.e.toFixed(3)}` : ''],
-    ['Rapporto Fa/C₀','—', (Fa/C0).toFixed(3),'[-]', b.type==='ball' ? `f₀·Fa/C₀ = ${(F0_DGBB*Fa/C0).toFixed(2)} → e, Y da tab. ISO 281` : ''],
-    ['Esponente durata','p', p.toFixed(4),'[-]', (['ball','angular','fourpoint','dball'].includes(b.type)||isBallThrust) ? 'p=3 (sfere / cont. obliquo)' : 'p=10/3 (rulli)'],
-    ['Diametro primitivo','dm', dm.toFixed(1),'mm','(d+D)/2'],
-    ['Massa cuscinetto','—', b.m,'kg','Da catalogo'],
+    ['Durata nominale L₁₀','L₁₀', L10.toFixed(2),'M giri','(C/P)^p · affidabilità 90%',
+      'Durata nominale L₁₀ [milioni di giri]. L₁₀ = (C/P)^p, affidabilità 90%: p=3 per cuscinetti a sfere, p=10/3 per cuscinetti a rulli.'],
+    ['Durata L₁₀h','L₁₀h', Math.round(L10h).toLocaleString('it-IT'),'ore','Senza fattori correttivi',
+      'Durata L₁₀h [ore]. L₁₀h = L₁₀·10⁶/(60·n): conversione in ore alla velocità n, senza i fattori correttivi a₁ (affidabilità) e a₂₃ (materiale/lubrificazione).'],
+    ['Fattore affidabilità','a₁', a1.toFixed(2),'[-]','',
+      'Fattore di affidabilità a₁ [-]. Riduce la durata calcolata rispetto a L₁₀ (90%) per ottenere un\'affidabilità superiore (es. a₁=0.21 per il 99%). Impostabile nella scheda Carichi.'],
+    ['Fattore mat./lubr.','a₂₃', a23.toFixed(2),'[-]','',
+      'Fattore materiale/lubrificazione a₂₃ [-]. Combina la qualità dell\'acciaio e le condizioni di lubrificazione (κ): 1 per condizioni normali, &gt;1 se favorevoli, &lt;1 se sfavorevoli.'],
+    ['Durata modificata','Lₙₘₕ', Math.round(Lnmh).toLocaleString('it-IT'),'ore','a₁·a₂₃·L₁₀h',
+      'Durata modificata Lₙₘₕ [ore]. Lₙₘₕ = a₁·a₂₃·L₁₀h: durata corretta per affidabilità e condizioni reali di lubrificazione, valore di riferimento per la verifica finale del cuscinetto.'],
+    ['Durata stimata','—', years.toFixed(1),'anni',`${h_day}h/g · ${d_year}g/anno`,
+      'Durata stimata in anni. Anni = Lₙₘₕ / (ore/giorno · giorni/anno), con i valori della scheda Avanzato: utile per confrontare la durata calcolata con la vita di progetto della macchina.'],
+    ['Sicurezza statica','s₀', s0.toFixed(2),'[-]', s0>=2?'✓ Adeguata':s0>=1?'⚠ Limite':'✗ Insufficiente',
+      'Sicurezza statica s₀ [-]. s₀ = C₀/P₀: verifica le deformazioni permanenti localizzate sotto carico statico o a velocità molto bassa. Minimo 1, consigliato ≥ 2 con urti o carichi variabili.'],
+    ['Viscosità di rif.','ν_rif', visc_ref.toFixed(1),'mm²/s','ISO 281',
+      'Viscosità di riferimento ν_rif [mm²/s]. Viscosità cinematica minima richiesta secondo ISO 281 in funzione di n e del diametro medio dm; si confronta con ν₁ per ottenere κ = ν₁/ν_rif.'],
+    ['Kappa lubrificazione','κ', kappa.toFixed(2),'[-]', kappaDesc(kappa),
+      'Kappa κ (rapporto di viscosità) [-]. κ = ν₁/ν_rif: κ&lt;0.4 lubrificazione insufficiente, 0.4-1 al limite, 1-4 ottimale, &gt;4 eccesso di viscosità (più attrito e calore).'],
+    ['Velocità rotazione','n', n.toLocaleString('it-IT'),'rpm','',
+      'Velocità di rotazione n [rpm], impostata nella scheda Carichi. Usata nel calcolo di L₁₀h e di ν_rif; va confrontata con i limiti di velocità del cuscinetto (righe seguenti).'],
+    ['Vel. limite grasso','n_lim_gr', b.n_gr.toLocaleString('it-IT'),'rpm', n>b.n_gr?'⚠ SUPERATA':'✓ OK',
+      'Velocità limite con grasso n_lim_gr [rpm], da catalogo. Se n la supera occorre passare a lubrificazione a olio o scegliere un cuscinetto diverso.'],
+    ['Vel. limite olio','n_lim_oi', b.n_oi.toLocaleString('it-IT'),'rpm', n>b.n_oi?'⚠ SUPERATA':'✓ OK',
+      'Velocità limite con olio n_lim_oi [rpm], da catalogo, superiore al limite a grasso. Se anche questo limite è superato il cuscinetto non è adatto alla velocità richiesta.'],
+    ['Fattore radiale','X', X.toFixed(3),'[-]', xyNota,
+      'Fattore radiale X [-]. Moltiplicatore della componente radiale in P = X·Fr + Y·Fa, calcolato secondo ISO 281 in base al tipo di cuscinetto e al rapporto Fa/Fr (o f₀·Fa/C₀ per i radiali a sfere).'],
+    ['Fattore assiale','Y', Y.toFixed(3),'[-]', auto.e>0 ? `e = ${auto.e.toFixed(3)}` : '',
+      'Fattore assiale Y [-]. Moltiplicatore della componente assiale in P = X·Fr + Y·Fa. Per i radiali a sfere dipende dalla soglia e = f(f₀·Fa/C₀).'],
+    ['Rapporto Fa/C₀','—', (Fa/C0).toFixed(3),'[-]', b.type==='ball' ? `f₀·Fa/C₀ = ${(F0_DGBB*Fa/C0).toFixed(2)} → e, Y da tab. ISO 281` : '',
+      'Rapporto Fa/C₀ [-]. Per i radiali a sfere, f₀·Fa/C₀ individua nelle tabelle ISO 281 la soglia e e i corrispondenti fattori X, Y da applicare.'],
+    ['Esponente durata','p', p.toFixed(4),'[-]', (['ball','angular','fourpoint','dball'].includes(b.type)||isBallThrust) ? 'p=3 (sfere / cont. obliquo)' : 'p=10/3 (rulli)',
+      'Esponente di durata p [-]. p=3 per contatto puntiforme (sfere, contatto obliquo, 4 punti, doppia corona di sfere); p=10/3 per contatto lineare (rulli cilindrici, conici, a botte, aghi).'],
+    ['Diametro primitivo','dm', dm.toFixed(1),'mm','(d+D)/2',
+      'Diametro medio dm [mm]. dm = (d+D)/2, con d = foro e D = diametro esterno. Usato nel calcolo di ν_rif secondo ISO 281.'],
+    ['Massa cuscinetto','—', b.m,'kg','Da catalogo',
+      'Massa del cuscinetto [kg], valore di catalogo. Utile per le forze d\'inerzia in avviamento/arresto e per la scelta dei sistemi di montaggio.'],
   ];
   document.getElementById('results-tbody').innerHTML = rows.map(r =>
-    `<tr><td>${r[0]}</td><td style="color:var(--text3);font-style:italic">${r[1]}</td><td class="val">${r[2]}</td><td style="color:var(--text3)">${r[3]}</td><td class="desc">${r[4]}</td></tr>`
+    `<tr><td><span style="display:inline-flex;align-items:center;gap:6px">${r[0]}<span class="info-btn" data-tip="${r[5]||''}">?</span></span></td><td style="color:var(--text3);font-style:italic">${r[1]}</td><td class="val">${r[2]}</td><td style="color:var(--text3)">${r[3]}</td><td class="desc">${r[4]}</td></tr>`
   ).join('');
 
   // ── Charts ──
