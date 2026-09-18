@@ -60,7 +60,7 @@ footer{margin-top:34px;font-size:10px;color:var(--dim);letter-spacing:.04em;text
   <a href="index.html" class="back-btn">← Ritorna</a>
   <h1><span class="dot"></span>Alberi Scanalati</h1>
   <div class="sub">Pressione di contatto sul fianco — Metodo Niemann</div>
-  <span class="norm-badge">DIN 5480 · ISO 4156 · ANSI B92</span>
+  <span class="norm-badge">DIN 5480 · ISO 4156 · ANSI B92 · UNI 8953</span>
 </div>
 
 <div class="container">
@@ -271,18 +271,12 @@ function adjust(id,step){
 //  RIGHE PER STANDARD (tabellate o parametriche)
 // ═══════════════════════════════════
 function getRows(standard, d){
-  if(standard==='PARALLELE'){
-    return SERIE_PARALLELE.map(s=>({
-      label:s.label, z:s.z, m:null, De:d, Di:s.rapporto*d
-    }));
-  }
   return TABELLE_SCAN[standard].map(r=>({
     label:(r.m?('m'+r.m+' × z'+r.z):('z'+r.z))+' (Ø'+fp(r.dB,1)+')',
     z:r.z, m:r.m, De:r.De, Di:r.Di, dB:r.dB
   }));
 }
 function nearestIdx(rows, d, standard){
-  if(standard==='PARALLELE') return 1; // default: serie media
   let best=0,bd=Infinity;
   rows.forEach((r,i)=>{ const dd=Math.abs((r.dB!==undefined?r.dB:(r.De+r.Di)/2)-d); if(dd<bd){bd=dd;best=i;} });
   return best;
@@ -412,8 +406,8 @@ function hint(r){
   if(r.p>r.pAdm){
     return `<div class="warn-box">La pressione di contatto (${fp(r.p,2)} MPa) supera l'ammissibile: aumentare la lunghezza di impegno, il trattamento termico, oppure scegliere una combinazione con diametro/modulo maggiore.</div>`;
   }
-  if(r.standard==='PARALLELE'){
-    return `<div class="warn-box">Fianco dritto: designazione normativa non verificata in questa scheda (dati parametrici indicativi). Verificare su fonte primaria prima di un uso progettuale reale.</div>`;
+  if(r.standard==='UNI8953'){
+    return `<div class="warn-box">UNI 8953: numero di denti e rapporto Di/De per serie noti con buona confidenza tecnica, ma i diametri di riga sono discretizzati su una serie di diametri preferenziali generici (ISO 3, R20) e NON sono la tabella normativa integrale. Verificare sempre sulla norma primaria prima di un uso esecutivo/di disegno.</div>`;
   }
   return `<div class="info-box">Combinazione <b>${r.row.label}</b> (${STANDARD_INFO[r.standard].nome}) idonea per T = ${fp(r.T,1)} Nm.</div>`;
 }

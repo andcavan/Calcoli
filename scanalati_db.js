@@ -11,11 +11,16 @@
                     dente più basso: presente su disegni di macchinari datati
      • ANSI B92.1 — Scanalature a evolvente in pollici (passo diametrale DP)
      • ANSI B92.2M— Scanalature a evolvente USA, modulo metrico
-     • Fianco dritto (scanalature a denti paralleli) — variante storicamente
-       normata come DIN 5463/5464 o simili: NON reperita con dati affidabili
-       in questa fase. Il modello qui proposto è parametrico (serie
-       leggera/media/pesante) e va considerato indicativo, non equivalente
-       a un DIN verificato.
+     • UNI 8953   — Collegamenti scanalati a fianchi paralleli (profili di
+       riferimento), tre serie leggera/media/pesante a parità di diametro
+       nominale (famiglia storicamente affine a DIN 5463/5464, ISO/R 14).
+       ATTENZIONE: numero di denti z e rapporto Di/De per serie riportati
+       con buona confidenza tecnica (struttura generale della norma), MA i
+       diametri di riga sotto NON sono la tabella normativa integrale: sono
+       una discretizzazione sui diametri preferenziali generici ISO 3
+       (serie R20), usata solo per offrire una selezione AUTO/manuale come
+       per gli altri standard. Verificare sempre sulla norma primaria
+       prima di un uso esecutivo/di disegno.
 
    METODO DI CALCOLO — Metodo di Niemann semplificato (generalizzazione della
    verifica di pressione laterale già usata per le linguette): dai diametri
@@ -32,7 +37,7 @@
 const FAMIGLIE_SCAN = {
   metrico: { label:'Involute metriche', standard:['DIN5480','ISO4156','DIN5482'] },
   ansi:    { label:'Involute ANSI (USA)', standard:['ANSI_B92_1','ANSI_B92_2M'] },
-  dritte:  { label:'Fianco dritto', standard:['PARALLELE'] }
+  dritte:  { label:'Fianco dritto', standard:['UNI8953'] }
 };
 
 const STANDARD_INFO = {
@@ -41,7 +46,7 @@ const STANDARD_INFO = {
   DIN5482:     { nome:'DIN 5482 (obsoleta)' },
   ANSI_B92_1:  { nome:'ANSI B92.1' },
   ANSI_B92_2M: { nome:'ANSI B92.2M' },
-  PARALLELE:   { nome:'Fianco dritto (parametrico)' }
+  UNI8953:     { nome:'UNI 8953' }
 };
 
 /* Campi di ogni riga tabellata: dB (diametro di riferimento m·z) [mm],
@@ -117,18 +122,67 @@ const TABELLE_SCAN = {
     { dB:52,   m:2,   z:26, De:53.80, Di:50.20 },
     { dB:65,   m:2.5, z:26, De:67.25, Di:62.75 },
     { dB:84,   m:3,   z:28, De:86.70, Di:81.30 }
+  ],
+
+  /* UNI 8953 — fianchi paralleli, tre serie leggera/media/pesante.
+     z e rapporto Di/De per serie noti con buona confidenza (struttura
+     generale della norma); i diametri De sono una discretizzazione sui
+     diametri preferenziali generici ISO 3 (serie R20), NON l'elenco
+     esatto delle designazioni UNI 8953 — vedi avviso in testa al file. */
+  UNI8953: [
+    // Serie leggera (z=6, Di/De=0.85)
+    { dB:14.0, m:null, z:6, De:14.00, Di:11.90 },
+    { dB:16.0, m:null, z:6, De:16.00, Di:13.60 },
+    { dB:18.0, m:null, z:6, De:18.00, Di:15.30 },
+    { dB:20.0, m:null, z:6, De:20.00, Di:17.00 },
+    { dB:22.0, m:null, z:6, De:22.00, Di:18.70 },
+    { dB:25.0, m:null, z:6, De:25.00, Di:21.25 },
+    { dB:28.0, m:null, z:6, De:28.00, Di:23.80 },
+    { dB:32.0, m:null, z:6, De:32.00, Di:27.20 },
+    { dB:36.0, m:null, z:6, De:36.00, Di:30.60 },
+    { dB:40.0, m:null, z:6, De:40.00, Di:34.00 },
+    { dB:45.0, m:null, z:6, De:45.00, Di:38.25 },
+    { dB:50.0, m:null, z:6, De:50.00, Di:42.50 },
+    { dB:56.0, m:null, z:6, De:56.00, Di:47.60 },
+    { dB:63.0, m:null, z:6, De:63.00, Di:53.55 },
+    { dB:71.0, m:null, z:6, De:71.00, Di:60.35 },
+    { dB:80.0, m:null, z:6, De:80.00, Di:68.00 },
+    // Serie media (z=8, Di/De=0.80)
+    { dB:14.0, m:null, z:8, De:14.00, Di:11.20 },
+    { dB:16.0, m:null, z:8, De:16.00, Di:12.80 },
+    { dB:18.0, m:null, z:8, De:18.00, Di:14.40 },
+    { dB:20.0, m:null, z:8, De:20.00, Di:16.00 },
+    { dB:22.0, m:null, z:8, De:22.00, Di:17.60 },
+    { dB:25.0, m:null, z:8, De:25.00, Di:20.00 },
+    { dB:28.0, m:null, z:8, De:28.00, Di:22.40 },
+    { dB:32.0, m:null, z:8, De:32.00, Di:25.60 },
+    { dB:36.0, m:null, z:8, De:36.00, Di:28.80 },
+    { dB:40.0, m:null, z:8, De:40.00, Di:32.00 },
+    { dB:45.0, m:null, z:8, De:45.00, Di:36.00 },
+    { dB:50.0, m:null, z:8, De:50.00, Di:40.00 },
+    { dB:56.0, m:null, z:8, De:56.00, Di:44.80 },
+    { dB:63.0, m:null, z:8, De:63.00, Di:50.40 },
+    { dB:71.0, m:null, z:8, De:71.00, Di:56.80 },
+    { dB:80.0, m:null, z:8, De:80.00, Di:64.00 },
+    // Serie pesante (z=10, Di/De=0.75)
+    { dB:14.0, m:null, z:10, De:14.00, Di:10.50 },
+    { dB:16.0, m:null, z:10, De:16.00, Di:12.00 },
+    { dB:18.0, m:null, z:10, De:18.00, Di:13.50 },
+    { dB:20.0, m:null, z:10, De:20.00, Di:15.00 },
+    { dB:22.0, m:null, z:10, De:22.00, Di:16.50 },
+    { dB:25.0, m:null, z:10, De:25.00, Di:18.75 },
+    { dB:28.0, m:null, z:10, De:28.00, Di:21.00 },
+    { dB:32.0, m:null, z:10, De:32.00, Di:24.00 },
+    { dB:36.0, m:null, z:10, De:36.00, Di:27.00 },
+    { dB:40.0, m:null, z:10, De:40.00, Di:30.00 },
+    { dB:45.0, m:null, z:10, De:45.00, Di:33.75 },
+    { dB:50.0, m:null, z:10, De:50.00, Di:37.50 },
+    { dB:56.0, m:null, z:10, De:56.00, Di:42.00 },
+    { dB:63.0, m:null, z:10, De:63.00, Di:47.25 },
+    { dB:71.0, m:null, z:10, De:71.00, Di:53.25 },
+    { dB:80.0, m:null, z:10, De:80.00, Di:60.00 }
   ]
 };
-
-/* Fianco dritto — modello parametrico (non tabellato): tre serie generiche
-   leggera/media/pesante, applicate al diametro esterno D inserito
-   dall'utente. Rapporto Di/De e numero di denti crescenti con la serie
-   ("pesante" = più denti, fianco più profondo). VALORI INDICATIVI. */
-const SERIE_PARALLELE = [
-  { label:'Leggera (z=6)',  z:6,  rapporto:0.85 },
-  { label:'Media (z=8)',    z:8,  rapporto:0.80 },
-  { label:'Pesante (z=10)', z:10, rapporto:0.75 }
-];
 
 /* Pressione ammissibile di contatto sul fianco [MPa], per condizione di
    impiego (fisso o scorrevole sotto carico) e trattamento termico.
