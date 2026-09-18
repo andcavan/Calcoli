@@ -344,7 +344,7 @@ body{display:flex;flex-direction:column;height:100%;min-height:100vh}
     </div>
 
     <div class="frow">
-      <span class="flabel">Modalità input</span>
+      <span class="flabel" data-tip="Modalità di inserimento del carico\nP = potenza nominale trasmessa (kW)\nT = coppia torcente sul pignone (N·m)\nScegliere l'una o l'altra: il valore mancante viene ricavato automaticamente da n1">Modalità input</span>
       <span class="fsym"></span>
       <div class="chip-row">
         <div class="pt-chip active" id="chip_P" onclick="setInputMode('P')">Potenza P</div>
@@ -391,22 +391,22 @@ body{display:flex;flex-direction:column;height:100%;min-height:100vh}
       </select>
     </div>
     <div class="frow">
-      <span class="flabel">σ<sub>b</sub></span><span class="fsym"></span>
+      <span class="flabel" data-tip="Resistenza a rottura per trazione σb — proprietà del materiale (Ruota 1)\nUnità: MPa\nValore precompilato secondo il materiale selezionato; editabile solo con 'Valori personalizzati'\nRiferimento generale di resistenza statica, non entra direttamente nelle verifiche ISO 6336">σ<sub>b</sub></span><span class="fsym"></span>
       <input class="numinput" id="i_sb1" type="number" value="900" oninput="sv('sb1',this.value)">
       <span class="funit">MPa</span>
     </div>
     <div class="frow">
-      <span class="flabel">σ<sub>Flim</sub></span><span class="fsym"></span>
+      <span class="flabel" data-tip="Limite di fatica a flessione σFlim — ISO 6336-3 (Ruota 1)\nUnità: MPa\nTensione limite alla radice del dente per vita a fatica illimitata\nDipende da materiale, trattamento termico e qualità superficiale; usata per calcolare σFP = σFlim·YNT/SFmin">σ<sub>Flim</sub></span><span class="fsym"></span>
       <input class="numinput" id="i_sFlim1" type="number" value="430" oninput="sv('sFlim1',this.value)">
       <span class="funit">MPa</span>
     </div>
     <div class="frow">
-      <span class="flabel">σ<sub>Hlim</sub></span><span class="fsym"></span>
+      <span class="flabel" data-tip="Limite di fatica a contatto (pitting) σHlim — ISO 6336-2 (Ruota 1)\nUnità: MPa\nTensione hertziana limite sul fianco del dente per vita a fatica illimitata\nDipende da materiale, durezza superficiale e trattamento; usata per calcolare σHP = σHlim·ZNT/SHmin">σ<sub>Hlim</sub></span><span class="fsym"></span>
       <input class="numinput" id="i_sHlim1" type="number" value="1210" oninput="sv('sHlim1',this.value)">
       <span class="funit">MPa</span>
     </div>
     <div class="frow">
-      <span class="flabel">Modulo elastico E</span><span class="fsym"></span>
+      <span class="flabel" data-tip="Modulo elastico E del materiale (Ruota 1) — usato nel fattore elastico ZE\nUnità: MPa\nAcciaio ≈ 206000, ghisa ≈ 170000, bronzo ≈ 110000 MPa\nInfluisce sulla tensione di contatto hertziana fra i due materiali accoppiati (ZE combina E1, ν1, E2, ν2)">Modulo elastico E</span><span class="fsym"></span>
       <select class="select-field" id="sel_E1" onchange="sv('E1',this.value)">
         <option value="206000">Acciaio 206 GPa</option>
         <option value="170000">Ghisa 170 GPa</option>
@@ -430,22 +430,22 @@ body{display:flex;flex-direction:column;height:100%;min-height:100vh}
       </select>
     </div>
     <div class="frow">
-      <span class="flabel">σ<sub>b</sub></span><span class="fsym"></span>
+      <span class="flabel" data-tip="Resistenza a rottura per trazione σb — proprietà del materiale (Ruota 2)\nUnità: MPa\nValore precompilato secondo il materiale selezionato; editabile solo con 'Valori personalizzati'\nRiferimento generale di resistenza statica, non entra direttamente nelle verifiche ISO 6336">σ<sub>b</sub></span><span class="fsym"></span>
       <input class="numinput" id="i_sb2" type="number" value="900" oninput="sv('sb2',this.value)">
       <span class="funit">MPa</span>
     </div>
     <div class="frow">
-      <span class="flabel">σ<sub>Flim</sub></span><span class="fsym"></span>
+      <span class="flabel" data-tip="Limite di fatica a flessione σFlim — ISO 6336-3 (Ruota 2)\nUnità: MPa\nTensione limite alla radice del dente per vita a fatica illimitata\nDipende da materiale, trattamento termico e qualità superficiale; usata per calcolare σFP = σFlim·YNT/SFmin">σ<sub>Flim</sub></span><span class="fsym"></span>
       <input class="numinput" id="i_sFlim2" type="number" value="430" oninput="sv('sFlim2',this.value)">
       <span class="funit">MPa</span>
     </div>
     <div class="frow">
-      <span class="flabel">σ<sub>Hlim</sub></span><span class="fsym"></span>
+      <span class="flabel" data-tip="Limite di fatica a contatto (pitting) σHlim — ISO 6336-2 (Ruota 2)\nUnità: MPa\nTensione hertziana limite sul fianco del dente per vita a fatica illimitata\nDipende da materiale, durezza superficiale e trattamento; usata per calcolare σHP = σHlim·ZNT/SHmin">σ<sub>Hlim</sub></span><span class="fsym"></span>
       <input class="numinput" id="i_sHlim2" type="number" value="1210" oninput="sv('sHlim2',this.value)">
       <span class="funit">MPa</span>
     </div>
     <div class="frow">
-      <span class="flabel">Modulo elastico E</span><span class="fsym"></span>
+      <span class="flabel" data-tip="Modulo elastico E del materiale (Ruota 2) — usato nel fattore elastico ZE\nUnità: MPa\nAcciaio ≈ 206000, ghisa ≈ 170000, bronzo ≈ 110000 MPa\nInfluisce sulla tensione di contatto hertziana fra i due materiali accoppiati (ZE combina E1, ν1, E2, ν2)">Modulo elastico E</span><span class="fsym"></span>
       <select class="select-field" id="sel_E2" onchange="sv('E2',this.value)">
         <option value="206000">Acciaio 206 GPa</option>
         <option value="170000">Ghisa 170 GPa</option>
@@ -460,7 +460,7 @@ body{display:flex;flex-direction:column;height:100%;min-height:100vh}
     <div class="stitle">Servizio e Precisione</div>
 
     <div class="frow">
-      <span class="flabel">Grado precisione ISO 1328</span>
+      <span class="flabel" data-tip="Grado di precisione della dentatura — ISO 1328-1\nAdimensionale: da 5 (altissima precisione) a 12 (molto grezza)\nDetermina le tolleranze geometriche (Fp, fpt, Fα, Fβ) e il fattore dinamico Kv\nGradi più bassi = tolleranze più strette = costo di produzione maggiore">Grado precisione ISO 1328</span>
       <span class="fsym">Q</span>
       <select class="select-field" id="sel_grado" onchange="sv('grado_prec',this.value)">
         <option value="5">5 — Altissima prec.</option>
@@ -476,7 +476,7 @@ body{display:flex;flex-direction:column;height:100%;min-height:100vh}
     </div>
 
     <div class="frow">
-      <span class="flabel">Tipo carico (K<sub>A</sub>)</span>
+      <span class="flabel" data-tip="Fattore di applicazione del carico KA — ISO 6336-1 Tab.1\nAdimensionale\nTiene conto degli urti e dei sovraccarichi dinamici imposti da macchina motrice e condotta\nSelezionare 'Manuale' per inserire un valore personalizzato">Tipo carico (K<sub>A</sub>)</span>
       <span class="fsym"></span>
       <select class="select-field" id="sel_KA" onchange="sv('KA_sel',this.value)">
         <option value="1.00">Uniforme — 1.00</option>
@@ -627,9 +627,9 @@ body{display:flex;flex-direction:column;height:100%;min-height:100vh}
         <div class="sf-req" id="req_H1">richiesto ≥ —</div>
       </div>
       <div class="vstrip-grid">
-        <div class="vval">σ<sub>H</sub> calcolata<br><span class="vbig" id="o_sH1">—</span> <span class="vunit">MPa</span></div>
-        <div class="vval">σ<sub>HP</sub> ammissibile<br><span class="vbig" id="o_sHP1">—</span> <span class="vunit">MPa</span></div>
-        <div class="vval">Utilizzo<br><span class="vbig" id="o_util_H1">—</span> <span class="vunit">%</span></div>
+        <div class="vval" data-tip="Tensione di contatto (hertziana) calcolata sul fianco del dente — ISO 6336-2\nσH = ZH·ZE·Zε·Zβ·√(Ft·KA·Kv·KHβ·KHα /(b·d1)·(u+1)/u)\nDeve risultare ≤ σHP per superare la verifica a pitting">σ<sub>H</sub> calcolata<br><span class="vbig" id="o_sH1">—</span> <span class="vunit">MPa</span></div>
+        <div class="vval" data-tip="Tensione di contatto ammissibile a pitting — ISO 6336-2\nσHP = σHlim · ZNT / SHmin\nLimite di fatica superficiale del materiale, corretto per il fattore di durata ZNT e per il coefficiente di sicurezza minimo richiesto">σ<sub>HP</sub> ammissibile<br><span class="vbig" id="o_sHP1">—</span> <span class="vunit">MPa</span></div>
+        <div class="vval" data-tip="Utilizzo della resistenza a pitting = σH / σHP × 100\nSotto 100% la verifica è soddisfatta (SH ≥ SHmin)\nOltre 100% rischio di vaiolatura (pitting) sul fianco del dente">Utilizzo<br><span class="vbig" id="o_util_H1">—</span> <span class="vunit">%</span></div>
       </div>
       <div class="pbar-wrap">
         <div class="pbar-limit" id="pbl_H1"></div>
@@ -646,9 +646,9 @@ body{display:flex;flex-direction:column;height:100%;min-height:100vh}
         <div class="sf-req" id="req_H2">richiesto ≥ —</div>
       </div>
       <div class="vstrip-grid">
-        <div class="vval">σ<sub>H</sub> calcolata<br><span class="vbig" id="o_sH2">—</span> <span class="vunit">MPa</span></div>
-        <div class="vval">σ<sub>HP</sub> ammissibile<br><span class="vbig" id="o_sHP2">—</span> <span class="vunit">MPa</span></div>
-        <div class="vval">Utilizzo<br><span class="vbig" id="o_util_H2">—</span> <span class="vunit">%</span></div>
+        <div class="vval" data-tip="Tensione di contatto (hertziana) calcolata sul fianco del dente — ISO 6336-2\nσH = ZH·ZE·Zε·Zβ·√(Ft·KA·Kv·KHβ·KHα /(b·d1)·(u+1)/u)\nPer l'ingranamento pignone-ruota σH è la stessa su entrambi i fianchi a contatto; cambia il confronto con σHP della ruota 2">σ<sub>H</sub> calcolata<br><span class="vbig" id="o_sH2">—</span> <span class="vunit">MPa</span></div>
+        <div class="vval" data-tip="Tensione di contatto ammissibile a pitting — ISO 6336-2\nσHP = σHlim2 · ZNT2 / SHmin\nLimite di fatica superficiale del materiale ruota 2, corretto per il fattore di durata ZNT2 e per il coefficiente di sicurezza minimo richiesto">σ<sub>HP</sub> ammissibile<br><span class="vbig" id="o_sHP2">—</span> <span class="vunit">MPa</span></div>
+        <div class="vval" data-tip="Utilizzo della resistenza a pitting = σH / σHP × 100\nSotto 100% la verifica è soddisfatta (SH ≥ SHmin)\nOltre 100% rischio di vaiolatura (pitting) sul fianco del dente">Utilizzo<br><span class="vbig" id="o_util_H2">—</span> <span class="vunit">%</span></div>
       </div>
       <div class="pbar-wrap">
         <div class="pbar-limit" id="pbl_H2"></div>
@@ -665,9 +665,9 @@ body{display:flex;flex-direction:column;height:100%;min-height:100vh}
         <div class="sf-req" id="req_F1">richiesto ≥ —</div>
       </div>
       <div class="vstrip-grid">
-        <div class="vval">σ<sub>F</sub> calcolata<br><span class="vbig" id="o_sF1">—</span> <span class="vunit">MPa</span></div>
-        <div class="vval">σ<sub>FP</sub> ammissibile<br><span class="vbig" id="o_sFP1">—</span> <span class="vunit">MPa</span></div>
-        <div class="vval">Utilizzo<br><span class="vbig" id="o_util_F1">—</span> <span class="vunit">%</span></div>
+        <div class="vval" data-tip="Tensione di flessione alla radice del dente (Lewis modificata) — ISO 6336-3\nσF = YF·YS·Yβ·Yε·Ft·KA·Kv·KFβ·KFα /(b·mn)\nDeve risultare ≤ σFP per superare la verifica a rottura per fatica flessionale">σ<sub>F</sub> calcolata<br><span class="vbig" id="o_sF1">—</span> <span class="vunit">MPa</span></div>
+        <div class="vval" data-tip="Tensione ammissibile a flessione — ISO 6336-3\nσFP = σFlim1 · YNT1 / SFmin\nLimite di fatica a flessione del materiale ruota 1, corretto per il fattore di durata YNT1 e per il coefficiente di sicurezza minimo richiesto">σ<sub>FP</sub> ammissibile<br><span class="vbig" id="o_sFP1">—</span> <span class="vunit">MPa</span></div>
+        <div class="vval" data-tip="Utilizzo della resistenza a flessione = σF / σFP × 100\nSotto 100% la verifica è soddisfatta (SF ≥ SFmin)\nOltre 100% rischio di rottura per fatica alla radice del dente">Utilizzo<br><span class="vbig" id="o_util_F1">—</span> <span class="vunit">%</span></div>
       </div>
       <div class="pbar-wrap">
         <div class="pbar-limit" id="pbl_F1"></div>
@@ -684,9 +684,9 @@ body{display:flex;flex-direction:column;height:100%;min-height:100vh}
         <div class="sf-req" id="req_F2">richiesto ≥ —</div>
       </div>
       <div class="vstrip-grid">
-        <div class="vval">σ<sub>F</sub> calcolata<br><span class="vbig" id="o_sF2">—</span> <span class="vunit">MPa</span></div>
-        <div class="vval">σ<sub>FP</sub> ammissibile<br><span class="vbig" id="o_sFP2">—</span> <span class="vunit">MPa</span></div>
-        <div class="vval">Utilizzo<br><span class="vbig" id="o_util_F2">—</span> <span class="vunit">%</span></div>
+        <div class="vval" data-tip="Tensione di flessione alla radice del dente (Lewis modificata) — ISO 6336-3\nσF = YF·YS·Yβ·Yε·Ft·KA·Kv·KFβ·KFα /(b·mn)\nCalcolata sulla ruota 2 con i propri fattori di forma YF2, YS2 (dipendenti da z virtuale)">σ<sub>F</sub> calcolata<br><span class="vbig" id="o_sF2">—</span> <span class="vunit">MPa</span></div>
+        <div class="vval" data-tip="Tensione ammissibile a flessione — ISO 6336-3\nσFP = σFlim2 · YNT2 / SFmin\nLimite di fatica a flessione del materiale ruota 2, corretto per il fattore di durata YNT2 e per il coefficiente di sicurezza minimo richiesto">σ<sub>FP</sub> ammissibile<br><span class="vbig" id="o_sFP2">—</span> <span class="vunit">MPa</span></div>
+        <div class="vval" data-tip="Utilizzo della resistenza a flessione = σF / σFP × 100\nSotto 100% la verifica è soddisfatta (SF ≥ SFmin)\nOltre 100% rischio di rottura per fatica alla radice del dente">Utilizzo<br><span class="vbig" id="o_util_F2">—</span> <span class="vunit">%</span></div>
       </div>
       <div class="pbar-wrap">
         <div class="pbar-limit" id="pbl_F2"></div>
