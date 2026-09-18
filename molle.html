@@ -369,7 +369,7 @@ canvas{display:block;max-width:100%}
           <input type="number" id="to-n" placeholder="es. 8" step="0.5" min="0">
         </div>
         <div class="field">
-          <label>Lungh. braccio L <span class="unit">mm</span></label>
+          <label data-tip="Lunghezza del braccio di leva su cui agisce la forza\nUnità: mm\nLega forza e momento: M = F · L\nNecessaria in entrambe le modalità di lavoro">Lungh. braccio L <span class="unit">mm</span></label>
           <input type="number" id="to-L" placeholder="es. 50" step="1" min="0">
         </div>
       </div>
@@ -409,8 +409,35 @@ canvas{display:block;max-width:100%}
     <div class="section">
       <div class="section-title">Condizioni di lavoro</div>
       <div class="field">
-        <label>Forza applicata F <span class="unit">N</span></label>
-        <input type="number" id="to-F" placeholder="es. 10" step="0.5" min="0">
+        <label>Angolo/forza noti tramite</label>
+        <select id="to-input-mode" onchange="toggleInputMode('to')">
+          <option value="f">Angoli di lavoro &phi;₁, &phi;₂ (&deg;)</option>
+          <option value="F">Forze di lavoro F₁, F₂ (N)</option>
+        </select>
+      </div>
+      <div id="to-f-inputs">
+        <div class="field-row">
+          <div class="field">
+            <label data-tip="Angolo di lavoro minimo (precarico)\nUnità: gradi\nM₁ = k_φ · φ₁, forza al braccio F₁ = M₁ / L\nDeve essere ≥ 0 e < angolo massimo φ₂">Angolo &phi;₁ <span class="unit">&deg;</span></label>
+            <input type="number" id="to-phi1" placeholder="es. 30" step="1" min="0">
+          </div>
+          <div class="field">
+            <label data-tip="Angolo di lavoro massimo\nUnità: gradi\nDetermina la tensione massima σ₂ e la geometria a carico\nEscursione utile: Δφ = φ₂ - φ₁">Angolo &phi;₂ <span class="unit">&deg;</span></label>
+            <input type="number" id="to-phi2" placeholder="es. 90" step="1" min="0">
+          </div>
+        </div>
+      </div>
+      <div id="to-F-inputs" style="display:none">
+        <div class="field-row">
+          <div class="field">
+            <label data-tip="Forza di precarico applicata al braccio\nUnità: N\nM₁ = F₁ · L, angolo corrispondente φ₁ = M₁ / k_φ\nF₁ ≥ 0">Forza F₁ <span class="unit">N</span></label>
+            <input type="number" id="to-F1" placeholder="es. 5" step="0.5" min="0">
+          </div>
+          <div class="field">
+            <label data-tip="Forza massima di lavoro applicata al braccio\nUnità: N\nM₂ = F₂ · L, determina la tensione massima σ₂\nVerifica: σ₂ ≤ 0,70·Rm">Forza F₂ <span class="unit">N</span></label>
+            <input type="number" id="to-F2" placeholder="es. 15" step="0.5" min="0">
+          </div>
+        </div>
       </div>
     </div>
 
@@ -520,12 +547,12 @@ function endData(type, n, d, L0){
 }
 
 /* ─── STRESS BAR HTML ─── */
-function stressBarHtml(ratio, tau, tauMax){
+function stressBarHtml(ratio, tau, tauMax, sym='τ'){
   const pct = Math.min(ratio*100,100);
   const color = ratio<0.65?'var(--green)':ratio<0.8?'var(--orange)':'var(--red)';
   return `
   <div class="stress-bar-wrap">
-    <div class="stress-bar-label"><span>τ = ${fmt(tau)} MPa</span><span>${fmt(ratio*100,1)}% di τ<sub>lim</sub>${tauMax?' ('+fmt(tauMax)+' MPa)':''}</span></div>
+    <div class="stress-bar-label"><span>${sym} = ${fmt(tau)} MPa</span><span>${fmt(ratio*100,1)}% di ${sym}<sub>lim</sub>${tauMax?' ('+fmt(tauMax)+' MPa)':''}</span></div>
     <div class="stress-bar-bg"><div class="stress-bar-fill" style="width:${pct}%;background:${color}"></div></div>
   </div>`;
 }
@@ -919,44 +946,70 @@ function clearTraz(){
    TORSIONE
 ═══════════════════════════════════ */
 function calcTors(){
-  const d  = +document.getElementById('to-d').value;
-  const D  = +document.getElementById('to-D').value;
-  const n  = +document.getElementById('to-n').value;
-  const L  = +document.getElementById('to-L').value;
-  const E  = +document.getElementById('to-E').value;
-  const Rm = +document.getElementById('to-Rm').value || null;
-  const F  = +document.getElementById('to-F').value;
+  const d    = +document.getElementById('to-d').value;
+  const D    = +document.getElementById('to-D').value;
+  const n    = +document.getElementById('to-n').value;
+  const L    = +document.getElementById('to-L').value;
+  const E    = +document.getElementById('to-E').value;
+  const Rm   = +document.getElementById('to-Rm').value || null;
+  const wind = document.getElementById('to-wind').value;
+  const mode = document.getElementById('to-input-mode').value;
 
-  if(!d||!D||!n||!E){hideResults();return;}
+  // Il braccio serve in entrambe le modalita': lega forza e momento (M = F·L).
+  if(!d||!D||!n||!E||!L){hideResults();return;}
   if(d>=D){hideResults();return;}
 
   const c   = D/d;
   const Ki  = wahlInner(c);  // fattore fibra interna
-  const R   = D/2;
 
   // Spring rate [N·mm/°] — EN 13906-3
   // k_phi = E·d⁴ / (64·D·n)  [N·mm/rad]
   const kRad = E * Math.pow(d,4) / (64 * D * n);
   const kDeg = kRad * Math.PI / 180; // [N·mm/°]
 
-  // Moment from force on arm
-  const M = F * L;  // [N·mm]
-  const phi_deg = M / kDeg; // angular deflection [°]
+  // Posizioni di lavoro — calcola sempre angoli, momenti e forze al braccio
+  let phi1,phi2,M1,M2,F1,F2;
+  if(mode==='f'){
+    phi1 = +document.getElementById('to-phi1').value || 0;
+    phi2 = +document.getElementById('to-phi2').value || 0;
+    M1 = kDeg*phi1;  M2 = kDeg*phi2;
+    F1 = M1/L;       F2 = M2/L;
+  } else {
+    F1 = +document.getElementById('to-F1').value || 0;
+    F2 = +document.getElementById('to-F2').value || 0;
+    M1 = F1*L;       M2 = F2*L;
+    phi1 = M1/kDeg;  phi2 = M2/kDeg;
+  }
 
   // Bending stress (inner fiber) [MPa]
-  const sigma = Ki * 32 * M / (Math.PI * Math.pow(d,3));
+  const sigmaOf = M => Ki * 32 * M / (Math.PI * Math.pow(d,3));
+  const sig1 = sigmaOf(M1), sig2 = sigmaOf(M2);
 
   // Allowable: σ_lim ≈ 0.70·Rm (torsione, fibra interna)
   const sigmaLim = Rm ? 0.70*Rm : null;
 
+  // Geometria alla rotazione massima — EN 13906-3.
+  // Caricata nel verso di avvolgimento la molla si chiude: le spire crescono
+  // di phi/360, il filo ha lunghezza costante quindi il diametro cala.
+  const phiMax = Math.max(phi1, phi2, 0);
+  const nPhi   = n + phiMax/360;   // spire a carico
+  const Dphi   = D * n / nPhi;     // diametro medio a carico
+  const DiPhi  = Dphi - d;         // diametro interno a carico (gioco mandrino)
+  const Lk     = (nPhi + 1) * d;   // lunghezza corpo a carico
+
   const checks = [];
-  if(sigmaLim){
-    const ok = sigma <= sigmaLim;
-    checks.push({label:`σ (${fmt(sigma)} MPa) ${ok?'≤':'>'} 0.70·Rm (${fmt(sigmaLim)} MPa)`,ok});
+  if(sigmaLim && sig2>0){
+    const ok = sig2 <= sigmaLim;
+    checks.push({label:`σ₂ (${fmt(sig2)} MPa) ${ok?'≤':'>'} 0.70·Rm (${fmt(sigmaLim)} MPa)`,ok});
   }
   if(c<3) checks.push({label:`c=${fmt(c,1)} < 3`,ok:false});
   else if(c>12) checks.push({label:`c=${fmt(c,1)} > 12`,ok:false});
   else checks.push({label:`Indice c = ${fmt(c,1)} ✓`,ok:true});
+  if(phi1>0 && phi2>0){
+    const okOrd = phi2 > phi1;
+    checks.push({label:okOrd?`Escursione Δφ = ${fmt(phi2-phi1,2)}° ✓`:'Posizione 2 deve essere maggiore della posizione 1',ok:okOrd});
+  }
+  if(phiMax>0) checks.push({label:`Ø interno a carico ${fmt(DiPhi,2)} mm — mandrino consigliato ≤ ${fmt(DiPhi*0.9,2)} mm`,ok:DiPhi>0});
 
   const html = `
   <div class="results-header">
@@ -984,25 +1037,83 @@ function calcTors(){
         <div class="rc-label">Fattore fibra int. K<sub>i</sub></div>
         <div class="rc-value">${fmt(Ki,3)}</div>
       </div>
+      <div class="result-card">
+        <div class="rc-label">Braccio di leva L</div>
+        <div class="rc-value">${fmt(L,1)}<span class="rc-unit">mm</span></div>
+        <div class="rc-note">M = F · L</div>
+      </div>
     </div>
+    <div class="info-box">Il carico deve agire nel verso di <strong>avvolgimento</strong> (molla ${wind==='right'?'destrorsa':'sinistrorsa'}): la molla si chiude, il diametro cala e le spire aumentano. Caricando in senso opposto la molla si apre e la EN 13906-3 non ne copre il calcolo.</div>
   </div>
 
   <div class="result-section">
     <div class="result-section-title">Condizioni di lavoro</div>
     <div class="result-grid">
-      <div class="result-card">
-        <div class="rc-label">Momento M = F·L</div>
-        <div class="rc-value">${fmt(M,1)}<span class="rc-unit">N·mm</span></div>
-        <div class="rc-note">F=${fmtN(F)} N · L=${fmt(L)} mm</div>
+      <div class="result-card accent">
+        <div class="rc-label">Posizione 1 — ${mode==='f'?'forza calcolata':'angolo calcolato'}</div>
+        ${mode==='f'
+          ? `<div class="rc-value accent">${fmtN(F1)}<span class="rc-unit">N</span></div><div class="rc-note">φ₁ = ${fmt(phi1,2)}° &nbsp;·&nbsp; M₁ = ${fmt(M1,1)} N·mm</div>`
+          : `<div class="rc-value accent">${fmt(phi1,2)}<span class="rc-unit">°</span></div><div class="rc-note">F₁ = ${fmtN(F1)} N &nbsp;·&nbsp; M₁ = ${fmt(M1,1)} N·mm</div>`
+        }
+      </div>
+      <div class="result-card accent">
+        <div class="rc-label">Posizione 2 — ${mode==='f'?'forza calcolata':'angolo calcolato'}</div>
+        ${mode==='f'
+          ? `<div class="rc-value accent">${fmtN(F2)}<span class="rc-unit">N</span></div><div class="rc-note">φ₂ = ${fmt(phi2,2)}° &nbsp;·&nbsp; M₂ = ${fmt(M2,1)} N·mm</div>`
+          : `<div class="rc-value accent">${fmt(phi2,2)}<span class="rc-unit">°</span></div><div class="rc-note">F₂ = ${fmtN(F2)} N &nbsp;·&nbsp; M₂ = ${fmt(M2,1)} N·mm</div>`
+        }
       </div>
       <div class="result-card gold">
-        <div class="rc-label">Rotazione φ</div>
-        <div class="rc-value gold">${fmt(phi_deg,2)}<span class="rc-unit">°</span></div>
+        <div class="rc-label">Escursione di lavoro</div>
+        <div class="rc-value gold">${fmt(phi2-phi1,2)}<span class="rc-unit">°</span></div>
+        <div class="rc-note">ΔM = ${fmt(M2-M1,1)} N·mm &nbsp;·&nbsp; ΔF = ${fmtN(F2-F1)} N</div>
       </div>
-      <div class="result-card ${sigmaLim&&sigma>sigmaLim?'red':'green'}">
-        <div class="rc-label">Tensione flessionale σ (fibra int.)</div>
-        <div class="rc-value ${sigmaLim&&sigma>sigmaLim?'red':'green'}">${fmt(sigma)}<span class="rc-unit">MPa</span></div>
-        ${sigmaLim?stressBarHtml(sigma/sigmaLim,sigma,sigmaLim):''}
+    </div>
+  </div>
+
+  <div class="result-section">
+    <div class="result-section-title">Geometria alla rotazione massima (φ = ${fmt(phiMax,2)}°)</div>
+    <div class="result-grid">
+      <div class="result-card">
+        <div class="rc-label">Spire a carico n<sub>φ</sub></div>
+        <div class="rc-value">${fmt(nPhi,2)}</div>
+        <div class="rc-note">n + φ/360</div>
+      </div>
+      <div class="result-card">
+        <div class="rc-label">Ø medio a carico D<sub>φ</sub></div>
+        <div class="rc-value">${fmt(Dphi,2)}<span class="rc-unit">mm</span></div>
+        <div class="rc-note">a riposo D = ${fmt(D,2)} mm</div>
+      </div>
+      <div class="result-card ${DiPhi>0?'orange':'red'}">
+        <div class="rc-label">Ø interno a carico D<sub>i,φ</sub></div>
+        <div class="rc-value ${DiPhi>0?'orange':'red'}">${fmt(DiPhi,2)}<span class="rc-unit">mm</span></div>
+        <div class="rc-note">mandrino ≤ ${fmt(DiPhi*0.9,2)} mm (gioco 10%)</div>
+      </div>
+      <div class="result-card">
+        <div class="rc-label">Lunghezza corpo L<sub>k</sub></div>
+        <div class="rc-value">${fmt(Lk,2)}<span class="rc-unit">mm</span></div>
+        <div class="rc-note">(n<sub>φ</sub> + 1)·d</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="result-section">
+    <div class="result-section-title">Tensioni flessionali (fibra interna)</div>
+    <div class="result-grid">
+      <div class="result-card ${sig1>0&&sigmaLim&&sig1>sigmaLim?'red':sig1>0?'green':''}">
+        <div class="rc-label">σ₁ (@ M₁)</div>
+        <div class="rc-value ${sig1>0&&sigmaLim&&sig1>sigmaLim?'red':sig1>0?'green':''}">${fmt(sig1)}<span class="rc-unit">MPa</span></div>
+        ${sigmaLim?stressBarHtml(sig1/sigmaLim,sig1,sigmaLim,'σ'):''}
+      </div>
+      <div class="result-card ${sig2>0&&sigmaLim&&sig2>sigmaLim?'red':sig2>0?'green':''}">
+        <div class="rc-label">σ₂ (@ M₂) — lavoro max</div>
+        <div class="rc-value ${sig2>0&&sigmaLim&&sig2>sigmaLim?'red':sig2>0?'green':''}">${fmt(sig2)}<span class="rc-unit">MPa</span></div>
+        ${sigmaLim?stressBarHtml(sig2/sigmaLim,sig2,sigmaLim,'σ'):''}
+      </div>
+      <div class="result-card">
+        <div class="rc-label">Escursione di tensione Δσ</div>
+        <div class="rc-value">${fmt(sig2-sig1)}<span class="rc-unit">MPa</span></div>
+        <div class="rc-note">rilevante per la verifica a fatica</div>
       </div>
     </div>
     ${!Rm?'<div class="info-box"><strong>Nota:</strong> Inserire Rm per visualizzare il limite ammissibile (0.70·Rm secondo UNI EN 13906-3).</div>':''}
@@ -1012,8 +1123,12 @@ function calcTors(){
     <div class="result-section-title">Formule utilizzate (UNI EN 13906-3)</div>
     <div class="result-card" style="padding:16px">
       <div class="formula-row"><span class="formula-name">Rigidità angolare</span><span class="formula-expr">k<sub>φ</sub> = E·d⁴ / (64·D·n) [N·mm/rad]</span></div>
+      <div class="formula-row"><span class="formula-name">Momento al braccio</span><span class="formula-expr">M = F · L</span></div>
+      <div class="formula-row"><span class="formula-name">Rotazione</span><span class="formula-expr">φ = M / k<sub>φ</sub></span></div>
       <div class="formula-row"><span class="formula-name">Fattore fibra interna</span><span class="formula-expr">K<sub>i</sub> = (4c²−c−1) / (4c(c−1))</span></div>
       <div class="formula-row"><span class="formula-name">Tensione flessionale</span><span class="formula-expr">σ = K<sub>i</sub>·32·M / (π·d³)</span></div>
+      <div class="formula-row"><span class="formula-name">Spire a carico</span><span class="formula-expr">n<sub>φ</sub> = n + φ/360</span></div>
+      <div class="formula-row"><span class="formula-name">Ø medio a carico</span><span class="formula-expr">D<sub>φ</sub> = D·n / n<sub>φ</sub></span></div>
     </div>
   </div>
 
@@ -1026,7 +1141,7 @@ function calcTors(){
 }
 
 function clearTors(){
-  ['to-d','to-D','to-n','to-L','to-F','to-Rm'].forEach(id=>{
+  ['to-d','to-D','to-n','to-L','to-phi1','to-phi2','to-F1','to-F2','to-Rm'].forEach(id=>{
     const el=document.getElementById(id); if(el) el.value='';
   });
   document.getElementById('to-E').value=206000;
