@@ -552,6 +552,7 @@ function calcComp(){
   const ed = endData(ends, n, d, L0);
   const Lc = ed.Lc;
   const ntot = ed.ntot;
+  const p = ed.p;
 
   // Spring rate [N/mm]
   const k = G * Math.pow(d,4) / (8 * Math.pow(D,3) * n);
