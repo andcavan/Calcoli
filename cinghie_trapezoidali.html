@@ -1,0 +1,585 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Cinghie Trapezoidali e Piane - ISO 4184 / DIN 2215</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@300;400;500&family=Barlow+Condensed:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<script src="cinghie_trapezoidali_db.js"></script>
+<link rel="stylesheet" href="theme.css">
+<style>
+
+html{background:var(--bg);color:var(--text);font-family:var(--mono);font-size:13px;min-height:100vh}
+body{display:flex;flex-direction:column;align-items:center;min-height:100vh;padding:20px}
+
+.header{border-bottom:1px solid var(--border);padding:11px 20px;display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:20px;width:100%;max-width:1180px}
+
+.container{max-width:1180px;width:100%;display:grid;grid-template-columns:340px 1fr;gap:20px}
+@media(max-width:900px){.container{grid-template-columns:1fr}}
+
+.panel{background:var(--bg2);border:1px solid var(--border2);border-radius:8px;padding:15px;display:flex;flex-direction:column;gap:12px}
+.rpanel{display:flex;flex-direction:column;gap:14px}
+
+.stitle{font-family:var(--cond);font-size:10px;font-weight:600;letter-spacing:.17em;color:var(--muted);text-transform:uppercase;margin-bottom:4px;display:flex;align-items:center;gap:6px}
+
+.field{margin-bottom:6px}
+
+.flabel{color:var(--muted);font-size:11px;letter-spacing:.03em}
+.funit{font-size:10px;color:var(--dim)}
+.frow2{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+
+.schematic-wrap{background:var(--bg1);border:1px solid var(--border);border-radius:6px;padding:10px;display:flex;justify-content:center}
+.schematic-wrap svg{width:100%;max-width:520px;height:auto}
+
+.util{width:70px;height:5px;background:var(--bg3);border-radius:3px;overflow:hidden;flex-shrink:0}
+.util span{display:block;height:100%;border-radius:3px}
+.util span.ok{background:var(--up)}
+.util span.warn{background:var(--amber)}
+.util span.err{background:var(--dn)}
+
+.dim-table tr.active-row{background:rgba(79,195,247,.12)}
+
+.back-btn{font-family:var(--cond);font-size:10px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);text-decoration:none;border:1px solid var(--border2);border-radius:4px;padding:4px 10px;transition:all .15s;white-space:nowrap}
+.back-btn:hover{color:var(--acc);border-color:var(--acc)}
+
+[data-tip]:hover::after{content:attr(data-tip);position:absolute;bottom:calc(100% + 7px);left:0;background:#1e2130;border:1px solid rgba(79,195,247,.25);color:#c8cad4;font-size:10px;padding:7px 11px;border-radius:6px;white-space:pre-wrap;max-width:280px;min-width:170px;z-index:999;line-height:1.6;pointer-events:none;font-family:var(--mono);text-align:left;box-shadow:0 4px 20px rgba(0,0,0,.5)}
+
+.hidden{display:none !important}
+
+footer{margin-top:34px;font-size:10px;color:var(--dim);letter-spacing:.04em;text-align:center;line-height:1.8}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <a href="index.html" class="back-btn">← Ritorna</a>
+  <h1><span class="dot"></span>Cinghie Trapezoidali e Piane</h1>
+  <div class="sub">Numero cinghie · Arco avvolgimento · Interasse</div>
+  <span class="norm-badge">ISO 4184 · DIN 2215 · DIN 7753</span>
+</div>
+
+<div class="container">
+
+<!-- ═══ PANNELLO INPUT ═══ -->
+<div class="panel">
+
+  <div class="stitle">Tipo cinghia</div>
+  <div class="seg seg-2" id="tipoToggle">
+    <button class="seg-btn on" id="tipo-V" onclick="setTipo('V')">Trapezoidale</button>
+    <button class="seg-btn" id="tipo-Flat" onclick="setTipo('Flat')">Piana</button>
+  </div>
+
+  <!-- ─── Blocco Trapezoidale ─── -->
+  <div id="blocco-V">
+    <div class="stitle">Sezione</div>
+    <div class="seg seg-2" id="sezToggle"></div>
+
+    <div class="field">
+      <div class="fhdr"><span class="flabel" data-tip="Profilo normalizzato della cinghia trapezoidale.\nClassiche: Z, A, B, C, D, E (ISO 4184 / DIN 2215)\nStrette: SPZ, SPA, SPB, SPC — sezione più compatta a parità di potenza (DIN 7753)">Profilo</span></div>
+      <select id="prof" class="select-field" onchange="calculate()"></select>
+    </div>
+
+    <div class="field">
+      <div class="fhdr"><span class="flabel" data-tip="AUTO: numero minimo di cinghie in parallelo che soddisfa la potenza di progetto.\nManuale: impone un numero di cinghie.">Numero cinghie</span></div>
+      <select id="nbelt" class="select-field" onchange="calculate()">
+        <option value="auto">AUTO (minimo idoneo)</option>
+        <option value="1">1</option><option value="2">2</option><option value="3">3</option>
+        <option value="4">4</option><option value="5">5</option><option value="6">6</option>
+        <option value="7">7</option><option value="8">8</option><option value="10">10</option>
+      </select>
+    </div>
+  </div>
+
+  <!-- ─── Blocco Piana ─── -->
+  <div id="blocco-Flat" class="hidden">
+    <div class="stitle">Materiale e spessore</div>
+    <div class="field">
+      <div class="fhdr"><span class="flabel" data-tip="Materiale della cinghia piana: determina il coefficiente d'attrito su puleggia e la tensione ammissibile per unità di sezione.">Materiale</span></div>
+      <select id="matPiatta" class="select-field" onchange="onMatPiattaChange()"></select>
+    </div>
+    <div class="field">
+      <div class="fhdr"><span class="flabel" data-tip="Spessore commerciale della cinghia piana.">Spessore s</span><span class="funit">mm</span></div>
+      <select id="spessore" class="select-field" onchange="calculate()"></select>
+    </div>
+  </div>
+
+  <div class="stitle">Potenza e velocità</div>
+
+  <div class="field">
+    <div class="fhdr"><span class="flabel" data-tip="Dato di ingresso del dimensionamento.\nPotenza: P [kW] nota.\nCoppia: coppia motrice M₁ [Nm] nota → P = M₁·n₁/9550.">Grandezza in ingresso</span></div>
+    <div class="seg seg-2">
+      <button class="seg-btn on" id="in-P" onclick="setInMode('P')">Potenza</button>
+      <button class="seg-btn" id="in-M" onclick="setInMode('M')">Coppia</button>
+    </div>
+  </div>
+
+  <div class="field" id="fieldP">
+    <div class="fhdr"><span class="flabel" data-tip="Potenza nominale da trasmettere, misurata all'albero motore.\nUnità: kW\nEntra nel fattore di servizio: P_d = P · K_s.">Potenza da trasmettere P</span><span class="funit">kW</span></div>
+    <div class="srow">
+      <div class="arr" onclick="adjust('P',-0.25)">−</div>
+      <input id="P" class="numinput" type="number" value="7.5" min="0.01" step="0.25" oninput="calculate()">
+      <div class="arr" onclick="adjust('P',0.25)">+</div>
+    </div>
+  </div>
+
+  <div class="field hidden" id="fieldM">
+    <div class="fhdr"><span class="flabel" data-tip="Coppia motrice nota, in alternativa alla potenza diretta.\nUnità: Nm\nConversione in potenza: P = M₁ · n₁ / 9550 [kW]">Coppia motrice M₁</span><span class="funit">Nm</span></div>
+    <div class="srow">
+      <div class="arr" onclick="adjust('Min',-1)">−</div>
+      <input id="Min" class="numinput" type="number" value="49" min="0.1" step="1" oninput="calculate()">
+      <div class="arr" onclick="adjust('Min',1)">+</div>
+    </div>
+  </div>
+
+  <div class="field">
+    <div class="fhdr"><span class="flabel" data-tip="Velocità di rotazione della puleggia motrice (piccola).\nUnità: giri/min (rpm)\nDetermina la velocità periferica della cinghia: v = π·d₁·n₁/60000 [m/s]">Giri puleggia motrice n₁</span><span class="funit">rpm</span></div>
+    <div class="srow">
+      <div class="arr" onclick="adjust('n1',-50)">−</div>
+      <input id="n1" class="numinput" type="number" value="1450" min="1" step="50" oninput="calculate()">
+      <div class="arr" onclick="adjust('n1',50)">+</div>
+    </div>
+  </div>
+
+  <div class="frow2">
+    <div class="field">
+      <div class="fhdr"><span class="flabel" data-tip="Diametro primitivo puleggia motrice (piccola).\nDeve rispettare il diametro minimo consigliato del profilo scelto.">Ø puleggia motrice d₁</span><span class="funit">mm</span></div>
+      <div class="srow">
+        <div class="arr" onclick="adjust('d1',-5)">−</div>
+        <input id="d1" class="numinput" type="number" value="112" min="10" step="5" oninput="calculate()">
+        <div class="arr" onclick="adjust('d1',5)">+</div>
+      </div>
+    </div>
+    <div class="field">
+      <div class="fhdr"><span class="flabel" data-tip="Diametro primitivo puleggia condotta (grande).\nDetermina il rapporto di trasmissione i = d₂/d₁ e la velocità in uscita n₂ = n₁/i.">Ø puleggia condotta d₂</span><span class="funit">mm</span></div>
+      <div class="srow">
+        <div class="arr" onclick="adjust('d2',-5)">−</div>
+        <input id="d2" class="numinput" type="number" value="280" min="10" step="5" oninput="calculate()">
+        <div class="arr" onclick="adjust('d2',5)">+</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="field">
+    <div class="fhdr"><span class="flabel" data-tip="Interasse teorico desiderato tra gli assi delle due pulegge.\nUnità: mm\nPer le cinghie trapezoidali viene usato per calcolare la lunghezza primitiva teorica, da cui si sceglie la L_p standard più vicina; l'interasse effettivo C_eff (nei risultati) viene poi ricalcolato con quella lunghezza standard. Per la cinghia piana coincide con l'interasse effettivo, non essendoci lunghezze standard discrete.">Interasse desiderato C</span><span class="funit">mm</span></div>
+    <div class="srow">
+      <div class="arr" onclick="adjust('C',-5)">−</div>
+      <input id="C" class="numinput" type="number" value="500" min="1" step="5" oninput="calculate()">
+      <div class="arr" onclick="adjust('C',5)">+</div>
+    </div>
+  </div>
+
+  <div class="stitle">Fattore di servizio</div>
+
+  <div class="field">
+    <div class="fhdr"><span class="flabel" data-tip="Tipo di macchina motrice: determina il livello di irregolarità della coppia in ingresso.">Macchina motrice</span></div>
+    <select id="mot" class="select-field" onchange="calculate()"></select>
+  </div>
+  <div class="field">
+    <div class="fhdr"><span class="flabel" data-tip="Tipo di macchina comandata: determina l'entità degli urti resistenti.">Macchina comandata</span></div>
+    <select id="car" class="select-field" onchange="calculate()"></select>
+  </div>
+  <div class="field">
+    <div class="fhdr"><span class="flabel" data-tip="Ore di funzionamento giornaliere del sistema.\nContribuisce al fattore di servizio: K_s = K_motore + K_carico + K_ore.">Ore di funzionamento</span></div>
+    <select id="ore" class="select-field" onchange="calculate()"></select>
+  </div>
+
+  <div class="note" style="margin-top:4px">Riferimenti: ISO 4184 · DIN 2215 (classiche) · DIN 7753 (strette). Metodo capstan/Eytelwein per pre-dimensionamento: verificare sempre con il catalogo del costruttore.</div>
+
+</div>
+
+<!-- ═══ PANNELLO RISULTATI ═══ -->
+<div class="rpanel">
+
+  <div id="hint"></div>
+
+  <div class="result-section">
+    <div class="result-section-title">Geometria trasmissione</div>
+    <div class="results-grid-3" id="geoGrid"></div>
+  </div>
+
+  <div class="schematic-wrap"><div id="schema"></div></div>
+
+  <div class="result-section">
+    <div class="result-section-title">Cinghia selezionata</div>
+    <div class="results-grid-3" id="beltGrid"></div>
+  </div>
+
+  <div class="result-section">
+    <div class="result-section-title">Verifiche</div>
+    <div class="verification-grid" id="verGrid"></div>
+  </div>
+
+  <div class="result-section" id="lpSection">
+    <div class="result-section-title">Lunghezze primitive standard — <span id="lpTitle"></span></div>
+    <div class="table-container">
+      <table class="dim-table" id="lpTable"></table>
+    </div>
+  </div>
+
+</div>
+</div>
+
+<footer>
+  Andrea Cavani · Moduli calcolo HTML<br>
+  Pre-dimensionamento con metodo capstan/Eytelwein. Verificare sempre con il catalogo del costruttore.
+</footer>
+
+<script>
+// ═══════════════════════════════════
+//  STATO
+// ═══════════════════════════════════
+let tipo    = 'V';        // 'V' = trapezoidale | 'Flat' = piana
+let sezione = 'classiche';
+let inMode  = 'P';        // 'P' = potenza [kW] | 'M' = coppia motrice [Nm]
+
+function setTipo(t){
+  tipo = t;
+  $('tipo-V').classList.toggle('on', t==='V');
+  $('tipo-Flat').classList.toggle('on', t==='Flat');
+  $('blocco-V').classList.toggle('hidden', t!=='V');
+  $('blocco-Flat').classList.toggle('hidden', t!=='Flat');
+  $('lpSection').classList.toggle('hidden', t!=='V');
+  calculate();
+}
+function setInMode(m){
+  inMode = m;
+  $('in-P').classList.toggle('on', m==='P');
+  $('in-M').classList.toggle('on', m==='M');
+  $('fieldP').classList.toggle('hidden', m!=='P');
+  $('fieldM').classList.toggle('hidden', m!=='M');
+  calculate();
+}
+
+// ═══════════════════════════════════
+//  HELPER
+// ═══════════════════════════════════
+const $ = id => document.getElementById(id);
+const fp = (v,n=1) => isFinite(v) ? v.toFixed(n) : '—';
+const PI = Math.PI;
+
+function box(label,value,unit,tip){
+  return `<div class="result-box">
+    <div class="result-label"${tip?` data-tip="${tip}"`:''}>${label}</div>
+    <div class="result-value">${value}<span class="result-unit">${unit||''}</span></div>
+  </div>`;
+}
+function sfClass(sf){
+  if(isNaN(sf) || sf<0) return 'err';
+  if(!isFinite(sf))     return 'ok';
+  if(sf>=1.1) return 'ok';
+  if(sf>=1.0) return 'warn';
+  return 'err';
+}
+function sfLabel(cl){ return cl==='ok'?'OK':(cl==='warn'?'LIMITE':'INSUFF.'); }
+function vrow(label,value,unit,sf,tip){
+  const cl=sfClass(sf);
+  const pct=Math.min(100, isFinite(sf)&&sf>0 ? 100/sf : 100);
+  return `<div class="verify-item">
+    <span class="verify-label"${tip?` data-tip="${tip}"`:''}>${label}</span>
+    <span class="util"><span class="${cl}" style="width:${pct}%"></span></span>
+    <span class="verify-value">${value}<span class="verify-unit">${unit||''}</span></span>
+    <span class="verify-status ${cl}">${sfLabel(cl)}</span>
+  </div>`;
+}
+function adjust(id,step){
+  const el=$(id);
+  const dec=(String(step).split('.')[1]||'').length;
+  let v=(parseFloat(el.value)||0)+step;
+  if(el.min!==''&&v<parseFloat(el.min)) v=parseFloat(el.min);
+  el.value=dec?v.toFixed(dec):v;
+  calculate();
+}
+// Interpolazione lineare su tabella ordinata per 'beta' decrescente
+function corrArco(beta){
+  const t=ARCO_CORR;
+  if(beta>=t[0].beta) return t[0].c;
+  for(let i=0;i<t.length-1;i++){
+    if(beta<=t[i].beta && beta>=t[i+1].beta){
+      const {beta:b1,c:c1}=t[i], {beta:b2,c:c2}=t[i+1];
+      return c1+(c2-c1)*(beta-b1)/(b2-b1);
+    }
+  }
+  return t[t.length-1].c;
+}
+// Interpolazione lineare su tabella ordinata per 'r' crescente
+function corrLungh(r){
+  const t=LUNGH_CORR;
+  if(r<=t[0].r) return t[0].c;
+  for(let i=0;i<t.length-1;i++){
+    if(r>=t[i].r && r<=t[i+1].r){
+      const {r:r1,c:c1}=t[i], {r:r2,c:c2}=t[i+1];
+      return c1+(c2-c1)*(r-r1)/(r2-r1);
+    }
+  }
+  return t[t.length-1].c;
+}
+
+// ═══════════════════════════════════
+//  POPOLAMENTO
+// ═══════════════════════════════════
+function fillStatic(){
+  $('sezToggle').innerHTML = Object.keys(SEZIONI).map(k =>
+    `<button class="seg-btn${k===sezione?' on':''}" id="sez-${k}" onclick="setSezione('${k}')">${SEZIONI[k].label}</button>`).join('');
+  $('mot').innerHTML = Object.keys(MOTORE_V).map(k=>`<option value="${k}">${MOTORE_V[k].desc}</option>`).join('');
+  $('car').innerHTML = Object.keys(CARICO_V).map(k=>`<option value="${k}">${CARICO_V[k].desc}</option>`).join('');
+  $('car').value='medio';
+  $('ore').innerHTML = Object.keys(ORE_V).map(k=>`<option value="${k}">${ORE_V[k].desc}</option>`).join('');
+  $('matPiatta').innerHTML = Object.keys(MATERIALI_PIATTA).map(k=>`<option value="${k}">${MATERIALI_PIATTA[k].desc}</option>`).join('');
+  fillProfili();
+  onMatPiattaChange();
+}
+function fillProfili(){
+  const list = SEZIONI[sezione].profili;
+  const prev = $('prof').value;
+  $('prof').innerHTML = list.map(p=>`<option value="${p}">${PROFILI_V[p].nome}</option>`).join('');
+  $('prof').value = list.includes(prev)?prev:list[0];
+  calculate();
+}
+function setSezione(k){
+  sezione=k;
+  Object.keys(SEZIONI).forEach(s=>$('sez-'+s).classList.toggle('on',s===k));
+  fillProfili();
+}
+function onMatPiattaChange(){
+  const mat = MATERIALI_PIATTA[$('matPiatta').value];
+  const prev = parseFloat($('spessore').value);
+  $('spessore').innerHTML = mat.spessori.map(s=>`<option value="${s}">${s} mm</option>`).join('');
+  $('spessore').value = mat.spessori.includes(prev)?prev:mat.spessori[Math.floor(mat.spessori.length/2)];
+  calculate();
+}
+
+// ═══════════════════════════════════
+//  CALCOLO
+// ═══════════════════════════════════
+function coreCalc(){
+  const n1  = parseFloat($('n1').value)||0;
+  const P   = inMode==='M' ? (parseFloat($('Min').value)||0)*n1/9550 : (parseFloat($('P').value)||0);
+  const d1  = Math.max(1, parseFloat($('d1').value)||1);
+  const d2  = Math.max(1, parseFloat($('d2').value)||1);
+  const Cin = parseFloat($('C').value)||0;
+
+  const Ks = MOTORE_V[$('mot').value].k + CARICO_V[$('car').value].k + ORE_V[$('ore').value].k;
+  const Pd = P*Ks;
+
+  const iReal = d2/d1;
+  const n2 = n1/iReal;
+  const v  = PI*d1*n1/60000;              // m/s
+  const M1 = n1>0 ? 9550*P/n1 : NaN;       // Nm
+  const M2 = n2>0 ? 9550*P/n2 : NaN;       // Nm
+  const FuReq = v>0 ? 1000*Pd/v : NaN;     // N, forza periferica di progetto (con K_s)
+
+  let r = { P,n1,n2,d1,d2,Cin,Ks,Pd,iReal,v,M1,M2,FuReq,tipo };
+
+  if(tipo==='V'){
+    const pr = PROFILI_V[$('prof').value];
+    // Lunghezza primitiva teorica e scelta standard (come cinghie_dentate)
+    const Lth = 2*Cin + (PI/2)*(d1+d2) + Math.pow(d2-d1,2)/(4*Cin);
+    let Lp = pr.Lp[0], best=Infinity;
+    pr.Lp.forEach(L=>{ const d=Math.abs(L-Lth); if(d<best){best=d;Lp=L;} });
+    const LpRif = pr.Lp[Math.floor(pr.Lp.length/2)];
+
+    const K = 4*Lp - 2*PI*(d1+d2);
+    const disc = K*K - 32*Math.pow(d2-d1,2);
+    const Ceff = disc>=0 ? (K + Math.sqrt(disc))/16 : NaN;
+
+    const beta = isFinite(Ceff) ? 180 - 2*Math.asin(Math.min(1,(d2-d1)/(2*Ceff)))*180/PI : NaN;
+
+    const Ctheta = isFinite(beta) ? corrArco(beta) : 1;
+    const CL = corrLungh(Lp/LpRif);
+
+    const fEff = ATTRITO_TRAPEZOIDALE.f / Math.sin(ATTRITO_TRAPEZOIDALE.gamma*PI/360);
+    const Fc = pr.mlin*v*v;
+    const betaRad = isFinite(beta) ? beta*PI/180 : 0;
+    const FuAdmBelt = Math.max(0,(pr.Tmax - Fc))*(1-Math.exp(-fEff*betaRad));
+    const Pb = FuAdmBelt*v/1000*Ctheta*CL;   // kW per singola cinghia
+
+    const nbReq = Pb>0 ? Math.ceil(Pd/Pb) : Infinity;
+    const nb = $('nbelt').value==='auto' ? Math.max(1,nbReq) : parseInt($('nbelt').value);
+
+    const Padm = Pb*nb;
+
+    Object.assign(r,{pr,Lth,Lp,LpRif,Ceff,beta,Ctheta,CL,Fc,fEff,FuAdmBelt,Pb,nbReq,nb,Padm});
+  } else {
+    const mat = MATERIALI_PIATTA[$('matPiatta').value];
+    const s = parseFloat($('spessore').value)||1;
+    const Ceff = Cin; // nessuna lunghezza standard discreta per la cinghia piana
+    const beta = 180 - 2*Math.asin(Math.min(1,(d2-d1)/(2*Ceff)))*180/PI;
+    const betaRad = isFinite(beta) ? beta*PI/180 : 0;
+
+    const k1 = mat.sigma_amm*s;                     // N per mm di larghezza (tiro ammissibile)
+    const k2 = s*DENSITA_PIATTA*1e-6;                // kg/m per mm di larghezza
+    const denom = (k1 - k2*v*v)*(1-Math.exp(-mat.f*betaRad));
+    const bReq = denom>0 ? FuReq/denom : Infinity;   // mm, larghezza richiesta
+    const bSel = Math.max(10, Math.ceil(bReq/5)*5);  // arrotondata al multiplo di 5 mm superiore
+
+    const mlin = k2*bSel;
+    const Fc = mlin*v*v;
+    const FuAdm = Math.max(0,(k1*bSel - Fc))*(1-Math.exp(-mat.f*betaRad));
+    const Padm = FuAdm*v/1000;
+
+    Object.assign(r,{mat,s,Ceff,beta,k1,k2,bReq,bSel,mlin,Fc,FuAdm,Padm});
+  }
+  return r;
+}
+
+function calculate(){
+  const r = coreCalc();
+
+  $('hint').innerHTML = hint(r);
+
+  $('geoGrid').innerHTML =
+    box('Rapporto i','1 : '+fp(r.iReal,2),'') +
+    box('Giri n₂',fp(r.n2,0),'rpm') +
+    box('Fatt. servizio K_s',fp(r.Ks,2),'') +
+    box('Ø puleggia d₁',fp(r.d1,0),'mm') +
+    box('Ø puleggia d₂',fp(r.d2,0),'mm') +
+    box('Velocità cinghia v',fp(r.v,2),'m/s') +
+    box('Potenza P',fp(r.P,2),'kW') +
+    box('Pot. progetto P_d',fp(r.Pd,2),'kW',
+        'Potenza di progetto, maggiorata rispetto alla potenza nominale P per tener conto degli urti di avviamento e di carico.\nP_d = P · K_s') +
+    box('Coppia motrice M₁',fp(r.M1,1),'Nm') +
+    box('Coppia uscita M₂',fp(r.M2,1),'Nm') +
+    box('Forza perif. rich.',fp(r.FuReq,0),'N');
+
+  if(r.tipo==='V'){
+    $('beltGrid').innerHTML =
+      box('Profilo',r.pr.nome,'') +
+      box('Lung. primitiva L_p',fp(r.Lp,0),'mm') +
+      box('Interasse eff. C',fp(r.Ceff,1),'mm') +
+      box('Avvolgimento β₁',fp(r.beta,1),'°') +
+      box('Fatt. arco C_θ',fp(r.Ctheta,2),'') +
+      box('Fatt. lunghezza C_L',fp(r.CL,2),'') +
+      box('Forza centrifuga F_c',fp(r.Fc,1),'N') +
+      box('N° cinghie',r.nb,'') +
+      box('Pot. per cinghia',fp(r.Pb,2),'kW') +
+      box('Pot. ammissibile tot.',fp(r.Padm,2),'kW',
+          'Potenza complessiva trasmissibile dal set di cinghie selezionato.\nP_adm = P_b · n_cinghie');
+  }else{
+    $('beltGrid').innerHTML =
+      box('Materiale',r.mat.desc,'') +
+      box('Spessore s',fp(r.s,1),'mm') +
+      box('Interasse C',fp(r.Ceff,1),'mm') +
+      box('Avvolgimento β₁',fp(r.beta,1),'°') +
+      box('Larghezza richiesta',fp(r.bReq,1),'mm') +
+      box('Larghezza scelta',fp(r.bSel,0),'mm') +
+      box('Forza centrifuga F_c',fp(r.Fc,1),'N') +
+      box('Pot. ammissibile',fp(r.Padm,2),'kW',
+          'Potenza trasmissibile dalla cinghia piana di larghezza scelta.\nP_adm = F_u,adm · v');
+  }
+
+  const verifs = [];
+  if(r.tipo==='V'){
+    verifs.push(
+      vrow('Potenza: P_adm ≥ P_d', fp(r.Padm,2), 'kW', r.Padm/r.Pd,
+           'Potenza ammissibile del set di cinghie selezionato rispetto alla potenza di progetto.'),
+      vrow('Ø puleggia d₁ ≥ d_min', fp(r.d1,0), 'mm', r.d1/r.pr.dmin,
+           'Diametro minimo consigliato per il profilo '+r.pr.nome+': '+r.pr.dmin+' mm (limite di flessione della cinghia).'),
+      vrow('Velocità v ≤ v_max', fp(r.v,2), 'm/s', r.pr.vmax/r.v,
+           'Velocità periferica massima consigliata per il profilo: '+r.pr.vmax+' m/s.'),
+      vrow('Avvolgimento β₁ ≥ 120°', fp(r.beta,1), '°', r.beta/120,
+           'Arco di avvolgimento minimo consigliato sulla puleggia piccola: sotto i 120° la capacità di trazione cala sensibilmente.')
+    );
+  }else{
+    verifs.push(
+      vrow('Potenza: P_adm ≥ P_d', fp(r.Padm,2), 'kW', r.Padm/r.Pd,
+           'Potenza ammissibile della cinghia piana selezionata rispetto alla potenza di progetto.'),
+      vrow('Avvolgimento β₁ ≥ 150°', fp(r.beta,1), '°', r.beta/150,
+           'Le cinghie piane richiedono un arco di avvolgimento maggiore delle trapezoidali per generare attrito sufficiente (assenza dell\'effetto cuneo di gola).'),
+      vrow('Velocità v ≤ 30 m/s', fp(r.v,2), 'm/s', 30/r.v,
+           'Limite pratico di velocità periferica per cinghie piane in cuoio/tessuto gommato, oltre il quale la forza centrifuga riduce fortemente la capacità di trazione.')
+    );
+  }
+  $('verGrid').innerHTML = verifs.join('');
+
+  if(r.tipo==='V') renderLpTable(r);
+
+  drawSchema(r);
+}
+
+function hint(r){
+  if(r.tipo==='V'){
+    if(r.nbReq>8){
+      return `<div class="warn-box">Con il profilo ${r.pr.nome} servirebbero ${r.nbReq} cinghie in parallelo: valutare una sezione più grande o strette (SP) per ridurne il numero.</div>`;
+    }
+    return `<div class="info-box">Profilo <b>${r.pr.nome}</b>: servono <b>${r.nbReq}</b> cinghie in parallelo per P_d = ${fp(r.Pd,2)} kW a ${fp(r.n1,0)} rpm.</div>`;
+  }
+  if(!isFinite(r.bReq) || r.bReq<=0){
+    return `<div class="warn-box">Alla velocità corrente la forza centrifuga assorbe l'intero tiro ammissibile: nessuna larghezza è sufficiente. Ridurre v o aumentare lo spessore/materiale.</div>`;
+  }
+  return `<div class="info-box">Larghezza minima calcolata: <b>${fp(r.bReq,1)} mm</b> → arrotondata a <b>${fp(r.bSel,0)} mm</b>.</div>`;
+}
+
+function renderLpTable(r){
+  $('lpTitle').textContent = r.pr.nome+' (b_p '+r.pr.bp+' mm)';
+  let html='<thead><tr><th>L_p [mm]</th><th>C con Ø attuali [mm]</th></tr></thead><tbody>';
+  r.pr.Lp.forEach(L=>{
+    const K=4*L-2*PI*(r.d1+r.d2);
+    const disc=K*K-32*Math.pow(r.d2-r.d1,2);
+    const C=disc>=0?(K+Math.sqrt(disc))/16:NaN;
+    const act = Math.abs(L-r.Lp)<1e-6 ? ' class="active-row"' : '';
+    html+=`<tr${act}><td>${fp(L,0)}</td><td>${isFinite(C)?fp(C,1):'—'}</td></tr>`;
+  });
+  html+='</tbody>';
+  $('lpTable').innerHTML=html;
+}
+
+// ═══════════════════════════════════
+//  SCHEMA SVG (pulegge + cinghia)
+// ═══════════════════════════════════
+function drawSchema(r){
+  const W=520,H=260,pad=54;
+  const yc=H/2;
+  const Ceff=isFinite(r.Ceff)?r.Ceff:r.Cin;
+  const R1=r.d1/2, R2=r.d2/2;
+  const span=Ceff + R1 + R2;
+  const s=(W-2*pad)/span;
+  const r1=R1*s, r2=R2*s;
+  const x1=pad+r1, x2=x1+Ceff*s;
+
+  const th=Math.asin(Math.min(1,(r2-r1)/(Ceff*s||1)));
+  const ux1=x1 - r1*Math.sin(th), uy1=yc - r1*Math.cos(th);
+  const ux2=x2 - r2*Math.sin(th), uy2=yc - r2*Math.cos(th);
+  const lx1=x1 + r1*Math.sin(th), ly1=yc + r1*Math.cos(th);
+  const lx2=x2 + r2*Math.sin(th), ly2=yc + r2*Math.cos(th);
+
+  const g='#4fc3f7', mut='#9a9dab', dim='#7d8090';
+  let s2='';
+  s2+=`<path d="M ${ux1.toFixed(1)} ${uy1.toFixed(1)}
+      L ${ux2.toFixed(1)} ${uy2.toFixed(1)}
+      A ${r2.toFixed(1)} ${r2.toFixed(1)} 0 1 1 ${lx2.toFixed(1)} ${ly2.toFixed(1)}
+      L ${lx1.toFixed(1)} ${ly1.toFixed(1)}
+      A ${r1.toFixed(1)} ${r1.toFixed(1)} 0 1 1 ${ux1.toFixed(1)} ${uy1.toFixed(1)} Z"
+      fill="none" stroke="${g}" stroke-width="3" stroke-opacity=".55"/>`;
+  s2+=`<circle cx="${x1.toFixed(1)}" cy="${yc}" r="${r1.toFixed(1)}" fill="#1c1d23" stroke="${g}" stroke-width="1.4"/>`;
+  s2+=`<circle cx="${x2.toFixed(1)}" cy="${yc}" r="${r2.toFixed(1)}" fill="#1c1d23" stroke="${g}" stroke-width="1.4"/>`;
+  s2+=`<circle cx="${x1.toFixed(1)}" cy="${yc}" r="${(r1*0.28).toFixed(1)}" fill="none" stroke="${mut}" stroke-width="1"/>`;
+  s2+=`<circle cx="${x2.toFixed(1)}" cy="${yc}" r="${(r2*0.28).toFixed(1)}" fill="none" stroke="${mut}" stroke-width="1"/>`;
+  s2+=`<circle cx="${x1.toFixed(1)}" cy="${yc}" r="2" fill="${g}"/>`;
+  s2+=`<circle cx="${x2.toFixed(1)}" cy="${yc}" r="2" fill="${g}"/>`;
+  const yd=yc+r2+26;
+  s2+=`<line x1="${x1}" y1="${yc}" x2="${x1}" y2="${yd+6}" stroke="${dim}" stroke-width=".8"/>`;
+  s2+=`<line x1="${x2}" y1="${yc}" x2="${x2}" y2="${yd+6}" stroke="${dim}" stroke-width=".8"/>`;
+  s2+=`<line x1="${x1}" y1="${yd}" x2="${x2}" y2="${yd}" stroke="${mut}" stroke-width=".8" marker-start="url(#a)" marker-end="url(#a)"/>`;
+  s2+=`<text x="${(x1+x2)/2}" y="${yd-5}" fill="${mut}" font-size="11" font-family="monospace" text-anchor="middle">C = ${fp(Ceff,0)} mm</text>`;
+  s2+=`<text x="${x1}" y="${yc-r1-8}" fill="${g}" font-size="10" font-family="monospace" text-anchor="middle">Ø${fp(r.d1,0)}</text>`;
+  s2+=`<text x="${x2}" y="${yc-r2-8}" fill="${g}" font-size="10" font-family="monospace" text-anchor="middle">Ø${fp(r.d2,0)}</text>`;
+  s2+=`<text x="${x1}" y="${yc+4}" fill="${mut}" font-size="9" font-family="monospace" text-anchor="middle">β=${fp(r.beta,0)}°</text>`;
+
+  $('schema').innerHTML =
+    `<svg viewBox="0 0 ${W} ${H}" xmlns="http://www.w3.org/2000/svg">
+      <defs><marker id="a" markerWidth="8" markerHeight="8" refX="4" refY="4" orient="auto">
+        <path d="M1 4 L7 1.5 L7 6.5 Z" fill="${mut}"/></marker></defs>
+      ${s2}
+    </svg>`;
+}
+
+// ═══════════════════════════════════
+//  INIT
+// ═══════════════════════════════════
+fillStatic();
+calculate();
+</script>
+
+</body>
+</html>

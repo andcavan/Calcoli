@@ -1,0 +1,440 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Alberi Scanalati - DIN 5480 / ISO 4156 / ANSI B92</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@300;400;500&family=Barlow+Condensed:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<script src="scanalati_db.js"></script>
+<link rel="stylesheet" href="theme.css">
+<style>
+
+html{background:var(--bg);color:var(--text);font-family:var(--mono);font-size:13px;min-height:100vh}
+body{display:flex;flex-direction:column;align-items:center;min-height:100vh;padding:20px}
+
+.header{border-bottom:1px solid var(--border);padding:11px 20px;display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:20px;width:100%;max-width:1180px}
+
+.container{max-width:1180px;width:100%;display:grid;grid-template-columns:340px 1fr;gap:20px}
+@media(max-width:900px){.container{grid-template-columns:1fr}}
+
+.panel{background:var(--bg2);border:1px solid var(--border2);border-radius:8px;padding:15px;display:flex;flex-direction:column;gap:12px}
+.rpanel{display:flex;flex-direction:column;gap:14px}
+
+.stitle{font-family:var(--cond);font-size:10px;font-weight:600;letter-spacing:.17em;color:var(--muted);text-transform:uppercase;margin-bottom:4px;display:flex;align-items:center;gap:6px}
+
+.field{margin-bottom:6px}
+
+.flabel{color:var(--muted);font-size:11px;letter-spacing:.03em}
+.funit{font-size:10px;color:var(--dim)}
+.frow2{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+
+/* Segmented control a 3 vie (scanalati: famiglia standard) */
+.seg-3{grid-template-columns:1fr 1fr 1fr}
+
+.util{width:70px;height:5px;background:var(--bg3);border-radius:3px;overflow:hidden;flex-shrink:0}
+.util span{display:block;height:100%;border-radius:3px}
+.util span.ok{background:var(--up)}
+.util span.warn{background:var(--amber)}
+.util span.err{background:var(--dn)}
+
+.dim-table tr.active-row{background:rgba(79,195,247,.12)}
+
+.back-btn{font-family:var(--cond);font-size:10px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);text-decoration:none;border:1px solid var(--border2);border-radius:4px;padding:4px 10px;transition:all .15s;white-space:nowrap}
+.back-btn:hover{color:var(--acc);border-color:var(--acc)}
+
+[data-tip]:hover::after{content:attr(data-tip);position:absolute;bottom:calc(100% + 7px);left:0;background:#1e2130;border:1px solid rgba(79,195,247,.25);color:#c8cad4;font-size:10px;padding:7px 11px;border-radius:6px;white-space:pre-wrap;max-width:280px;min-width:170px;z-index:999;line-height:1.6;pointer-events:none;font-family:var(--mono);text-align:left;box-shadow:0 4px 20px rgba(0,0,0,.5)}
+
+.hidden{display:none !important}
+
+.checkbox-group{display:flex;align-items:center;gap:8px;margin:4px 0}
+.checkbox-group input[type="checkbox"]{width:16px;height:16px;cursor:pointer}
+.checkbox-group label{font-size:11px;color:var(--text);cursor:pointer}
+
+footer{margin-top:34px;font-size:10px;color:var(--dim);letter-spacing:.04em;text-align:center;line-height:1.8}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <a href="index.html" class="back-btn">← Ritorna</a>
+  <h1><span class="dot"></span>Alberi Scanalati</h1>
+  <div class="sub">Pressione di contatto sul fianco — Metodo Niemann</div>
+  <span class="norm-badge">DIN 5480 · ISO 4156 · ANSI B92</span>
+</div>
+
+<div class="container">
+
+<!-- ═══ PANNELLO INPUT ═══ -->
+<div class="panel">
+
+  <div class="stitle">Famiglia e standard</div>
+  <div class="seg seg-3" id="famToggle"></div>
+
+  <div class="field">
+    <div class="fhdr"><span class="flabel" data-tip="Norma di riferimento per la geometria della scanalatura, all'interno della famiglia selezionata.">Standard</span></div>
+    <select id="standard" class="select-field" onchange="onStandardChange()"></select>
+  </div>
+
+  <div class="field">
+    <div class="fhdr"><span class="flabel" data-tip="Diametro dell'albero scanalato.\nPer gli standard tabellati (DIN/ISO/ANSI) seleziona automaticamente la combinazione modulo×denti più vicina.\nPer il fianco dritto è direttamente il diametro esterno D della scanalatura.">Diametro albero d</span><span class="funit">mm</span></div>
+    <div class="srow">
+      <div class="arr" onclick="adjust('diametro',-2)">−</div>
+      <input id="diametro" class="numinput" type="number" value="36" min="5" step="2" oninput="calculate()">
+      <div class="arr" onclick="adjust('diametro',2)">+</div>
+    </div>
+  </div>
+
+  <div class="field">
+    <div class="fhdr"><span class="flabel" data-tip="AUTO: combinazione più vicina al diametro inserito.\nManuale: impone una combinazione della tabella.">Combinazione</span></div>
+    <select id="combinazione" class="select-field" onchange="calculate()"></select>
+  </div>
+
+  <div class="stitle">Potenza e velocità</div>
+
+  <div class="field">
+    <div class="fhdr"><span class="flabel" data-tip="Dato di ingresso del dimensionamento.\nPotenza: P [kW] nota.\nCoppia: coppia nota M [Nm] → P = M·n/9550.">Grandezza in ingresso</span></div>
+    <div class="seg seg-2">
+      <button class="seg-btn on" id="in-P" onclick="setInMode('P')">Potenza</button>
+      <button class="seg-btn" id="in-M" onclick="setInMode('M')">Coppia</button>
+    </div>
+  </div>
+
+  <div class="field" id="fieldP">
+    <div class="fhdr"><span class="flabel" data-tip="Potenza nominale da trasmettere.\nUnità: kW">Potenza da trasmettere P</span><span class="funit">kW</span></div>
+    <div class="srow">
+      <div class="arr" onclick="adjust('P',-0.5)">−</div>
+      <input id="P" class="numinput" type="number" value="10" min="0.01" step="0.5" oninput="calculate()">
+      <div class="arr" onclick="adjust('P',0.5)">+</div>
+    </div>
+  </div>
+
+  <div class="field hidden" id="fieldM">
+    <div class="fhdr"><span class="flabel" data-tip="Coppia nominale nota, in alternativa alla potenza diretta.\nUnità: Nm">Coppia nominale M</span><span class="funit">Nm</span></div>
+    <div class="srow">
+      <div class="arr" onclick="adjust('Min',-5)">−</div>
+      <input id="Min" class="numinput" type="number" value="66" min="0.1" step="5" oninput="calculate()">
+      <div class="arr" onclick="adjust('Min',5)">+</div>
+    </div>
+  </div>
+
+  <div class="field">
+    <div class="fhdr"><span class="flabel" data-tip="Velocità di rotazione dell'albero.\nUnità: giri/min (rpm)">Giri n</span><span class="funit">rpm</span></div>
+    <div class="srow">
+      <div class="arr" onclick="adjust('n',-50)">−</div>
+      <input id="n" class="numinput" type="number" value="1450" min="1" step="50" oninput="calculate()">
+      <div class="arr" onclick="adjust('n',50)">+</div>
+    </div>
+  </div>
+
+  <div class="field">
+    <div class="fhdr"><span class="flabel" data-tip="Fattore di applicazione K_A: moltiplica la coppia nominale per tener conto degli urti di avviamento e di carico.\nCorrisponde al K_A di DIN 6892.">Fattore applicazione K_A</span></div>
+    <select id="ka" class="select-field" onchange="calculate()"></select>
+  </div>
+
+  <div class="stitle">Condizioni di impiego</div>
+
+  <div class="frow2">
+    <div class="field">
+      <div class="fhdr"><span class="flabel" data-tip="Fattore di ripartizione del carico ψ tra i denti in presa: non tutti si ripartiscono uniformemente il carico per errori di passo/forma.\nz_eff = ψ·z">Ripartizione ψ</span></div>
+      <select id="psi" class="select-field" onchange="calculate()"></select>
+    </div>
+    <div class="field">
+      <div class="fhdr"><span class="flabel" data-tip="Trattamento termico delle superfici di contatto: influenza la pressione ammissibile.">Trattamento</span></div>
+      <select id="trattamento" class="select-field" onchange="calculate()">
+        <option value="non_temprato">Non temprato</option>
+        <option value="temprato">Temprato/cementato</option>
+      </select>
+    </div>
+  </div>
+
+  <div class="checkbox-group">
+    <input type="checkbox" id="scorrevole" onchange="calculate()">
+    <label for="scorrevole">Scorrevole sotto carico (non solo calettamento fisso)</label>
+  </div>
+
+  <div class="stitle">Lunghezza impegno mozzo</div>
+  <div class="checkbox-group">
+    <input type="checkbox" id="l-auto" checked onchange="toggleLAuto()">
+    <label for="l-auto">Automatica (= minima necessaria)</label>
+  </div>
+  <div class="field" id="l-manual-field">
+    <div class="fhdr"><span class="flabel" data-tip="Lunghezza di impegno tra albero e mozzo scanalati.">Lunghezza l</span><span class="funit">mm</span></div>
+    <div class="srow">
+      <div class="arr" onclick="adjust('l-manual',-2)">−</div>
+      <input id="l-manual" class="numinput" type="number" value="40" min="1" step="2" disabled oninput="calculate()">
+      <div class="arr" onclick="adjust('l-manual',2)">+</div>
+    </div>
+  </div>
+
+  <div class="note" style="margin-top:4px">Metodo di Niemann semplificato: pressione di contatto p = 2T/(z_eff·dm·h'·l). Tabelle DIN/ISO/ANSI: sottoinsieme rappresentativo, verificare sulla norma integrale.</div>
+
+</div>
+
+<!-- ═══ PANNELLO RISULTATI ═══ -->
+<div class="rpanel">
+
+  <div id="hint"></div>
+
+  <div class="result-section">
+    <div class="result-section-title">Coppia di progetto</div>
+    <div class="results-grid-3" id="coppiaGrid"></div>
+  </div>
+
+  <div class="result-section">
+    <div class="result-section-title">Scanalatura selezionata</div>
+    <div class="results-grid-3" id="scanGrid"></div>
+  </div>
+
+  <div class="result-section">
+    <div class="result-section-title">Verifiche</div>
+    <div class="verification-grid" id="verGrid"></div>
+  </div>
+
+  <div class="result-section">
+    <div class="result-section-title">Tabella dimensionale — <span id="tabTitle"></span></div>
+    <div class="table-container">
+      <table class="dim-table" id="scanTable"></table>
+    </div>
+  </div>
+
+</div>
+</div>
+
+<footer>
+  Andrea Cavani · Moduli calcolo HTML<br>
+  Metodo di Niemann semplificato. Tabelle rappresentative: verificare sempre sulla norma integrale.
+</footer>
+
+<script>
+// ═══════════════════════════════════
+//  STATO
+// ═══════════════════════════════════
+let famiglia = 'metrico';
+let inMode = 'P';
+
+function setInMode(m){
+  inMode = m;
+  $('in-P').classList.toggle('on', m==='P');
+  $('in-M').classList.toggle('on', m==='M');
+  $('fieldP').classList.toggle('hidden', m!=='P');
+  $('fieldM').classList.toggle('hidden', m!=='M');
+  calculate();
+}
+function toggleLAuto(){
+  const auto = $('l-auto').checked;
+  $('l-manual').disabled = auto;
+  calculate();
+}
+
+// ═══════════════════════════════════
+//  HELPER
+// ═══════════════════════════════════
+const $ = id => document.getElementById(id);
+const fp = (v,n=1) => isFinite(v) ? v.toFixed(n) : '—';
+const PI = Math.PI;
+
+function box(label,value,unit,tip){
+  return `<div class="result-box">
+    <div class="result-label"${tip?` data-tip="${tip}"`:''}>${label}</div>
+    <div class="result-value">${value}<span class="result-unit">${unit||''}</span></div>
+  </div>`;
+}
+function sfClass(sf){
+  if(isNaN(sf) || sf<0) return 'err';
+  if(!isFinite(sf))     return 'ok';
+  if(sf>=1.1) return 'ok';
+  if(sf>=1.0) return 'warn';
+  return 'err';
+}
+function sfLabel(cl){ return cl==='ok'?'OK':(cl==='warn'?'LIMITE':'INSUFF.'); }
+function vrow(label,value,unit,sf,tip){
+  const cl=sfClass(sf);
+  const pct=Math.min(100, isFinite(sf)&&sf>0 ? 100/sf : 100);
+  return `<div class="verify-item">
+    <span class="verify-label"${tip?` data-tip="${tip}"`:''}>${label}</span>
+    <span class="util"><span class="${cl}" style="width:${pct}%"></span></span>
+    <span class="verify-value">${value}<span class="verify-unit">${unit||''}</span></span>
+    <span class="verify-status ${cl}">${sfLabel(cl)}</span>
+  </div>`;
+}
+function adjust(id,step){
+  const el=$(id);
+  const dec=(String(step).split('.')[1]||'').length;
+  let v=(parseFloat(el.value)||0)+step;
+  if(el.min!==''&&v<parseFloat(el.min)) v=parseFloat(el.min);
+  el.value=dec?v.toFixed(dec):v;
+  calculate();
+}
+
+// ═══════════════════════════════════
+//  RIGHE PER STANDARD (tabellate o parametriche)
+// ═══════════════════════════════════
+function getRows(standard, d){
+  if(standard==='PARALLELE'){
+    return SERIE_PARALLELE.map(s=>({
+      label:s.label, z:s.z, m:null, De:d, Di:s.rapporto*d
+    }));
+  }
+  return TABELLE_SCAN[standard].map(r=>({
+    label:(r.m?('m'+r.m+' × z'+r.z):('z'+r.z))+' (Ø'+fp(r.dB,1)+')',
+    z:r.z, m:r.m, De:r.De, Di:r.Di, dB:r.dB
+  }));
+}
+function nearestIdx(rows, d, standard){
+  if(standard==='PARALLELE') return 1; // default: serie media
+  let best=0,bd=Infinity;
+  rows.forEach((r,i)=>{ const dd=Math.abs((r.dB!==undefined?r.dB:(r.De+r.Di)/2)-d); if(dd<bd){bd=dd;best=i;} });
+  return best;
+}
+
+// ═══════════════════════════════════
+//  POPOLAMENTO
+// ═══════════════════════════════════
+function fillStatic(){
+  $('famToggle').innerHTML = Object.keys(FAMIGLIE_SCAN).map(k=>
+    `<button class="seg-btn${k===famiglia?' on':''}" id="fam-${k}" onclick="setFamiglia('${k}')">${FAMIGLIE_SCAN[k].label}</button>`).join('');
+  $('ka').innerHTML = Object.keys(KA_SCANALATI).map(k=>`<option value="${k}">${k.replace('.',',')} — ${KA_SCANALATI[k]}</option>`).join('');
+  $('psi').innerHTML = Object.keys(PSI_RIPARTIZIONE).map(k=>`<option value="${k}">${PSI_RIPARTIZIONE[k].desc} (ψ=${PSI_RIPARTIZIONE[k].k})</option>`).join('');
+  $('psi').value='standard';
+  fillStandard();
+}
+function fillStandard(){
+  const list = FAMIGLIE_SCAN[famiglia].standard;
+  const prev = $('standard').value;
+  $('standard').innerHTML = list.map(k=>`<option value="${k}">${STANDARD_INFO[k].nome}</option>`).join('');
+  $('standard').value = list.includes(prev)?prev:list[0];
+  onStandardChange();
+}
+function setFamiglia(k){
+  famiglia = k;
+  Object.keys(FAMIGLIE_SCAN).forEach(f=>$('fam-'+f).classList.toggle('on',f===k));
+  fillStandard();
+}
+function onStandardChange(){
+  fillCombinazioni();
+}
+function fillCombinazioni(){
+  const d = parseFloat($('diametro').value)||0;
+  const standard = $('standard').value;
+  const rows = getRows(standard, d);
+  const idxAuto = nearestIdx(rows, d, standard);
+  let opts = '<option value="auto">AUTO (più vicina)</option>';
+  opts += rows.map((r,i)=>`<option value="${i}">${r.label}</option>`).join('');
+  $('combinazione').innerHTML = opts;
+  $('combinazione').value = 'auto';
+  calculate();
+}
+
+// ═══════════════════════════════════
+//  CALCOLO
+// ═══════════════════════════════════
+function coreCalc(){
+  const n = parseFloat($('n').value)||0;
+  const Tnom = inMode==='M' ? (parseFloat($('Min').value)||0) : (n>0 ? 9550*(parseFloat($('P').value)||0)/n : 0);
+  const KA = parseFloat($('ka').value)||1;
+  const T = Tnom*KA;              // Nm
+  const T_Nmm = T*1000;
+
+  const d = parseFloat($('diametro').value)||0;
+  const standard = $('standard').value;
+  const rows = getRows(standard, d);
+  const idxAuto = nearestIdx(rows, d, standard);
+  const idx = $('combinazione').value==='auto' ? idxAuto : parseInt($('combinazione').value);
+  const row = rows[idx] || rows[idxAuto];
+
+  const dm = (row.De+row.Di)/2;
+  const hp = (row.De-row.Di)/2;
+  const psi = PSI_RIPARTIZIONE[$('psi').value].k;
+  const zEff = psi*row.z;
+
+  const scorrevole = $('scorrevole').checked;
+  const trattamento = $('trattamento').value;
+  const condizione = scorrevole ? 'scorrevole' : 'fisso';
+  const pAdm = P_AMM_SCANALATI[condizione][trattamento];
+
+  const denomBase = zEff*dm*hp;
+  const lMin = denomBase>0 && pAdm>0 ? 2*T_Nmm/(denomBase*pAdm) : Infinity;
+
+  const lAuto = $('l-auto').checked;
+  let l;
+  if(lAuto){
+    l = isFinite(lMin) ? Math.max(1,Math.ceil(lMin)) : 1;
+    $('l-manual').value = l;
+  } else {
+    l = parseFloat($('l-manual').value)||0;
+  }
+
+  const p = (denomBase*l)>0 ? 2*T_Nmm/(denomBase*l) : Infinity;
+
+  return {n,Tnom,KA,T,d,standard,rows,idx,row,dm,hp,psi,zEff,scorrevole,trattamento,pAdm,lMin,lAuto,l,p};
+}
+
+function calculate(){
+  const r = coreCalc();
+
+  $('hint').innerHTML = hint(r);
+
+  $('coppiaGrid').innerHTML =
+    box('Coppia nominale',fp(r.Tnom,1),'Nm') +
+    box('Fatt. applicazione K_A',fp(r.KA,2),'') +
+    box('Coppia di progetto T',fp(r.T,1),'Nm',
+        'Coppia nominale maggiorata dal fattore di applicazione.\nT = T_nom · K_A') +
+    box('Giri n',fp(r.n,0),'rpm') +
+    box('Standard',STANDARD_INFO[r.standard].nome,'') +
+    box('Combinazione',r.row.label,'');
+
+  $('scanGrid').innerHTML =
+    box('N° denti z',r.row.z,'') +
+    box('Denti efficaci z_eff',fp(r.zEff,1),'',
+        'z_eff = ψ · z — solo una frazione dei denti si ripartisce uniformemente il carico.') +
+    box('Ø esterno De',fp(r.row.De,2),'mm') +
+    box('Ø interno Di',fp(r.row.Di,2),'mm') +
+    box('Ø medio dm',fp(r.dm,2),'mm') +
+    box('Altezza utile h′',fp(r.hp,2),'mm') +
+    box('Lunghezza impegno l',fp(r.l,1),'mm') +
+    box('Press. ammissibile',fp(r.pAdm,1),'MPa') +
+    box('Press. di contatto p',fp(r.p,2),'MPa',
+        'p = 2T / (z_eff · dm · h′ · l)');
+
+  $('verGrid').innerHTML =
+    vrow('Pressione: p_amm ≥ p', fp(r.p,2), 'MPa', r.pAdm/r.p,
+         'Pressione di contatto sul fianco confrontata con quella ammissibile per la condizione di impiego (fisso/scorrevole) e il trattamento selezionati.') +
+    vrow('Lunghezza: l ≥ l_min', fp(r.l,1), 'mm', r.lMin>0?r.l/r.lMin:Infinity,
+         'Lunghezza minima di impegno necessaria per rispettare la pressione ammissibile.\nl_min = 2T / (z_eff · dm · h′ · p_amm)') +
+    vrow('Denti efficaci z_eff ≥ 4', fp(r.zEff,1), '', r.zEff/4,
+         'Sotto i 4 denti efficaci la ripartizione del carico è poco affidabile: valutare una combinazione con più denti o maggiore precisione.');
+
+  renderTable(r);
+}
+
+function hint(r){
+  if(r.p>r.pAdm){
+    return `<div class="warn-box">La pressione di contatto (${fp(r.p,2)} MPa) supera l'ammissibile: aumentare la lunghezza di impegno, il trattamento termico, oppure scegliere una combinazione con diametro/modulo maggiore.</div>`;
+  }
+  if(r.standard==='PARALLELE'){
+    return `<div class="warn-box">Fianco dritto: designazione normativa non verificata in questa scheda (dati parametrici indicativi). Verificare su fonte primaria prima di un uso progettuale reale.</div>`;
+  }
+  return `<div class="info-box">Combinazione <b>${r.row.label}</b> (${STANDARD_INFO[r.standard].nome}) idonea per T = ${fp(r.T,1)} Nm.</div>`;
+}
+
+function renderTable(r){
+  $('tabTitle').textContent = STANDARD_INFO[r.standard].nome;
+  const hasM = r.rows.some(x=>x.m);
+  let html = `<thead><tr><th>Combinazione</th>${hasM?'<th>m [mm]</th>':''}<th>z</th><th>De [mm]</th><th>Di [mm]</th></tr></thead><tbody>`;
+  r.rows.forEach((row,i)=>{
+    const act = i===r.idx ? ' class="active-row"' : '';
+    html += `<tr${act}><td>${row.label}</td>${hasM?`<td>${row.m?fp(row.m,3):'—'}</td>`:''}<td>${row.z}</td><td>${fp(row.De,2)}</td><td>${fp(row.Di,2)}</td></tr>`;
+  });
+  html += '</tbody>';
+  $('scanTable').innerHTML = html;
+}
+
+// ═══════════════════════════════════
+//  INIT
+// ═══════════════════════════════════
+fillStatic();
+</script>
+
+</body>
+</html>

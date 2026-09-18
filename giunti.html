@@ -1,0 +1,522 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Giunti di Trasmissione - Rigidi, Elastici, a Disco</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@300;400;500&family=Barlow+Condensed:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="theme.css">
+<style>
+
+html{background:var(--bg);color:var(--text);font-family:var(--mono);font-size:13px;min-height:100vh}
+body{display:flex;flex-direction:column;align-items:center;min-height:100vh;padding:20px}
+
+.header{border-bottom:1px solid var(--border);padding:11px 20px;display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:20px;width:100%;max-width:1180px}
+
+.container{max-width:1180px;width:100%;display:grid;grid-template-columns:340px 1fr;gap:20px}
+@media(max-width:900px){.container{grid-template-columns:1fr}}
+
+.panel{background:var(--bg2);border:1px solid var(--border2);border-radius:8px;padding:15px;display:flex;flex-direction:column;gap:12px}
+.rpanel{display:flex;flex-direction:column;gap:14px}
+
+.stitle{font-family:var(--cond);font-size:10px;font-weight:600;letter-spacing:.17em;color:var(--muted);text-transform:uppercase;margin-bottom:4px;display:flex;align-items:center;gap:6px}
+
+.field{margin-bottom:6px}
+
+.flabel{color:var(--muted);font-size:11px;letter-spacing:.03em}
+.funit{font-size:10px;color:var(--dim)}
+.frow2{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.frow3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px}
+
+/* Segmented control a 3 vie (giunti: rigido/elastico/disco) */
+.seg-3{grid-template-columns:1fr 1fr 1fr}
+
+.util{width:70px;height:5px;background:var(--bg3);border-radius:3px;overflow:hidden;flex-shrink:0}
+.util span{display:block;height:100%;border-radius:3px}
+.util span.ok{background:var(--up)}
+.util span.warn{background:var(--amber)}
+.util span.err{background:var(--dn)}
+
+.dim-table tr.active-row{background:rgba(79,195,247,.12)}
+
+.back-btn{font-family:var(--cond);font-size:10px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);text-decoration:none;border:1px solid var(--border2);border-radius:4px;padding:4px 10px;transition:all .15s;white-space:nowrap}
+.back-btn:hover{color:var(--acc);border-color:var(--acc)}
+
+[data-tip]:hover::after{content:attr(data-tip);position:absolute;bottom:calc(100% + 7px);left:0;background:#1e2130;border:1px solid rgba(79,195,247,.25);color:#c8cad4;font-size:10px;padding:7px 11px;border-radius:6px;white-space:pre-wrap;max-width:280px;min-width:170px;z-index:999;line-height:1.6;pointer-events:none;font-family:var(--mono);text-align:left;box-shadow:0 4px 20px rgba(0,0,0,.5)}
+
+.hidden{display:none !important}
+
+.checkbox-group{display:flex;align-items:center;gap:8px;margin:4px 0}
+.checkbox-group input[type="checkbox"]{width:16px;height:16px;cursor:pointer}
+.checkbox-group label{font-size:11px;color:var(--text);cursor:pointer}
+
+footer{margin-top:34px;font-size:10px;color:var(--dim);letter-spacing:.04em;text-align:center;line-height:1.8}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <a href="index.html" class="back-btn">← Ritorna</a>
+  <h1><span class="dot"></span>Giunti di Trasmissione</h1>
+  <div class="sub">Rigidi · Elastici · A disco — Coppia e disallineamento</div>
+</div>
+
+<div class="container">
+
+<!-- ═══ PANNELLO INPUT ═══ -->
+<div class="panel">
+
+  <div class="stitle">Tipo giunto</div>
+  <div class="seg seg-3" id="tipoToggle">
+    <button class="seg-btn on" id="tipo-rigido"   onclick="setTipo('rigido')">Rigido</button>
+    <button class="seg-btn"    id="tipo-elastico" onclick="setTipo('elastico')">Elastico</button>
+    <button class="seg-btn"    id="tipo-disco"    onclick="setTipo('disco')">A disco</button>
+  </div>
+
+  <div class="stitle">Potenza e velocità</div>
+
+  <div class="field">
+    <div class="fhdr"><span class="flabel" data-tip="Dato di ingresso del dimensionamento.\nPotenza: P [kW] nota.\nCoppia: coppia nominale M nota → P = M·n/9550.">Grandezza in ingresso</span></div>
+    <div class="seg seg-2">
+      <button class="seg-btn on" id="in-P" onclick="setInMode('P')">Potenza</button>
+      <button class="seg-btn" id="in-M" onclick="setInMode('M')">Coppia</button>
+    </div>
+  </div>
+
+  <div class="field" id="fieldP">
+    <div class="fhdr"><span class="flabel" data-tip="Potenza nominale da trasmettere.\nUnità: kW\nConvertita in coppia nominale: M = 9550·P/n [Nm]">Potenza da trasmettere P</span><span class="funit">kW</span></div>
+    <div class="srow">
+      <div class="arr" onclick="adjust('P',-0.5)">−</div>
+      <input id="P" class="numinput" type="number" value="15" min="0.01" step="0.5" oninput="calculate()">
+      <div class="arr" onclick="adjust('P',0.5)">+</div>
+    </div>
+  </div>
+
+  <div class="field hidden" id="fieldM">
+    <div class="fhdr"><span class="flabel" data-tip="Coppia nominale nota, in alternativa alla potenza diretta.\nUnità: Nm">Coppia nominale M</span><span class="funit">Nm</span></div>
+    <div class="srow">
+      <div class="arr" onclick="adjust('Min',-5)">−</div>
+      <input id="Min" class="numinput" type="number" value="99" min="0.1" step="5" oninput="calculate()">
+      <div class="arr" onclick="adjust('Min',5)">+</div>
+    </div>
+  </div>
+
+  <div class="field">
+    <div class="fhdr"><span class="flabel" data-tip="Velocità di rotazione dell'albero.\nUnità: giri/min (rpm)">Giri n</span><span class="funit">rpm</span></div>
+    <div class="srow">
+      <div class="arr" onclick="adjust('n',-50)">−</div>
+      <input id="n" class="numinput" type="number" value="1450" min="1" step="50" oninput="calculate()">
+      <div class="arr" onclick="adjust('n',50)">+</div>
+    </div>
+  </div>
+
+  <div class="field">
+    <div class="fhdr"><span class="flabel" data-tip="Diametro dell'albero da collegare (il maggiore tra motore e condotto, se diversi).\nDeve rientrare nel campo Ø_min–Ø_max della taglia selezionata.">Diametro albero d</span><span class="funit">mm</span></div>
+    <div class="srow">
+      <div class="arr" onclick="adjust('dalbero',-2)">−</div>
+      <input id="dalbero" class="numinput" type="number" value="35" min="4" step="2" oninput="calculate()">
+      <div class="arr" onclick="adjust('dalbero',2)">+</div>
+    </div>
+  </div>
+
+  <div class="field">
+    <div class="fhdr"><span class="flabel" data-tip="Fattore di servizio K_A: moltiplica la coppia nominale per tener conto degli urti di avviamento e di carico.">Fattore di servizio K_A</span></div>
+    <select id="ka" class="select-field" onchange="calculate()">
+      <option value="1.0">1,0 — Uniforme (motore elettrico, carico costante)</option>
+      <option value="1.3">1,3 — Urti leggeri (ventilatori, pompe)</option>
+      <option value="1.75" selected>1,75 — Urti medi (trasportatori, macch. utensili)</option>
+      <option value="2.5">2,5 — Urti forti (frantoi, presse, laminatoi)</option>
+    </select>
+  </div>
+
+  <div class="checkbox-group">
+    <input type="checkbox" id="use-peak" onchange="togglePeak()">
+    <label for="use-peak">Verifica anche coppia di picco (avviamenti/urti)</label>
+  </div>
+  <div class="field hidden" id="field-peak">
+    <div class="fhdr"><span class="flabel" data-tip="Coppia di picco attesa (es. spunto di avviamento, urto di carico), da confrontare con la coppia massima ammessa a rottura/snervamento della taglia selezionata.">Coppia di picco M_picco</span><span class="funit">Nm</span></div>
+    <div class="srow">
+      <div class="arr" onclick="adjust('mpicco',-10)">−</div>
+      <input id="mpicco" class="numinput" type="number" value="300" min="0" step="10" oninput="calculate()">
+      <div class="arr" onclick="adjust('mpicco',10)">+</div>
+    </div>
+  </div>
+
+  <!-- ─── Campi specifici per tipo ─── -->
+  <div id="fields-rigido">
+    <div class="info-box">Il giunto rigido non ammette disallineamenti: richiede un allineamento di precisione tra gli alberi (tipicamente ≤ 0,02 mm radiali e ≤ 0,05° angolari). Verificare l'allineamento in fase di montaggio con comparatore o laser.</div>
+  </div>
+
+  <div id="fields-elastico" class="hidden">
+    <div class="stitle">Disallineamento</div>
+    <div class="frow3">
+      <div class="field">
+        <div class="fhdr"><span class="flabel" data-tip="Disallineamento angolare tra gli assi degli alberi.">Δα</span><span class="funit">°</span></div>
+        <input id="dalpha-e" class="numinput" type="number" value="0.3" min="0" step="0.05" oninput="calculate()">
+      </div>
+      <div class="field">
+        <div class="fhdr"><span class="flabel" data-tip="Disallineamento radiale (parallelo) tra gli assi.">Δr</span><span class="funit">mm</span></div>
+        <input id="dr-e" class="numinput" type="number" value="0.2" min="0" step="0.05" oninput="calculate()">
+      </div>
+      <div class="field">
+        <div class="fhdr"><span class="flabel" data-tip="Disallineamento assiale (variazione di lunghezza tra gli alberi).">Δa</span><span class="funit">mm</span></div>
+        <input id="da-e" class="numinput" type="number" value="1.0" min="0" step="0.1" oninput="calculate()">
+      </div>
+    </div>
+  </div>
+
+  <div id="fields-disco" class="hidden">
+    <div class="stitle">Disallineamento</div>
+    <div class="frow2">
+      <div class="field">
+        <div class="fhdr"><span class="flabel" data-tip="Disallineamento angolare tra gli assi degli alberi.">Δα</span><span class="funit">°</span></div>
+        <input id="dalpha-d" class="numinput" type="number" value="0.2" min="0" step="0.05" oninput="calculate()">
+      </div>
+      <div class="field">
+        <div class="fhdr"><span class="flabel" data-tip="Disallineamento assiale (variazione di lunghezza tra gli alberi).">Δa</span><span class="funit">mm</span></div>
+        <input id="da-d" class="numinput" type="number" value="1.5" min="0" step="0.1" oninput="calculate()">
+      </div>
+    </div>
+    <div class="note">I giunti a disco non tollerano disallineamento radiale puro: lo gestiscono come combinazione di angolare e assiale.</div>
+  </div>
+
+  <div class="stitle">Taglia</div>
+  <div class="field">
+    <div class="fhdr"><span class="flabel" data-tip="AUTO: prima taglia (per coppia crescente) che soddisfa coppia, diametro albero e velocità.\nManuale: impone una taglia.">Selezione</span></div>
+    <select id="taglia" class="select-field" onchange="calculate()">
+      <option value="auto">AUTO (minima idonea)</option>
+    </select>
+  </div>
+
+  <div class="info-box">Le taglie riportate sono una serie generica per classe di coppia, non riferita a un costruttore specifico. La scelta definitiva del giunto va sempre verificata sul catalogo del fornitore (es. KTR, Mayr, R+W, Lenze, Voith), che riporta le taglie e i limiti di disallineamento reali del modello scelto.</div>
+
+</div>
+
+<!-- ═══ PANNELLO RISULTATI ═══ -->
+<div class="rpanel">
+
+  <div id="hint"></div>
+
+  <div class="result-section">
+    <div class="result-section-title">Coppia di progetto</div>
+    <div class="results-grid-3" id="coppiaGrid"></div>
+  </div>
+
+  <div class="result-section">
+    <div class="result-section-title">Giunto selezionato</div>
+    <div class="results-grid-3" id="giuntoGrid"></div>
+  </div>
+
+  <div class="result-section">
+    <div class="result-section-title">Verifiche</div>
+    <div class="verification-grid" id="verGrid"></div>
+  </div>
+
+  <div class="result-section">
+    <div class="result-section-title">Serie taglie — <span id="tabTitle"></span></div>
+    <div class="table-container">
+      <table class="dim-table" id="tagliaTable"></table>
+    </div>
+  </div>
+
+</div>
+</div>
+
+<footer>
+  Andrea Cavani · Moduli calcolo HTML<br>
+  Taglie generiche di riferimento per classe di coppia. Verificare sempre con il catalogo del costruttore.
+</footer>
+
+<script>
+// ═══════════════════════════════════
+//  DATI — serie generica per classe di coppia (numeri preferiti)
+//  ATTENZIONE: valori indicativi, non di un costruttore specifico.
+// ═══════════════════════════════════
+const GIUNTI = {
+  rigido: {
+    label:'Rigido', bulloni:false,
+    limiti:{ angolare:0.05, radiale:0.02, assiale:0.10 },
+    taglie:[
+      {Mn:10,   Mmax:15,   dmin:6,  dmax:14,  nmax:12000},
+      {Mn:16,   Mmax:24,   dmin:8,  dmax:18,  nmax:11000},
+      {Mn:25,   Mmax:38,   dmin:10, dmax:22,  nmax:10000},
+      {Mn:40,   Mmax:60,   dmin:12, dmax:28,  nmax:9000},
+      {Mn:63,   Mmax:95,   dmin:14, dmax:35,  nmax:8000},
+      {Mn:100,  Mmax:150,  dmin:18, dmax:42,  nmax:7000},
+      {Mn:160,  Mmax:240,  dmin:22, dmax:50,  nmax:6300},
+      {Mn:250,  Mmax:375,  dmin:28, dmax:60,  nmax:5600},
+      {Mn:400,  Mmax:600,  dmin:32, dmax:70,  nmax:5000},
+      {Mn:630,  Mmax:945,  dmin:38, dmax:85,  nmax:4500},
+      {Mn:1000, Mmax:1500, dmin:45, dmax:100, nmax:4000},
+      {Mn:1600, Mmax:2400, dmin:55, dmax:120, nmax:3550},
+      {Mn:2500, Mmax:3750, dmin:65, dmax:140, nmax:3150},
+      {Mn:4000, Mmax:6000, dmin:75, dmax:160, nmax:2800},
+      {Mn:6300, Mmax:9450, dmin:90, dmax:190, nmax:2500},
+      {Mn:10000,Mmax:15000,dmin:110,dmax:220, nmax:2240}
+    ]
+  },
+  elastico: {
+    label:'Elastico', bulloni:false,
+    limiti:{ angolare:1.0, radiale:0.4, assiale:2.0 },
+    taglie:[
+      {Mn:10,   Mmax:25,    dmin:6,  dmax:16,  nmax:10000},
+      {Mn:16,   Mmax:40,    dmin:8,  dmax:20,  nmax:9500},
+      {Mn:25,   Mmax:63,    dmin:10, dmax:24,  nmax:9000},
+      {Mn:40,   Mmax:100,   dmin:12, dmax:30,  nmax:8000},
+      {Mn:63,   Mmax:158,   dmin:14, dmax:38,  nmax:7000},
+      {Mn:100,  Mmax:250,   dmin:18, dmax:45,  nmax:6300},
+      {Mn:160,  Mmax:400,   dmin:22, dmax:55,  nmax:5600},
+      {Mn:250,  Mmax:625,   dmin:28, dmax:65,  nmax:5000},
+      {Mn:400,  Mmax:1000,  dmin:32, dmax:75,  nmax:4500},
+      {Mn:630,  Mmax:1575,  dmin:38, dmax:90,  nmax:4000},
+      {Mn:1000, Mmax:2500,  dmin:45, dmax:105, nmax:3550},
+      {Mn:1600, Mmax:4000,  dmin:55, dmax:125, nmax:3150},
+      {Mn:2500, Mmax:6250,  dmin:65, dmax:145, nmax:2800},
+      {Mn:4000, Mmax:10000, dmin:75, dmax:165, nmax:2500},
+      {Mn:6300, Mmax:15750, dmin:90, dmax:195, nmax:2240},
+      {Mn:10000,Mmax:25000, dmin:110,dmax:225, nmax:2000}
+    ]
+  },
+  disco: {
+    label:'A disco', bulloni:true, tauAmm:80,
+    limiti:{ angolare:0.5, assiale:3.0 },
+    taglie:[
+      {Mn:10,   Mmax:20,    dmin:6,  dmax:14,  nmax:14000, nb:4,  db:4,  Rbc:14},
+      {Mn:16,   Mmax:32,    dmin:8,  dmax:18,  nmax:13000, nb:4,  db:5,  Rbc:17},
+      {Mn:25,   Mmax:50,    dmin:10, dmax:22,  nmax:12000, nb:6,  db:5,  Rbc:20},
+      {Mn:40,   Mmax:80,    dmin:12, dmax:28,  nmax:11000, nb:6,  db:6,  Rbc:24},
+      {Mn:63,   Mmax:126,   dmin:14, dmax:35,  nmax:10000, nb:6,  db:6,  Rbc:28},
+      {Mn:100,  Mmax:200,   dmin:18, dmax:42,  nmax:9000,  nb:8,  db:8,  Rbc:34},
+      {Mn:160,  Mmax:320,   dmin:22, dmax:50,  nmax:8000,  nb:8,  db:8,  Rbc:40},
+      {Mn:250,  Mmax:500,   dmin:28, dmax:60,  nmax:7100,  nb:8,  db:10, Rbc:47},
+      {Mn:400,  Mmax:800,   dmin:32, dmax:70,  nmax:6300,  nb:10, db:10, Rbc:55},
+      {Mn:630,  Mmax:1260,  dmin:38, dmax:85,  nmax:5600,  nb:10, db:12, Rbc:65},
+      {Mn:1000, Mmax:2000,  dmin:45, dmax:100, nmax:5000,  nb:10, db:12, Rbc:76},
+      {Mn:1600, Mmax:3200,  dmin:55, dmax:120, nmax:4500,  nb:12, db:14, Rbc:90},
+      {Mn:2500, Mmax:5000,  dmin:65, dmax:140, nmax:4000,  nb:12, db:16, Rbc:105},
+      {Mn:4000, Mmax:8000,  dmin:75, dmax:160, nmax:3550,  nb:12, db:18, Rbc:120},
+      {Mn:6300, Mmax:12600, dmin:90, dmax:190, nmax:3150,  nb:16, db:18, Rbc:140},
+      {Mn:10000,Mmax:20000, dmin:110,dmax:220, nmax:2800,  nb:16, db:20, Rbc:160}
+    ]
+  }
+};
+
+// ═══════════════════════════════════
+//  STATO
+// ═══════════════════════════════════
+let tipoGiunto = 'rigido';
+let inMode = 'P';
+
+function setTipo(t){
+  tipoGiunto = t;
+  ['rigido','elastico','disco'].forEach(k=>$('tipo-'+k).classList.toggle('on', k===t));
+  $('fields-rigido').classList.toggle('hidden', t!=='rigido');
+  $('fields-elastico').classList.toggle('hidden', t!=='elastico');
+  $('fields-disco').classList.toggle('hidden', t!=='disco');
+  fillTaglie();
+}
+function setInMode(m){
+  inMode = m;
+  $('in-P').classList.toggle('on', m==='P');
+  $('in-M').classList.toggle('on', m==='M');
+  $('fieldP').classList.toggle('hidden', m!=='P');
+  $('fieldM').classList.toggle('hidden', m!=='M');
+  calculate();
+}
+function togglePeak(){
+  $('field-peak').classList.toggle('hidden', !$('use-peak').checked);
+  calculate();
+}
+
+// ═══════════════════════════════════
+//  HELPER
+// ═══════════════════════════════════
+const $ = id => document.getElementById(id);
+const fp = (v,n=1) => isFinite(v) ? v.toFixed(n) : '—';
+const PI = Math.PI;
+
+function box(label,value,unit,tip){
+  return `<div class="result-box">
+    <div class="result-label"${tip?` data-tip="${tip}"`:''}>${label}</div>
+    <div class="result-value">${value}<span class="result-unit">${unit||''}</span></div>
+  </div>`;
+}
+function sfClass(sf){
+  if(isNaN(sf) || sf<0) return 'err';
+  if(!isFinite(sf))     return 'ok';
+  if(sf>=1.1) return 'ok';
+  if(sf>=1.0) return 'warn';
+  return 'err';
+}
+function sfLabel(cl){ return cl==='ok'?'OK':(cl==='warn'?'LIMITE':'INSUFF.'); }
+function vrow(label,value,unit,sf,tip){
+  const cl=sfClass(sf);
+  const pct=Math.min(100, isFinite(sf)&&sf>0 ? 100/sf : 100);
+  return `<div class="verify-item">
+    <span class="verify-label"${tip?` data-tip="${tip}"`:''}>${label}</span>
+    <span class="util"><span class="${cl}" style="width:${pct}%"></span></span>
+    <span class="verify-value">${value}<span class="verify-unit">${unit||''}</span></span>
+    <span class="verify-status ${cl}">${sfLabel(cl)}</span>
+  </div>`;
+}
+function adjust(id,step){
+  const el=$(id);
+  const dec=(String(step).split('.')[1]||'').length;
+  let v=(parseFloat(el.value)||0)+step;
+  if(el.min!==''&&v<parseFloat(el.min)) v=parseFloat(el.min);
+  el.value=dec?v.toFixed(dec):v;
+  calculate();
+}
+
+// ═══════════════════════════════════
+//  POPOLAMENTO
+// ═══════════════════════════════════
+function fillTaglie(){
+  const list = GIUNTI[tipoGiunto].taglie;
+  const prev = $('taglia').value;
+  let opts = '<option value="auto">AUTO (minima idonea)</option>';
+  opts += list.map((t,i)=>`<option value="${i}">M_n = ${t.Mn} Nm</option>`).join('');
+  $('taglia').innerHTML = opts;
+  $('taglia').value = 'auto';
+  calculate();
+}
+
+// ═══════════════════════════════════
+//  CALCOLO
+// ═══════════════════════════════════
+function selectTaglia(list, Md, d, n){
+  const idx = list.findIndex(t => t.Mn>=Md && t.dmax>=d && t.nmax>=n);
+  return idx>=0 ? idx : list.length-1;
+}
+
+function coreCalc(){
+  const n = parseFloat($('n').value)||0;
+  const Mn = inMode==='M' ? (parseFloat($('Min').value)||0) : (n>0 ? 9550*(parseFloat($('P').value)||0)/n : 0);
+  const KA = parseFloat($('ka').value)||1;
+  const Md = Mn*KA;
+  const d  = parseFloat($('dalbero').value)||0;
+  const usePeak = $('use-peak').checked;
+  const Mpicco = usePeak ? (parseFloat($('mpicco').value)||0) : null;
+
+  const grp = GIUNTI[tipoGiunto];
+  const list = grp.taglie;
+  const idxAuto = selectTaglia(list, Md, d, n);
+  const idx = $('taglia').value==='auto' ? idxAuto : parseInt($('taglia').value);
+  const t = list[idx];
+
+  let disall = {};
+  if(tipoGiunto==='elastico'){
+    disall = {
+      angolare:{v:parseFloat($('dalpha-e').value)||0, lim:grp.limiti.angolare},
+      radiale: {v:parseFloat($('dr-e').value)||0,     lim:grp.limiti.radiale},
+      assiale: {v:parseFloat($('da-e').value)||0,     lim:grp.limiti.assiale}
+    };
+  }else if(tipoGiunto==='disco'){
+    disall = {
+      angolare:{v:parseFloat($('dalpha-d').value)||0, lim:grp.limiti.angolare},
+      assiale: {v:parseFloat($('da-d').value)||0,      lim:grp.limiti.assiale}
+    };
+  }
+
+  let bulloni = null;
+  if(grp.bulloni){
+    const F = Md*1000/(t.nb*t.Rbc);              // N, forza su ogni bullone
+    const tau = F/((PI/4)*t.db*t.db);              // MPa
+    bulloni = { F, tau, tauAmm:grp.tauAmm };
+  }
+
+  return {n,Mn,KA,Md,d,usePeak,Mpicco,grp,list,idx,t,disall,bulloni};
+}
+
+function calculate(){
+  const r = coreCalc();
+
+  $('hint').innerHTML = hint(r);
+
+  $('coppiaGrid').innerHTML =
+    box('Coppia nominale M',fp(r.Mn,1),'Nm') +
+    box('Fatt. servizio K_A',fp(r.KA,2),'') +
+    box('Coppia di progetto M_d',fp(r.Md,1),'Nm',
+        'Coppia nominale maggiorata dal fattore di servizio.\nM_d = M · K_A\nÈ il valore che il giunto selezionato deve poter trasmettere in servizio continuo.') +
+    box('Giri n',fp(r.n,0),'rpm') +
+    box('Diametro albero d',fp(r.d,0),'mm') +
+    box('Tipo',r.grp.label,'');
+
+  let giuntoHtml =
+    box('Coppia nom. taglia M_n',fp(r.t.Mn,0),'Nm') +
+    box('Coppia max M_max',fp(r.t.Mmax,0),'Nm') +
+    box('Ø foro min–max',fp(r.t.dmin,0)+'–'+fp(r.t.dmax,0),'mm') +
+    box('Giri max n_max',fp(r.t.nmax,0),'rpm');
+  if(r.bulloni){
+    giuntoHtml += box('N° bulloni × Ø',r.t.nb+' × '+r.t.db,'mm') +
+      box('Raggio bulloni R_bc',fp(r.t.Rbc,0),'mm');
+  }
+  $('giuntoGrid').innerHTML = giuntoHtml;
+
+  const verifs = [];
+  verifs.push(vrow('Coppia nominale: M_n ≥ M_d', fp(r.t.Mn,0), 'Nm', r.t.Mn/r.Md,
+      'Coppia nominale della taglia selezionata rispetto alla coppia di progetto (con fattore di servizio).'));
+  if(r.usePeak){
+    verifs.push(vrow('Coppia di picco: M_max ≥ M_picco', fp(r.t.Mmax,0), 'Nm', r.Mpicco>0?r.t.Mmax/r.Mpicco:Infinity,
+      'Coppia massima ammessa dalla taglia (di norma per urti/avviamenti) rispetto alla coppia di picco attesa.'));
+  }
+  verifs.push(vrow('Velocità n_max ≥ n', fp(r.t.nmax,0), 'rpm', r.n>0?r.t.nmax/r.n:Infinity,
+      'Velocità massima ammessa dalla taglia selezionata.'));
+  verifs.push(vrow('Diametro: Ø_max ≥ d', fp(r.t.dmax,0), 'mm', r.d>0?r.t.dmax/r.d:Infinity,
+      'Diametro massimo del foro della taglia selezionata rispetto al diametro dell\'albero.'));
+
+  if(tipoGiunto==='rigido'){
+    verifs.push(`<div class="verify-item">
+      <span class="verify-label">Allineamento</span>
+      <span class="verify-value" style="flex:1;text-align:right;color:var(--amber)">Richiede allineamento di precisione — vedi nota</span>
+    </div>`);
+  }else{
+    Object.entries(r.disall).forEach(([k,d])=>{
+      const label = k==='angolare'?'Disallin. angolare Δα ≤ '+d.lim+'°':
+                    k==='radiale'?'Disallin. radiale Δr ≤ '+d.lim+' mm':
+                    'Disallin. assiale Δa ≤ '+d.lim+' mm';
+      const unit = k==='angolare'?'°':'mm';
+      verifs.push(vrow(label, fp(d.v,2), unit, d.v>0?d.lim/d.v:Infinity,
+          'Limite di disallineamento ammesso dal giunto elastomerico/a disco per la taglia selezionata (valore di riferimento generico).'));
+    });
+  }
+
+  if(r.bulloni){
+    verifs.push(vrow('Bulloni pacco dischi: τ_amm ≥ τ', fp(r.bulloni.tau,1), 'MPa', r.bulloni.tauAmm/r.bulloni.tau,
+        'Tensione di taglio nei bulloni del pacco dischi.\nF = M_d/(n_bulloni·R_bc) ; τ = F/(π/4·Ø_bullone²)\nτ_amm di riferimento: '+r.bulloni.tauAmm+' MPa (classe 8.8 generica).'));
+  }
+
+  $('verGrid').innerHTML = verifs.join('');
+
+  renderTagliaTable(r);
+}
+
+function hint(r){
+  if(r.t.Mn<r.Md || r.t.dmax<r.d || r.t.nmax<r.n){
+    return `<div class="warn-box">La taglia selezionata (M_n = ${fp(r.t.Mn,0)} Nm) non copre tutte le condizioni richieste: valutare la taglia successiva della serie.</div>`;
+  }
+  return `<div class="info-box">Giunto <b>${r.grp.label}</b>, taglia M_n = ${fp(r.t.Mn,0)} Nm idonea per M_d = ${fp(r.Md,1)} Nm.</div>`;
+}
+
+function renderTagliaTable(r){
+  $('tabTitle').textContent = r.grp.label;
+  const bulCols = r.grp.bulloni ? '<th>N°×Ø bulloni</th><th>R_bc</th>' : '';
+  let html = `<thead><tr><th>M_n [Nm]</th><th>M_max [Nm]</th><th>Ø min–max [mm]</th><th>n_max [rpm]</th>${bulCols}</tr></thead><tbody>`;
+  r.list.forEach((t,i)=>{
+    const act = i===r.idx ? ' class="active-row"' : '';
+    const bulCells = r.grp.bulloni ? `<td>${t.nb}×${t.db}</td><td>${t.Rbc}</td>` : '';
+    html += `<tr${act}><td>${t.Mn}</td><td>${t.Mmax}</td><td>${t.dmin}–${t.dmax}</td><td>${t.nmax}</td>${bulCells}</tr>`;
+  });
+  html += '</tbody>';
+  $('tagliaTable').innerHTML = html;
+}
+
+// ═══════════════════════════════════
+//  INIT
+// ═══════════════════════════════════
+fillTaglie();
+</script>
+
+</body>
+</html>
