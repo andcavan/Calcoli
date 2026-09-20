@@ -51,6 +51,26 @@ body{display:flex;flex-direction:column;align-items:center;min-height:100vh;padd
 .crit.sta{background:rgba(79,195,247,.12);color:var(--acc);border:1px solid rgba(79,195,247,.35)}
 .crit.nd{background:rgba(179,157,219,.14);color:var(--violet);border:1px solid rgba(179,157,219,.35)}
 
+/* Elenco delle forze radiali applicate all'albero */
+.fload{background:var(--bg1);border:1px solid var(--border);border-radius:6px;padding:8px;margin-bottom:6px}
+.fload-hdr{display:flex;justify-content:space-between;align-items:center;margin-bottom:5px}
+.fload-name{font-family:var(--cond);font-size:11px;font-weight:700;letter-spacing:.09em;color:var(--acc);text-transform:uppercase}
+.fload-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px}
+.fload-grid .flabel{display:block;font-size:9px;margin-bottom:2px}
+.fload .numinput{height:23px;font-size:11px}
+.rm-btn{width:20px;height:20px;line-height:1;background:transparent;border:1px solid var(--border2);border-radius:4px;color:var(--dim);font-family:var(--mono);font-size:12px;cursor:pointer;transition:all .12s}
+.rm-btn:hover{border-color:var(--dn);color:var(--dn)}
+.add-btn{width:100%;padding:6px;background:transparent;border:1px dashed var(--border2);border-radius:6px;color:var(--dim);font-family:var(--mono);font-size:11px;cursor:pointer;transition:all .15s}
+.add-btn:hover{border-color:var(--acc);color:var(--acc)}
+
+/* Diagrammi dell'albero (schema di carico, taglio, momento) */
+.chart-box{background:var(--bg1);border:1px solid var(--border);border-radius:6px;padding:10px 10px 7px}
+.chart-box + .chart-box{margin-top:10px}
+.chart-title{font-family:var(--cond);font-size:10px;font-weight:600;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);margin-bottom:6px}
+.chart-box svg{display:block;width:100%;height:auto}
+.legend{display:flex;flex-wrap:wrap;gap:6px 16px;margin-top:5px;font-size:10px;color:var(--dim)}
+.legend i{display:inline-block;width:15px;height:0;border-top-width:2px;margin-right:5px;vertical-align:middle}
+
 .back-btn{background:transparent;cursor:pointer}
 
 .hidden{display:none !important}
@@ -110,12 +130,68 @@ footer{margin-top:34px;font-size:10px;color:var(--dim);letter-spacing:.04em;text
   <div class="stitle">Carichi nella sezione</div>
 
   <div class="field">
-    <div class="fhdr"><span class="flabel" data-tip="Momento flettente risultante nella sezione verificata, Mf = √(Mx²+My²). Genera la tensione normale σ_f = Mf/W. Va calcolato sullo schema di trave con le reazioni dei cuscinetti: normalmente è massimo in corrispondenza di una ruota o di una puleggia.">Momento flettente Mf</span><span class="funit">Nm</span></div>
+    <div class="fhdr"><span class="flabel" data-tip="«Diretto»: il momento flettente della sezione è già noto e si inserisce a mano. «Da schema albero»: si descrive l'albero su due appoggi con tutte le forze radiali applicate (ruote dentate, pulegge, catene, tiri di cinghia) e il modulo ricava reazioni, diagrammi di taglio e di momento e il valore di Mf nella sezione verificata.">Momento flettente — sorgente</span></div>
+    <div class="seg seg-2">
+      <button class="seg-btn on" id="b-diretto" onclick="setBendMode('diretto')">Diretto</button>
+      <button class="seg-btn" id="b-schema" onclick="setBendMode('schema')">Da schema albero</button>
+    </div>
+  </div>
+
+  <div class="field">
+    <div class="fhdr"><span class="flabel" data-tip="Momento flettente risultante nella sezione verificata, Mf = √(My²+Mz²). Genera la tensione normale σ_f = Mf/W. In modalità «Da schema albero» il campo è di sola lettura e riporta il momento risultante calcolato nella sezione scelta.">Momento flettente Mf</span><span class="funit">Nm</span></div>
     <div class="srow">
       <div class="arr" onclick="adjust('Mf',-10)">−</div>
       <input id="Mf" class="numinput" type="number" value="250" min="0" step="10" oninput="calculate()">
       <div class="arr" onclick="adjust('Mf',10)">+</div>
     </div>
+  </div>
+
+  <!-- ═══ SCHEMA DI TRAVE: forze radiali multiple ═══ -->
+  <div class="hidden" id="f-schema">
+
+    <div class="frow3">
+      <div class="field">
+        <div class="fhdr"><span class="flabel" data-tip="Lunghezza totale dell'albero. Le posizioni degli appoggi, delle forze e della sezione verificata sono tutte misurate da x = 0, estremità sinistra.">Albero L_t</span><span class="funit">mm</span></div>
+        <input id="Lsh" class="numinput" type="number" value="500" min="1" step="10" oninput="calculate()">
+      </div>
+      <div class="field">
+        <div class="fhdr"><span class="flabel" data-tip="Posizione del primo appoggio (cuscinetto A) misurata da x = 0. Le forze applicate prima di A o dopo B lavorano a sbalzo e generano momento sull'appoggio.">Appoggio x_A</span><span class="funit">mm</span></div>
+        <input id="xA" class="numinput" type="number" value="50" min="0" step="10" oninput="calculate()">
+      </div>
+      <div class="field">
+        <div class="fhdr"><span class="flabel" data-tip="Posizione del secondo appoggio (cuscinetto B). Lo schema è isostatico — due soli appoggi — e si risolve con le sole equazioni di equilibrio. Le reazioni ottenute sono i carichi radiali sui cuscinetti.">Appoggio x_B</span><span class="funit">mm</span></div>
+        <input id="xB" class="numinput" type="number" value="450" min="0" step="10" oninput="calculate()">
+      </div>
+    </div>
+
+    <div class="stitle" style="margin-top:12px">Forze radiali</div>
+    <div id="forceList"></div>
+    <button class="add-btn" onclick="addForce()">+ Aggiungi forza radiale</button>
+
+    <div class="field" style="margin-top:12px">
+      <div class="fhdr"><span class="flabel" data-tip="«Automatica»: la verifica è condotta nella sezione con momento flettente risultante massimo. «Manuale»: si indica l'ascissa da verificare, utile quando il punto critico è un intaglio (spallamento, gola, cava per linguetta) lontano dal massimo del momento.">Sezione verificata</span></div>
+      <div class="seg seg-2">
+        <button class="seg-btn on" id="x-auto" onclick="setSecMode('auto')">Automatica</button>
+        <button class="seg-btn" id="x-man" onclick="setSecMode('man')">Manuale</button>
+      </div>
+    </div>
+
+    <div class="field">
+      <div class="fhdr"><span class="flabel" data-tip="Ascissa della sezione verificata, misurata da x = 0. In modalità automatica il campo è di sola lettura e mostra la posizione del momento flettente massimo.">Posizione sezione x</span><span class="funit">mm</span></div>
+      <div class="srow">
+        <div class="arr" onclick="adjust('xsec',-5)">−</div>
+        <input id="xsec" class="numinput" type="number" value="150" min="0" step="5" oninput="calculate()">
+        <div class="arr" onclick="adjust('xsec',5)">+</div>
+      </div>
+    </div>
+
+    <div class="note">
+      Convenzione: <b>F_y</b> positiva verso il basso nel piano verticale, <b>F_z</b> positiva nel piano
+      orizzontale ortogonale. I due piani sono risolti separatamente e composti con Mf = √(M_y² + M_z²).
+      Le reazioni sono i <b>carichi radiali sui cuscinetti</b>. Con lo schema attivo, Mf e la forza di
+      taglio T della sezione diventano risultati del calcolo.
+    </div>
+
   </div>
 
   <div class="field">
@@ -258,7 +334,9 @@ footer{margin-top:34px;font-size:10px;color:var(--dim);letter-spacing:.04em;text
   <div class="note">
     <b>Verifica statica</b>: von Mises su σ_tot e τ_tot, confronto con Re.<br>
     <b>Verifica a fatica</b>: limite del provino σ_D corretto con ka (finitura), kb (dimensione), kc (altri effetti) e Kf (intaglio); criterio di <b>Goodman</b> separato per flessione e torsione, combinati con <b>Gough-Pollard</b>.<br>
-    Le tensioni sono riferite alla singola sezione: il momento flettente va ricavato a parte dallo schema di trave.
+    Le tensioni sono riferite alla singola sezione: il momento flettente si inserisce direttamente oppure si
+    ricava dallo <b>schema di trave</b> con più forze radiali, che fornisce anche reazioni sui cuscinetti e
+    diagrammi di taglio e momento.
   </div>
 
 </div>
@@ -273,7 +351,28 @@ footer{margin-top:34px;font-size:10px;color:var(--dim);letter-spacing:.04em;text
     <div class="results-grid-3" id="geoGrid"></div>
   </div>
 
-  <div class="schematic-wrap"><div id="schema"></div></div>
+  <div class="schematic-wrap" id="schemaWrap"><div id="schema"></div></div>
+
+  <div class="result-section hidden" id="beamSection">
+    <div class="result-section-title">Schema dell'albero e diagrammi</div>
+    <div class="results-grid-3" id="beamGrid" style="margin-bottom:12px"></div>
+    <div class="chart-box">
+      <div class="chart-title">Schema di carico</div>
+      <div id="beamSchema"></div>
+      <div class="legend" id="legS"></div>
+    </div>
+    <div class="chart-box">
+      <div class="chart-title">Diagramma del taglio V(x) — N · ascissa x in mm</div>
+      <div id="chartV"></div>
+      <div class="legend" id="legV"></div>
+    </div>
+    <div class="chart-box">
+      <div class="chart-title">Diagramma del momento flettente M(x) — Nm · ascissa x in mm</div>
+      <div id="chartM"></div>
+      <div class="legend" id="legM"></div>
+    </div>
+    <div class="note" id="beamNote" style="margin-top:10px"></div>
+  </div>
 
   <div class="result-section">
     <div class="result-section-title">Tensioni nella sezione</div>
@@ -343,6 +442,14 @@ footer{margin-top:34px;font-size:10px;color:var(--dim);letter-spacing:.04em;text
 // ═══════════════════════════════════════════════════════
 let section    = 'piena';    // 'piena' | 'cava'
 let torqueMode = 'diretto';  // 'diretto' = Mt inserito | 'potenza' = Mt da P e n
+let bendMode   = 'diretto';  // 'diretto' = Mf inserito | 'schema' = Mf da schema di trave
+let secMode    = 'auto';     // sezione verificata: 'auto' = momento massimo | 'man' = ascissa imposta
+
+// Forze radiali applicate all'albero, scomposte nei due piani ortogonali.
+// Fy positiva verso il basso (piano verticale), Fz positiva nel piano
+// orizzontale. Posizione x misurata dall'estremità sinistra.
+let forces   = [{id:0, x:150, Fy:1200, Fz:0}, {id:1, x:380, Fy:800, Fz:500}];
+let forceSeq = 2;
 
 // ═══════════════════════════════════════════════════════
 //  DATI
@@ -444,6 +551,64 @@ function setSection(s){
   $('s-piena').classList.toggle('on', s==='piena');
   $('s-cava').classList.toggle('on', s==='cava');
   $('f-di').classList.toggle('hidden', s!=='cava');
+  calculate();
+}
+
+function setBendMode(m){
+  bendMode = m;
+  $('b-diretto').classList.toggle('on', m==='diretto');
+  $('b-schema').classList.toggle('on', m==='schema');
+  $('f-schema').classList.toggle('hidden', m!=='schema');
+  // Con lo schema attivo Mf e T sono risultati del calcolo di trave.
+  $('Mf').readOnly = (m==='schema');
+  $('T').readOnly  = (m==='schema');
+  calculate();
+}
+
+function setSecMode(m){
+  secMode = m;
+  $('x-auto').classList.toggle('on', m==='auto');
+  $('x-man').classList.toggle('on', m==='man');
+  $('xsec').readOnly = (m==='auto');
+  calculate();
+}
+
+// Le righe delle forze sono ricostruite solo quando cambia il loro numero:
+// la modifica di un valore aggiorna l'array senza toccare il DOM, altrimenti
+// il campo perderebbe il fuoco a ogni carattere digitato.
+function renderForces(){
+  $('forceList').innerHTML = forces.map((f,i) => `
+    <div class="fload">
+      <div class="fload-hdr">
+        <span class="fload-name">F${i+1}</span>
+        <button class="rm-btn" onclick="removeForce(${f.id})" title="Elimina la forza">×</button>
+      </div>
+      <div class="fload-grid">
+        <div><span class="flabel">x [mm]</span><input class="numinput" type="number" value="${f.x}" min="0" step="10" oninput="setForce(${f.id},'x',this.value)"></div>
+        <div><span class="flabel">F_y [N]</span><input class="numinput" type="number" value="${f.Fy}" step="50" oninput="setForce(${f.id},'Fy',this.value)"></div>
+        <div><span class="flabel">F_z [N]</span><input class="numinput" type="number" value="${f.Fz}" step="50" oninput="setForce(${f.id},'Fz',this.value)"></div>
+      </div>
+    </div>`).join('') ||
+    '<div class="note">Nessuna forza radiale inserita: aggiungerne almeno una.</div>';
+}
+
+function addForce(){
+  const Lt = val('Lsh')||500;
+  forces.push({id:forceSeq++, x:Math.round(Lt/2), Fy:1000, Fz:0});
+  renderForces();
+  calculate();
+}
+
+function removeForce(id){
+  forces = forces.filter(f => f.id!==id);
+  renderForces();
+  calculate();
+}
+
+function setForce(id, key, v){
+  const f = forces.find(o => o.id===id);
+  if(!f) return;
+  f[key] = parseFloat(v)||0;
   calculate();
 }
 
@@ -588,6 +753,270 @@ function minDiameter(p, req, ratio){
 }
 
 // ═══════════════════════════════════════════════════════
+//  SCHEMA DI TRAVE DELL'ALBERO
+//  Albero su due appoggi (schema isostatico, sbalzi ammessi). Le forze
+//  radiali sono scomposte nei due piani ortogonali y e z, ciascuno
+//  risolto con le sole equazioni di equilibrio; il momento flettente
+//  risultante è la composizione vettoriale dei due piani.
+// ═══════════════════════════════════════════════════════
+function planeReactions(loads, xA, xB){
+  const span = xB - xA;
+  let sF=0, sM=0;
+  for(const l of loads){ sF += l.F; sM += l.F*(l.x-xA); }
+  const RB = span!==0 ? sM/span : 0;   // equilibrio dei momenti rispetto ad A
+  const RA = sF - RB;                  // equilibrio alla traslazione
+  // Convenzione interna delle stazioni: forze positive verso l'alto,
+  // quindi i carichi applicati (positivi verso il basso) cambiano segno.
+  const st = loads.map(l => ({x:l.x, W:-l.F}));
+  st.push({x:xA, W:RA}, {x:xB, W:RB});
+  st.sort((a,b) => a.x-b.x);
+  return {RA, RB, st};
+}
+
+// Taglio e momento in un piano: somma dei contributi a sinistra di x.
+function planeVM(st, x){
+  let V=0, M=0;
+  for(const p of st){ if(p.x<=x){ V += p.W; M += p.W*(x-p.x); } }
+  return {V, M};
+}
+
+function beamAt(b, x){
+  const a = planeVM(b.py.st, x), c = planeVM(b.pz.st, x);
+  return {My:a.M, Mz:c.M, Vy:a.V, Vz:c.V,
+          M:Math.hypot(a.M,c.M), V:Math.hypot(a.V,c.V)};
+}
+
+function buildBeam(){
+  const Lt=val('Lsh'), xA=val('xA'), xB=val('xB');
+  if(!(Lt>0) || xA<0 || xB<0 || xA>Lt || xB>Lt || Math.abs(xB-xA)<1e-6) return null;
+  const act = forces.filter(f => f.x>=0 && f.x<=Lt && (f.Fy!==0 || f.Fz!==0));
+  if(!act.length) return null;
+
+  const py = planeReactions(act.map(f=>({x:f.x, F:f.Fy})), xA, xB);
+  const pz = planeReactions(act.map(f=>({x:f.x, F:f.Fz})), xA, xB);
+
+  // Campionamento: griglia uniforme più i punti di discontinuità (appoggi e
+  // forze), presi appena prima e appena dopo perché il taglio vi salta.
+  const eps = Math.max(Lt*1e-7, 1e-6);
+  const xs  = [];
+  const push = x => { if(x>=0 && x<=Lt) xs.push(x); };
+  const N = 200;
+  for(let i=0;i<=N;i++) push(Lt*i/N);
+  [xA, xB, ...act.map(f=>f.x)].forEach(s => { push(s-eps); push(s+eps); });
+  xs.sort((a,b)=>a-b);
+
+  const Vy=[],Vz=[],Vr=[],My=[],Mz=[],Mr=[];
+  let Mmax=0, xMmax=0, Vmax=0;
+  for(const x of xs){
+    const r = beamAt({py,pz}, x);
+    Vy.push(r.Vy); Vz.push(r.Vz); Vr.push(r.V);
+    My.push(r.My); Mz.push(r.Mz); Mr.push(r.M);
+    // Mf risultante è convessa a tratti: il massimo cade sempre su una
+    // stazione, che il campionamento contiene.
+    if(r.M>Mmax){ Mmax=r.M; xMmax=x; }
+    if(r.V>Vmax) Vmax=r.V;
+  }
+  // Un albero caricato in un solo piano non ha bisogno delle curve M_z e V_z.
+  const planar = act.every(f => f.Fz===0);
+  return {Lt, xA, xB, act, py, pz, xs, Vy, Vz, Vr, My, Mz, Mr, Mmax, xMmax, Vmax, planar};
+}
+
+// ═══════════════════════════════════════════════════════
+//  GRAFICI SVG
+//  Colori: piano verticale = azzurro, piano orizzontale = verde
+//  tratteggiato (doppia codifica, leggibile anche in daltonismo),
+//  risultante = ambra con area piena ed etichetta diretta sul massimo.
+// ═══════════════════════════════════════════════════════
+const CH = {y:'#4fc3f7', z:'#66bb6a', r:'#ffa726', mark:'#b39ddb',
+            axis:'#7d8090', grid:'rgba(255,255,255,.07)', txt:'#e8e9ec'};
+const SVGF = `font-family="'DM Mono',monospace"`;
+
+function chartSVG(xs, Lt, series, unit, xMark){
+  const W=640, H=178, ml=60, mr=18, mt=14, mb=26;
+  const pw=W-ml-mr, ph=H-mt-mb, y0=mt+ph/2;
+
+  let amax=0;
+  series.forEach(s => s.data.forEach(v => { const a=Math.abs(v); if(a>amax) amax=a; }));
+  if(!(amax>0)) amax=1;
+  const sc = amax*1.18;
+  const X = x => ml + (Lt>0 ? x/Lt : 0)*pw;
+  const Y = v => y0 - v/sc*(ph/2);
+  const fv = v => Math.abs(v)>=100 ? fi(v) : fp(v,1);
+  const poly = d => d.map((v,i) => `${X(xs[i]).toFixed(1)},${Y(v).toFixed(1)}`).join(' ');
+
+  let g='';
+  // Riferimenti: estremi della scala tratteggiati, asse zero pieno.
+  [amax,-amax].forEach(v => {
+    g += `<line x1="${ml}" y1="${Y(v).toFixed(1)}" x2="${ml+pw}" y2="${Y(v).toFixed(1)}" stroke="${CH.grid}" stroke-width="1" stroke-dasharray="3 4"/>`;
+  });
+  g += `<line x1="${ml}" y1="${y0}" x2="${ml+pw}" y2="${y0}" stroke="${CH.axis}" stroke-width="1.2"/>`;
+  [[amax,Y(amax)],[0,y0],[-amax,Y(-amax)]].forEach(([v,y]) => {
+    g += `<text x="${ml-8}" y="${(y+3).toFixed(1)}" fill="${CH.axis}" font-size="9" text-anchor="end" ${SVGF}>${fv(v)}</text>`;
+  });
+
+  series.forEach(s => { if(s.fill)
+    g += `<polygon points="${X(xs[0]).toFixed(1)},${y0} ${poly(s.data)} ${X(xs[xs.length-1]).toFixed(1)},${y0}" fill="${s.color}" fill-opacity="0.13"/>`;
+  });
+  series.forEach(s => {
+    g += `<polyline points="${poly(s.data)}" fill="none" stroke="${s.color}" stroke-width="${s.fill?2.2:1.7}"${s.dash?` stroke-dasharray="${s.dash}"`:''} stroke-linejoin="round"/>`;
+  });
+
+  // Etichetta diretta sul valore massimo della serie principale.
+  const main = series.find(s => s.mark);
+  if(main){
+    let im=0;
+    main.data.forEach((v,i) => { if(Math.abs(v)>Math.abs(main.data[im])) im=i; });
+    const vx=X(xs[im]), vy=Y(main.data[im]);
+    const anchor = vx>ml+pw*0.85 ? 'end' : (vx<ml+pw*0.15 ? 'start' : 'middle');
+    g += `<circle cx="${vx.toFixed(1)}" cy="${vy.toFixed(1)}" r="3" fill="${main.color}" stroke="#141519" stroke-width="1.5"/>`
+       + `<text x="${vx.toFixed(1)}" y="${(vy + (main.data[im]>=0 ? -9 : 16)).toFixed(1)}" fill="${CH.txt}" font-size="10" text-anchor="${anchor}" ${SVGF}>${fv(main.data[im])} ${unit}</text>`;
+  }
+
+  // Marcatore della sezione verificata.
+  if(xMark!=null && Lt>0){
+    const mx=X(xMark);
+    g += `<line x1="${mx.toFixed(1)}" y1="${mt}" x2="${mx.toFixed(1)}" y2="${mt+ph}" stroke="${CH.mark}" stroke-width="1.2" stroke-dasharray="4 3"/>`;
+  }
+
+  for(let t=0;t<=4;t++){
+    const xv=Lt*t/4;
+    g += `<text x="${X(xv).toFixed(1)}" y="${H-7}" fill="${CH.axis}" font-size="9" text-anchor="middle" ${SVGF}>${fi(xv)}</text>`;
+  }
+
+  return `<svg viewBox="0 0 ${W} ${H}" xmlns="http://www.w3.org/2000/svg">${g}</svg>`;
+}
+
+function legendHTML(items){
+  return items.map(i => `<span><i style="border-top-style:${i.dash?'dashed':'solid'};border-top-color:${i.color}"></i>${i.label}</span>`).join('');
+}
+
+// Schema di carico: albero, appoggi con reazione, forze nei due piani,
+// sezione verificata.
+function drawBeamSchema(b, xsec){
+  const W=640, H=200, ml=34, mr=34, yC=112, hh=20;
+  const pw=W-ml-mr;
+  const X = x => ml + (b.Lt>0 ? x/b.Lt : 0)*pw;
+
+  const arrow = (x1,y1,x2,y2,col) => {
+    const a=Math.atan2(y2-y1,x2-x1), h=9, w=4.5;
+    const p2=`${(x2-h*Math.cos(a)+w*Math.sin(a)).toFixed(1)},${(y2-h*Math.sin(a)-w*Math.cos(a)).toFixed(1)}`;
+    const p3=`${(x2-h*Math.cos(a)-w*Math.sin(a)).toFixed(1)},${(y2-h*Math.sin(a)+w*Math.cos(a)).toFixed(1)}`;
+    return `<line x1="${x1.toFixed(1)}" y1="${y1.toFixed(1)}" x2="${x2.toFixed(1)}" y2="${y2.toFixed(1)}" stroke="${col}" stroke-width="2"/>`
+         + `<polygon points="${x2.toFixed(1)},${y2.toFixed(1)} ${p2} ${p3}" fill="${col}"/>`;
+  };
+
+  let g = `<rect x="${ml}" y="${yC-hh/2}" width="${pw}" height="${hh}" fill="rgba(79,195,247,.08)" stroke="#4fc3f7" stroke-width="1.3" rx="2"/>`
+        + `<line x1="${ml}" y1="${yC}" x2="${ml+pw}" y2="${yC}" stroke="rgba(255,255,255,.18)" stroke-width="1" stroke-dasharray="6 4"/>`;
+
+  // Appoggi con il carico radiale risultante sul cuscinetto.
+  [['A', b.xA, Math.hypot(b.py.RA, b.pz.RA)],
+   ['B', b.xB, Math.hypot(b.py.RB, b.pz.RB)]].forEach(([n,xv,R]) => {
+    const x=X(xv), yt=yC+hh/2+2;
+    g += `<polygon points="${x.toFixed(1)},${yt} ${(x-10).toFixed(1)},${yt+15} ${(x+10).toFixed(1)},${yt+15}" fill="none" stroke="#9a9dab" stroke-width="1.3"/>`
+       + `<line x1="${(x-15).toFixed(1)}" y1="${yt+15}" x2="${(x+15).toFixed(1)}" y2="${yt+15}" stroke="#9a9dab" stroke-width="1.3"/>`
+       + `<text x="${x.toFixed(1)}" y="${yt+29}" fill="#9a9dab" font-size="9" text-anchor="middle" ${SVGF}>${n} · ${fi(R)} N</text>`;
+  });
+
+  // Forze: lunghezza della freccia proporzionale al modulo.
+  const Fmax = Math.max(...b.act.map(f => Math.hypot(f.Fy,f.Fz)), 1);
+  b.act.forEach((f,i) => {
+    const x = X(f.x);
+    const len = 24 + 30*Math.hypot(f.Fy,f.Fz)/Fmax;
+    const lab = [];
+    if(f.Fy!==0){
+      const dn = f.Fy>0;                       // positiva = verso il basso
+      const yTip = dn ? yC-hh/2 : yC+hh/2;
+      g += arrow(x, dn?yTip-len:yTip+len, x, yTip, CH.y);
+      lab.push(`y ${fi(f.Fy)}`);
+    }
+    if(f.Fz!==0){
+      // Piano orizzontale: freccia obliqua, a suggerire la profondità.
+      const s = f.Fz>0 ? 1 : -1;
+      g += arrow(x - s*len*0.87, yC-hh/2 - len*0.5, x, yC-hh/2, CH.z);
+      lab.push(`z ${fi(f.Fz)}`);
+    }
+    const yLab = 26 + (i%2)*13;                // sfalsate per evitare le sovrapposizioni
+    g += `<text x="${x.toFixed(1)}" y="${yLab}" fill="#9a9dab" font-size="9" text-anchor="middle" ${SVGF}>F${i+1} · ${lab.join(' / ')} N</text>`;
+  });
+
+  // Sezione verificata.
+  const xm = X(xsec);
+  g += `<line x1="${xm.toFixed(1)}" y1="${yC-hh/2-8}" x2="${xm.toFixed(1)}" y2="${yC+hh/2+8}" stroke="${CH.mark}" stroke-width="1.6" stroke-dasharray="4 3"/>`
+     + `<text x="${xm.toFixed(1)}" y="${H-8}" fill="${CH.mark}" font-size="9" text-anchor="middle" ${SVGF}>sezione x = ${fi(xsec)} mm</text>`
+     + `<text x="${ml}" y="${yC+hh/2+46}" fill="#7d8090" font-size="9" ${SVGF}>x = 0</text>`
+     + `<text x="${ml+pw}" y="${yC+hh/2+46}" fill="#7d8090" font-size="9" text-anchor="end" ${SVGF}>x = ${fi(b.Lt)} mm</text>`;
+
+  return `<svg viewBox="0 0 ${W} ${H}" xmlns="http://www.w3.org/2000/svg">${g}</svg>`;
+}
+
+function renderBeam(b){
+  if(!b){
+    ['beamGrid','beamSchema','chartV','chartM','legS','legV','legM'].forEach(id => $(id).innerHTML='');
+    $('beamNote').innerHTML = 'Schema incompleto: servono una lunghezza valida, due appoggi in posizioni '
+      + 'distinte comprese fra 0 e L_t, e almeno una forza radiale non nulla applicata sull\'albero. '
+      + 'Finché lo schema non è risolvibile, Mf resta a zero.';
+    return;
+  }
+  const RAr=Math.hypot(b.py.RA,b.pz.RA), RBr=Math.hypot(b.py.RB,b.pz.RB);
+  const at=b.at;
+
+  $('beamGrid').innerHTML =
+    box('Reazione appoggio A', fi(RAr), 'N',
+      `Reazione risultante in A (x = ${fi(b.xA)} mm): R_Ay = ${fp(b.py.RA,1)} N, R_Az = ${fp(b.pz.RA,1)} N. È il carico radiale da usare per la scelta e la durata del cuscinetto A.`) +
+    box('Reazione appoggio B', fi(RBr), 'N',
+      `Reazione risultante in B (x = ${fi(b.xB)} mm): R_By = ${fp(b.py.RB,1)} N, R_Bz = ${fp(b.pz.RB,1)} N. È il carico radiale sul cuscinetto B.`) +
+    box('Momento massimo', fp(b.Mmax/1000,1), 'Nm',
+      'Massimo del momento flettente risultante lungo l\'albero, composizione dei due piani: Mf = √(M_y² + M_z²). Negli alberi rotanti è il punto candidato alla rottura per fatica, salvo intagli più severi altrove.') +
+    box('Posizione del massimo', fi(b.xMmax), 'mm',
+      'Ascissa in cui si verifica il momento flettente massimo. Cade sempre in corrispondenza di una forza o di un appoggio.') +
+    box('Mf nella sezione', fp(at.M/1000,1), 'Nm',
+      `Momento flettente risultante nella sezione verificata (x = ${fi(b.xsec)} mm): M_y = ${fp(at.My/1000,1)} Nm, M_z = ${fp(at.Mz/1000,1)} Nm. È il valore trasferito al calcolo delle tensioni.`) +
+    box('Taglio nella sezione', fi(at.V), 'N',
+      `Taglio risultante nella sezione verificata: V_y = ${fp(at.Vy,1)} N, V_z = ${fp(at.Vz,1)} N. Viene riportato automaticamente nel campo «Forza di taglio T».`);
+
+  $('beamSchema').innerHTML = drawBeamSchema(b, b.xsec);
+
+  const legS = [{color:CH.y, label:'F_y — piano verticale'}];
+  if(!b.planar) legS.push({color:CH.z, label:'F_z — piano orizzontale'});
+  legS.push({color:CH.mark, dash:true, label:'sezione verificata'});
+  $('legS').innerHTML = legendHTML(legS);
+
+  // Taglio
+  const serV = [];
+  if(b.planar){
+    serV.push({data:b.Vy, color:CH.y, label:'V_y', fill:true, mark:true});
+  } else {
+    serV.push({data:b.Vy, color:CH.y, label:'V_y — piano verticale'},
+              {data:b.Vz, color:CH.z, dash:'6 4', label:'V_z — piano orizzontale'},
+              {data:b.Vr, color:CH.r, label:'V risultante', fill:true, mark:true});
+  }
+  $('chartV').innerHTML = chartSVG(b.xs, b.Lt, serV, 'N', b.xsec);
+  $('legV').innerHTML = legendHTML(serV.concat([{color:CH.mark, dash:true, label:'sezione verificata'}]));
+
+  // Momento flettente, espresso in Nm
+  const kNm = a => a.map(v => v/1000);
+  const serM = [];
+  if(b.planar){
+    serM.push({data:kNm(b.My), color:CH.y, label:'M_y', fill:true, mark:true});
+  } else {
+    serM.push({data:kNm(b.My), color:CH.y, label:'M_y — piano verticale'},
+              {data:kNm(b.Mz), color:CH.z, dash:'6 4', label:'M_z — piano orizzontale'},
+              {data:kNm(b.Mr), color:CH.r, label:'Mf risultante', fill:true, mark:true});
+  }
+  $('chartM').innerHTML = chartSVG(b.xs, b.Lt, serM, 'Nm', b.xsec);
+  $('legM').innerHTML = legendHTML(serM.concat([{color:CH.mark, dash:true, label:'sezione verificata'}]));
+
+  const fuori = b.xsec < Math.min(b.xA,b.xB) || b.xsec > Math.max(b.xA,b.xB);
+  $('beamNote').innerHTML =
+    `Schema isostatico su due appoggi, risolto con le sole equazioni di equilibrio: R_B = Σ F_i·(x_i − x_A)/(x_B − x_A), `
+    + `R_A = Σ F_i − R_B. Il taglio è costante fra due forze e salta in corrispondenza di ciascuna; il momento è `
+    + `lineare a tratti e la risultante Mf = √(M_y² + M_z²) ha il massimo su una forza o su un appoggio. `
+    + (fuori ? 'La sezione verificata si trova <b>a sbalzo</b>, fuori dalla luce fra gli appoggi. ' : '')
+    + `Il momento torcente e la forza assiale restano input indipendenti: non derivano dalle forze radiali qui inserite. `
+    + `Non sono considerate la freccia flessionale, l'inclinazione sugli appoggi né le velocità critiche.`;
+}
+
+// ═══════════════════════════════════════════════════════
 //  SCHEMA SVG
 //  Albero su due appoggi con le sollecitazioni applicate: serve a
 //  chiarire quali grandezze si riferiscono alla sezione verificata.
@@ -639,9 +1068,7 @@ function calculate(){
   const d      = val('d');
   const hollow = section==='cava';
   const di     = hollow ? val('di') : 0;
-  const Mf     = val('Mf');
   const Fa     = val('Fa');
-  const T      = val('T');
   const Re     = val('Re');
   const Rm     = val('Rm');
   const sigD   = val('sigD');
@@ -652,6 +1079,32 @@ function calculate(){
   const L      = val('L');
   const G      = val('G');
   const fin    = FIN[$('fin').value] || FIN.macc;
+
+  // Momento flettente e taglio: inseriti a mano oppure ricavati dallo schema
+  // di trave con tutte le forze radiali applicate all'albero.
+  let beam = null, Mf, T;
+  if(bendMode==='schema'){
+    beam = buildBeam();
+    if(beam){
+      const xs = secMode==='auto'
+               ? beam.xMmax
+               : Math.min(Math.max(val('xsec'), 0), beam.Lt);
+      if(secMode==='auto') $('xsec').value = Math.round(beam.xMmax);
+      beam.xsec = xs;
+      beam.at   = beamAt(beam, xs);
+      Mf = beam.at.M/1000;          // N·mm → Nm
+      T  = beam.at.V;
+      $('Mf').value = Mf.toFixed(1);
+      $('T').value  = T.toFixed(0);
+    } else {
+      Mf = 0; T = 0;
+      $('Mf').value = 0;
+      $('T').value  = 0;
+    }
+  } else {
+    Mf = val('Mf');
+    T  = val('T');
+  }
 
   // Momento torcente: inserito oppure ricavato da potenza e giri.
   let Mt;
@@ -685,7 +1138,12 @@ function calculate(){
     box('Rapporto di/d', ok?fp(hollow&&d>0?di/d:0,3):'—', '',
       'Rapporto di foratura. A parità di diametro esterno un rapporto 0,5 riduce i moduli di resistenza solo del 6% ma l\'area (e quindi la massa) del 25%.');
 
-  $('schema').innerHTML = drawSchema(hollow, d, di, Mf, Mt, Fa, T);
+  // Schema di sezione in modalità diretta, schema di trave e diagrammi in
+  // modalità «da schema albero».
+  $('schemaWrap').classList.toggle('hidden', bendMode==='schema');
+  $('beamSection').classList.toggle('hidden', bendMode!=='schema');
+  if(bendMode==='schema') renderBeam(beam);
+  else $('schema').innerHTML = drawSchema(hollow, d, di, Mf, Mt, Fa, T);
 
   // ── Tensioni
   let sigHtml =
@@ -821,7 +1279,7 @@ function calculate(){
   }
 
   // ── Formule
-  $('formulaBox').innerHTML = buildFormulas(hollow);
+  $('formulaBox').innerHTML = buildFormulas(hollow, bendMode==='schema');
 
   // ── Avvisi
   const hints=[];
@@ -847,8 +1305,15 @@ function calculate(){
 // ═══════════════════════════════════════════════════════
 //  FORMULARIO
 // ═══════════════════════════════════════════════════════
-function buildFormulas(hollow){
+function buildFormulas(hollow, schema){
+  const beamRows = schema ? [
+    ['Reazioni (per piano)', 'R_B = Σ F_i·(x_i − x_A)/(x_B − x_A) &nbsp;;&nbsp; R_A = Σ F_i − R_B'],
+    ['Taglio (per piano)', 'V(x) = Σ<sub>x_i ≤ x</sub> W_i &nbsp;[W verso l\'alto positivo]'],
+    ['Momento (per piano)', 'M(x) = Σ<sub>x_i ≤ x</sub> W_i·(x − x_i)'],
+    ['Momento risultante', 'Mf(x) = √(M_y(x)² + M_z(x)²)']
+  ] : [];
   const rows = [
+    ...beamRows,
     ['Area', hollow?'A = π·(d²−di²)/4':'A = π·d²/4'],
     ['Modulo a flessione', hollow?'W = π·(d⁴−di⁴)/(32·d)':'W = π·d³/32'],
     ['Modulo a torsione', hollow?'Wt = π·(d⁴−di⁴)/(16·d)':'Wt = π·d³/16'],
@@ -877,8 +1342,11 @@ function buildFormulas(hollow){
 //  INIT
 // ═══════════════════════════════════════════════════════
 $('printBtn').addEventListener('click', () => window.print());
+renderForces();
 setSection('piena');
 setTorqueMode('diretto');
+setSecMode('auto');
+setBendMode('diretto');
 calculate();
 </script>
 
