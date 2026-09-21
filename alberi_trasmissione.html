@@ -51,13 +51,19 @@ body{display:flex;flex-direction:column;align-items:center;min-height:100vh;padd
 .crit.sta{background:rgba(79,195,247,.12);color:var(--acc);border:1px solid rgba(79,195,247,.35)}
 .crit.nd{background:rgba(179,157,219,.14);color:var(--violet);border:1px solid rgba(179,157,219,.35)}
 
-/* Elenco delle forze radiali applicate all'albero */
+/* Elenco dei supporti e dei punti di carico applicati all'albero */
 .fload{background:var(--bg1);border:1px solid var(--border);border-radius:6px;padding:8px;margin-bottom:6px}
 .fload-hdr{display:flex;justify-content:space-between;align-items:center;margin-bottom:5px}
 .fload-name{font-family:var(--cond);font-size:11px;font-weight:700;letter-spacing:.09em;color:var(--acc);text-transform:uppercase}
-.fload-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px}
+/* Cinque campi per punto (x, F_y, F_z, F_a, M_t): a colonne fisse andrebbero
+   fuori dal pannello, quindi vanno a capo da soli quando manca larghezza. */
+.fload-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(62px,1fr));gap:6px}
 .fload-grid .flabel{display:block;font-size:9px;margin-bottom:2px}
 .fload .numinput{height:23px;font-size:11px}
+/* Riga di supporto: ascissa a sinistra, vincolo assiale a destra */
+.sup-grid{display:grid;grid-template-columns:90px 1fr;gap:8px;align-items:end}
+.sup-grid .seg-btn{padding:4px 3px;font-size:11px}
+.fload-name.sup-free{color:var(--muted)}
 .rm-btn{width:20px;height:20px;line-height:1;background:transparent;border:1px solid var(--border2);border-radius:4px;color:var(--dim);font-family:var(--mono);font-size:12px;cursor:pointer;transition:all .12s}
 .rm-btn:hover{border-color:var(--dn);color:var(--dn)}
 .add-btn{width:100%;padding:6px;background:transparent;border:1px dashed var(--border2);border-radius:6px;color:var(--dim);font-family:var(--mono);font-size:11px;cursor:pointer;transition:all .15s}
@@ -90,6 +96,7 @@ footer{margin-top:34px;font-size:10px;color:var(--dim);letter-spacing:.04em;text
   <a href="index.html" class="back-btn">← Ritorna</a>
   <h1><span class="dot"></span>Alberi di Trasmissione</h1>
   <div class="sub">Flesso-torsione · von Mises · Fatica Goodman · Gough-Pollard</div>
+  <span class="norm-badge">v1.1</span>
   <span class="norm-badge">UNI 7670 · DIN 743 (rif.)</span>
   <button class="back-btn" id="printBtn">🖶 Stampa</button>
 </div>
@@ -130,7 +137,7 @@ footer{margin-top:34px;font-size:10px;color:var(--dim);letter-spacing:.04em;text
   <div class="stitle">Carichi nella sezione</div>
 
   <div class="field">
-    <div class="fhdr"><span class="flabel" data-tip="«Diretto»: il momento flettente della sezione è già noto e si inserisce a mano. «Da schema albero»: si descrive l'albero su due appoggi con tutte le forze radiali applicate (ruote dentate, pulegge, catene, tiri di cinghia) e il modulo ricava reazioni, diagrammi di taglio e di momento e il valore di Mf nella sezione verificata.">Momento flettente — sorgente</span></div>
+    <div class="fhdr"><span class="flabel" data-tip="«Diretto»: il momento flettente della sezione è già noto e si inserisce a mano. «Da schema albero»: si descrive l'albero con i suoi supporti (bloccati o scorrevoli assialmente) e i punti di applicazione dei carichi — forza radiale nei due piani, forza assiale e momento torcente — e il modulo ricava le reazioni sui cuscinetti, i diagrammi di taglio, momento flettente, momento torcente e forza normale, e i carichi della sezione verificata.">Momento flettente — sorgente</span></div>
     <div class="seg seg-2">
       <button class="seg-btn on" id="b-diretto" onclick="setBendMode('diretto')">Diretto</button>
       <button class="seg-btn" id="b-schema" onclick="setBendMode('schema')">Da schema albero</button>
@@ -146,30 +153,24 @@ footer{margin-top:34px;font-size:10px;color:var(--dim);letter-spacing:.04em;text
     </div>
   </div>
 
-  <!-- ═══ SCHEMA DI TRAVE: forze radiali multiple ═══ -->
+  <!-- ═══ SCHEMA DI TRAVE: supporti e punti di carico multipli ═══ -->
   <div class="hidden" id="f-schema">
 
-    <div class="frow3">
-      <div class="field">
-        <div class="fhdr"><span class="flabel" data-tip="Lunghezza totale dell'albero. Le posizioni degli appoggi, delle forze e della sezione verificata sono tutte misurate da x = 0, estremità sinistra.">Albero L_t</span><span class="funit">mm</span></div>
-        <input id="Lsh" class="numinput" type="number" value="500" min="1" step="10" oninput="calculate()">
-      </div>
-      <div class="field">
-        <div class="fhdr"><span class="flabel" data-tip="Posizione del primo appoggio (cuscinetto A) misurata da x = 0. Le forze applicate prima di A o dopo B lavorano a sbalzo e generano momento sull'appoggio.">Appoggio x_A</span><span class="funit">mm</span></div>
-        <input id="xA" class="numinput" type="number" value="50" min="0" step="10" oninput="calculate()">
-      </div>
-      <div class="field">
-        <div class="fhdr"><span class="flabel" data-tip="Posizione del secondo appoggio (cuscinetto B). Lo schema è isostatico — due soli appoggi — e si risolve con le sole equazioni di equilibrio. Le reazioni ottenute sono i carichi radiali sui cuscinetti.">Appoggio x_B</span><span class="funit">mm</span></div>
-        <input id="xB" class="numinput" type="number" value="450" min="0" step="10" oninput="calculate()">
-      </div>
+    <div class="field">
+      <div class="fhdr"><span class="flabel" data-tip="Lunghezza totale dell'albero. Le posizioni dei supporti, dei punti di carico e della sezione verificata sono tutte misurate da x = 0, estremità sinistra.">Albero L_t</span><span class="funit">mm</span></div>
+      <input id="Lsh" class="numinput" type="number" value="500" min="1" step="10" oninput="calculate()">
     </div>
 
-    <div class="stitle" style="margin-top:12px">Forze radiali</div>
+    <div class="stitle" style="margin-top:12px">Supporti</div>
+    <div id="supportList"></div>
+    <button class="add-btn" onclick="addSupport()">+ Aggiungi supporto</button>
+
+    <div class="stitle" style="margin-top:12px">Punti di applicazione dei carichi</div>
     <div id="forceList"></div>
-    <button class="add-btn" onclick="addForce()">+ Aggiungi forza radiale</button>
+    <button class="add-btn" onclick="addForce()">+ Aggiungi punto di carico</button>
 
     <div class="field" style="margin-top:12px">
-      <div class="fhdr"><span class="flabel" data-tip="«Automatica»: la verifica è condotta nella sezione con momento flettente risultante massimo. «Manuale»: si indica l'ascissa da verificare, utile quando il punto critico è un intaglio (spallamento, gola, cava per linguetta) lontano dal massimo del momento.">Sezione verificata</span></div>
+      <div class="fhdr"><span class="flabel" data-tip="«Automatica»: la verifica è condotta nella sezione a coefficiente di sicurezza minimo, valutato con il momento flettente, il momento torcente e la forza assiale locali di ogni punto notevole. «Manuale»: si indica l'ascissa da verificare, utile quando il punto critico è un intaglio (spallamento, gola, cava per linguetta) lontano dalla sezione peggiore.">Sezione verificata</span></div>
       <div class="seg seg-2">
         <button class="seg-btn on" id="x-auto" onclick="setSecMode('auto')">Automatica</button>
         <button class="seg-btn" id="x-man" onclick="setSecMode('man')">Manuale</button>
@@ -177,7 +178,7 @@ footer{margin-top:34px;font-size:10px;color:var(--dim);letter-spacing:.04em;text
     </div>
 
     <div class="field">
-      <div class="fhdr"><span class="flabel" data-tip="Ascissa della sezione verificata, misurata da x = 0. In modalità automatica il campo è di sola lettura e mostra la posizione del momento flettente massimo.">Posizione sezione x</span><span class="funit">mm</span></div>
+      <div class="fhdr"><span class="flabel" data-tip="Ascissa della sezione verificata, misurata da x = 0. In modalità automatica il campo è di sola lettura e mostra la posizione della sezione a coefficiente di sicurezza minimo.">Posizione sezione x</span><span class="funit">mm</span></div>
       <div class="srow">
         <div class="arr" onclick="adjust('xsec',-5)">−</div>
         <input id="xsec" class="numinput" type="number" value="150" min="0" step="5" oninput="calculate()">
@@ -188,13 +189,16 @@ footer{margin-top:34px;font-size:10px;color:var(--dim);letter-spacing:.04em;text
     <div class="note">
       Convenzione: <b>F_y</b> positiva verso il basso nel piano verticale, <b>F_z</b> positiva nel piano
       orizzontale ortogonale. I due piani sono risolti separatamente e composti con Mf = √(M_y² + M_z²).
-      Le reazioni sono i <b>carichi radiali sui cuscinetti</b>. Con lo schema attivo, Mf e la forza di
-      taglio T della sezione diventano risultati del calcolo.
+      <b>F_a</b> positiva verso destra (trazione del tratto a monte del supporto che la assorbe),
+      <b>M_t</b> positivo se entrante nell'albero: l'equilibrio richiede ΣM_t = 0, cioè tanta coppia
+      in ingresso quanta ne esce. Le reazioni radiali sono i <b>carichi sui cuscinetti</b>; la spinta
+      assiale è assorbita dai supporti <b>bloccati</b> e attraversa l'albero solo fino ad essi.
+      Con lo schema attivo Mf, T, Mt e Fa della sezione diventano risultati del calcolo.
     </div>
 
   </div>
 
-  <div class="field">
+  <div class="field" id="f-tsrc">
     <div class="fhdr"><span class="flabel" data-tip="Il momento torcente si può inserire direttamente oppure ricavare dalla potenza trasmessa e dalla velocità di rotazione con Mt = 9550·P/n (costante 9550 = 30000/π, valida per P in kW, n in giri/min, Mt in Nm).">Momento torcente — sorgente</span></div>
     <div class="seg seg-2">
       <button class="seg-btn on" id="t-diretto" onclick="setTorqueMode('diretto')">Diretto</button>
@@ -203,7 +207,7 @@ footer{margin-top:34px;font-size:10px;color:var(--dim);letter-spacing:.04em;text
   </div>
 
   <div class="field">
-    <div class="fhdr"><span class="flabel" data-tip="Momento torcente trasmesso dall'albero nella sezione verificata. Genera la tensione tangenziale τ_t = Mt/Wt. In modalità «Da potenza» il campo è di sola lettura e vale 9550·P/n.">Momento torcente Mt</span><span class="funit">Nm</span></div>
+    <div class="fhdr"><span class="flabel" data-tip="Momento torcente trasmesso dall'albero nella sezione verificata. Genera la tensione tangenziale τ_t = Mt/Wt. In modalità «Da potenza» il campo è di sola lettura e vale 9550·P/n; con lo schema di albero attivo riporta la coppia effettivamente trasmessa dalla sezione, nulla fuori dal tratto fra ingresso e uscita del momento.">Momento torcente Mt</span><span class="funit">Nm</span></div>
     <div class="srow">
       <div class="arr" onclick="adjust('Mt',-10)">−</div>
       <input id="Mt" class="numinput" type="number" value="400" min="0" step="10" oninput="calculate()">
@@ -224,11 +228,11 @@ footer{margin-top:34px;font-size:10px;color:var(--dim);letter-spacing:.04em;text
 
   <div class="frow2">
     <div class="field">
-      <div class="fhdr"><span class="flabel" data-tip="Forza assiale sull'albero (opzionale): spinta di ruote elicoidali o coniche, precarico di cuscinetti obliqui. Genera σ_a = Fa/A, sommata a σ_f. Negativa se di compressione. Lasciare 0 se assente.">Forza assiale Fa</span><span class="funit">N</span></div>
+      <div class="fhdr"><span class="flabel" data-tip="Forza assiale sull'albero (opzionale): spinta di ruote elicoidali o coniche, precarico di cuscinetti obliqui. Genera σ_a = Fa/A, sommata a σ_f. Negativa se di compressione. Lasciare 0 se assente. Con lo schema di albero attivo è di sola lettura e riporta la forza normale della sezione, che esiste solo fra il punto di applicazione e il supporto bloccato che la assorbe.">Forza assiale Fa</span><span class="funit">N</span></div>
       <input id="Fa" class="numinput" type="number" value="0" step="100" oninput="calculate()">
     </div>
     <div class="field">
-      <div class="fhdr"><span class="flabel" data-tip="Forza di taglio nella sezione (opzionale). Genera τ_T = (4/3)·T/A per sezione piena, 2·T/A per sezione cava (valori massimi sull'asse neutro). Negli alberi normali è trascurabile rispetto alla torsione; conta solo per alberi molto corti e tozzi.">Forza di taglio T</span><span class="funit">N</span></div>
+      <div class="fhdr"><span class="flabel" data-tip="Forza di taglio nella sezione (opzionale). Genera τ_T = (4/3)·T/A per sezione piena, 2·T/A per sezione cava (valori massimi sull'asse neutro). Negli alberi normali è trascurabile rispetto alla torsione; conta solo per alberi molto corti e tozzi. Con lo schema di albero attivo è di sola lettura e riporta il taglio risultante della sezione.">Forza di taglio T</span><span class="funit">N</span></div>
       <input id="T" class="numinput" type="number" value="0" min="0" step="100" oninput="calculate()">
     </div>
   </div>
@@ -334,9 +338,9 @@ footer{margin-top:34px;font-size:10px;color:var(--dim);letter-spacing:.04em;text
   <div class="note">
     <b>Verifica statica</b>: von Mises su σ_tot e τ_tot, confronto con Re.<br>
     <b>Verifica a fatica</b>: limite del provino σ_D corretto con ka (finitura), kb (dimensione), kc (altri effetti) e Kf (intaglio); criterio di <b>Goodman</b> separato per flessione e torsione, combinati con <b>Gough-Pollard</b>.<br>
-    Le tensioni sono riferite alla singola sezione: il momento flettente si inserisce direttamente oppure si
-    ricava dallo <b>schema di trave</b> con più forze radiali, che fornisce anche reazioni sui cuscinetti e
-    diagrammi di taglio e momento.
+    Le tensioni sono riferite alla singola sezione: i carichi si inseriscono direttamente oppure si
+    ricavano dallo <b>schema di albero</b> con n supporti e n punti di applicazione, che fornisce anche le
+    reazioni sui cuscinetti e i diagrammi di taglio, momento flettente, momento torcente e forza normale.
   </div>
 
 </div>
@@ -370,6 +374,16 @@ footer{margin-top:34px;font-size:10px;color:var(--dim);letter-spacing:.04em;text
       <div class="chart-title">Diagramma del momento flettente M(x) — Nm · ascissa x in mm</div>
       <div id="chartM"></div>
       <div class="legend" id="legM"></div>
+    </div>
+    <div class="chart-box hidden" id="boxT">
+      <div class="chart-title">Diagramma del momento torcente Mt(x) — Nm · ascissa x in mm</div>
+      <div id="chartT"></div>
+      <div class="legend" id="legT"></div>
+    </div>
+    <div class="chart-box hidden" id="boxN">
+      <div class="chart-title">Diagramma della forza normale N(x) — N · ascissa x in mm</div>
+      <div id="chartN"></div>
+      <div class="legend" id="legN"></div>
     </div>
     <div class="note" id="beamNote" style="margin-top:10px"></div>
   </div>
@@ -430,10 +444,13 @@ footer{margin-top:34px;font-size:10px;color:var(--dim);letter-spacing:.04em;text
 
 <footer>
   Andrea Cavani · Moduli calcolo HTML<br>
-  Verifica di massima di una singola sezione di albero soggetta a flesso-torsione. Non copre le velocità
-  critiche flessionali e torsionali, la verifica dei collegamenti (linguette, calettamenti, profili
-  scanalati), la freccia flessionale né i carichi variabili a blocchi (Miner). I preset di materiale sono
-  valori indicativi: per il progetto definitivo usare i dati del fornitore e, per l'intaglio, DIN 743-2.
+  Verifica di massima di una sezione di albero soggetta a flesso-torsione, con schema di albero su n
+  supporti e n punti di applicazione dei carichi. Lo schema iperstatico assume rigidezza flessionale
+  costante e supporti perfettamente allineati; la spinta assiale su più supporti bloccati è ripartita
+  per vicinanza. Non copre le coppie flettenti concentrate, le velocità critiche flessionali e torsionali,
+  la verifica dei collegamenti (linguette, calettamenti, profili scanalati), la freccia flessionale né i
+  carichi variabili a blocchi (Miner). I preset di materiale sono valori indicativi: per il progetto
+  definitivo usare i dati del fornitore e, per l'intaglio, DIN 743-2.<br>Versione 1.1
 </footer>
 
 <script>
@@ -445,11 +462,21 @@ let torqueMode = 'diretto';  // 'diretto' = Mt inserito | 'potenza' = Mt da P e 
 let bendMode   = 'diretto';  // 'diretto' = Mf inserito | 'schema' = Mf da schema di trave
 let secMode    = 'auto';     // sezione verificata: 'auto' = momento massimo | 'man' = ascissa imposta
 
-// Forze radiali applicate all'albero, scomposte nei due piani ortogonali.
-// Fy positiva verso il basso (piano verticale), Fz positiva nel piano
-// orizzontale. Posizione x misurata dall'estremità sinistra.
-let forces   = [{id:0, x:150, Fy:1200, Fz:0}, {id:1, x:380, Fy:800, Fz:500}];
-let forceSeq = 2;
+// Supporti dell'albero. x misurata dall'estremità sinistra; axial = true
+// se il supporto blocca anche la traslazione assiale (cuscinetto fisso),
+// false se è scorrevole (cuscinetto libero, che porta il solo carico
+// radiale). Servono almeno due supporti in posizioni distinte.
+let supports = [{id:0, x:50, axial:true}, {id:1, x:450, axial:false}];
+let supSeq   = 2;
+
+// Punti di applicazione dei carichi. In ciascuno si inseriscono la forza
+// radiale scomposta nei due piani ortogonali (Fy positiva verso il basso,
+// Fz positiva nel piano orizzontale), la forza assiale Fa (positiva verso
+// destra) e il momento torcente Mt (positivo se entrante nell'albero:
+// l'equilibrio richiede che la somma dei Mt sia nulla).
+let loads    = [{id:0, x:150, Fy:1200, Fz:0,   Fa:0, Mt:400},
+                {id:1, x:380, Fy:800,  Fz:500, Fa:0, Mt:-400}];
+let loadSeq  = 2;
 
 // ═══════════════════════════════════════════════════════
 //  DATI
@@ -559,9 +586,14 @@ function setBendMode(m){
   $('b-diretto').classList.toggle('on', m==='diretto');
   $('b-schema').classList.toggle('on', m==='schema');
   $('f-schema').classList.toggle('hidden', m!=='schema');
-  // Con lo schema attivo Mf e T sono risultati del calcolo di trave.
-  $('Mf').readOnly = (m==='schema');
-  $('T').readOnly  = (m==='schema');
+  // Con lo schema attivo Mf, T, Mt e Fa nella sezione sono tutti risultati
+  // del calcolo di trave: i campi restano visibili ma di sola lettura e il
+  // selettore della sorgente della coppia non ha piu' senso.
+  const sch = (m==='schema');
+  ['Mf','T','Mt','Fa'].forEach(id => { $(id).readOnly = sch; });
+  $('f-tsrc').classList.toggle('hidden', sch);
+  if(sch) $('f-pot').classList.add('hidden');
+  else if(torqueMode==='potenza') $('f-pot').classList.remove('hidden');
   calculate();
 }
 
@@ -573,40 +605,90 @@ function setSecMode(m){
   calculate();
 }
 
-// Le righe delle forze sono ricostruite solo quando cambia il loro numero:
-// la modifica di un valore aggiorna l'array senza toccare il DOM, altrimenti
-// il campo perderebbe il fuoco a ogni carattere digitato.
-function renderForces(){
-  $('forceList').innerHTML = forces.map((f,i) => `
+// Le righe di supporti e carichi sono ricostruite solo quando cambia il loro
+// numero: la modifica di un valore aggiorna l'array senza toccare il DOM,
+// altrimenti il campo perderebbe il fuoco a ogni carattere digitato.
+function renderSupports(){
+  $('supportList').innerHTML = supports.map((s,i) => `
     <div class="fload">
       <div class="fload-hdr">
-        <span class="fload-name">F${i+1}</span>
-        <button class="rm-btn" onclick="removeForce(${f.id})" title="Elimina la forza">×</button>
+        <span class="fload-name${s.axial?'':' sup-free'}">${supName(i)}</span>
+        <button class="rm-btn" onclick="removeSupport(${s.id})" title="Elimina il supporto">×</button>
+      </div>
+      <div class="sup-grid">
+        <div><span class="flabel" style="display:block;font-size:9px;margin-bottom:2px">x [mm]</span>
+          <input class="numinput" type="number" value="${s.x}" min="0" step="10" oninput="setSupport(${s.id},'x',this.value)"></div>
+        <div><span class="flabel" style="display:block;font-size:9px;margin-bottom:2px">vincolo assiale</span>
+          <div class="seg seg-2">
+            <button class="seg-btn${s.axial?' on':''}" onclick="setSupport(${s.id},'axial',1)">Bloccato</button>
+            <button class="seg-btn${s.axial?'':' on'}" onclick="setSupport(${s.id},'axial',0)">Scorrevole</button>
+          </div></div>
+      </div>
+    </div>`).join('') ||
+    '<div class="note">Nessun supporto inserito: servono almeno due supporti in posizioni distinte.</div>';
+}
+
+// I supporti sono numerati da sinistra a destra con le lettere dei cuscinetti,
+// indipendentemente dall'ordine di inserimento nella lista.
+function supName(i){
+  const ord = supports.map((s,k)=>({x:s.x,k})).sort((a,b)=>a.x-b.x).findIndex(o=>o.k===i);
+  return String.fromCharCode(65 + (ord>=0?ord:i) % 26);
+}
+
+function addSupport(){
+  const Lt = val('Lsh')||500;
+  supports.push({id:supSeq++, x:Math.round(Lt/2), axial:false});
+  renderSupports();
+  calculate();
+}
+
+function removeSupport(id){
+  supports = supports.filter(s => s.id!==id);
+  renderSupports();
+  calculate();
+}
+
+function setSupport(id, key, v){
+  const s = supports.find(o => o.id===id);
+  if(!s) return;
+  if(key==='axial'){ s.axial = !!Number(v); renderSupports(); }
+  else s[key] = parseFloat(v)||0;
+  calculate();
+}
+
+function renderForces(){
+  $('forceList').innerHTML = loads.map((f,i) => `
+    <div class="fload">
+      <div class="fload-hdr">
+        <span class="fload-name">P${i+1}</span>
+        <button class="rm-btn" onclick="removeForce(${f.id})" title="Elimina il punto di carico">×</button>
       </div>
       <div class="fload-grid">
         <div><span class="flabel">x [mm]</span><input class="numinput" type="number" value="${f.x}" min="0" step="10" oninput="setForce(${f.id},'x',this.value)"></div>
         <div><span class="flabel">F_y [N]</span><input class="numinput" type="number" value="${f.Fy}" step="50" oninput="setForce(${f.id},'Fy',this.value)"></div>
         <div><span class="flabel">F_z [N]</span><input class="numinput" type="number" value="${f.Fz}" step="50" oninput="setForce(${f.id},'Fz',this.value)"></div>
+        <div><span class="flabel">F_a [N]</span><input class="numinput" type="number" value="${f.Fa}" step="50" oninput="setForce(${f.id},'Fa',this.value)"></div>
+        <div><span class="flabel">M_t [Nm]</span><input class="numinput" type="number" value="${f.Mt}" step="10" oninput="setForce(${f.id},'Mt',this.value)"></div>
       </div>
     </div>`).join('') ||
-    '<div class="note">Nessuna forza radiale inserita: aggiungerne almeno una.</div>';
+    '<div class="note">Nessun punto di carico inserito: aggiungerne almeno uno.</div>';
 }
 
 function addForce(){
   const Lt = val('Lsh')||500;
-  forces.push({id:forceSeq++, x:Math.round(Lt/2), Fy:1000, Fz:0});
+  loads.push({id:loadSeq++, x:Math.round(Lt/2), Fy:1000, Fz:0, Fa:0, Mt:0});
   renderForces();
   calculate();
 }
 
 function removeForce(id){
-  forces = forces.filter(f => f.id!==id);
+  loads = loads.filter(f => f.id!==id);
   renderForces();
   calculate();
 }
 
 function setForce(id, key, v){
-  const f = forces.find(o => o.id===id);
+  const f = loads.find(o => o.id===id);
   if(!f) return;
   f[key] = parseFloat(v)||0;
   calculate();
@@ -616,7 +698,7 @@ function setTorqueMode(m){
   torqueMode = m;
   $('t-diretto').classList.toggle('on', m==='diretto');
   $('t-potenza').classList.toggle('on', m==='potenza');
-  $('f-pot').classList.toggle('hidden', m!=='potenza');
+  $('f-pot').classList.toggle('hidden', m!=='potenza' || bendMode==='schema');
   // In modalita' "da potenza" il campo Mt diventa un risultato, non un input.
   $('Mt').readOnly = (m==='potenza');
   calculate();
@@ -754,23 +836,118 @@ function minDiameter(p, req, ratio){
 
 // ═══════════════════════════════════════════════════════
 //  SCHEMA DI TRAVE DELL'ALBERO
-//  Albero su due appoggi (schema isostatico, sbalzi ammessi). Le forze
-//  radiali sono scomposte nei due piani ortogonali y e z, ciascuno
-//  risolto con le sole equazioni di equilibrio; il momento flettente
-//  risultante è la composizione vettoriale dei due piani.
+//  Albero su n supporti, sbalzi ammessi. Le forze radiali sono scomposte
+//  nei due piani ortogonali y e z, ciascuno risolto separatamente; il
+//  momento flettente risultante è la composizione vettoriale dei due piani.
+//  Con due supporti lo schema è isostatico e bastano le equazioni di
+//  equilibrio; con tre o più è iperstatico e si risolve come trave continua
+//  di Euler-Bernoulli. A diametro costante le reazioni non dipendono da EI,
+//  quindi il solutore lavora su geometria normalizzata con EI = 1.
 // ═══════════════════════════════════════════════════════
-function planeReactions(loads, xA, xB){
-  const span = xB - xA;
-  let sF=0, sM=0;
-  for(const l of loads){ sF += l.F; sM += l.F*(l.x-xA); }
-  const RB = span!==0 ? sM/span : 0;   // equilibrio dei momenti rispetto ad A
-  const RA = sF - RB;                  // equilibrio alla traslazione
+
+// Sistema lineare denso con eliminazione di Gauss e pivoting parziale.
+// A è memorizzata per righe (flat), n è l'ordine.
+function gaussSolve(A, rhs, n){
+  const Ab = new Float64Array(n*(n+1));
+  for(let i=0;i<n;i++){
+    for(let j=0;j<n;j++) Ab[i*(n+1)+j] = A[i*n+j];
+    Ab[i*(n+1)+n] = rhs[i];
+  }
+  for(let i=0;i<n;i++){
+    let maxv=Math.abs(Ab[i*(n+1)+i]), maxr=i;
+    for(let k=i+1;k<n;k++){
+      const av=Math.abs(Ab[k*(n+1)+i]);
+      if(av>maxv){ maxv=av; maxr=k; }
+    }
+    if(maxr!==i){
+      for(let j=0;j<=n;j++){
+        const t=Ab[i*(n+1)+j]; Ab[i*(n+1)+j]=Ab[maxr*(n+1)+j]; Ab[maxr*(n+1)+j]=t;
+      }
+    }
+    const piv=Ab[i*(n+1)+i];
+    if(Math.abs(piv)<1e-30) continue;
+    for(let k=i+1;k<n;k++){
+      const fac=Ab[k*(n+1)+i]/piv;
+      if(fac===0) continue;
+      for(let j=i;j<=n;j++) Ab[k*(n+1)+j]-=fac*Ab[i*(n+1)+j];
+    }
+  }
+  const u=new Float64Array(n);
+  for(let i=n-1;i>=0;i--){
+    let s=Ab[i*(n+1)+n];
+    for(let j=i+1;j<n;j++) s-=Ab[i*(n+1)+j]*u[j];
+    const piv=Ab[i*(n+1)+i];
+    u[i]=Math.abs(piv)<1e-30?0:s/piv;
+  }
+  return u;
+}
+
+// Trave continua su appoggi: elementi di Euler-Bernoulli fra nodi
+// consecutivi (lunghezza variabile), carichi tutti nodali per costruzione.
+// I vincoli sono imposti azzerando riga e colonna del grado di libertà di
+// spostamento, così le reazioni si ricavano esatte da R = K·u − f sulla
+// matrice non vincolata. Restituisce le reazioni positive verso l'alto.
+function continuousReactions(nodes, P, supIdx){
+  const nn=nodes.length, ndof=2*nn;
+  const K=new Float64Array(ndof*ndof), f=new Float64Array(ndof);
+  for(let e=0;e<nn-1;e++){
+    const le=nodes[e+1]-nodes[e];
+    if(!(le>0)) return null;
+    const k=1/(le*le*le), le2=le*le;
+    const ke=[ 12*k,      6*le*k,   -12*k,      6*le*k,
+                6*le*k,   4*le2*k,   -6*le*k,   2*le2*k,
+              -12*k,     -6*le*k,    12*k,     -6*le*k,
+                6*le*k,   2*le2*k,   -6*le*k,   4*le2*k];
+    const dofs=[2*e, 2*e+1, 2*e+2, 2*e+3];
+    for(let i=0;i<4;i++) for(let j=0;j<4;j++) K[dofs[i]*ndof+dofs[j]] += ke[i*4+j];
+  }
+  for(let i=0;i<nn;i++) f[2*i] = P[i];      // carichi positivi verso il basso
+
+  const Kc=K.slice(), fc=f.slice();
+  for(const s of supIdx){
+    const d=2*s;
+    for(let j=0;j<ndof;j++){ Kc[d*ndof+j]=0; Kc[j*ndof+d]=0; }
+    Kc[d*ndof+d]=1; fc[d]=0;
+  }
+  const u=gaussSolve(Kc, fc, ndof);
+  for(let i=0;i<ndof;i++) if(!isFinite(u[i])) return null;
+
+  return supIdx.map(sI => {
+    const d=2*sI;
+    let r=0;
+    for(let j=0;j<ndof;j++) r += K[d*ndof+j]*u[j];
+    return -(r - f[d]);                     // reazione positiva verso l'alto
+  });
+}
+
+// Reazioni di un piano. loads = [{x, F}] con F positiva verso il basso,
+// sup = supporti ordinati per ascissa. Il caso a due supporti è risolto
+// con le sole equazioni di equilibrio.
+function planeReactions(loads, sup, Lt){
+  let R;
+  if(sup.length===2){
+    const xA=sup[0].x, xB=sup[1].x, span=xB-xA;
+    let sF=0, sM=0;
+    for(const l of loads){ sF += l.F; sM += l.F*(l.x-xA); }
+    const RB = span!==0 ? sM/span : 0;      // equilibrio dei momenti rispetto ad A
+    R = [sF - RB, RB];                      // equilibrio alla traslazione
+  } else {
+    // Nodi: estremi dell'albero, supporti e punti di carico, normalizzati
+    // su Lt perché le reazioni dipendono solo dai rapporti geometrici.
+    const key   = x => +(x/Lt).toFixed(9);
+    const nodes = [...new Set([0, Lt, ...sup.map(s=>s.x), ...loads.map(l=>l.x)].map(key))].sort((a,b)=>a-b);
+    const idx   = x => nodes.indexOf(key(x));
+    const P = new Float64Array(nodes.length);
+    for(const l of loads){ const i=idx(l.x); if(i>=0) P[i]+=l.F; }
+    R = continuousReactions(nodes, P, sup.map(s=>idx(s.x)));
+    if(!R) R = sup.map(()=>0);
+  }
   // Convenzione interna delle stazioni: forze positive verso l'alto,
   // quindi i carichi applicati (positivi verso il basso) cambiano segno.
   const st = loads.map(l => ({x:l.x, W:-l.F}));
-  st.push({x:xA, W:RA}, {x:xB, W:RB});
+  sup.forEach((s,i) => st.push({x:s.x, W:R[i]}));
   st.sort((a,b) => a.x-b.x);
-  return {RA, RB, st};
+  return {R, st};
 }
 
 // Taglio e momento in un piano: somma dei contributi a sinistra di x.
@@ -786,31 +963,79 @@ function beamAt(b, x){
           M:Math.hypot(a.M,c.M), V:Math.hypot(a.V,c.V)};
 }
 
+// Momento torcente trasmesso dalla sezione x: somma delle coppie applicate
+// a destra di x. Con l'albero in equilibrio (ΣMt = 0) il risultato è nullo
+// fuori dal tratto compreso fra ingresso e uscita della coppia.
+function torqueAt(b, x){
+  let m=0;
+  for(const l of b.act) if(l.x > x) m += l.Mt;
+  return m;
+}
+
+// Forza normale nella sezione x (positiva di trazione): somma delle forze
+// assiali applicate a destra di x, comprese le reazioni dei supporti
+// bloccati assialmente.
+function axialAt(b, x){
+  let n=0;
+  for(const l of b.act)   if(l.x > x) n += l.Fa;
+  for(const s of b.axSup) if(s.x > x) n += s.Ra;
+  return n;
+}
+
 function buildBeam(){
-  const Lt=val('Lsh'), xA=val('xA'), xB=val('xB');
-  if(!(Lt>0) || xA<0 || xB<0 || xA>Lt || xB>Lt || Math.abs(xB-xA)<1e-6) return null;
-  const act = forces.filter(f => f.x>=0 && f.x<=Lt && (f.Fy!==0 || f.Fz!==0));
+  const Lt=val('Lsh');
+  if(!(Lt>0)) return null;
+
+  const sup = supports.filter(s => s.x>=0 && s.x<=Lt)
+                      .map(s => ({...s}))
+                      .sort((a,b) => a.x-b.x);
+  if(sup.length<2) return null;
+  for(let i=1;i<sup.length;i++) if(Math.abs(sup[i].x-sup[i-1].x)<1e-6) return null;
+
+  const act = loads.filter(f => f.x>=0 && f.x<=Lt &&
+                                (f.Fy!==0 || f.Fz!==0 || f.Fa!==0 || f.Mt!==0));
   if(!act.length) return null;
 
-  const py = planeReactions(act.map(f=>({x:f.x, F:f.Fy})), xA, xB);
-  const pz = planeReactions(act.map(f=>({x:f.x, F:f.Fz})), xA, xB);
+  const py = planeReactions(act.map(f=>({x:f.x, F:f.Fy})), sup, Lt);
+  const pz = planeReactions(act.map(f=>({x:f.x, F:f.Fz})), sup, Lt);
 
-  // Campionamento: griglia uniforme più i punti di discontinuità (appoggi e
-  // forze), presi appena prima e appena dopo perché il taglio vi salta.
+  // Spinta assiale: ogni forza è assorbita dal supporto bloccato più vicino.
+  // Con un solo supporto bloccato il risultato è esatto; con più di uno il
+  // problema è iperstatico e la ripartizione reale dipende dai giochi, quindi
+  // questa resta un'ipotesi, dichiarata in nota.
+  const axSup = sup.filter(s => s.axial).map(s => ({x:s.x, Ra:0}));
+  const sumFa = act.reduce((a,f) => a+f.Fa, 0);
+  if(axSup.length){
+    for(const l of act){
+      if(l.Fa===0) continue;
+      let best=axSup[0];
+      for(const s of axSup) if(Math.abs(s.x-l.x) < Math.abs(best.x-l.x)) best=s;
+      best.Ra -= l.Fa;
+    }
+  }
+  const sumMt = act.reduce((a,f) => a+f.Mt, 0);
+
+  // Campionamento: griglia uniforme più i punti di discontinuità (supporti,
+  // carichi), presi appena prima e appena dopo perché taglio, coppia e forza
+  // normale vi saltano.
   const eps = Math.max(Lt*1e-7, 1e-6);
   const xs  = [];
   const push = x => { if(x>=0 && x<=Lt) xs.push(x); };
   const N = 200;
   for(let i=0;i<=N;i++) push(Lt*i/N);
-  [xA, xB, ...act.map(f=>f.x)].forEach(s => { push(s-eps); push(s+eps); });
+  const nodesX = [...new Set([...sup.map(s=>s.x), ...act.map(f=>f.x)])];
+  nodesX.forEach(s => { push(s-eps); push(s+eps); });
   xs.sort((a,b)=>a-b);
 
-  const Vy=[],Vz=[],Vr=[],My=[],Mz=[],Mr=[];
+  const b = {Lt, sup, act, py, pz, axSup, sumFa, sumMt, eps, nodesX};
+
+  const Vy=[],Vz=[],Vr=[],My=[],Mz=[],Mr=[],Nx=[],Tx=[];
   let Mmax=0, xMmax=0, Vmax=0;
   for(const x of xs){
-    const r = beamAt({py,pz}, x);
+    const r = beamAt(b, x);
     Vy.push(r.Vy); Vz.push(r.Vz); Vr.push(r.V);
     My.push(r.My); Mz.push(r.Mz); Mr.push(r.M);
+    Nx.push(axialAt(b,x)); Tx.push(torqueAt(b,x));
     // Mf risultante è convessa a tratti: il massimo cade sempre su una
     // stazione, che il campionamento contiene.
     if(r.M>Mmax){ Mmax=r.M; xMmax=x; }
@@ -818,7 +1043,38 @@ function buildBeam(){
   }
   // Un albero caricato in un solo piano non ha bisogno delle curve M_z e V_z.
   const planar = act.every(f => f.Fz===0);
-  return {Lt, xA, xB, act, py, pz, xs, Vy, Vz, Vr, My, Mz, Mr, Mmax, xMmax, Vmax, planar};
+  return {...b, xs, Vy, Vz, Vr, My, Mz, Mr, Nx, Tx, Mmax, xMmax, Vmax, planar};
+}
+
+// Stazioni candidate alla verifica: punti notevoli presi appena prima e
+// appena dopo la discontinuità, più gli estremi dell'albero.
+function beamStations(b){
+  const out=[0, b.Lt, b.xMmax];
+  b.nodesX.forEach(x => { out.push(Math.max(0,x-b.eps), Math.min(b.Lt,x+b.eps)); });
+  return [...new Set(out)].sort((a,b2)=>a-b2);
+}
+
+// Carichi interni della sezione x, nella forma attesa da analyze().
+function sectionLoads(b, x){
+  const at = beamAt(b, x);
+  return {Mf: at.M/1000,                 // N·mm → Nm
+          Mt: Math.abs(torqueAt(b,x)),   // il segno non influenza |τ_t|
+          Fa: axialAt(b,x),
+          T : at.V};
+}
+
+// Sezione più critica: con Mt e N variabili lungo l'albero il massimo del
+// momento flettente non è più necessariamente il punto peggiore, quindi si
+// confronta il coefficiente di sicurezza effettivo di ogni stazione.
+function criticalStation(b, d, di, pMat){
+  let bx=b.xMmax, bcs=Infinity;
+  for(const x of beamStations(b)){
+    const r = analyze(d, di, {...pMat, ...sectionLoads(b,x)});
+    if(!r) continue;
+    const cs = Math.min(r.CSst, r.CSfat);
+    if(cs < bcs){ bcs=cs; bx=x; }
+  }
+  return bx;
 }
 
 // ═══════════════════════════════════════════════════════
@@ -827,7 +1083,7 @@ function buildBeam(){
 //  tratteggiato (doppia codifica, leggibile anche in daltonismo),
 //  risultante = ambra con area piena ed etichetta diretta sul massimo.
 // ═══════════════════════════════════════════════════════
-const CH = {y:'#4fc3f7', z:'#66bb6a', r:'#ffa726', mark:'#b39ddb',
+const CH = {y:'#4fc3f7', z:'#66bb6a', r:'#ffa726', mark:'#b39ddb', ax:'#4db6ac', mt:'#ef5350',
             axis:'#7d8090', grid:'rgba(255,255,255,.07)', txt:'#e8e9ec'};
 const SVGF = `font-family="'DM Mono',monospace"`;
 
@@ -890,10 +1146,11 @@ function legendHTML(items){
   return items.map(i => `<span><i style="border-top-style:${i.dash?'dashed':'solid'};border-top-color:${i.color}"></i>${i.label}</span>`).join('');
 }
 
-// Schema di carico: albero, appoggi con reazione, forze nei due piani,
-// sezione verificata.
+// Schema di carico: albero, supporti con reazione (triangolo pieno =
+// bloccato assialmente, su rullini = scorrevole), carichi nei due piani con
+// spinta assiale e coppia, sezione verificata.
 function drawBeamSchema(b, xsec){
-  const W=640, H=200, ml=34, mr=34, yC=112, hh=20;
+  const W=640, H=210, ml=34, mr=34, yC=112, hh=20;
   const pw=W-ml-mr;
   const X = x => ml + (b.Lt>0 ? x/b.Lt : 0)*pw;
 
@@ -908,16 +1165,28 @@ function drawBeamSchema(b, xsec){
   let g = `<rect x="${ml}" y="${yC-hh/2}" width="${pw}" height="${hh}" fill="rgba(79,195,247,.08)" stroke="#4fc3f7" stroke-width="1.3" rx="2"/>`
         + `<line x1="${ml}" y1="${yC}" x2="${ml+pw}" y2="${yC}" stroke="rgba(255,255,255,.18)" stroke-width="1" stroke-dasharray="6 4"/>`;
 
-  // Appoggi con il carico radiale risultante sul cuscinetto.
-  [['A', b.xA, Math.hypot(b.py.RA, b.pz.RA)],
-   ['B', b.xB, Math.hypot(b.py.RB, b.pz.RB)]].forEach(([n,xv,R]) => {
-    const x=X(xv), yt=yC+hh/2+2;
-    g += `<polygon points="${x.toFixed(1)},${yt} ${(x-10).toFixed(1)},${yt+15} ${(x+10).toFixed(1)},${yt+15}" fill="none" stroke="#9a9dab" stroke-width="1.3"/>`
-       + `<line x1="${(x-15).toFixed(1)}" y1="${yt+15}" x2="${(x+15).toFixed(1)}" y2="${yt+15}" stroke="#9a9dab" stroke-width="1.3"/>`
-       + `<text x="${x.toFixed(1)}" y="${yt+29}" fill="#9a9dab" font-size="9" text-anchor="middle" ${SVGF}>${n} · ${fi(R)} N</text>`;
+  // Supporti con il carico radiale risultante sul cuscinetto.
+  b.sup.forEach((s,i) => {
+    const x=X(s.x), yt=yC+hh/2+2;
+    const R=Math.hypot(b.py.R[i], b.pz.R[i]);
+    const nome=String.fromCharCode(65+i%26);
+    g += `<polygon points="${x.toFixed(1)},${yt} ${(x-10).toFixed(1)},${yt+15} ${(x+10).toFixed(1)},${yt+15}" fill="${s.axial?'rgba(154,157,171,.35)':'none'}" stroke="#9a9dab" stroke-width="1.3"/>`;
+    if(s.axial){
+      // Vincolo bloccato: base a terra piena, nessun rullino.
+      g += `<line x1="${(x-15).toFixed(1)}" y1="${yt+15}" x2="${(x+15).toFixed(1)}" y2="${yt+15}" stroke="#9a9dab" stroke-width="1.3"/>`;
+    } else {
+      // Vincolo scorrevole: due rullini fra triangolo e terreno.
+      g += `<circle cx="${(x-5).toFixed(1)}" cy="${yt+19}" r="3.2" fill="none" stroke="#9a9dab" stroke-width="1.1"/>`
+         + `<circle cx="${(x+5).toFixed(1)}" cy="${yt+19}" r="3.2" fill="none" stroke="#9a9dab" stroke-width="1.1"/>`
+         + `<line x1="${(x-15).toFixed(1)}" y1="${yt+23}" x2="${(x+15).toFixed(1)}" y2="${yt+23}" stroke="#9a9dab" stroke-width="1.3"/>`;
+    }
+    const ax = b.axSup.find(o => Math.abs(o.x-s.x)<1e-6);
+    g += `<text x="${x.toFixed(1)}" y="${yt+(s.axial?31:37)}" fill="#9a9dab" font-size="9" text-anchor="middle" ${SVGF}>${nome} · ${fi(R)} N</text>`;
+    if(ax && Math.abs(ax.Ra)>=0.5)
+      g += `<text x="${x.toFixed(1)}" y="${yt+(s.axial?42:48)}" fill="#66bb6a" font-size="9" text-anchor="middle" ${SVGF}>ax ${fi(ax.Ra)} N</text>`;
   });
 
-  // Forze: lunghezza della freccia proporzionale al modulo.
+  // Carichi: lunghezza della freccia proporzionale al modulo radiale.
   const Fmax = Math.max(...b.act.map(f => Math.hypot(f.Fy,f.Fz)), 1);
   b.act.forEach((f,i) => {
     const x = X(f.x);
@@ -935,49 +1204,78 @@ function drawBeamSchema(b, xsec){
       g += arrow(x - s*len*0.87, yC-hh/2 - len*0.5, x, yC-hh/2, CH.z);
       lab.push(`z ${fi(f.Fz)}`);
     }
-    const yLab = 26 + (i%2)*13;                // sfalsate per evitare le sovrapposizioni
-    g += `<text x="${x.toFixed(1)}" y="${yLab}" fill="#9a9dab" font-size="9" text-anchor="middle" ${SVGF}>F${i+1} · ${lab.join(' / ')} N</text>`;
+    if(f.Fa!==0){
+      // Spinta assiale: freccia orizzontale sull'asse dell'albero.
+      const s = f.Fa>0 ? 1 : -1;
+      g += arrow(x - s*26, yC, x, yC, CH.ax);
+      lab.push(`a ${fi(f.Fa)}`);
+    }
+    if(f.Mt!==0){
+      // Coppia: archetto sotto l'albero, verso secondo il segno.
+      const s = f.Mt>0 ? 1 : -1, yb=yC+hh/2+4;
+      g += `<path d="M ${(x-13).toFixed(1)} ${yb+11} A 13 13 0 0 ${s>0?1:0} ${(x+13).toFixed(1)} ${yb+11}" fill="none" stroke="${CH.mt}" stroke-width="1.8"/>`
+         + `<polygon points="${(x+s*13).toFixed(1)},${yb+11} ${(x+s*8).toFixed(1)},${yb+4} ${(x+s*17).toFixed(1)},${yb+6}" fill="${CH.mt}"/>`;
+      lab.push(`t ${fi(f.Mt)}`);
+    }
+    const yLab = 22 + (i%2)*13;                // sfalsate per evitare le sovrapposizioni
+    g += `<text x="${x.toFixed(1)}" y="${yLab}" fill="#9a9dab" font-size="9" text-anchor="middle" ${SVGF}>P${i+1} · ${lab.join(' / ')}</text>`;
   });
 
   // Sezione verificata.
   const xm = X(xsec);
   g += `<line x1="${xm.toFixed(1)}" y1="${yC-hh/2-8}" x2="${xm.toFixed(1)}" y2="${yC+hh/2+8}" stroke="${CH.mark}" stroke-width="1.6" stroke-dasharray="4 3"/>`
      + `<text x="${xm.toFixed(1)}" y="${H-8}" fill="${CH.mark}" font-size="9" text-anchor="middle" ${SVGF}>sezione x = ${fi(xsec)} mm</text>`
-     + `<text x="${ml}" y="${yC+hh/2+46}" fill="#7d8090" font-size="9" ${SVGF}>x = 0</text>`
-     + `<text x="${ml+pw}" y="${yC+hh/2+46}" fill="#7d8090" font-size="9" text-anchor="end" ${SVGF}>x = ${fi(b.Lt)} mm</text>`;
+     + `<text x="${ml}" y="${H-8}" fill="#7d8090" font-size="9" ${SVGF}>x = 0</text>`
+     + `<text x="${ml+pw}" y="${H-8}" fill="#7d8090" font-size="9" text-anchor="end" ${SVGF}>x = ${fi(b.Lt)} mm</text>`;
 
   return `<svg viewBox="0 0 ${W} ${H}" xmlns="http://www.w3.org/2000/svg">${g}</svg>`;
 }
 
 function renderBeam(b){
   if(!b){
-    ['beamGrid','beamSchema','chartV','chartM','legS','legV','legM'].forEach(id => $(id).innerHTML='');
-    $('beamNote').innerHTML = 'Schema incompleto: servono una lunghezza valida, due appoggi in posizioni '
-      + 'distinte comprese fra 0 e L_t, e almeno una forza radiale non nulla applicata sull\'albero. '
-      + 'Finché lo schema non è risolvibile, Mf resta a zero.';
+    ['beamGrid','beamSchema','chartV','chartM','chartN','chartT','legS','legV','legM','legN','legT']
+      .forEach(id => $(id).innerHTML='');
+    ['boxN','boxT'].forEach(id => $(id).classList.add('hidden'));
+    $('beamNote').innerHTML = 'Schema incompleto: servono una lunghezza valida, almeno due supporti in '
+      + 'posizioni distinte comprese fra 0 e L_t, e almeno un punto di carico non nullo applicato '
+      + 'sull\'albero. Finché lo schema non è risolvibile, i carichi della sezione restano a zero.';
     return;
   }
-  const RAr=Math.hypot(b.py.RA,b.pz.RA), RBr=Math.hypot(b.py.RB,b.pz.RB);
   const at=b.at;
 
-  $('beamGrid').innerHTML =
-    box('Reazione appoggio A', fi(RAr), 'N',
-      `Reazione risultante in A (x = ${fi(b.xA)} mm): R_Ay = ${fp(b.py.RA,1)} N, R_Az = ${fp(b.pz.RA,1)} N. È il carico radiale da usare per la scelta e la durata del cuscinetto A.`) +
-    box('Reazione appoggio B', fi(RBr), 'N',
-      `Reazione risultante in B (x = ${fi(b.xB)} mm): R_By = ${fp(b.py.RB,1)} N, R_Bz = ${fp(b.pz.RB,1)} N. È il carico radiale sul cuscinetto B.`) +
+  // Una casella per supporto, con le componenti nei due piani e, per i
+  // supporti bloccati, la spinta assiale assorbita.
+  let grid = b.sup.map((s,i) => {
+    const nome=String.fromCharCode(65+i%26);
+    const R=Math.hypot(b.py.R[i], b.pz.R[i]);
+    const ax=b.axSup.find(o => Math.abs(o.x-s.x)<1e-6);
+    return box(`Reazione supporto ${nome}`, fi(R), 'N',
+      `Reazione radiale risultante in ${nome} (x = ${fi(s.x)} mm): R_y = ${fp(b.py.R[i],1)} N, R_z = ${fp(b.pz.R[i],1)} N. `
+      + `È il carico radiale da usare per la scelta e la durata del cuscinetto. Vincolo assiale: ${s.axial?'bloccato':'scorrevole'}`
+      + (ax ? `, reazione assiale ${fp(ax.Ra,1)} N.` : '.'));
+  }).join('');
+
+  grid +=
     box('Momento massimo', fp(b.Mmax/1000,1), 'Nm',
-      'Massimo del momento flettente risultante lungo l\'albero, composizione dei due piani: Mf = √(M_y² + M_z²). Negli alberi rotanti è il punto candidato alla rottura per fatica, salvo intagli più severi altrove.') +
+      'Massimo del momento flettente risultante lungo l\'albero, composizione dei due piani: Mf = √(M_y² + M_z²). Non coincide necessariamente con la sezione verificata, che è scelta sul coefficiente di sicurezza.') +
     box('Posizione del massimo', fi(b.xMmax), 'mm',
-      'Ascissa in cui si verifica il momento flettente massimo. Cade sempre in corrispondenza di una forza o di un appoggio.') +
+      'Ascissa in cui si verifica il momento flettente massimo. Cade sempre in corrispondenza di un carico o di un supporto.') +
     box('Mf nella sezione', fp(at.M/1000,1), 'Nm',
-      `Momento flettente risultante nella sezione verificata (x = ${fi(b.xsec)} mm): M_y = ${fp(at.My/1000,1)} Nm, M_z = ${fp(at.Mz/1000,1)} Nm. È il valore trasferito al calcolo delle tensioni.`) +
+      `Momento flettente risultante nella sezione verificata (x = ${fi(b.xsec)} mm): M_y = ${fp(at.My/1000,1)} Nm, M_z = ${fp(at.Mz/1000,1)} Nm.`) +
     box('Taglio nella sezione', fi(at.V), 'N',
-      `Taglio risultante nella sezione verificata: V_y = ${fp(at.Vy,1)} N, V_z = ${fp(at.Vz,1)} N. Viene riportato automaticamente nel campo «Forza di taglio T».`);
+      `Taglio risultante nella sezione verificata: V_y = ${fp(at.Vy,1)} N, V_z = ${fp(at.Vz,1)} N. Viene riportato automaticamente nel campo «Forza di taglio T».`) +
+    box('Mt nella sezione', fp(b.MtSec,1), 'Nm',
+      'Momento torcente trasmesso dalla sezione verificata: somma delle coppie applicate a destra della sezione. Vale zero nei tratti esterni al percorso della coppia, fra ingresso e uscita.') +
+    box('Forza normale N', fi(b.NSec), 'N',
+      'Forza assiale interna nella sezione verificata, positiva di trazione: somma delle spinte applicate a destra della sezione e delle reazioni dei supporti bloccati. Viene riportata nel campo «Forza assiale Fa».');
+  $('beamGrid').innerHTML = grid;
 
   $('beamSchema').innerHTML = drawBeamSchema(b, b.xsec);
 
   const legS = [{color:CH.y, label:'F_y — piano verticale'}];
   if(!b.planar) legS.push({color:CH.z, label:'F_z — piano orizzontale'});
+  if(b.act.some(f=>f.Fa!==0)) legS.push({color:CH.ax, label:'F_a — spinta assiale'});
+  if(b.act.some(f=>f.Mt!==0)) legS.push({color:CH.mt, label:'M_t — coppia applicata'});
   legS.push({color:CH.mark, dash:true, label:'sezione verificata'});
   $('legS').innerHTML = legendHTML(legS);
 
@@ -1006,14 +1304,40 @@ function renderBeam(b){
   $('chartM').innerHTML = chartSVG(b.xs, b.Lt, serM, 'Nm', b.xsec);
   $('legM').innerHTML = legendHTML(serM.concat([{color:CH.mark, dash:true, label:'sezione verificata'}]));
 
-  const fuori = b.xsec < Math.min(b.xA,b.xB) || b.xsec > Math.max(b.xA,b.xB);
+  // Coppia e forza normale: disegnate solo se non identicamente nulle.
+  const hasT = b.Tx.some(v => Math.abs(v)>1e-9);
+  $('boxT').classList.toggle('hidden', !hasT);
+  if(hasT){
+    const serT=[{data:b.Tx, color:CH.mt, label:'Mt trasmesso', fill:true, mark:true}];
+    $('chartT').innerHTML = chartSVG(b.xs, b.Lt, serT, 'Nm', b.xsec);
+    $('legT').innerHTML = legendHTML(serT.concat([{color:CH.mark, dash:true, label:'sezione verificata'}]));
+  }
+  const hasN = b.Nx.some(v => Math.abs(v)>1e-9);
+  $('boxN').classList.toggle('hidden', !hasN);
+  if(hasN){
+    const serN=[{data:b.Nx, color:CH.ax, label:'N (positiva di trazione)', fill:true, mark:true}];
+    $('chartN').innerHTML = chartSVG(b.xs, b.Lt, serN, 'N', b.xsec);
+    $('legN').innerHTML = legendHTML(serN.concat([{color:CH.mark, dash:true, label:'sezione verificata'}]));
+  }
+
+  const fuori = b.xsec < b.sup[0].x || b.xsec > b.sup[b.sup.length-1].x;
+  const iper  = b.sup.length>2;
   $('beamNote').innerHTML =
-    `Schema isostatico su due appoggi, risolto con le sole equazioni di equilibrio: R_B = Σ F_i·(x_i − x_A)/(x_B − x_A), `
-    + `R_A = Σ F_i − R_B. Il taglio è costante fra due forze e salta in corrispondenza di ciascuna; il momento è `
-    + `lineare a tratti e la risultante Mf = √(M_y² + M_z²) ha il massimo su una forza o su un appoggio. `
-    + (fuori ? 'La sezione verificata si trova <b>a sbalzo</b>, fuori dalla luce fra gli appoggi. ' : '')
-    + `Il momento torcente e la forza assiale restano input indipendenti: non derivano dalle forze radiali qui inserite. `
-    + `Non sono considerate la freccia flessionale, l'inclinazione sugli appoggi né le velocità critiche.`;
+    (iper
+      ? `Albero su ${b.sup.length} supporti: schema <b>iperstatico</b>, risolto come trave continua di `
+        + `Euler-Bernoulli (K·u = f, reazioni ricavate ai gradi di libertà vincolati). Il calcolo assume `
+        + `<b>rigidezza flessionale costante</b>: con albero fortemente a gradini le reazioni reali si scostano. `
+      : `Schema isostatico su due supporti, risolto con le sole equazioni di equilibrio: `
+        + `R_B = Σ F_i·(x_i − x_A)/(x_B − x_A), R_A = Σ F_i − R_B. `)
+    + `Il taglio è costante fra due carichi e salta in corrispondenza di ciascuno; il momento è `
+    + `lineare a tratti e la risultante Mf = √(M_y² + M_z²) ha il massimo su un carico o su un supporto. `
+    + `Il momento torcente e la forza normale sono costanti a tratti e cambiano solo nei punti di applicazione. `
+    + (fuori ? 'La sezione verificata si trova <b>a sbalzo</b>, fuori dalla luce fra i supporti estremi. ' : '')
+    + (b.axSup.length>1
+        ? 'Con <b>più supporti bloccati</b> assialmente la ripartizione della spinta è iperstatica e dipende dai giochi di montaggio: qui ogni forza è assegnata al supporto bloccato più vicino. '
+        : '')
+    + `Non sono considerate la freccia flessionale, l'inclinazione sui supporti, le coppie flettenti `
+    + `concentrate né le velocità critiche.`;
 }
 
 // ═══════════════════════════════════════════════════════
@@ -1068,7 +1392,6 @@ function calculate(){
   const d      = val('d');
   const hollow = section==='cava';
   const di     = hollow ? val('di') : 0;
-  const Fa     = val('Fa');
   const Re     = val('Re');
   const Rm     = val('Rm');
   const sigD   = val('sigD');
@@ -1080,44 +1403,50 @@ function calculate(){
   const G      = val('G');
   const fin    = FIN[$('fin').value] || FIN.macc;
 
-  // Momento flettente e taglio: inseriti a mano oppure ricavati dallo schema
-  // di trave con tutte le forze radiali applicate all'albero.
-  let beam = null, Mf, T;
+  // Carichi della sezione: inseriti a mano oppure ricavati dallo schema di
+  // trave. Con lo schema attivo anche Mt e Fa sono risultati, perche' coppia
+  // e spinta esistono solo nei tratti di albero che le trasmettono.
+  const pMat = {hollow, Re, Rm, sigD, Kt, q, kc,
+                fa:fin.a, fb:fin.b, bend:$('bend').value, tor:$('tor').value};
+
+  let beam = null, Mf, T, Mt, Fa;
   if(bendMode==='schema'){
     beam = buildBeam();
     if(beam){
       const xs = secMode==='auto'
-               ? beam.xMmax
+               ? criticalStation(beam, d, di, pMat)
                : Math.min(Math.max(val('xsec'), 0), beam.Lt);
-      if(secMode==='auto') $('xsec').value = Math.round(beam.xMmax);
+      if(secMode==='auto') $('xsec').value = Math.round(xs);
       beam.xsec = xs;
       beam.at   = beamAt(beam, xs);
-      Mf = beam.at.M/1000;          // N·mm → Nm
-      T  = beam.at.V;
+      const sl  = sectionLoads(beam, xs);
+      Mf = sl.Mf; T = sl.T; Mt = sl.Mt; Fa = sl.Fa;
+      beam.MtSec = torqueAt(beam, xs);
+      beam.NSec  = sl.Fa;
       $('Mf').value = Mf.toFixed(1);
       $('T').value  = T.toFixed(0);
+      $('Mt').value = Mt.toFixed(1);
+      $('Fa').value = Fa.toFixed(0);
     } else {
-      Mf = 0; T = 0;
-      $('Mf').value = 0;
-      $('T').value  = 0;
+      Mf = 0; T = 0; Mt = 0; Fa = 0;
+      ['Mf','T','Mt','Fa'].forEach(id => { $(id).value = 0; });
     }
   } else {
     Mf = val('Mf');
     T  = val('T');
+    Fa = val('Fa');
+    // Momento torcente: inserito oppure ricavato da potenza e giri.
+    if(torqueMode==='potenza'){
+      const P=val('P'), n=val('n');
+      Mt = n>0 ? K_POT*P/n : 0;
+      $('Mt').value = Mt ? Mt.toFixed(1) : 0;
+    } else {
+      Mt = val('Mt');
+    }
   }
 
-  // Momento torcente: inserito oppure ricavato da potenza e giri.
-  let Mt;
-  if(torqueMode==='potenza'){
-    const P=val('P'), n=val('n');
-    Mt = n>0 ? K_POT*P/n : 0;
-    $('Mt').value = Mt ? Mt.toFixed(1) : 0;
-  } else {
-    Mt = val('Mt');
-  }
 
-  const p = {Mf, Mt, Fa, T, hollow, Re, Rm, sigD, Kt, q, kc,
-             fa:fin.a, fb:fin.b, bend:$('bend').value, tor:$('tor').value};
+  const p = {...pMat, Mf, Mt, Fa, T};
 
   const r = analyze(d, di, p);
   const ok = !!r;
@@ -1299,6 +1628,31 @@ function calculate(){
     if(r.ka>=1) hints.push('<div class="info-box">Il fattore di finitura risulta ≥ 1 ed è stato limitato a 1: la correlazione ka = a·Rm^b non può migliorare il limite di fatica del provino lucido.</div>');
     if(T!==0) hints.push('<div class="info-box">Il taglio è stato incluso nelle tensioni tangenziali. Attenzione: τ_t è massima in superficie mentre τ_T è massima sull\'asse neutro, quindi la loro somma è una semplificazione <b>cautelativa</b>, non lo stato reale in un singolo punto.</div>');
   }
+  // ── Avvisi sulla coerenza dello schema di albero
+  if(bendMode==='schema'){
+    const Lt = val('Lsh');
+    const nSup = supports.length;
+    const fuoriS = supports.filter(s => !(s.x>=0 && s.x<=Lt)).length;
+    const nAx = supports.filter(s => s.axial).length;
+    if(nSup<2)
+      hints.push('<div class="warn-box">Servono <b>almeno due supporti</b>: con un solo supporto lo schema è labile e non si possono calcolare reazioni né momento flettente.</div>');
+    else if(fuoriS)
+      hints.push(`<div class="warn-box">${fuoriS===1?'Un supporto è':'Alcuni supporti sono'} fuori dall'albero (x non compreso fra 0 e ${fi(Lt)} mm): ${fuoriS===1?'viene ignorato':'vengono ignorati'} nel calcolo.</div>`);
+    else if(!beam)
+      hints.push('<div class="warn-box">Schema non risolvibile: verificare che i supporti siano in posizioni distinte e che ci sia almeno un punto di carico non nullo.</div>');
+    if(beam){
+      if(Math.abs(beam.sumMt) > 1e-6*Math.max(1, ...beam.act.map(f=>Math.abs(f.Mt))))
+        hints.push(`<div class="warn-box">Coppie <b>non in equilibrio</b>: ΣM_t = ${fp(beam.sumMt,1)} Nm ≠ 0. Un albero in regime trasmette tanta coppia quanta ne riceve: inserire la coppia resistente (segno opposto) nel punto in cui esce, altrimenti il diagramma Mt(x) non si chiude a zero.</div>`);
+      if(Math.abs(beam.sumFa)>1e-9 && !beam.axSup.length)
+        hints.push(`<div class="warn-box">Spinta assiale ΣF_a = ${fi(beam.sumFa)} N senza alcun supporto <b>bloccato</b> assialmente: l'albero non è vincolato in direzione assiale. Impostare almeno un supporto su «Bloccato».</div>`);
+      if(beam.axSup.length>1)
+        hints.push('<div class="info-box">Più supporti bloccati assialmente: la ripartizione della spinta è iperstatica e dipende dai giochi di montaggio. Qui ogni forza è assegnata al supporto bloccato più vicino; nella pratica costruttiva si blocca <b>un solo</b> cuscinetto e si lascia scorrevole l\'altro per la dilatazione termica.</div>');
+      if(beam.sup.length>2)
+        hints.push(`<div class="info-box">Albero su ${beam.sup.length} supporti: schema <b>iperstatico</b>. Le reazioni dipendono dall'allineamento e sono calcolate a rigidezza flessionale costante; un disallineamento dei supporti o un albero a gradini marcati modificano la ripartizione dei carichi.</div>`);
+      if(beam.act.every(f => f.Mt===0))
+        hints.push('<div class="info-box">Nessuna coppia inserita nei punti di carico: il momento torcente della sezione risulta nullo. Inserire M_t positivo dove la coppia entra (puleggia, giunto motore) e negativo dove esce (ruota, utilizzatore).</div>');
+    }
+  }
   $('hint').innerHTML = hints.join('');
 }
 
@@ -1307,10 +1661,13 @@ function calculate(){
 // ═══════════════════════════════════════════════════════
 function buildFormulas(hollow, schema){
   const beamRows = schema ? [
-    ['Reazioni (per piano)', 'R_B = Σ F_i·(x_i − x_A)/(x_B − x_A) &nbsp;;&nbsp; R_A = Σ F_i − R_B'],
+    ['Reazioni — 2 supporti', 'R_B = Σ F_i·(x_i − x_A)/(x_B − x_A) &nbsp;;&nbsp; R_A = Σ F_i − R_B'],
+    ['Reazioni — n supporti', 'K·u = f &nbsp;(trave continua) → R = (K·u − f) ai g.d.l. vincolati'],
     ['Taglio (per piano)', 'V(x) = Σ<sub>x_i ≤ x</sub> W_i &nbsp;[W verso l\'alto positivo]'],
     ['Momento (per piano)', 'M(x) = Σ<sub>x_i ≤ x</sub> W_i·(x − x_i)'],
-    ['Momento risultante', 'Mf(x) = √(M_y(x)² + M_z(x)²)']
+    ['Momento risultante', 'Mf(x) = √(M_y(x)² + M_z(x)²)'],
+    ['Momento torcente', 'Mt(x) = Σ<sub>x_i &gt; x</sub> Mt_i &nbsp;;&nbsp; equilibrio: Σ Mt_i = 0'],
+    ['Forza normale', 'N(x) = Σ<sub>x_i &gt; x</sub> Fa_i + Σ<sub>x_j &gt; x</sub> R_aj &nbsp;[+ trazione]']
   ] : [];
   const rows = [
     ...beamRows,
@@ -1342,6 +1699,7 @@ function buildFormulas(hollow, schema){
 //  INIT
 // ═══════════════════════════════════════════════════════
 $('printBtn').addEventListener('click', () => window.print());
+renderSupports();
 renderForces();
 setSection('piena');
 setTorqueMode('diretto');
