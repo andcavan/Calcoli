@@ -31,6 +31,12 @@ body{display:flex;flex-direction:column;align-items:center;min-height:100vh;padd
 
 /* Segmented control a 3 vie (giunti: rigido/elastico/disco) */
 .seg-3{grid-template-columns:1fr 1fr 1fr}
+#tipoToggle .seg-btn{display:flex;flex-direction:column;align-items:center;gap:3px;padding:7px 4px}
+#tipoToggle .seg-btn svg{width:38px;height:24px}
+
+/* Schema visivo del giunto selezionato */
+.schematic-wrap{background:var(--bg1);border:1px solid var(--border);border-radius:6px;padding:10px;display:flex;justify-content:center}
+.schematic-wrap svg{width:100%;max-width:440px;height:auto}
 
 .util{width:70px;height:5px;background:var(--bg3);border-radius:3px;overflow:hidden;flex-shrink:0}
 .util span{display:block;height:100%;border-radius:3px}
@@ -69,9 +75,36 @@ footer{margin-top:34px;font-size:10px;color:var(--dim);letter-spacing:.04em;text
 
   <div class="stitle">Tipo giunto</div>
   <div class="seg seg-3" id="tipoToggle">
-    <button class="seg-btn on" id="tipo-rigido"   onclick="setTipo('rigido')">Rigido</button>
-    <button class="seg-btn"    id="tipo-elastico" onclick="setTipo('elastico')">Elastico</button>
-    <button class="seg-btn"    id="tipo-disco"    onclick="setTipo('disco')">A disco</button>
+    <button class="seg-btn on" id="tipo-rigido" onclick="setTipo('rigido')">
+      <svg viewBox="0 0 40 24" fill="none" stroke="currentColor" stroke-width="1.6">
+        <line x1="2" y1="12" x2="12" y2="12" stroke-width="3"/>
+        <line x1="28" y1="12" x2="38" y2="12" stroke-width="3"/>
+        <rect x="12" y="5" width="16" height="14" rx="2" fill="currentColor" fill-opacity=".28"/>
+      </svg>
+      Rigido
+    </button>
+    <button class="seg-btn" id="tipo-elastico" onclick="setTipo('elastico')">
+      <svg viewBox="0 0 40 24" fill="none" stroke="currentColor" stroke-width="1.6">
+        <line x1="2" y1="12" x2="9" y2="12" stroke-width="3"/>
+        <line x1="31" y1="12" x2="38" y2="12" stroke-width="3"/>
+        <rect x="9" y="5" width="8" height="14" rx="1"/>
+        <rect x="23" y="5" width="8" height="14" rx="1"/>
+        <path d="M20 6 L21.6 10.4 L26 10.4 L22.4 13 L23.6 17.4 L20 14.8 L16.4 17.4 L17.6 13 L14 10.4 L18.4 10.4 Z" fill="currentColor" fill-opacity=".55" stroke="none"/>
+      </svg>
+      Elastico
+    </button>
+    <button class="seg-btn" id="tipo-disco" onclick="setTipo('disco')">
+      <svg viewBox="0 0 40 24" fill="none" stroke="currentColor" stroke-width="1.6">
+        <line x1="2" y1="12" x2="9" y2="12" stroke-width="3"/>
+        <line x1="31" y1="12" x2="38" y2="12" stroke-width="3"/>
+        <rect x="9" y="5" width="7" height="14" rx="1"/>
+        <rect x="24" y="5" width="7" height="14" rx="1"/>
+        <line x1="18" y1="5" x2="18" y2="19"/>
+        <line x1="20.5" y1="5" x2="20.5" y2="19"/>
+        <line x1="23" y1="5" x2="23" y2="19"/>
+      </svg>
+      A disco
+    </button>
   </div>
 
   <div class="stitle">Potenza e velocità</div>
@@ -195,6 +228,11 @@ footer{margin-top:34px;font-size:10px;color:var(--dim);letter-spacing:.04em;text
 
 <!-- ═══ PANNELLO RISULTATI ═══ -->
 <div class="rpanel">
+
+  <div class="result-section">
+    <div class="result-section-title">Schema giunto — <span id="schemaTitle"></span></div>
+    <div class="schematic-wrap"><svg id="schemaGiunto" viewBox="0 0 440 170"></svg></div>
+  </div>
 
   <div id="hint"></div>
 
@@ -429,8 +467,60 @@ function coreCalc(){
   return {n,Mn,KA,Md,d,usePeak,Mpicco,grp,list,idx,t,disall,bulloni};
 }
 
+function schemaSVG(tipo){
+  const shaftY=76, shaftH=18, midY=shaftY+shaftH/2;
+  let s = `<line x1="0" y1="${midY}" x2="440" y2="${midY}" stroke="#4a4e5c" stroke-width="0.6" stroke-dasharray="7 3 2 3"/>
+    <rect x="6" y="${shaftY}" width="120" height="${shaftH}" fill="#2f3340" stroke="#9a9dab" stroke-width="1"/>
+    <rect x="314" y="${shaftY}" width="120" height="${shaftH}" fill="#2f3340" stroke="#9a9dab" stroke-width="1"/>
+    <text x="10" y="${shaftY-9}" fill="#7d8090" font-size="9" font-family="DM Mono">Albero motore</text>
+    <text x="430" y="${shaftY-9}" fill="#7d8090" font-size="9" font-family="DM Mono" text-anchor="end">Albero condotto</text>`;
+
+  if(tipo==='rigido'){
+    s += `<rect x="126" y="46" width="188" height="78" rx="8" fill="#3a3f4e" stroke="#b0b4c0" stroke-width="1.3"/>
+      <rect x="150" y="38" width="10" height="14" rx="2" fill="#9a9dab"/>
+      <rect x="178" y="38" width="10" height="14" rx="2" fill="#9a9dab"/>
+      <rect x="252" y="38" width="10" height="14" rx="2" fill="#9a9dab"/>
+      <rect x="280" y="38" width="10" height="14" rx="2" fill="#9a9dab"/>
+      <line x1="220" y1="46" x2="220" y2="124" stroke="#23252d" stroke-width="1" stroke-dasharray="3 3"/>
+      <text x="220" y="150" text-anchor="middle" fill="#c8cad4" font-size="10" font-family="Barlow Condensed" font-weight="600">MANICOTTO RIGIDO</text>
+      <text x="220" y="163" text-anchor="middle" fill="#7d8090" font-size="9" font-family="DM Mono">Corpo unico — nessun disallineamento ammesso</text>`;
+  }else if(tipo==='elastico'){
+    s += `<rect x="126" y="50" width="70" height="70" rx="6" fill="#3a3f4e" stroke="#b0b4c0" stroke-width="1.3"/>
+      <rect x="244" y="50" width="70" height="70" rx="6" fill="#3a3f4e" stroke="#b0b4c0" stroke-width="1.3"/>
+      <rect x="180" y="58" width="16" height="18" fill="#1c1d23"/>
+      <rect x="180" y="92" width="16" height="18" fill="#1c1d23"/>
+      <rect x="244" y="58" width="16" height="18" fill="#1c1d23"/>
+      <rect x="244" y="92" width="16" height="18" fill="#1c1d23"/>
+      <path d="M220 55 L227 78 L251 78 L232 92 L239 115 L220 101 L201 115 L208 92 L189 78 L213 78 Z"
+            fill="#ffb74d" fill-opacity=".85" stroke="#ffb74d" stroke-width="1"/>
+      <text x="220" y="150" text-anchor="middle" fill="#c8cad4" font-size="10" font-family="Barlow Condensed" font-weight="600">GIUNTO ELASTICO A INSERTO (SPIDER)</text>
+      <text x="220" y="163" text-anchor="middle" fill="#7d8090" font-size="9" font-family="DM Mono">Inserto elastomerico — assorbe piccoli disallineamenti</text>`;
+  }else{
+    s += `<rect x="126" y="55" width="55" height="60" rx="4" fill="#3a3f4e" stroke="#b0b4c0" stroke-width="1.3"/>
+      <rect x="259" y="55" width="55" height="60" rx="4" fill="#3a3f4e" stroke="#b0b4c0" stroke-width="1.3"/>
+      <circle cx="145" cy="68" r="4" fill="#9a9dab"/>
+      <circle cx="145" cy="102" r="4" fill="#9a9dab"/>
+      <circle cx="295" cy="68" r="4" fill="#9a9dab"/>
+      <circle cx="295" cy="102" r="4" fill="#9a9dab"/>
+      <rect x="188" y="48" width="4" height="74" fill="#c8cad4" opacity=".9"/>
+      <rect x="200" y="48" width="4" height="74" fill="#c8cad4" opacity=".7"/>
+      <rect x="212" y="48" width="4" height="74" fill="#c8cad4" opacity=".9"/>
+      <rect x="224" y="48" width="4" height="74" fill="#c8cad4" opacity=".7"/>
+      <rect x="236" y="48" width="4" height="74" fill="#c8cad4" opacity=".9"/>
+      <rect x="248" y="48" width="4" height="74" fill="#c8cad4" opacity=".7"/>
+      <line x1="145" y1="68" x2="188" y2="55" stroke="#7d8090" stroke-width="1" stroke-dasharray="2 2"/>
+      <line x1="295" y1="102" x2="252" y2="115" stroke="#7d8090" stroke-width="1" stroke-dasharray="2 2"/>
+      <text x="220" y="150" text-anchor="middle" fill="#c8cad4" font-size="10" font-family="Barlow Condensed" font-weight="600">GIUNTO A DISCO FLESSIBILE</text>
+      <text x="220" y="163" text-anchor="middle" fill="#7d8090" font-size="9" font-family="DM Mono">Pacco lamellare — disallineamento assorbito per flessione dei dischi</text>`;
+  }
+  return s;
+}
+
 function calculate(){
   const r = coreCalc();
+
+  $('schemaTitle').textContent = r.grp.label;
+  $('schemaGiunto').innerHTML = schemaSVG(tipoGiunto);
 
   $('hint').innerHTML = hint(r);
 
