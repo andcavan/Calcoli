@@ -918,7 +918,7 @@ function renderSchema(){
       <path d="M0,0 L7,3 L0,6 z" fill="${R}"/></marker></defs>`;
   let s = defs;
 
-  if(mode===1 || mode===2){
+  if(mode===1){
     // Sezione di un cordone d'angolo a T con gola inclinata a 45°
     s += `<rect x="40" y="120" width="180" height="26" fill="#23252d" stroke="${G}" stroke-width="1"/>`;
     s += `<rect x="118" y="40" width="24" height="80" fill="#23252d" stroke="${G}" stroke-width="1"/>`;
@@ -930,27 +930,34 @@ function renderSchema(){
     s += `<line x1="97" y1="99" x2="118" y2="120" stroke="${A}" stroke-width="1.6"/>`;
     s += `<text x="104" y="103" fill="${A}" font-size="11" font-family="DM Mono" font-weight="500">a</text>`;
     s += `<text x="150" y="112" fill="${W}" font-size="9" font-family="DM Mono">45°</text>`;
-    if(mode===1){
       s += `<line x1="130" y1="36" x2="130" y2="10" stroke="${R}" stroke-width="1.6" marker-end="url(#ar)"/>`;
       s += `<text x="138" y="22" fill="${R}" font-size="9" font-family="DM Mono">F⊥ / F_n</text>`;
       s += `<circle cx="205" cy="60" r="9" fill="none" stroke="${R}" stroke-width="1.2"/><circle cx="205" cy="60" r="2.5" fill="${R}"/>`;
       s += `<text x="220" y="64" fill="${R}" font-size="9" font-family="DM Mono">F∥ (uscente)</text>`;
       s += Sch.legend([['a','altezza di gola',Sch.C.acc],['F⊥','forza ⊥ al cordone',Sch.C.red],['F∥','forza ∥ (uscente)',Sch.C.red],['45°','gola ideale',Sch.C.violet]],292,98,{size:8.5,gap:14,w:140});
       s += `<text x="12" y="172" fill="${D}" font-size="9" font-family="DM Mono">Sezione del giunto a T — gola a inclinata di 45°, n cordoni di lunghezza L</text>`;
-    } else {
-      s += `<rect x="250" y="40" width="20" height="110" fill="#23252d" stroke="${G}" stroke-width="1"/>`;
-      s += `<rect x="270" y="72" width="120" height="22" fill="#23252d" stroke="${G}" stroke-width="1"/>`;
-      s += `<path d="M270,72 L270,54 L286,72 z" fill="rgba(179,157,219,.22)" stroke="${W}" stroke-width="1.1"/>`;
-      s += `<path d="M270,94 L270,112 L286,94 z" fill="rgba(179,157,219,.22)" stroke="${W}" stroke-width="1.1"/>`;
-      s += `<line x1="390" y1="83" x2="390" y2="128" stroke="${R}" stroke-width="1.6" marker-end="url(#ar)"/>`;
-      s += `<text x="366" y="142" fill="${R}" font-size="9" font-family="DM Mono">F</text>`;
-      s += `<line x1="270" y1="30" x2="390" y2="30" stroke="${D}" stroke-width=".8"/>`;
-      s += `<text x="318" y="25" fill="${D}" font-size="9" font-family="DM Mono">e</text>`;
-      s += `<line x1="240" y1="40" x2="240" y2="150" stroke="${A}" stroke-width=".8"/>`;
-      s += `<text x="222" y="98" fill="${A}" font-size="9" font-family="DM Mono">L</text>`;
-      s += Sch.legendRow([['a','gola',Sch.C.acc],['L','lungh. cordone',Sch.C.acc],['e','braccio di F',Sch.C.mut],['F','carico',Sch.C.red]],12,166,{size:8.5,step:100});
-      s += `<text x="12" y="184" fill="${D}" font-size="9" font-family="DM Mono">Mensola su due cordoni verticali — M = F·e, taglio ripartito su A_w = 2·a·L</text>`;
-    }
+  } else if(mode===2){
+    // Mensola saldata: piastra verticale (altezza L) + sbalzo con due cordoni; si disegna solo la mensola
+    const S=Sch, C=S.C;
+    const num=id=>{const v=parseFloat(document.getElementById(id).value);return isFinite(v)?v:0;};
+    const a=num('a2'), L=num('L2'), F=num('F2'), e=num('ecc');
+    const wx=206, wy=34, ww=20, wh=112, bx=wx+ww, bw=140, by=78, bh=24, fx=bx+bw-8;
+    s += S.defs();
+    s += `<rect x="${wx}" y="${wy}" width="${ww}" height="${wh}" fill="#23252d" stroke="${G}" stroke-width="1"/>`;
+    s += `<rect x="${bx}" y="${by}" width="${bw}" height="${bh}" fill="#23252d" stroke="${G}" stroke-width="1"/>`;
+    s += `<path d="M${bx},${by} L${bx},${by-18} L${bx+18},${by} z" fill="rgba(179,157,219,.22)" stroke="${W}" stroke-width="1.2"/>`;
+    s += `<path d="M${bx},${by+bh} L${bx},${by+bh+18} L${bx+18},${by+bh} z" fill="rgba(179,157,219,.22)" stroke="${W}" stroke-width="1.2"/>`;
+    s += `<line x1="${bx}" y1="${by}" x2="${bx+9}" y2="${by-9}" stroke="${A}" stroke-width="1.6"/>`;
+    s += S.txt(bx+22,by-12,'a'+(a?` = ${a}`:''),{c:C.acc,size:10,anchor:'start',weight:500});
+    s += `<line x1="${fx}" y1="${by-34}" x2="${fx}" y2="${by-1}" stroke="${R}" stroke-width="1.8" marker-end="url(#ar)"/>`;
+    s += S.txt(fx+8,by-22,'F'+(F?` = ${F} kN`:''),{c:C.red,size:10,anchor:'start',weight:500});
+    s += S.line(wx,wy,wx-30,wy,{c:C.mut,w:.5}) + S.line(wx,wy+wh,wx-30,wy+wh,{c:C.mut,w:.5});
+    s += S.dim(wx-24,wy,wx-24,wy+wh,'L'+(L?` = ${L}`:''),{off:0,ext:false,hor:true,c:C.acc});
+    s += S.line(bx,by+bh+20,bx,by+bh+52,{c:C.mut,w:.5,dash:'2 2'}) + S.line(fx,by+bh,fx,by+bh+52,{c:C.mut,w:.5,dash:'2 2'});
+    s += S.dim(bx,by+bh+46,fx,by+bh+46,'e'+(e?` = ${e}`:''),{off:0,ext:false,flip:true,c:C.mut});
+    s += S.txt(bx+bw/2,wy+wh+22,'M = F·e',{c:C.violet,size:10,anchor:'middle',weight:500});
+    s += S.legend([['a','altezza di gola',C.acc],['L','lungh. cordoni',C.acc],['e','braccio di F',C.mut],['F','carico',C.red]],10,64,{size:8.5,gap:14,w:128});
+    s += `<text x="12" y="184" fill="${D}" font-size="9" font-family="DM Mono">Mensola su due cordoni verticali — M = F·e, taglio ripartito su A_w = 2·a·L</text>`;
   } else {
     const piena = pen==='full';
     s += `<rect x="60" y="80" width="150" height="30" fill="#23252d" stroke="${G}" stroke-width="1"/>`;
