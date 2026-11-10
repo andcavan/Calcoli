@@ -420,7 +420,7 @@ Serve alla regola pratica di gola minima a_min ≈ √(t_max) − 0,5 mm, che li
   <div class="panel">
     <div class="stitle" id="geo-title">Geometria resistente</div>
     <div class="results-grid-3" id="res-geo"></div>
-    <div class="schematic-wrap"><svg id="schema" viewBox="0 0 440 190"></svg></div>
+    <div class="schematic-wrap"><svg id="schema" viewBox="0 0 440 196"></svg></div>
     <div class="note" id="geo-note"></div>
   </div>
 
@@ -948,8 +948,8 @@ function renderSchema(){
       s += `<text x="318" y="25" fill="${D}" font-size="9" font-family="DM Mono">e</text>`;
       s += `<line x1="240" y1="40" x2="240" y2="150" stroke="${A}" stroke-width=".8"/>`;
       s += `<text x="222" y="98" fill="${A}" font-size="9" font-family="DM Mono">L</text>`;
-      s += Sch.legend([['a','altezza di gola',Sch.C.acc],['L','lungh. cordone',Sch.C.acc],['e','braccio di F',Sch.C.mut],['F','carico',Sch.C.red]],16,70,{size:8.5,gap:14,w:130});
-      s += `<text x="12" y="172" fill="${D}" font-size="9" font-family="DM Mono">Mensola su due cordoni verticali — M = F·e, taglio ripartito su A_w = 2·a·L</text>`;
+      s += Sch.legendRow([['a','gola',Sch.C.acc],['L','lungh. cordone',Sch.C.acc],['e','braccio di F',Sch.C.mut],['F','carico',Sch.C.red]],12,166,{size:8.5,step:100});
+      s += `<text x="12" y="184" fill="${D}" font-size="9" font-family="DM Mono">Mensola su due cordoni verticali — M = F·e, taglio ripartito su A_w = 2·a·L</text>`;
     }
   } else {
     const piena = pen==='full';
