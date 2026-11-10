@@ -490,6 +490,11 @@ body{min-height:100vh}
 <!-- WARNING -->
 <div class="warnbox" id="warnbox"></div>
 
+<div class="section-div" style="margin-top:6px">Schema · Filettatura e forze</div>
+<div class="main" style="padding-bottom:0">
+  <div class="schematic-wrap" id="schemaScrew"></div>
+</div>
+
 <div class="section-div" style="margin-top:6px">Grafici · Analisi visiva</div>
 
 <div class="main">
@@ -509,6 +514,7 @@ body{min-height:100vh}
 </div>
 </div><!-- /layout -->
 
+<script src="schema.js"></script>
 <script>
 // ═══════════════════════════════════
 //  DATI FILETTATURE
@@ -842,6 +848,7 @@ function compute(){
 //  RENDER
 // ═══════════════════════════════════
 function render(r){
+  try{drawScrewSchema(r);}catch(e){console.error("schema:",e);}
   // Geometria filetto
   document.getElementById('lbl-d2').textContent=fp(r.d2,3)+' mm';
   document.getElementById('lbl-d1').textContent=fp(r.d1,3)+' mm';
@@ -1077,6 +1084,84 @@ function updateCharts(r){
 // ═══════════════════════════════════
 //  MAIN
 // ═══════════════════════════════════
+
+// ═══════════════════════════════════
+//  SCHEMA — profilo del filetto e piano inclinato dell'elica
+// ═══════════════════════════════════
+function schemaProfile(r){
+  const S=Sch,C=S.C,W=460,H=250;
+  const p=r.p, depth=Math.max((r.d-r.d1)/2, p*0.2), al=r.alpha_half*Math.PI/180;
+  const k=62/p, P=p*k, dp=Math.min(depth*k, 78), ta=Math.tan(al);
+  const tipHw=Math.max(P/4-dp*ta/2, 2.5), rootHw=tipHw+dp*ta;
+  const x0=122, yTopV=100, yRoot=yTopV+dp, yBase=yRoot+34, yNutTop=yTopV-34, nT=3;
+  const xl=x0-P+tipHw, xe=x0+nT*P-tipHw;
+  // vite: denti verso l'alto
+  const pts=[[xl,yBase],[xl,yRoot]];
+  for(let i=0;i<nT;i++){const c=x0+i*P; pts.push([c-rootHw,yRoot],[c-tipHw,yTopV],[c+tipHw,yTopV],[c+rootHw,yRoot]);}
+  pts.push([xe,yRoot],[xe,yBase]);
+  // madrevite: complementare, denti verso il basso sfalsati di p/2
+  const nt=[[xl,yNutTop]];
+  for(let i=0;i<=nT;i++){const c=x0+(i-.5)*P, a=P/2-tipHw, b=P/2-rootHw;
+    nt.push([c-a,yTopV],[c-b,yRoot],[c+b,yRoot],[c+a,yTopV]);}
+  nt.push([xe,yNutTop]);
+  let s=S.poly(nt,{c:C.amber,w:1.2,fill:'rgba(255,167,38,.10)'})+S.poly(pts,{c:C.acc,w:1.3,fill:'rgba(79,195,247,.10)'});
+  s+=S.txt(xe-4,yNutTop+13,'MADREVITE',{font:S.COND,size:12,c:C.amber,anchor:'end',ls:1});
+  s+=S.txt(xe-4,yBase-8,'VITE',{font:S.COND,size:12,c:C.acc,anchor:'end',ls:1});
+  // linee dei diametri
+  const yD2=yTopV+dp*((r.d-r.d2)/Math.max(r.d-r.d1,1e-9));
+  const ln=(y,col,t)=>S.line(xl-8,y,xe+8,y,{c:col,w:.7,dash:'6 3 1.5 3'})+S.txt(xe+14,y+3,t,{c:col,size:9.5,anchor:'start'});
+  s+=ln(yTopV,C.mut,`d = ${S.f(r.d)}`)+ln(yD2,C.amber,`d₂ = ${S.f(r.d2)}`)+ln(yRoot,C.mut,`d₁ = ${S.f(r.d1)}`);
+  // passo
+  s+=S.line(x0,yTopV,x0,yBase+4,{c:C.mut,w:.5,dash:'2 2'})+S.line(x0+P,yTopV,x0+P,yBase+4,{c:C.mut,w:.5,dash:'2 2'});
+  s+=S.dim(x0,yBase+4,x0+P,yBase+4,`p = ${S.f(p)}`,{off:14,ext:false});
+  // semi-angolo del fianco sinistro del primo dente, alla quota d2
+  const fxL=x0-(tipHw+(yD2-yTopV)*ta);
+  s+=S.line(fxL,yD2,fxL,yD2-34,{c:C.red,w:.7,dash:'2 2'});
+  s+=S.arcDim(fxL,yD2,24,-Math.PI/2,-Math.PI/2+al,'',{c:C.red});
+  s+=S.txt(xl-10,yNutTop-8,`α = ${+(r.alpha_half).toFixed(1)}° (semi-angolo del fianco)`,{c:C.red,size:10,weight:500,anchor:'start'});
+  s+=S.note(8,H-6,`Profilo in scala di p · tra d e d₁ altezza del dente = ${S.f((r.d-r.d1)/2)} mm`);
+  return S.svg(W,H,s);
+}
+
+function schemaHelix(r){
+  const S=Sch,C=S.C,W=460,H=250,rad=Math.PI/180;
+  const phi=r.phi, rho=r.rho_p;
+  // angoli reali piccoli: ingranditi solo nel disegno, i valori numerici restano quelli veri
+  const pd=Math.min(Math.max(phi/rad,22),38)*rad, rd=Math.min(Math.max(rho/rad,9),22)*rad;
+  const B=230,x0=30,yb=196,Ht=B*Math.tan(pd);
+  let s=S.poly([[x0,yb],[x0+B,yb],[x0+B,yb-Ht]],{c:C.acc,w:1.3,fill:'rgba(79,195,247,.08)'});
+  const m=.68,cx=x0+B*m,cy=yb-Ht*m, nx=-Math.sin(pd), ny=-Math.cos(pd), tx=Math.cos(pd), ty=-Math.sin(pd);
+  const bw=40,bh=16, c0=[cx+nx*bh/2,cy+ny*bh/2];
+  const q=(a,b)=>[c0[0]+tx*a+nx*b,c0[1]+ty*a+ny*b];
+  s+=S.poly([q(-bw/2,-bh/2),q(bw/2,-bh/2),q(bw/2,bh/2),q(-bw/2,bh/2)],{c:C.amber,w:1.3,fill:'rgba(255,167,38,.22)'});
+  s+=S.txt(q(-6,-bh/2-9)[0],q(-6,-bh/2-9)[1],'madrevite',{c:C.amber,size:9,anchor:'end'});
+  const M=[cx,cy], La=46, tot=pd+rd, Lf=La*Math.tan(tot);
+  // normale al piano (tratteggiata, verso l'interno)
+  s+=S.line(M[0],M[1],M[0]-nx*64,M[1]-ny*64,{c:C.dim,w:.8,dash:'4 3'});
+  s+=S.txt(M[0]-nx*64+8,M[1]-ny*64+10,'N',{c:C.mut,size:9.5,anchor:'start'});
+  // forze applicate alla madrevite: Fa assiale (giù), Ft tangente (→), risultante R
+  s+=S.force(M[0],M[1],0,La,'F<tspan font-size="8" dy="2">a</tspan>',{c:C.green,dist:2,anchor:'end'});
+  s+=S.force(M[0],M[1],Lf,0,'F<tspan font-size="8" dy="2">t</tspan>',{c:C.amber,dist:3});
+  s+=S.force(M[0],M[1],Lf,La,'R',{c:C.red,w:1.4,dist:3,anchor:'start'});
+  // angoli
+  s+=S.arcDim(x0,yb,44,0,-pd,'φ',{c:C.acc,tdist:10});
+  s+=S.arcDim(M[0],M[1],30,Math.PI/2-pd,Math.PI/2-pd-rd,'ρ′',{c:C.red,tdist:17});
+  // quote
+  s+=S.dim(x0,yb,x0+B,yb,`π·d₂ = ${S.f(Math.PI*r.d2)}`,{off:16,ext:false});
+  s+=S.dim(x0+B,yb,x0+B,yb-Ht,`L = ${r.ns}·p = ${S.f(r.lead)}`,{off:14,ext:true,hor:true});
+  s+=S.txt(10,16,`φ = ${S.f(phi/rad)}°   ρ′ = ${S.f(rho/rad)}°`,{c:C.text,size:10,weight:500,anchor:'start'});
+  s+=S.txt(W-10,16,r.self_locking?'φ ≤ ρ′ → autofrenante':'φ > ρ′ → non autofrenante',{c:r.self_locking?C.green:C.amber,size:10,anchor:'end',weight:500});
+  s+=S.note(8,H-6,`Angoli ingranditi nel disegno · tan ρ′ = μ/cos α = ${S.f(r.mu_p)} · tan φ = L/(π·d₂)`);
+  return S.svg(W,H,s);
+}
+
+function drawScrewSchema(r){
+  const box=document.getElementById('schemaScrew'); if(!box) return;
+  box.innerHTML=
+    `<div class="sch-col"><div class="sch-cap">Profilo del filetto (sezione assiale)</div>${schemaProfile(r)}</div>`+
+    `<div class="sch-col"><div class="sch-cap">Sviluppo dell'elica · equilibrio del dente</div>${schemaHelix(r)}</div>`;
+}
+
 function recalc(){
   const r=compute();
   render(r);

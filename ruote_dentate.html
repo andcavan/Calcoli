@@ -566,6 +566,12 @@ body{display:flex;flex-direction:column;height:100%;min-height:100vh}
        border-left:3px solid #ffa726;background:rgba(255,167,38,.09);
        border-radius:3px;font-size:12.5px;line-height:1.7;color:#e8e9ec"></div>
 
+  <!-- SCHEMA -->
+  <div class="rsec">
+    <div class="rsec-title">Schema · Ingranamento e nomenclatura <span id="schemaHint" style="color:var(--dim);text-transform:none;letter-spacing:0;font-family:var(--mono);font-size:10px"></span></div>
+    <div class="schematic-wrap" id="schemaGear"></div>
+  </div>
+
   <!-- CORREZIONE DENTATURA -->
   <div class="rsec" id="sec_shift" style="display:none">
     <div class="rsec-title">Correzione Dentatura (Spostamento del profilo)</div>
@@ -729,6 +735,7 @@ body{display:flex;flex-direction:column;height:100%;min-height:100vh}
 </div><!-- /main -->
 </div><!-- /layout -->
 
+<script src="schema.js"></script>
 <script>
 // ============================================================
 // DATI
@@ -1224,6 +1231,7 @@ function calcTolerance(grade, d, m, b) {
 let sfChart = null;
 
 function render(r) {
+  try { drawGearSchema(r); } catch (e) { console.error("schema:", e); }
   // KPI
   el('o_i').textContent = fp(r.i, 3);
   if (r.isCilindrica) {
@@ -1631,6 +1639,154 @@ function recalc() {
         + '<br><span style="opacity:.7">I valori mostrati si riferiscono all&rsquo;ultimo calcolo riuscito.</span>';
     }
   }
+}
+
+
+// ============================================================
+// SCHEMA — ingranamento con forze + nomenclatura del dente
+// ============================================================
+function schemaMesh(r) {
+  const S = Sch, C = S.C, W = 460, H = 250, cy = 122;
+  const conical = !r.isCilindrica;
+  if (conical) return schemaCones(r);
+
+  const z1 = ST.z1, z2 = ST.z2;
+  const r1 = r.d1 / 2, r2 = r.d2 / 2, ra1 = r.da1 / 2, ra2 = r.da2 / 2, rf1 = r.df1 / 2, rf2 = r.df2 / 2;
+  const a = r1 + r2;
+  const k = Math.min((W - 70) / (ra1 + a + ra2), (H - 110) / (2 * Math.max(ra1, ra2)));
+  const x1 = 35 + ra1 * k, x2 = x1 + a * k;
+  const at = (r.at_deg || r.an_deg) * Math.PI / 180;
+  const beta = (r.beta_deg || 0) * Math.PI / 180;
+  const an = r.an_deg * Math.PI / 180;
+
+  const g = (cx, z, rr, rra, rrf, rot, col) => {
+    const pts = []; const hp = Math.PI / z;
+    for (let i = 0; i < z; i++) {
+      const t = rot + i * 2 * hp;
+      [[-0.74, rrf], [-0.3, rra], [0.3, rra], [0.74, rrf]].forEach(([u, q]) =>
+        pts.push([cx + q * k * Math.cos(t + u * hp), cy + q * k * Math.sin(t + u * hp)]));
+    }
+    return S.poly(pts, { c: col, w: 1.2, fill: col === C.acc ? 'rgba(79,195,247,.10)' : 'rgba(255,167,38,.10)' });
+  };
+  // fasatura: dente della 1 verso la 2 (angolo 0), vano della 2 verso la 1 (angolo π)
+  let s = '';
+  s += g(x1, z1, r1, ra1, rf1, 0, C.acc) + g(x2, z2, r2, ra2, rf2, Math.PI + Math.PI / z2, C.amber);
+  [[x1, r1, ra1, rf1, C.acc], [x2, r2, ra2, rf2, C.amber]].forEach(([cx, rp, rtop, rr, col]) => {
+    s += S.circle(cx, cy, rp * k, { c: col, w: .8, dash: '6 2 1.5 2' });
+    s += S.circle(cx, cy, rr * k * 0.0 + 3, { c: col, w: 1, fill: C.bg });
+    s += S.axis(cx - rtop * k - 8, cy, cx + rtop * k + 8, cy).replace('stroke-width="0.8"', 'stroke-width=".5"');
+  });
+  // punto primitivo P
+  const px = x1 + r1 * k;
+  // linea d'azione + forze (la ruota 1 spinge la 2)
+  const ux = Math.sin(at), uy = Math.cos(at);              // direzione normale (angolo α dalla tangente verticale)
+  s += S.line(px - ux * 70, cy - uy * 70, px + ux * 70, cy + uy * 70, { c: C.dim, w: .9, dash: '4 3' });
+  const L = 62, Fr = Math.tan(an) / Math.cos(beta);
+  s += S.force(px, cy, 0, L, 'F<tspan font-size="8" dy="2">t</tspan>', { c: C.amber, anchor: 'start', dist: 0 });
+  s += S.force(px, cy, L * Math.tan(at), 0, 'F<tspan font-size="8" dy="2">r</tspan>', { c: C.green, dist: 3 });
+  s += S.force(px, cy, ux * L / Math.cos(at) * 1.0, uy * L / Math.cos(at) * 1.0, 'F<tspan font-size="8" dy="2">n</tspan>', { c: C.red, dist: 4, w: 1.6 });
+  s += S.circle(px, cy, 3, { c: C.text, fill: C.text });
+  s += S.txt(px - 6, cy - 8, 'P', { c: C.text, size: 10, anchor: 'end', weight: 500 });
+  s += S.arcDim(px, cy, 26, Math.PI / 2, Math.PI / 2 - at, '', { c: C.red });
+  s += S.txt(px - 8, cy + 38, 'α<tspan font-size="8" dy="2">t</tspan>', { c: C.red, size: 10, anchor: 'end', weight: 500 });
+  // quote: interasse e diametri primitivi
+  s += S.dim(x1, cy + ra2 * k + 0, x2, cy + ra2 * k + 0, `a = ${S.f(r.a_eff || a)} mm`, { off: 22, ext: true });
+  s += S.txt(10, 16, `ruota 1 · z₁ = ${z1} · d₁ = ${S.f(r.d1)}`, { c: C.acc, size: 9.5, anchor: 'start' });
+  s += S.txt(W - 10, 16, `ruota 2 · z₂ = ${z2} · d₂ = ${S.f(r.d2)}`, { c: C.amber, size: 9.5, anchor: 'end' });
+  s += S.note(8, H - 6, `Forze sulla ruota 2 (condotta). Ft = ${S.f(r.Ft)} N · Fr = ${S.f(r.Ft * Fr)} N` + (beta ? ` · Fa = ${S.f(r.Ft * Math.tan(beta))} N (⊥ al piano)` : ''));
+  return S.svg(W, H, s);
+}
+
+function schemaCones(r) {
+  const S = Sch, C = S.C, W = 460, H = 250;
+  const sig = r.sigma_deg * Math.PI / 180, d1 = r.delta1_deg * Math.PI / 180, d2 = r.delta2_deg * Math.PI / 180;
+  const f1 = Math.PI, f2 = Math.PI - sig;               // assi uscenti dal vertice O
+  // geometria in coordinate unitarie (Re = 1), poi adattata alla finestra
+  const dir = a => [Math.cos(a), Math.sin(a)];
+  const base = (fa, dl) => [dir(fa - dl), dir(fa + dl)];
+  const pts = [[0, 0]];
+  [[f1, d1], [f2, d2]].forEach(([fa, dl]) => { base(fa, dl).forEach(q => pts.push(q)); pts.push(dir(fa).map(v => v * 1.15)); });
+  const xs = pts.map(q => q[0]), ys = pts.map(q => q[1]);
+  const minx = Math.min(...xs), maxx = Math.max(...xs), miny = Math.min(...ys), maxy = Math.max(...ys);
+  const k = Math.min((W - 130) / (maxx - minx), (H - 90) / (maxy - miny));
+  const ox = (W - (maxx - minx) * k) / 2 - minx * k, oy = 34 + ((H - 90) - (maxy - miny) * k) / 2 - miny * k;
+  const P = q => [ox + q[0] * k, oy + q[1] * k];
+  const O = P([0, 0]);
+  let s = '';
+  const cone = (fa, dl, col, fill, name) => {
+    const [a, b] = base(fa, dl).map(P), e = P(dir(fa).map(v => v * 1.15)), m = [(a[0] + b[0]) / 2, (a[1] + b[1]) / 2];
+    let o = S.poly([O, a, b], { c: col, w: 1.3, fill });
+    o += S.axis(O[0], O[1], e[0], e[1]);
+    o += S.line(a[0], a[1], b[0], b[1], { c: col, w: 2.4 });
+    const out = [m[0] - O[0], m[1] - O[1]], L = Math.hypot(...out) || 1;
+    o += S.txt(m[0] + out[0] / L * 6, m[1] + out[1] / L * 12 + 3, name, { c: col, size: 9.5, anchor: out[0] / L > .3 ? 'start' : out[0] / L < -.3 ? 'end' : 'middle' });
+    return o;
+  };
+  s += cone(f1, d1, C.acc, 'rgba(79,195,247,.10)', `de₁ = ${S.f(r.de1)}`);
+  s += cone(f2, d2, C.amber, 'rgba(255,167,38,.10)', `de₂ = ${S.f(r.de2)}`);
+  s += S.arcDim(O[0], O[1], 46, f1, f1 - d1, 'δ₁', { c: C.acc, tdist: 14 });
+  s += S.arcDim(O[0], O[1], 30, f2, f2 + d2, 'δ₂', { c: C.amber, tdist: 13 });
+  s += S.arcDim(O[0], O[1], 84, f1, f2, 'Σ', { c: C.mut, tdist: 11 });
+  s += S.circle(O[0], O[1], 3, { c: C.text, fill: C.text });
+  s += S.txt(O[0] + 8, O[1] - 7, 'O', { c: C.text, anchor: 'start', size: 10, weight: 500 });
+  const g = P(dir(f1 - d1));                             // generatrice di contatto: lunghezza Re
+  s += S.txt((O[0] + g[0]) / 2 + 4, (O[1] + g[1]) / 2 - 8, `Re = ${S.f(r.Re)}`, { c: C.mut, size: 9.5, anchor: 'start', rot: -Math.atan2(O[1] - g[1], O[0] - g[0]) * 0 });
+  s += S.note(8, H - 6, `Σ = ${S.f(r.sigma_deg)}° · δ₁ = ${S.f(r.delta1_deg)}° · δ₂ = ${S.f(r.delta2_deg)}° · Ft = ${S.f(r.Ft)} N applicata al diametro medio`);
+  return S.svg(W, H, s);
+}
+
+function schemaRack(r) {
+  const S = Sch, C = S.C, W = 460, H = 250;
+  const m = r.mn, ha = r.ha1 || m, hf = r.hf1 || 1.25 * m;
+  const an = r.an_deg * Math.PI / 180;
+  const k = 28 / m;                                       // scala: il modulo occupa sempre 28 px
+  const p = Math.PI * m * k, hpx = ha * k, hfp = hf * k;
+  const yP = 112, x0 = 125;
+  // cremagliera: pezzo con denti rivolti verso l'alto; il materiale sta sotto la linea di fondo
+  const yTop = yP - hpx, yRoot = yP + hfp, yB = yRoot + 28;
+  const tipW = p / 2 - 2 * hpx * Math.tan(an) * 1.0 - 0;
+  const rootW = p / 2 + 0;
+  // spessore al primitivo = p/2: flanco con inclinazione α rispetto alla verticale
+  const hw = p / 4;                                       // semi-spessore al primitivo
+  const tipHw = Math.max(hw - hpx * Math.tan(an), 1.5), rootHw = hw + hfp * Math.tan(an);
+  const pts = [[x0 - 40, yB], [x0 - 40, yRoot]];
+  for (let i = 0; i < 3; i++) {
+    const c = x0 + i * p;
+    pts.push([c - rootHw, yRoot], [c - tipHw, yTop], [c + tipHw, yTop], [c + rootHw, yRoot]);
+  }
+  pts.push([x0 + 2 * p + p / 2 + 24, yRoot], [x0 + 2 * p + p / 2 + 24, yB]);
+  let s = S.poly(pts, { c: C.acc, w: 1.3, fill: 'rgba(79,195,247,.10)' });
+  const xl = x0 - 55, xr = x0 + 2 * p + p / 2 + 30;
+  s += S.line(xl, yP, xr, yP, { c: C.amber, w: .9, dash: '8 3 2 3' });
+  s += S.line(xl, yTop, xr, yTop, { c: C.mut, w: .5, dash: '3 3' });
+  s += S.line(xl, yRoot, xr, yRoot, { c: C.mut, w: .5, dash: '3 3' });
+  s += S.txt(xr + 2, yP - 3, 'retta primitiva', { c: C.amber, size: 8.5, anchor: 'start' });
+  s += S.txt(xr + 2, yTop - 3, 'testa', { c: C.dim, size: 8.5, anchor: 'start' });
+  s += S.txt(xr + 2, yRoot + 10, 'fondo', { c: C.dim, size: 8.5, anchor: 'start' });
+  // quote
+  const xq = x0 - hw - 22;
+  s += S.dim(xq, yTop, xq, yP, `ha = ${S.f(ha)}`, { off: 0, ext: false, hor: true });
+  s += S.dim(xq, yP, xq, yRoot, `hf = ${S.f(hf)}`, { off: 0, ext: false, hor: true });
+  s += S.line(xq, yTop, x0 - tipHw, yTop, { c: C.mut, w: .5 }) + S.line(xq, yRoot, x0 - rootHw, yRoot, { c: C.mut, w: .5 });
+  s += S.dim(x0, yTop, x0 + p, yTop, `p = π·m = ${S.f(Math.PI * m)}`, { off: -22, ext: true, flip: true });
+  s += S.line(x0 - hw, yP + 12, x0 - hw, yP + 22, { c: C.amber, w: .6 }) + S.line(x0 + hw, yP + 12, x0 + hw, yP + 22, { c: C.amber, w: .6 });
+  s += S.dim(x0 - hw, yP + 18, x0 + hw, yP + 18, 's', { off: 0, ext: false, c: C.amber, flip: false });
+  // angolo di pressione: tra la verticale e il fianco, nel punto primitivo
+  const ax = x0 + hw;
+  s += S.line(ax, yP, ax, yP - 34, { c: C.red, w: .7, dash: '2 2' });
+  s += S.arcDim(ax, yP, 24, -Math.PI / 2, -Math.PI / 2 - an, '', { c: C.red });
+  s += S.txt(ax + 8, yP - 4, `α = ${+(+r.an_deg).toFixed(1)}°`, { c: C.red, size: 10, weight: 500, anchor: 'start' });
+  s += S.note(8, H - 6, `Cremagliera di riferimento · m = ${S.f(m)} mm · s = p/2 · h = ha + hf = ${S.f(ha + hf)} mm`);
+  return S.svg(W, H, s);
+}
+
+function drawGearSchema(r) {
+  const box = document.getElementById('schemaGear'); if (!box) return;
+  const hint = document.getElementById('schemaHint');
+  box.innerHTML =
+    `<div class="sch-col"><div class="sch-cap">${r.isCilindrica ? 'Ingranamento e forze' : 'Coni primitivi'}</div>${schemaMesh(r)}</div>` +
+    `<div class="sch-col"><div class="sch-cap">Nomenclatura del dente</div>${schemaRack(r)}</div>`;
+  if (hint) hint.textContent = '— si aggiorna con i dati inseriti';
 }
 
 // ============================================================
