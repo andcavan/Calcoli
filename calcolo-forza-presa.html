@@ -400,6 +400,7 @@
       <span class="pulse-dot"></span>
       <span class="result-title">Risultati</span>
     </div>
+    <div class="schematic-wrap" id="schemaGrip" style="margin-bottom:16px"></div>
     <div class="result-grid">
       <div class="result-card accent">
         <span class="rc-label" data-tip="Forza di presa totale richiesta, somma su tutte le ganasce\nF_totale = (Fi × k_s × k_geo) / μs\ndove Fi = m×(g+a) è la forza da trattenere, k_s il fattore di sicurezza, k_geo il fattore geometrico (1,0 sull'attrito, 0,3 in appoggio)\nNon è la forza di una singola ganascia, ma il totale che l'attrito distribuito su tutte le superfici di contatto deve generare">Forza totale</span>
@@ -435,6 +436,7 @@
 
 </div>
 
+<script src="schema.js"></script>
 <script>
 // ── Data ──
 // Coefficienti di attrito statico per ganasce industriali.
@@ -600,7 +602,61 @@ function calculate() {
     `Servono <b>${fmt(F_jaw)} N</b> per ganascia, ` +
     `con una pressione di <b>${fmt(P_MPa, 3)} MPa</b> (${fmt(P_bar, 3)} bar).`;
 
+  try{drawGripSchema({jaws,mu,F_jaw,F_total,Fi,P_MPa,orientation});}catch(e){console.error("schema:",e);}
   document.getElementById("results").classList.add("visible");
+}
+
+
+// ── Schema ──
+function drawGripSchema(o){
+  const box=document.getElementById('schemaGrip'); if(!box) return;
+  const S=Sch,C=S.C;
+  // — vista frontale: due ganasce contrapposte, carico sull'attrito o in appoggio —
+  const W=300,H=260,cx=150,cy=118,ow=64,oh=84, x0=cx-ow/2, x1=cx+ow/2, y0=cy-oh/2, y1=cy+oh/2;
+  let a='';
+  const appoggio=o.orientation==='vertical';
+  a+=`<rect x="${x0}" y="${y0}" width="${ow}" height="${oh}" rx="3" fill="rgba(79,195,247,.14)" stroke="${C.acc}" stroke-width="1.3"/>`;
+  a+=S.txt(cx,cy+4,'m',{c:C.acc,size:14,weight:500});
+  // ganasce: pad + braccio verso l'alto
+  const jaw=(xa,dir)=>`<rect x="${dir<0?xa-16:xa}" y="${y0+10}" width="16" height="${oh-20}" fill="rgba(255,167,38,.22)" stroke="${C.amber}" stroke-width="1.3"/>`
+    +`<rect x="${dir<0?xa-16:xa}" y="${y0-34}" width="16" height="${34+10}" fill="rgba(255,167,38,.10)" stroke="${C.amber}" stroke-width="1.1"/>`;
+  a+=jaw(x0,-1)+jaw(x1,1);
+  if(appoggio){
+    a+=`<rect x="${cx-ow/2-10}" y="${y1}" width="${ow+20}" height="9" fill="rgba(255,255,255,.07)" stroke="${C.mut}" stroke-width="1.1"/>`;
+    a+=S.force(cx,y1+28,0,-18,'',{c:C.green})+S.txt(cx+8,y1+30,'battuta',{c:C.green,size:9,anchor:'start'});
+  }
+  // forza di serraggio sulle ganasce
+  a+=S.force(x0-54,cy,34,0,'',{c:C.amber,w:2.2})+S.txt(x0-58,cy-6,'F',{c:C.amber,size:11,anchor:'end',weight:500});
+  a+=S.force(x1+54,cy,-34,0,'',{c:C.amber,w:2.2})+S.txt(x1+58,cy-6,'F',{c:C.amber,size:11,anchor:'start',weight:500});
+  // attrito sulle facce (verso l'alto)
+  const fl=appoggio?14:26;
+  a+=S.force(x0+3,y1-8,0,-fl,'',{c:C.green,w:2})+S.force(x1-3,y1-8,0,-fl,'',{c:C.green,w:2});
+  a+=S.txt(x0+8,y1-fl-12,'μF',{c:C.green,size:10,anchor:'start'})+S.txt(x1-8,y1-fl-12,'μF',{c:C.green,size:10,anchor:'end'});
+  // peso + inerzia
+  a+=S.force(cx,cy+14,0,36,'',{c:C.red,w:2.4});
+  a+=S.txt(cx,cy+66,`W = m(g+a) = ${fmt(o.Fi)} N`,{c:C.red,size:9.5,weight:500});
+  a+=S.txt(cx,H-26,`F = ${fmt(o.F_jaw)} N per ganascia · μs = ${o.mu}`,{c:C.amber,size:9.5});
+  a+=S.txt(cx,H-12,appoggio?'carico in parte sostenuto da una battuta (k_geo = 0,3)':'carico sull’attrito: Σ μ·F ≥ ks·W (k_geo = 1,0)',{c:C.dim,size:9});
+  const front=S.svg(W,H,a);
+  // — vista dall'alto: n ganasce a pari angolo —
+  const n=o.jaws, R=36, tcx=150, tcy=118; let b='';
+  b+=S.circle(tcx,tcy,R,{c:C.acc,w:1.3,fill:'rgba(79,195,247,.14)'});
+  b+=S.circle(tcx,tcy,2.5,{c:C.acc,fill:C.acc});
+  for(let i=0;i<n;i++){
+    const t=-Math.PI/2+i*2*Math.PI/n, ux=Math.cos(t), uy=Math.sin(t);
+    const pw=Math.min(26,2*Math.PI*R/n*0.55);
+    const px=tcx+(R+7)*ux, py=tcy+(R+7)*uy, ang=t*180/Math.PI;
+    b+=`<rect x="${S.f(-7)}" y="${S.f(-pw/2)}" width="14" height="${S.f(pw)}" fill="rgba(255,167,38,.22)" stroke="${C.amber}" stroke-width="1.3" transform="translate(${S.f(px)} ${S.f(py)}) rotate(${S.f(ang)})"/>`;
+    b+=S.force(tcx+(R+7+52)*ux,tcy+(R+7+52)*uy,-ux*38,-uy*38,'',{c:C.amber,w:2.2});
+    b+=S.txt(tcx+(R+7+60)*ux+ (ux>0.3?4:ux<-0.3?-4:0),tcy+(R+7+60)*uy+(uy>0.3?10:uy<-0.3?-3:4),'F',{c:C.amber,size:11,weight:500,anchor:ux>0.3?'start':ux<-0.3?'end':'middle'});
+  }
+  b+=S.arcDim(tcx,tcy,R+18,-Math.PI/2,-Math.PI/2+2*Math.PI/n*0.999,'',{c:C.mut});
+  b+=S.txt(tcx+ (R+34)*Math.cos(-Math.PI/2+Math.PI/n),tcy+(R+34)*Math.sin(-Math.PI/2+Math.PI/n)+3,`${S.f(360/n)}°`,{c:C.mut,size:9});
+  b+=S.txt(tcx,H-26,`n = ${n} ganasce · F_tot = n·F = ${fmt(o.F_total)} N`,{c:C.amber,size:9.5});
+  b+=S.txt(tcx,H-12,`area di contatto per ganascia → P = F/A = ${fmt(o.P_MPa,3)} MPa`,{c:C.dim,size:9});
+  const top=S.svg(W,H,b);
+  box.innerHTML=`<div class="sch-col"><div class="sch-cap">Vista frontale · equilibrio</div>${front}</div>`+
+                `<div class="sch-col"><div class="sch-cap">Vista dall’alto · ${n} ganasce</div>${top}</div>`;
 }
 
 // ── Real-time listeners ──

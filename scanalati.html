@@ -177,6 +177,11 @@ footer{margin-top:34px;font-size:10px;color:var(--dim);letter-spacing:.04em;text
   <div id="hint"></div>
 
   <div class="result-section">
+    <div class="result-section-title">Schema — sezione e vista laterale</div>
+    <div class="schematic-wrap" id="schemaSpl"></div>
+  </div>
+
+  <div class="result-section">
     <div class="result-section-title">Coppia di progetto</div>
     <div class="results-grid-3" id="coppiaGrid"></div>
   </div>
@@ -206,6 +211,7 @@ footer{margin-top:34px;font-size:10px;color:var(--dim);letter-spacing:.04em;text
   Metodo di Niemann semplificato. Tabelle rappresentative: verificare sempre sulla norma integrale.
 </footer>
 
+<script src="schema.js"></script>
 <script>
 // ═══════════════════════════════════
 //  STATO
@@ -366,6 +372,7 @@ function coreCalc(){
 
 function calculate(){
   const r = coreCalc();
+  try{drawSplSchema(r);}catch(e){console.error('schema:',e);}
 
   $('hint').innerHTML = hint(r);
 
@@ -400,6 +407,64 @@ function calculate(){
          'Sotto i 4 denti efficaci la ripartizione del carico è poco affidabile: valutare una combinazione con più denti o maggiore precisione.');
 
   renderTable(r);
+}
+
+
+// ═══════════════════════════════════
+//  SCHEMA — sezione scanalata e vista laterale
+// ═══════════════════════════════════
+function schemaSplSection(r){
+  const S=Sch,C=S.C,W=300,H=250,cx=150,cy=118;
+  const z=Math.max(3,Math.round(r.row.z)), De=r.row.De, Di=r.row.Di;
+  const Re=62, k=Re/(De/2), depth=Math.min(Math.max((De-Di)/2*k,10),Re*0.3), Ri=Re-depth, Rm=(Re+Ri)/2;   // profondità dei denti ingrandita nel disegno
+  const dritti=r.standard==='UNI8953', hp=Math.PI/z;
+  const aT=dritti?.5:.28, aR=dritti?.5:.7, tilt=-Math.PI/2;
+  const pts=[];
+  for(let i=0;i<z;i++){const t=tilt+i*2*hp;
+    [[-aR,Ri],[-aT,Re],[aT,Re],[aR,Ri]].forEach(([u,q])=>pts.push([cx+q*Math.cos(t+u*hp),cy+q*Math.sin(t+u*hp)]));}
+  const Rh=Re+Math.max(16,0.28*Re);
+  let s=S.circle(cx,cy,Rh,{c:C.amber,w:1.3,fill:'rgba(255,167,38,.14)'});
+  s+=S.poly(pts,{c:C.acc,w:1.2,fill:'#16222b'});
+  s+=S.circle(cx,cy,Rm,{c:C.amber,w:.8,dash:'5 3'});
+  s+=S.axis(cx-Rh-10,cy,cx+Rh+10,cy)+S.axis(cx,cy-Rh-10,cx,cy+Rh+10);
+  // quote: De (sotto), h' (radiale in alto)
+  s+=S.dim(cx-Re,cy,cx+Re,cy,'De',{off:Rh+8,ext:true,flip:false});
+  const xh=cx+aR*0+16;
+  s+=S.dim(cx+16,cy-Re,cx+16,cy-Ri,'h′',{off:0,ext:false,hor:true,flip:true});
+  s+=S.line(cx,cy-Re,cx+24,cy-Re,{c:C.mut,w:.5})+S.line(cx,cy-Ri,cx+24,cy-Ri,{c:C.mut,w:.5});
+  s+=S.txt(cx+Rm*0.74+8,cy+Rm*0.74+10,'dm',{c:C.amber,size:10,weight:500,anchor:'start'});
+  s+=S.txt(cx,cy+16,'Di',{c:C.mut,size:10});
+  s+=S.txt(cx,H-22,`z ${r.row.z} · De ${S.f(De)} · Di ${S.f(Di)} · dm ${S.f(r.dm)} · h′ ${S.f(r.hp)} mm`,{c:C.mut,size:9});
+  s+=S.txt(cx,H-8,(dritti?'fianchi paralleli':'evolvente 30°')+' · altezza denti ingrandita',{c:C.dim,size:9});
+  return S.svg(W,H,s);
+}
+
+function schemaSplSide(r){
+  const S=Sch,C=S.C,W=300,H=250,x0=14,x1=286,cy=108;
+  const l=Math.max(r.l,1), k=Math.min(190/l,6), L=l*k, kx0=(x0+x1)/2-L/2, kx1=kx0+L;
+  const hs=60, hh=34, yS=cy-hs/2;
+  let s=S.poly([[x0,yS],[x1,yS],[x1,yS+hs],[x0,yS+hs]],{c:C.acc,w:1.3,fill:'rgba(79,195,247,.10)'});
+  s+=`<rect x="${S.f(kx0)}" y="${S.f(yS-hh)}" width="${S.f(L)}" height="${hh}" fill="rgba(255,167,38,.12)" stroke="${C.amber}" stroke-width="1.3"/>`;
+  // zona scanalata: tratteggio
+  let hat='';
+  for(let x=kx0+5;x<kx1-2;x+=7) hat+=S.line(x,yS,x,yS+hs,{c:C.acc,w:.7});
+  s+=hat+S.line(kx0,yS,kx0,yS+hs,{c:C.acc,w:1.4})+S.line(kx1,yS,kx1,yS+hs,{c:C.acc,w:1.4});
+  s+=S.axis(x0-6,cy,x1+6,cy);
+  s+=S.dim(kx0,yS+hs,kx1,yS+hs,`l = ${S.f(r.l)}`,{off:16,ext:true,flip:true,c:C.green});
+  s+=S.moment(x0+6,cy,18,'T',{c:C.violet,a1:-2.2,a2:0.9});
+  s+=S.txt((kx0+kx1)/2,yS-hh/2+4,'MOZZO',{font:S.COND,size:11,c:C.amber,ls:1});
+  s+=S.txt(x1-6,yS+hs-8,'ALBERO',{font:S.COND,size:11,c:C.acc,anchor:'end',ls:1});
+  const F=r.dm>0?2*r.T*1000/r.dm:0;
+  s+=S.txt(150,H-22,`F = 2T/dm = ${S.f(F)} N (totale sui denti)`,{c:C.red,size:9});
+  s+=S.txt(150,H-8,`p = 2T/(zeff·dm·h′·l) = ${S.f(r.p)} MPa`,{c:C.mut,size:9});
+  return S.svg(W,H,s);
+}
+
+function drawSplSchema(r){
+  const box=document.getElementById('schemaSpl'); if(!box) return;
+  box.innerHTML=
+    `<div class="sch-col"><div class="sch-cap">Sezione trasversale</div>${schemaSplSection(r)}</div>`+
+    `<div class="sch-col"><div class="sch-cap">Vista laterale</div>${schemaSplSide(r)}</div>`;
 }
 
 function hint(r){

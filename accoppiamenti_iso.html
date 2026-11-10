@@ -392,6 +392,11 @@ body{min-height:100vh}
 <!-- WARNING -->
 <div class="warnbox" id="warnbox"></div>
 
+<div class="section-div">Schema · Zone di tolleranza e accoppiamento</div>
+<div class="main" style="padding-bottom:0">
+  <div class="schematic-wrap" id="schemaISO"></div>
+</div>
+
 <div class="section-div">Grafici · Analisi visiva</div>
 
 <div class="main">
@@ -413,6 +418,7 @@ body{min-height:100vh}
 
 </div><!-- /layout -->
 
+<script src="schema.js"></script>
 <script>
 // ═══════════════════════════════════════
 //  ISO 286-1 — DATI INTERVALLI
@@ -908,8 +914,71 @@ function updateCharts(r){
   chTemp.update('none');
 }
 
+
+// ═══════════════════════════════════════
+//  SCHEMA — zone di tolleranza (ISO 286) e sezione dell'accoppiamento
+// ═══════════════════════════════════════
+function schemaZones(r){
+  const S=Sch,C=S.C,W=460,H=300;
+  const vals=[r.ES,r.EI,r.es,r.ei,0];
+  const vmax=Math.max(...vals), vmin=Math.min(...vals), span=Math.max(vmax-vmin,1);
+  const top=46, bot=H-58, k=(bot-top)/span, yv=v=>top+(vmax-v)*k;
+  const xh=150,xs=250,bw=62;
+  let s='';
+  // linea dello zero (diametro nominale)
+  s+=S.line(70,yv(0),W-30,yv(0),{c:C.text,w:1.2});
+  s+=S.txt(66,yv(0)+3,'0',{c:C.text,size:10,anchor:'end'});
+  s+=S.txt(W-30,yv(0)-5,`Ø ${r.D} (nominale)`,{c:C.text,size:9,anchor:'end'});
+  // zone: foro (a sinistra, ambra) e albero (a destra, azzurro); altezza minima per leggibilità
+  const zone=(x,hi,lo,col,fill)=>{const y1=yv(hi),y2=Math.max(yv(lo),y1+2.5);
+    return `<rect x="${x}" y="${S.f(y1)}" width="${bw}" height="${S.f(y2-y1)}" fill="${fill}" stroke="${col}" stroke-width="1.3"/>`;};
+  s+=zone(xh,r.ES,r.EI,C.amber,'rgba(255,167,38,.25)')+zone(xs,r.es,r.ei,C.acc,'rgba(79,195,247,.25)');
+  s+=S.txt(xh+bw/2,top-18,`FORO ${r.hp}${r.hi}`,{font:S.COND,size:12,c:C.amber,ls:1});
+  s+=S.txt(xs+bw/2,top-18,`ALBERO ${r.sp}${r.si}`,{font:S.COND,size:12,c:C.acc,ls:1});
+  // quote degli scostamenti
+  const lab=(x,v,name,col,anchor)=>S.txt(x,yv(v)+3.5+(v===0?11:0),`${name} = ${v>0?'+':''}${v}`,{c:col,size:9.5,anchor});
+  s+=lab(xh-6,r.ES,'ES',C.amber,'end')+lab(xh-6,r.EI,'EI',C.amber,'end');
+  s+=lab(xs+bw+6,r.es,'es',C.acc,'start')+lab(xs+bw+6,r.ei,'ei',C.acc,'start');
+  // gioco/interferenza: livelli tratteggiati e frecce tra le zone
+  [[r.ES,C.amber],[r.EI,C.amber],[r.es,C.acc],[r.ei,C.acc]].forEach(([v,c])=>{s+=S.line(xh+bw,yv(v),xs,yv(v),{c,w:.6,dash:'3 3'});});
+  const xm=xh+bw+(xs-xh-bw)/2;
+  const jc=v=>v>=0?C.green:C.red;
+  s+=S.dim(xm-10,yv(r.es),xm-10,yv(r.EI),'',{off:0,ext:false,c:jc(r.Jmin)});
+  s+=S.dim(xm+10,yv(r.ei),xm+10,yv(r.ES),'',{off:0,ext:false,c:jc(r.Jmax)});
+  s+=S.txt(xm-14,Math.max(yv(r.es),yv(r.EI))+16,`Jmin ${r.Jmin>0?'+':''}${r.Jmin}`,{c:jc(r.Jmin),size:9.5,anchor:'end'});
+  s+=S.txt(xm+14,Math.min(yv(r.ei),yv(r.ES))-8,`Jmax ${r.Jmax>0?'+':''}${r.Jmax}`,{c:jc(r.Jmax),size:9.5,anchor:'start'});
+  s+=S.txt(14,H-26,`scostamenti in µm · IT foro ${r.IT_h} µm · IT albero ${r.IT_s} µm`,{c:C.mut,size:9,anchor:'start'});
+  s+=S.txt(14,H-12,'J = foro − albero: positivo = gioco, negativo = interferenza',{c:C.dim,size:9,anchor:'start'});
+  return S.svg(W,H,s);
+}
+
+function schemaFitSection(r){
+  const S=Sch,C=S.C,W=300,H=300,cx=150,cy=130;
+  const Rh=62, Rs=r.Jmin>=0?55:(r.Jmax<0?70:62);            // il gioco/interferenza è esagerato nel disegno
+  let s=S.circle(cx,cy,Rh+26,{c:C.amber,w:1.3,fill:'rgba(255,167,38,.14)'});
+  s+=S.circle(cx,cy,Rh,{c:C.amber,w:1.3,fill:C.bg1});
+  const rs=r.fitClass==='lasco'?Rh-7:(r.fitClass==='forzato'?Rh+4:Rh);
+  s+=S.circle(cx,cy,rs,{c:C.acc,w:1.5,fill:'rgba(79,195,247,.18)'});
+  s+=S.axis(cx-Rh-34,cy,cx+Rh+34,cy)+S.axis(cx,cy-Rh-34,cx,cy+Rh+34);
+  s+=S.txt(cx,cy-16,'ALBERO',{font:S.COND,size:13,c:C.acc,ls:1});
+  s+=S.txt(cx+Rh+22,cy+Rh+22,'FORO',{font:S.COND,size:12,c:C.amber,ls:1,anchor:'end'});
+  s+=S.dim(cx-Rh,cy,cx+Rh,cy,`Ø ${r.D}`,{off:0,ext:false,flip:true,c:C.text});
+  const col=r.fitClass==='lasco'?C.green:r.fitClass==='forzato'?C.red:C.amber;
+  s+=S.txt(cx,H-44,`${r.hp}${r.hi} / ${r.sp}${r.si}  →  ${r.fitName.toUpperCase()}`,{c:col,size:11,weight:500});
+  s+=S.txt(cx,H-28,`J da ${r.Jmin>0?'+':''}${r.Jmin} a ${r.Jmax>0?'+':''}${r.Jmax} µm`,{c:C.mut,size:9.5});
+  s+=S.txt(cx,H-12,'gioco / interferenza esagerati nel disegno',{c:C.dim,size:9});
+  return S.svg(W,H,s);
+}
+
+function drawISOSchema(r){
+  const box=document.getElementById('schemaISO'); if(!box) return;
+  box.innerHTML=`<div class="sch-col"><div class="sch-cap">Posizione delle zone di tolleranza</div>${schemaZones(r)}</div>`+
+                `<div class="sch-col" style="flex:0 1 300px"><div class="sch-cap">Sezione dell'accoppiamento</div>${schemaFitSection(r)}</div>`;
+}
+
 function recalc(){
   const r=compute();
+  try{drawISOSchema(r);}catch(e){console.error('schema:',e);}
   render(r);
 }
 
