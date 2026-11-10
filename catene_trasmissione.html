@@ -193,6 +193,7 @@ footer{margin-top:34px;font-size:10px;color:var(--dim);letter-spacing:.04em;text
   Pre-dimensionamento secondo ISO 606 (serie B). Verificare sempre con il catalogo del costruttore.
 </footer>
 
+<script src="schema.js"></script>
 <script>
 // ═══════════════════════════════════
 //  STATO
@@ -413,8 +414,8 @@ function drawSchema(r){
   const th=Math.asin(Math.min(1,(r2-r1)/(Ceff*s||1)));
   const ux1=x1 - r1*Math.sin(th), uy1=yc - r1*Math.cos(th);
   const ux2=x2 - r2*Math.sin(th), uy2=yc - r2*Math.cos(th);
-  const lx1=x1 + r1*Math.sin(th), ly1=yc + r1*Math.cos(th);
-  const lx2=x2 + r2*Math.sin(th), ly2=yc + r2*Math.cos(th);
+  const lx1=x1 - r1*Math.sin(th), ly1=yc + r1*Math.cos(th);
+  const lx2=x2 - r2*Math.sin(th), ly2=yc + r2*Math.cos(th);
 
   const g='#4fc3f7', mut='#9a9dab', dim='#7d8090';
   let s2='';
@@ -422,7 +423,7 @@ function drawSchema(r){
       L ${ux2.toFixed(1)} ${uy2.toFixed(1)}
       A ${r2.toFixed(1)} ${r2.toFixed(1)} 0 1 1 ${lx2.toFixed(1)} ${ly2.toFixed(1)}
       L ${lx1.toFixed(1)} ${ly1.toFixed(1)}
-      A ${r1.toFixed(1)} ${r1.toFixed(1)} 0 1 1 ${ux1.toFixed(1)} ${uy1.toFixed(1)} Z"
+      A ${r1.toFixed(1)} ${r1.toFixed(1)} 0 0 1 ${ux1.toFixed(1)} ${uy1.toFixed(1)} Z"
       fill="none" stroke="${g}" stroke-width="3" stroke-opacity=".55" stroke-dasharray="4 3"/>`;
   s2+=`<circle cx="${x1.toFixed(1)}" cy="${yc}" r="${r1.toFixed(1)}" fill="#1c1d23" stroke="${g}" stroke-width="1.4"/>`;
   s2+=`<circle cx="${x2.toFixed(1)}" cy="${yc}" r="${r2.toFixed(1)}" fill="#1c1d23" stroke="${g}" stroke-width="1.4"/>`;
@@ -438,6 +439,7 @@ function drawSchema(r){
   s2+=`<text x="${x1}" y="${yc-r1-8}" fill="${g}" font-size="10" font-family="monospace" text-anchor="middle">z₁=${r.z1}</text>`;
   s2+=`<text x="${x2}" y="${yc-r2-8}" fill="${g}" font-size="10" font-family="monospace" text-anchor="middle">z₂=${r.z2}</text>`;
 
+  try{ s2+=Sch.belt({x1,x2,yc,r1,r2,th,betaDeg:r.beta,tight:'F_t lato teso',slack:'lato lento',note:`Tiro F_t = ${fp(r.Ft,0)} N sul ramo teso · la catena si avvolge su z₁ denti`}); }catch(e){console.error('schema:',e);}
   $('schema').innerHTML =
     `<svg viewBox="0 0 ${W} ${H}" xmlns="http://www.w3.org/2000/svg">
       <defs><marker id="a" markerWidth="8" markerHeight="8" refX="4" refY="4" orient="auto">

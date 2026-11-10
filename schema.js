@@ -23,6 +23,10 @@ const Sch = (() => {
       <defs>${mk}</defs>${body}</svg>`;
   }
 
+  // solo i marker (per SVG scritti a mano che usano le funzioni della libreria)
+  const defs = () => `<defs>${Object.entries(C).map(([k, col]) =>
+    `<marker id="${mid(k)}" markerWidth="7" markerHeight="7" refX="6" refY="3.5" orient="auto-start-reverse" markerUnits="userSpaceOnUse"><path d="M0.5,0.8 L6.2,3.5 L0.5,6.2 z" fill="${col}"/></marker>`).join('')}</defs>`;
+
   function txt(x, y, s, o = {}) {
     const { c = C.mut, size = 10, anchor = 'middle', font = MONO, weight = 400, rot = 0, ls = 0 } = o;
     const t = rot ? ` transform="rotate(${rot} ${f(x)} ${f(y)})"` : '';
@@ -115,5 +119,40 @@ const Sch = (() => {
   // piccolo avviso "non in scala"
   const note = (x, y, s, anchor = 'start') => txt(x, y, s, { c: C.dim, size: 8.5, anchor });
 
-  return { C, MONO, COND, svg, txt, label, line, axis, circle, poly, dim, force, arcDim, moment, legend, note, f };
+  // sovrapposizione per trasmissioni a cinghia/catena a due pulegge (assi orizzontali).
+  // o: {x1,x2,yc,r1,r2,th (angolo tangenti), betaDeg, tight, slack, note}
+  // Convenzione: puleggia 1 motrice che gira in senso orario ⇒ lato teso in basso, lato lento in alto.
+  function belt(o) {
+    const { x1, x2, yc, r1, r2, th, tight = 'T₁ teso', slack = 'T₂ lento', note = '' } = o;
+    const betaDeg = Number.isFinite(+o.betaDeg) ? +o.betaDeg : (Math.PI - 2 * th) * 180 / Math.PI;
+    let s = defs();
+    // rotazioni
+    s += moment(x1, yc, Math.max(Math.min(r1 * 0.62, 22), 8), r1 > 26 ? 'ω₁' : '', { c: C.violet, a1: -2.6, a2: 0.4, size: 10 });
+    s += moment(x2, yc, Math.max(Math.min(r2 * 0.62, 22), 8), r2 > 26 ? 'ω₂' : '', { c: C.violet, a1: -2.6, a2: 0.4, size: 10 });
+    // arco di avvolgimento sulla puleggia 1 (lato opposto alla puleggia 2)
+    const ra = r1 + 7, a1 = Math.PI / 2 + th, a2 = 3 * Math.PI / 2 - th;
+    const P = a => [x1 + ra * Math.cos(a), yc + ra * Math.sin(a)];
+    const p1 = P(a1), p2 = P(a2);
+    s += `<path d="M${f(p1[0])},${f(p1[1])} A${f(ra)},${f(ra)} 0 ${a2 - a1 > Math.PI ? 1 : 0} 1 ${f(p2[0])},${f(p2[1])}" fill="none" stroke="${C.red}" stroke-width="2.2"/>`;
+    s += txt(x1 - 6, yc + r1 + 20, `β₁ = ${(+betaDeg).toFixed(0)}°`, { c: C.red, size: 10, anchor: 'end', weight: 500 });
+    // strand: direzione e etichette (il punto medio di ciascun tratto retto)
+    const u = [x1 - r1 * Math.sin(th), yc - r1 * Math.cos(th)], u2 = [x2 - r2 * Math.sin(th), yc - r2 * Math.cos(th)];
+    const l = [x1 - r1 * Math.sin(th), yc + r1 * Math.cos(th)], l2 = [x2 - r2 * Math.sin(th), yc + r2 * Math.cos(th)];
+    const mid2 = (a, b) => [(a[0] + b[0]) / 2, (a[1] + b[1]) / 2];
+    const mu = mid2(u, u2), ml = mid2(l, l2);
+    const dirU = Math.atan2(u2[1] - u[1], u2[0] - u[0]);            // verso destra
+    const dirL = Math.atan2(l[1] - l2[1], l[0] - l2[0]);            // verso sinistra
+    const arr = (m, ang, off, col) => {
+      const nx = Math.sin(ang) * off, ny = -Math.cos(ang) * off, L = 16;
+      const cx = m[0] + nx, cy = m[1] + ny;
+      return `<line x1="${f(cx - Math.cos(ang) * L)}" y1="${f(cy - Math.sin(ang) * L)}" x2="${f(cx + Math.cos(ang) * L)}" y2="${f(cy + Math.sin(ang) * L)}" stroke="${col}" stroke-width="2" marker-end="url(#${mid(cname(col))})"/>`;
+    };
+    s += arr(mu, dirU, 11, C.amber) + arr(ml, dirL, 11, C.red);
+    s += txt(mu[0], mu[1] + 18, slack, { c: C.amber, size: 9.5, weight: 500 });
+    s += txt(ml[0], ml[1] - 14, tight, { c: C.red, size: 9.5, weight: 500 });
+    if (note) s += txt(10, 16, note, { c: C.mut, size: 9, anchor: 'start' });
+    return s;
+  }
+
+  return { belt, defs, C, MONO, COND, svg, txt, label, line, axis, circle, poly, dim, force, arcDim, moment, legend, note, f };
 })();
