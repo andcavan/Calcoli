@@ -116,6 +116,16 @@ const Sch = (() => {
     return s;
   }
 
+  // legenda orizzontale: items = [[simbolo, descrizione, colore?], ...], distribuita a passo fisso
+  function legendRow(items, x, y, o = {}) {
+    const { size = 9, step = 100 } = o;
+    return items.map((it, i) => {
+      const xi = x + i * step;
+      return txt(xi, y, it[0], { c: it[2] || C.acc, size, anchor: 'start', weight: 500 })
+        + txt(xi + 8 + it[0].length * 5.4, y, it[1], { c: C.mut, size, anchor: 'start' });
+    }).join('');
+  }
+
   // piccolo avviso "non in scala"
   const note = (x, y, s, anchor = 'start') => txt(x, y, s, { c: C.dim, size: 8.5, anchor });
 
@@ -154,5 +164,5 @@ const Sch = (() => {
     return s;
   }
 
-  return { belt, defs, C, MONO, COND, svg, txt, label, line, axis, circle, poly, dim, force, arcDim, moment, legend, note, f };
+  return { legendRow, belt, defs, C, MONO, COND, svg, txt, label, line, axis, circle, poly, dim, force, arcDim, moment, legend, note, f };
 })();

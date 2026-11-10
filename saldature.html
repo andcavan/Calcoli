@@ -481,6 +481,7 @@ Serve alla regola pratica di gola minima a_min ≈ √(t_max) − 0,5 mm, che li
   Strumento di pre-dimensionamento: i risultati vanno confermati dalla verifica del progettista e dalle prescrizioni di esecuzione.
 </footer>
 
+<script src="schema.js"></script>
 <script>
 // ═══════════════════════════════════════════════════════
 //  DATI — EN 10025 + EN 1993-1-8 tab. 4.1
@@ -927,13 +928,14 @@ function renderSchema(){
     // gola a 45°
     s += `<line x1="118" y1="78" x2="76" y2="120" stroke="${A}" stroke-width="1" stroke-dasharray="3 2"/>`;
     s += `<line x1="97" y1="99" x2="118" y2="120" stroke="${A}" stroke-width="1.6"/>`;
-    s += `<text x="60" y="96" fill="${A}" font-size="10" font-family="DM Mono">a</text>`;
+    s += `<text x="104" y="103" fill="${A}" font-size="11" font-family="DM Mono" font-weight="500">a</text>`;
     s += `<text x="150" y="112" fill="${W}" font-size="9" font-family="DM Mono">45°</text>`;
     if(mode===1){
       s += `<line x1="130" y1="36" x2="130" y2="10" stroke="${R}" stroke-width="1.6" marker-end="url(#ar)"/>`;
       s += `<text x="138" y="22" fill="${R}" font-size="9" font-family="DM Mono">F⊥ / F_n</text>`;
       s += `<circle cx="205" cy="60" r="9" fill="none" stroke="${R}" stroke-width="1.2"/><circle cx="205" cy="60" r="2.5" fill="${R}"/>`;
       s += `<text x="220" y="64" fill="${R}" font-size="9" font-family="DM Mono">F∥ (uscente)</text>`;
+      s += Sch.legend([['a','altezza di gola',Sch.C.acc],['F⊥','forza ⊥ al cordone',Sch.C.red],['F∥','forza ∥ (uscente)',Sch.C.red],['45°','gola ideale',Sch.C.violet]],292,98,{size:8.5,gap:14,w:140});
       s += `<text x="12" y="172" fill="${D}" font-size="9" font-family="DM Mono">Sezione del giunto a T — gola a inclinata di 45°, n cordoni di lunghezza L</text>`;
     } else {
       s += `<rect x="250" y="40" width="20" height="110" fill="#23252d" stroke="${G}" stroke-width="1"/>`;
@@ -946,6 +948,7 @@ function renderSchema(){
       s += `<text x="318" y="25" fill="${D}" font-size="9" font-family="DM Mono">e</text>`;
       s += `<line x1="240" y1="40" x2="240" y2="150" stroke="${A}" stroke-width=".8"/>`;
       s += `<text x="222" y="98" fill="${A}" font-size="9" font-family="DM Mono">L</text>`;
+      s += Sch.legend([['a','altezza di gola',Sch.C.acc],['L','lungh. cordone',Sch.C.acc],['e','braccio di F',Sch.C.mut],['F','carico',Sch.C.red]],16,70,{size:8.5,gap:14,w:130});
       s += `<text x="12" y="172" fill="${D}" font-size="9" font-family="DM Mono">Mensola su due cordoni verticali — M = F·e, taglio ripartito su A_w = 2·a·L</text>`;
     }
   } else {
@@ -973,6 +976,7 @@ function renderSchema(){
     s += `<line x1="92" y1="80" x2="100" y2="80" stroke="${A}" stroke-width=".8"/>`;
     s += `<line x1="92" y1="110" x2="100" y2="110" stroke="${A}" stroke-width=".8"/>`;
     s += `<text x="104" y="98" fill="${A}" font-size="9" font-family="DM Mono">t</text>`;
+    s += Sch.legendRow([['N','assiale',Sch.C.red],['V','taglio',Sch.C.red],['M','flettente',Sch.C.red],['t','spessore',Sch.C.amber]],70,134,{size:8.5,step:80});
     s += `<text x="12" y="158" fill="${D}" font-size="9" font-family="DM Mono">Giunto di testa — sezione longitudinale (b = larghezza, in profondità)</text>`;
     s += `<text x="12" y="172" fill="${D}" font-size="9" font-family="DM Mono">A = b·${piena?'t':'a_eff'} · W = b·${piena?'t':'a_eff'}²/6</text>`;
   }

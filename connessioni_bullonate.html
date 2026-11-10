@@ -547,6 +547,7 @@ footer{margin-top:34px;font-size:10px;color:var(--dim);letter-spacing:.04em;text
   Strumento di pre-dimensionamento: i risultati vanno confermati con i dati del fornitore e la verifica del progettista.
 </footer>
 
+<script src="schema.js"></script>
 <script>
 // ═══════════════════════════════════
 //  STATO
@@ -1247,11 +1248,11 @@ function drawSchema(inp) {
   if (mode === 'VDI') {
     const r = coreVDI(inp);
     // Scala: la lunghezza serrata occupa 90 px
-    const cx = 190, yTop = 55, hK = 90;
+    const cx = 170, yTop = 62, hK = 90;
     const sc = hK / inp.lK;                       // px per mm
     const rh = Math.min(70, inp.th.dw * sc / 2 + 6);  // semi-larghezza testa
     const rb = Math.max(3, inp.th.d * sc / 2);        // semi-larghezza gambo
-    const rDA = Math.min(130, inp.DA * sc / 2);
+    const rDA = Math.min(105, inp.DA * sc / 2);
     const hHead = 0.65 * inp.th.d * sc;
     const hNut  = 0.8 * inp.th.d * sc;
     const yBot  = yTop + hK;
@@ -1282,13 +1283,15 @@ function drawSchema(inp) {
     }
     // Asse
     s += `<line x1="${cx}" y1="10" x2="${cx}" y2="210" stroke="#7d8090" stroke-width="0.5" stroke-dasharray="6 3 2 3"/>`;
-    // Carico assiale
-    s += `<line x1="${cx - rDA + 14}" y1="${yTop - 30}" x2="${cx - rDA + 14}" y2="${yTop - 6}" stroke="#ef5350" stroke-width="1.4" marker-start="url(#arFb)"/>
-          <text x="${cx - rDA + 20}" y="${yTop - 20}" fill="#ef5350" font-size="9" font-family="DM Mono">F_A</text>`;
+    // Carico assiale: F_A tira le piastre in direzioni opposte
+    s += `<line x1="${cx - rDA + 14}" y1="${yTop - 2}" x2="${cx - rDA + 14}" y2="${yTop - 30}" stroke="#ef5350" stroke-width="1.6" marker-end="url(#arF)"/>
+          <line x1="${cx - rDA + 14}" y1="${yBot + 2}" x2="${cx - rDA + 14}" y2="${yBot + 30}" stroke="#ef5350" stroke-width="1.6" marker-end="url(#arF)"/>
+          <text x="${cx - rDA + 8}" y="${yTop - 14}" fill="#ef5350" font-size="9" font-family="DM Mono" text-anchor="end">F_A</text>`;
     // Quote
     s += dimV(cx + rDA + 12, yTop, yBot, 'l_K = ' + fp(inp.lK, 0));
     s += dimH(cx - rDA, cx + rDA, yBot + hNut + 26, 'D_A = ' + fp(inp.DA, 0));
-    s += `<text x="12" y="20" fill="#9a9dab" font-size="10" font-family="DM Mono">${tipo === 'DSV' ? 'Vite passante + dado (DSV)' : 'Filetto ricavato nel pezzo (ESV)'} · Φ_en = ${fp(r.Phien, 3)}</text>`;
+    s += Sch.legend([['F_A','carico assiale',Sch.C.red],['l_K','lung. serrata',Sch.C.acc],['D_A','Ø equiv.',Sch.C.acc],['┈┈','cono press.',Sch.C.mut]],340,70,{size:8.5,gap:14,w:118});
+    s += `<text x="12" y="14" fill="#9a9dab" font-size="10" font-family="DM Mono">${tipo === 'DSV' ? 'Vite passante + dado (DSV)' : 'Filetto ricavato nel pezzo (ESV)'} · Φ_en = ${fp(r.Phien, 3)}</text>`;
     $('schema').innerHTML = s;
 
   } else {
@@ -1320,6 +1323,7 @@ function drawSchema(inp) {
     s += dimV(x0 - 14, yMid - hPl / 2, yMid, 'e₂ ' + fp(inp.e2, 0));
     s += `<text x="12" y="16" fill="#9a9dab" font-size="10" font-family="DM Mono">Categoria ${inp.cat} · d₀ = ${fp(r.d0, 1)} mm · t = ${fp(inp.t1, 0)} mm</text>`;
     s += `<text x="12" y="212" fill="#7d8090" font-size="9" font-family="DM Mono">Vista in pianta — disposizione dei fori (schematica)</text>`;
+    s += Sch.legend([['F_Q','taglio sul bullone',Sch.C.red],['e₁','distanza dal bordo',Sch.C.acc],['p₁','passo tra i fori',Sch.C.acc],['e₂','distanza laterale',Sch.C.acc]],300,150,{size:8.5,gap:14,w:150});
     $('schema').innerHTML = s;
   }
 }
