@@ -1224,26 +1224,17 @@ function ok(inp) {
 // ═══════════════════════════════════
 // Due marker: "ar" punta nel verso della linea, "arb" nel verso opposto.
 // Sulle linee di quota servono entrambi, così le punte guardano verso l'esterno.
-function dimH(x1, x2, y, label) {
-  return `<line x1="${x1}" y1="${y}" x2="${x2}" y2="${y}" stroke="#4fc3f7" stroke-width="0.7" marker-start="url(#arb)" marker-end="url(#ar)"/>
-    <text x="${(x1 + x2) / 2}" y="${y - 4}" fill="#4fc3f7" font-size="9" text-anchor="middle" font-family="DM Mono">${label}</text>`;
-}
-function dimV(x, y1, y2, label) {
-  return `<line x1="${x}" y1="${y1}" x2="${x}" y2="${y2}" stroke="#4fc3f7" stroke-width="0.7" marker-start="url(#arb)" marker-end="url(#ar)"/>
-    <text x="${x + 5}" y="${(y1 + y2) / 2 + 3}" fill="#4fc3f7" font-size="9" font-family="DM Mono">${label}</text>`;
-}
+// quote: delegate alla libreria condivisa (schema.js)
+function dimH(x1, x2, y, label) { return Sch.dim(x1, y, x2, y, label, { off: 0, ext: false, flip: true, c: Sch.C.acc, size: 9 }); }
+function dimV(x, y1, y2, label) { return Sch.dim(x, y1, x, y2, label, { off: 0, ext: false, hor: true, flip: true, c: Sch.C.acc, size: 9 }); }
 
 function drawSchema(inp) {
   const defs = `<defs>
-    <marker id="ar" markerWidth="6" markerHeight="6" refX="3" refY="3" orient="auto">
-      <path d="M0,1 L6,3 L0,5 Z" fill="#4fc3f7"/></marker>
-    <marker id="arb" markerWidth="6" markerHeight="6" refX="3" refY="3" orient="auto">
-      <path d="M6,1 L0,3 L6,5 Z" fill="#4fc3f7"/></marker>
     <marker id="arF" markerWidth="7" markerHeight="7" refX="3.5" refY="3.5" orient="auto">
       <path d="M0,1 L7,3.5 L0,6 Z" fill="#ef5350"/></marker>
     <marker id="arFb" markerWidth="7" markerHeight="7" refX="3.5" refY="3.5" orient="auto">
       <path d="M7,1 L0,3.5 L7,6 Z" fill="#ef5350"/></marker>
-  </defs>`;
+  </defs>` + Sch.defs();
 
   if (mode === 'VDI') {
     const r = coreVDI(inp);
@@ -1323,7 +1314,7 @@ function drawSchema(inp) {
     s += dimV(x0 - 14, yMid - hPl / 2, yMid, 'e₂ ' + fp(inp.e2, 0));
     s += `<text x="12" y="16" fill="#9a9dab" font-size="10" font-family="DM Mono">Categoria ${inp.cat} · d₀ = ${fp(r.d0, 1)} mm · t = ${fp(inp.t1, 0)} mm</text>`;
     s += `<text x="12" y="212" fill="#7d8090" font-size="9" font-family="DM Mono">Vista in pianta — disposizione dei fori (schematica)</text>`;
-    s += Sch.legend([['F_Q','taglio sul bullone',Sch.C.red],['e₁','distanza dal bordo',Sch.C.acc],['p₁','passo tra i fori',Sch.C.acc],['e₂','distanza laterale',Sch.C.acc]],300,150,{size:8.5,gap:14,w:150});
+    s += Sch.legend([['F_Q','taglio sul bullone',Sch.C.red],['e₁','distanza dal bordo',Sch.C.acc],['p₁','passo tra i fori',Sch.C.acc],['e₂','distanza laterale',Sch.C.acc]],300,134,{size:8.5,gap:14,w:150});
     $('schema').innerHTML = s;
   }
 }
